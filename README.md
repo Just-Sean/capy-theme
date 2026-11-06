@@ -90,8 +90,20 @@ uv run django-admin makemigrations capy_theme --settings=tests.settings --python
 
 ## Release a version
 
-1. Change `version` in `pyproject.toml` and add a line to `CHANGELOG.md`.
-2. Commit, then tag it: `git tag v0.2.0` and `git push origin main v0.2.0`.
+Each release has its own issue (e.g. "1.10 Release v0.1.0"). Nothing is pushed
+straight to `main`:
+
+1. On the release issue's branch, change `version` in `pyproject.toml` and add an
+   entry to `CHANGELOG.md`. Commit, push the branch and open a PR that closes the issue.
+2. After the PR is merged, tag the merged `main` and push only the tag:
+
+   ```bash
+   git checkout main
+   git pull
+   git tag v0.2.0
+   git push origin v0.2.0
+   ```
+
 3. In each project, update the tag in its `uv add` line when you want the new version.
 
 ## Rules that keep it pluggable
