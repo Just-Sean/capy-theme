@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Just-Sean/capy-theme/settings.schema.json",
+  "title": "capy-theme Theme.settings",
+  "description": "Every override a theme makes on top of its light and dark base themes. Each phase adds its own keys here (colours, fonts, shape and so on). Keys not listed are rejected.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
