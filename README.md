@@ -68,7 +68,23 @@ uv run python demo/manage.py createsuperuser
 uv run python demo/manage.py runserver      # then open http://localhost:8000/admin/
 ```
 
-It uses SQLite (`demo/db.sqlite3`) by default; set `DATABASE_URL` to use Postgres.
+Stop the server with **Ctrl+C** in the terminal it's running in.
+
+It uses SQLite (`demo/db.sqlite3`) by default. To use Postgres instead, set
+`DATABASE_URL` on each command (the database must already exist):
+
+```bash
+DATABASE_URL=postgres://app:app@localhost:5432/capy_demo uv run python demo/manage.py migrate
+DATABASE_URL=postgres://app:app@localhost:5432/capy_demo uv run python demo/manage.py runserver
+```
+
+To start the demo over with an empty SQLite database, delete it and set it up again:
+
+```bash
+rm demo/db.sqlite3
+uv run python demo/manage.py migrate
+uv run python demo/manage.py createsuperuser
+```
 
 The demo's home page (<http://localhost:8000/>) is an ordinary project-style page
 of daisyUI components, for checking the theme works on pages the module doesn't
@@ -116,6 +132,18 @@ test project:
 ```bash
 uv run django-admin makemigrations capy_theme --settings=tests.settings --pythonpath=.
 ```
+
+## Build the package
+
+To build the installable package (a wheel and an sdist, written to `dist/`) and
+check what's in it:
+
+```bash
+uv build
+unzip -l dist/capy_theme-*.whl     # should list only capy_theme/ files, nothing from demo/ or scripts/
+```
+
+`dist/` is git-ignored.
 
 ## Release a version
 
