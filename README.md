@@ -133,6 +133,23 @@ test project:
 uv run django-admin makemigrations capy_theme --settings=tests.settings --pythonpath=.
 ```
 
+### Theme settings schema
+
+Everything a theme overrides is stored in its `settings` field, a JSON object.
+It's checked against `src/capy_theme/settings.schema.json` (a standard
+[JSON Schema](https://json-schema.org/), validated with the `jsonschema` package)
+every time a theme is saved, so data that doesn't match can't be saved. Keys the
+schema doesn't list are rejected. It starts with no keys, and each phase adds its own.
+
+When a change adds a new setting, add it to `settings.schema.json` in the same
+change, with a test. No migration is needed, because `settings` is a single JSON column.
+
+After pulling changes that add migrations, apply them to the demo database:
+
+```bash
+uv run python demo/manage.py migrate
+```
+
 ## Build the package
 
 To build the installable package (a wheel and an sdist, written to `dist/`) and
@@ -178,7 +195,11 @@ straight to `main`:
 | --- | --- |
 | `src/capy_theme/` | The Django app that projects install |
 | `src/capy_theme/apps.py` | The app's name, label and admin title |
-| `src/capy_theme/models.py` | Database models (empty to start) |
+| `src/capy_theme/models.py` | Database models: `Theme` (name, slug, light and dark base, `settings` overrides) |
+| `src/capy_theme/admin.py` | The admin pages for themes |
+| `src/capy_theme/settings.schema.json` | JSON Schema that every theme's `settings` must match |
+| `src/capy_theme/validation.py` | Checks `settings` against the schema, and that bases are valid themes |
+| `src/capy_theme/migrations/` | Database migrations (create with the `makemigrations` command above) |
 | `src/capy_theme/builtin_themes.py` | daisyUI's built-in themes and their values (generated; don't edit) |
 | `src/capy_theme/catalogue.py` | `get_builtin_themes()`: the built-in themes a project offers |
 | `scripts/generate_builtin_themes.py` | Regenerates `builtin_themes.py` from the daisyUI package |
