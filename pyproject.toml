@@ -47,3 +47,4 @@ select = ["E", "W", "F", "I", "B", "S", "DJ", "UP"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["S101", "S105", "S106"]
+"demo/demo_site/settings.py" = ["S105"]   # the demo's dev-only SECRET_KEY
