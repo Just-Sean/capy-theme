@@ -28,6 +28,7 @@ dev = [
     "dj-database-url>=3.1",     # lets the tests switch databases via DATABASE_URL
     "psycopg[binary]>=3.3",     # only used when DATABASE_URL points at Postgres
     "ruff>=0.17",
+    "django-tailwind-cli>=4.8",
 ]
 
 [tool.pytest.ini_options]
