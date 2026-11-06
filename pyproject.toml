@@ -1,0 +1,49 @@
+[project]
+name = "capy-theme"
+version = "0.1.0"
+description = "Theming for Django projects."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "django>=6.1,<7",          # the Django versions this module supports
+]
+classifiers = [
+    "Framework :: Django",
+    "Framework :: Django :: 6.1",
+    "Private :: Do Not Upload",    # stops an accidental upload to the public PyPI
+]
+
+[build-system]
+requires = ["uv_build>=0.11,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "capy_theme"   # the folder under src/
+
+[dependency-groups]
+# Only for developing and testing the module; projects never install these.
+dev = [
+    "pytest>=9",
+    "pytest-django>=4.14",
+    "dj-database-url>=3.1",     # lets the tests switch databases via DATABASE_URL
+    "psycopg[binary]>=3.3",     # only used when DATABASE_URL points at Postgres
+    "ruff>=0.17",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+pythonpath = ["."]
+addopts = "--strict-markers"
+# Fail on Django deprecation warnings, so Django upgrades never surprise you.
+filterwarnings = ["error::DeprecationWarning:django.*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "S", "DJ", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["S101", "S105", "S106"]
