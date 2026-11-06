@@ -47,6 +47,21 @@ To run the tests on Postgres instead (for Postgres-only features):
 DATABASE_URL=postgres://app:app@localhost:5432/module_tests uv run pytest
 ```
 
+### Demo site
+
+`demo/` is a tiny Django site for running and clicking through the module while
+it's built. It uses the module straight from `src/` (uv installs it in editable
+mode), so every change shows immediately. It is development-only and not part
+of the installed package.
+
+```bash
+uv run python demo/manage.py migrate
+uv run python demo/manage.py createsuperuser
+uv run python demo/manage.py runserver      # then open http://localhost:8000/admin/
+```
+
+It uses SQLite (`demo/db.sqlite3`) by default; set `DATABASE_URL` to use Postgres.
+
 To create migrations after changing models, run Django's command against the
 test project:
 
