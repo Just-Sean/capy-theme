@@ -1,0 +1,8 @@
+# Written by Copier. Lets `copier update` know which template and answers this
+# module came from. Don't edit by hand.
+_commit: v0.1.1
+_src_path: .
+description: Theming for Django projects.
+distribution_name: capy-theme
+module_name: Capy Theme
+package_name: capy_theme
