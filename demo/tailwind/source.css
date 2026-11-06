@@ -1,0 +1,14 @@
+/* Tailwind source for the demo site. Built to demo/static/css/tailwind.css by
+   `uv run python demo/manage.py tailwind build` (or `tailwind runserver`).
+
+   No font families are set here on purpose, so the theme's fonts can apply later.
+   daisyui.mjs and daisyui-theme.mjs are the daisyUI 5.7.50 plugin files from
+   https://github.com/saadeghi/daisyui/releases (the standalone-CLI install). */
+
+@import "tailwindcss";
+
+/* Scan the demo's templates and the module's own templates. */
+@source "../templates";
+@source "../../src/capy_theme/templates";
+
+@plugin "./daisyui.mjs";

@@ -62,6 +62,25 @@ uv run python demo/manage.py runserver      # then open http://localhost:8000/ad
 
 It uses SQLite (`demo/db.sqlite3`) by default; set `DATABASE_URL` to use Postgres.
 
+The demo's home page (<http://localhost:8000/>) is an ordinary project-style page
+of daisyUI components, for checking the theme works on pages the module doesn't
+own. It's styled with Tailwind CSS v4 and daisyUI 5 through
+[django-tailwind-cli](https://github.com/django-commons/django-tailwind-cli),
+which downloads the Tailwind CLI on first use. To build the CSS and run the
+server, rebuilding as templates change:
+
+```bash
+uv run python demo/manage.py tailwind runserver
+```
+
+Or build once with `uv run python demo/manage.py tailwind build`, then `runserver`.
+
+The Tailwind source is `demo/tailwind/source.css`. It scans the demo's templates
+and the module's own (`src/capy_theme/templates/`), and loads the daisyUI plugin
+files (`daisyui.mjs`, `daisyui-theme.mjs`) kept next to it. To update daisyUI,
+replace those two files with ones from a newer
+[daisyUI release](https://github.com/saadeghi/daisyui/releases).
+
 To create migrations after changing models, run Django's command against the
 test project:
 

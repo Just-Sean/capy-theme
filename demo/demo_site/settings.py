@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_tailwind_cli",  # demo only: builds demo/static/css/tailwind.css
     "capy_theme",
 ]
 
@@ -64,5 +65,12 @@ TIME_ZONE = "UTC"
 LANGUAGE_CODE = "en"
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+# Tailwind CSS v4 standalone CLI (downloaded to demo/.django_tailwind_cli/ on first run)
+# with the daisyUI 5 plugin files in demo/tailwind/.
+TAILWIND_CLI_VERSION = "4.3.4"
+TAILWIND_CLI_SRC_CSS = "tailwind/source.css"  # relative to demo/
+TAILWIND_CLI_DIST_CSS = "css/tailwind.css"  # relative to demo/static/
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"

@@ -26,3 +26,16 @@ def run_manage(*args):
 def test_demo_site_passes_django_checks():
     result = run_manage("check")
     assert result.returncode == 0, result.stderr
+
+
+def test_demo_home_page_renders():
+    # Renders / with Django's test client inside the demo's own settings.
+    code = (
+        "from django.test import Client; "
+        "r = Client().get('/', SERVER_NAME='localhost'); "
+        "print(r.status_code); "
+        "print('btn-primary' in r.content.decode())"
+    )
+    result = run_manage("shell", "--no-imports", "-c", code)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.split() == ["200", "True"], result.stdout

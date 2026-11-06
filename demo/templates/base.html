@@ -1,0 +1,22 @@
+{% load tailwind_cli %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Capy Theme demo{% endblock %}</title>
+  {% tailwind_css %}
+</head>
+<body class="min-h-screen bg-base-100 text-base-content">
+  <header class="navbar bg-base-200 px-4">
+    <div class="flex-1">
+      <a href="{% url 'home' %}" class="text-xl font-bold">Capy Theme demo</a>
+    </div>
+    <nav class="flex-none">
+      <a href="{% url 'admin:index' %}" class="btn btn-ghost btn-sm">Admin</a>
+    </nav>
+  </header>
+  <main class="mx-auto max-w-5xl p-6">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
