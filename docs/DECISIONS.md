@@ -401,3 +401,18 @@ Recommended (made while building autonomously).
   through the same merging as publishing, so they match what would be published.
   Live ratings as you type come with the editor (3.3).
 - **Warnings only:** nothing stops saving or publishing.
+
+## 2.6 Shape and effects (#19)
+
+Recommended (made while building autonomously).
+
+- **One set for both modes:** shape settings apply to light and dark alike.
+  daisyUI's own light and dark themes share their shape, and a card shouldn't
+  change roundness when the mode changes.
+- **Stored as numbers and booleans** in `settings["shape"]` (rem for radii and
+  sizes, px for border), written out with their units.
+- **Limits:** radii 0–2 rem (boxes 0–3), sizes 0.125–0.5 rem (daisyUI uses
+  0.1875–0.3125), border 0–4 px. They keep the components usable.
+- **Depth and noise** have three choices, "From the base theme", On and Off, so
+  "not set" is possible (a plain checkbox can't express it).
+- **Hints:** blank fields show the light base's value.

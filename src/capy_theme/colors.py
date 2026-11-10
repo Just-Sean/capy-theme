@@ -7,6 +7,8 @@ overridden comes from the base theme.
 
 from coloraide import Color
 
+from .shape import shape_values
+
 # The 20 colours, grouped as the admin shows them. Each name is the CSS
 # variable without its "--color-" prefix.
 COLOR_GROUPS = {
@@ -64,12 +66,13 @@ WITH_CONTENT = [
 def effective_values(snapshot, scheme):
     """Return a published revision's CSS values for one scheme.
 
-    The base theme's values, with the theme's colour overrides on top. When a
+    The base theme's values, with the theme's shape and colour overrides on top. When a
     colour is overridden but its text colour isn't, the text colour is worked
     out so it's readable. When the background (base-100) is overridden but its
     shades or text aren't, those are worked out from it too.
     """
     values = dict(snapshot[f"{scheme}_values"])
+    values.update(shape_values(snapshot.get("settings", {})))
     chosen = overrides(snapshot.get("settings", {}), scheme)
     for name, value in chosen.items():
         values[f"--color-{name}"] = value
