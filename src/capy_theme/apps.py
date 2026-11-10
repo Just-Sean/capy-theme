@@ -8,3 +8,6 @@ class CapyThemeConfig(AppConfig):
     # Set here, not left to the project, so the module's migrations are the
     # same in every project whatever its DEFAULT_AUTO_FIELD.
     default_auto_field = "django.db.models.BigAutoField"
+
+    def ready(self):
+        from . import signals  # noqa: F401 (connects the cache-clearing signals)

@@ -7,6 +7,7 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import format_html
 
+from .active import NotPublished, activate, get_active_theme
 from .catalogue import get_builtin_themes
 from .models import Theme, ThemeRevision
 from .publishing import NothingToPublish, publish
@@ -78,10 +79,12 @@ class ThemeAdmin(admin.ModelAdmin):
         "slug",
         "light_base",
         "dark_base",
+        "is_active",
         "live_revision_number",
         "unpublished_changes",
         "updated_at",
     ]
+    actions = ["activate_theme"]
     list_filter = ["light_base", "dark_base"]
     search_fields = ["name", "slug"]
     prepopulated_fields = {"slug": ["name"]}
@@ -97,6 +100,27 @@ class ThemeAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("live_revision")
+
+    @admin.display(boolean=True, description="Active")
+    def is_active(self, theme):
+        active = get_active_theme()
+        return active is not None and active.pk == theme.pk
+
+    @admin.action(description="Activate the selected theme (make it the site's theme)")
+    def activate_theme(self, request, queryset):
+        # Anyone who can edit themes can activate for now; 1.9 adds a separate permission.
+        if not self.has_change_permission(request):
+            raise PermissionDenied
+        if queryset.count() != 1:
+            messages.error(request, "Select exactly one theme to activate.")
+            return
+        theme = queryset.select_related("live_revision").get()
+        try:
+            activate(theme)
+        except NotPublished as error:
+            messages.error(request, str(error))
+        else:
+            messages.success(request, f"“{theme}” is now the active theme.")
 
     @admin.display(description="Live revision", ordering="live_revision__number")
     def live_revision_number(self, theme):

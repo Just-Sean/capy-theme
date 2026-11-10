@@ -39,6 +39,7 @@ Optional settings a project can add to its `settings.py`:
 | Setting | Default | What it does |
 | --- | --- | --- |
 | `CAPY_THEME_BUILTIN_THEMES` | all 35 | Which built-in daisyUI themes can be used as a theme's light or dark base, e.g. `["light", "dark"]`. Listing an unknown theme raises an error that names it. |
+| `CAPY_THEME_CACHE_SECONDS` | `300` | How long the active theme is cached, in seconds. Publishing or activating clears the cache straight away; this limit makes every server process catch up when the project's cache isn't shared between processes (e.g. Django's default in-memory cache). |
 
 ## Develop it
 
@@ -166,6 +167,17 @@ theme's **live revision**, which changes only when someone publishes:
 
 From code: `from capy_theme.publishing import publish` then `publish(theme, user=request.user, note="…")`.
 
+### The active theme
+
+One theme is the site's **active** theme. To choose it, tick it in the admin's
+theme list and run the **Activate** action. The list's "Active" column shows
+which one it is. A theme must be published before it can be activated.
+
+From code: `from capy_theme.active import get_active_theme` then
+`get_active_theme(request)` returns the active `Theme`, with its live revision
+loaded, or `None` if no theme is active. It's cached (see
+`CAPY_THEME_CACHE_SECONDS`), so a normal page load doesn't query the database.
+
 ## Build the package
 
 To build the installable package (a wheel and an sdist, written to `dist/`) and
@@ -211,7 +223,9 @@ straight to `main`:
 | --- | --- |
 | `src/capy_theme/` | The Django app that projects install |
 | `src/capy_theme/apps.py` | The app's name, label and admin title |
-| `src/capy_theme/models.py` | Database models: `Theme` (the draft: name, slug, light and dark base, `settings` overrides, and its live revision) and `ThemeRevision` (a published copy of a theme's look) |
+| `src/capy_theme/models.py` | Database models: `Theme` (the draft: name, slug, light and dark base, `settings` overrides, and its live revision) `ThemeRevision` (a published copy of a theme's look) and `ThemeAssignment` (which theme is active) |
+| `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |
+| `src/capy_theme/signals.py` | Clears the active-theme cache whenever themes, revisions or assignments change |
 | `src/capy_theme/publishing.py` | `publish()`: turns a theme's draft into its new live revision |
 | `src/capy_theme/admin.py` | The admin pages for themes, including the Publish page and the list of published revisions |
 | `src/capy_theme/templates/capy_theme/admin/` | Templates for the theme edit page (adds the Publish button) and the Publish page |
