@@ -276,6 +276,8 @@ straight to `main`:
 | `demo/` | The demo site, for development only (not in the package) |
 | `tests/settings.py` | A tiny stand-in project for the tests |
 | `tests/test_app.py` | Checks the app loads and its migrations are complete |
+| `docs/PLAN.md` | The build plan: every phase and step |
+| `docs/DECISIONS.md` | Every design decision made while building, with the alternatives and why |
 | `pyproject.toml` | Package name, version, Django versions supported, tool settings |
 | `CHANGELOG.md` | What changed in each version |
 | `.copier-answers.yml` | Lets `copier update` find the template; don't edit |
