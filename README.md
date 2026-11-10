@@ -338,7 +338,18 @@ publishing still work. Ratings are for the saved draft, so save to update them.
 Staff who can change themes see an **Edit theme** button on the showcase. It
 opens a panel on the right and shows the theme's **draft** on the page, in your
 browser only; visitors keep seeing the published theme. **Close** puts the page
-back to the published look. (The editing controls arrive in the next steps.)
+back to the published look.
+
+The panel has:
+
+- **Base themes:** the light and dark base.
+- **Colours:** Light and Dark tabs, with Basic open and Advanced and Expert
+  folded. Each colour has the browser's colour picker, a text box (any format),
+  **Reset** (back to the base colour) and its contrast rating, e.g. "AA 5.19" or
+  "⚠ fail 2.1". Overridden colours are shown in bold with a dot.
+- **Shape and effects:** the radii, sizes and border width, plus depth and noise.
+
+Every change shows on the page straight away (in your browser only).
 
 - It edits the active theme, or any theme with `?edit=<theme id>` on the showcase
   URL, which also opens the panel straight away.
@@ -565,7 +576,7 @@ straight to `main`:
 | `src/capy_theme/shape.py` | The shape and effect settings (radii, sizes, border, depth, noise) |
 | `src/capy_theme/showcase.py` | Data for the showcase's colour swatches and shape samples |
 | `src/capy_theme/editor.py` | The live editor: who can use it, which theme it edits, and the draft data it reads |
-| `src/capy_theme/static/capy_theme/editor/` | The editor panel's script and stylesheet (plain JS and CSS) |
+| `src/capy_theme/static/capy_theme/editor/` | The editor panel: `editor.js` (panel, preview), `editor-controls.js` (bases, colours, shape) and `editor.css` |
 | `src/capy_theme/templates/capy_theme/editor/mount.html` | Loads the editor on a page for staff who can edit |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |

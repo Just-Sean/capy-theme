@@ -496,3 +496,23 @@ Recommended (made while building autonomously).
   attribute, because Django's CSRF cookie may be HttpOnly in projects.
 - **Debounced in the browser:** `capyEditor.schedulePreview()` waits 150 ms after
   the last change, so dragging a picker sends one request, not dozens.
+
+## 3.3 Colour and shape controls (#97)
+
+Recommended (made while building autonomously).
+
+- **Controls come from the server:** the state endpoint lists the allowed bases
+  (following `CAPY_THEME_BUILTIN_THEMES`), the colour groups and labels, and the
+  shape settings with their limits, so the panel never duplicates that knowledge.
+- **Colour rows:** the browser's colour picker, a text box for any format, Reset
+  and a contrast badge. Picking writes hex, and the server converts it to OKLCH.
+  The picker is set from hex values the server provides (`hex` in the preview).
+- **Light and dark tabs** edit each mode's colours separately. Shape is shared.
+- **Every change is previewed** through the 150 ms debounce. `capyEditor.changes`
+  holds the unsaved values for Save (3.5).
+- **A separate script**, `editor-controls.js`, listens to the editor's
+  `capy-editor:loaded` and `capy-editor:preview` events, so the panel shell
+  stays small.
+- **Tested in headless Chrome** with real input events: picking a colour,
+  switching tabs, reset, changing a base and changing a radius all update the
+  page as expected, and nothing is saved.
