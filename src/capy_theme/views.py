@@ -1,15 +1,16 @@
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import ImproperlyConfigured
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from .active import get_active_theme
 from .branding import branding
+from .editor import can_edit, draft_state, editor_theme, editor_urls
 from .mode import COOKIE_MAX_AGE, COOKIE_NAME, MODES, mode_settings
-from .models import ThemeRevision
+from .models import Theme, ThemeRevision
 from .showcase import shape_samples, swatches
 from .stylesheet import render_css
 
@@ -70,6 +71,7 @@ def showcase(request):
         "sections": [f"capy_theme/showcase/sections/{name}.html" for name in SHOWCASE_SECTIONS],
         "swatches": swatches(revision),
         "shape_samples": shape_samples(revision),
+        "editor": _editor_context(request),
     }
     return render(request, "capy_theme/showcase/page.html", context)
 
@@ -94,4 +96,24 @@ def set_mode(request, mode):
             response.set_cookie(
                 COOKIE_NAME, mode, max_age=COOKIE_MAX_AGE, samesite="Lax", httponly=False
             )
+    return response
+
+
+def _editor_context(request):
+    """The editor's mount data for the showcase, or None if this user can't edit."""
+    if not can_edit(request.user):
+        return None
+    theme = editor_theme(request)
+    if theme is None:
+        return None
+    return {"theme": theme, "urls": editor_urls(theme)}
+
+
+def editor_state(request, pk):
+    """The live editor's view of a theme's draft (JSON). Staff who can change themes only."""
+    if not can_edit(request.user):
+        return JsonResponse({"error": "You can't edit themes."}, status=403)
+    theme = get_object_or_404(Theme.objects.select_related("live_revision"), pk=pk)
+    response = JsonResponse(draft_state(theme, request.user))
+    response["Cache-Control"] = "no-store"
     return response

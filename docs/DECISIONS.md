@@ -453,3 +453,25 @@ Recommended (made while building autonomously).
 - Released with tests passing on SQLite and PostgreSQL 17 (throwaway Docker
   container), and the package checked. No database migrations were needed in
   Phase 2: colours and shape live in the theme's `settings` JSON.
+
+## 3.1 Editor on the showcase (#42)
+
+Recommended (made while building autonomously).
+
+- **Who:** staff with the change-theme permission (`editor.can_edit`). Publishing
+  from the editor will also need `publish_theme` (3.5).
+- **Which theme:** the active theme, or `?edit=<id>`. `?edit` also opens the panel
+  on load, which the admin's "Edit live" link (3.8) will use.
+- **Preview for that user only:** the draft's CSS is added in the browser as a
+  constructed stylesheet (`document.adoptedStyleSheets`) after the page's own, so
+  it wins. Constructed stylesheets aren't blocked by a CSP the way `<style>`
+  elements are, and nothing changes for anyone else.
+- **One source of truth:** the draft's CSS comes from `/theme/editor/<id>/state/`,
+  written by `stylesheet.snapshot_css()`, the same function as published
+  stylesheets (a test checks they match).
+- **Self-contained panel:** plain CSS and JavaScript, no Tailwind or daisyUI
+  classes and no framework, so it works on any project page later (3.6).
+- **Tested in a real browser:** headless Chrome, driven over the DevTools
+  protocol by a script kept outside the repo. It checked that the panel opens,
+  the page shows the draft colour, Close restores the published one, and
+  reopening works.

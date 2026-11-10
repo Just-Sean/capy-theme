@@ -32,11 +32,21 @@ def render_css(revision):
     The rules aren't in a CSS layer, so they override daisyUI's own theme rules
     (which are in `@layer base`) wherever the stylesheet is loaded.
     """
-    snapshot = revision.snapshot
+    return snapshot_css(
+        revision.snapshot, f"capy-theme: {revision.theme.name}, revision {revision.number}"
+    )
+
+
+def snapshot_css(snapshot, comment):
+    """Return the CSS for a snapshot of a theme's look (published or draft).
+
+    Used for published revisions and, in the editor, for unsaved drafts, so the
+    two always match.
+    """
     light = effective_values(snapshot, "light")
     dark = effective_values(snapshot, "dark")
     lines = [
-        f"/* capy-theme: {revision.theme.name}, revision {revision.number} */",
+        f"/* {comment} */",
         ":root {",
         *_block("light", light, indent="  "),
         "}",

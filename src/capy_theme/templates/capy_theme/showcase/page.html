@@ -13,7 +13,10 @@
 <link rel="stylesheet" href="{% static 'capy_theme/showcase.css' %}">
 <div class="capy-showcase bg-base-200 text-base-content min-h-screen p-4 md:p-8">
   <header class="mb-6 space-y-2">
-    <h1 class="text-3xl font-bold">Theme showcase</h1>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h1 class="text-3xl font-bold">Theme showcase</h1>
+      {% if editor %}<button type="button" class="btn btn-primary" data-capy-editor-open>Edit theme</button>{% endif %}
+    </div>
     {% if active_theme %}
       <p>
         Active theme: <strong>{{ active_theme.name }}</strong>, revision {{ revision.number }}
@@ -42,4 +45,5 @@
     {% endfor %}
   </div>
 </div>
+{% if editor %}{% include "capy_theme/editor/mount.html" %}{% endif %}
 {% endblock %}
