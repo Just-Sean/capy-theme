@@ -25,7 +25,7 @@ def editor_state(request, pk):
     if not can_edit(request.user):
         return JsonResponse({"error": "You can't edit themes."}, status=403)
     theme = get_object_or_404(Theme.objects.select_related("live_revision"), pk=pk)
-    response = JsonResponse(draft_state(theme, request.user))
+    response = JsonResponse(draft_state(theme, request.user, request))
     response["Cache-Control"] = "no-store"
     return response
 
@@ -93,7 +93,7 @@ def editor_save(request, pk):
         save_draft(theme, data)
     except ValidationError as error:
         return JsonResponse({"errors": error.messages}, status=400)
-    return JsonResponse({"saved": True, "state": draft_state(theme, request.user)})
+    return JsonResponse({"saved": True, "state": draft_state(theme, request.user, request)})
 
 
 @require_POST
@@ -125,7 +125,9 @@ def editor_publish(request, pk):
             },
             status=409,
         )
-    return JsonResponse({"published": revision.number, "state": draft_state(theme, request.user)})
+    return JsonResponse(
+        {"published": revision.number, "state": draft_state(theme, request.user, request)}
+    )
 
 
 @require_POST
@@ -201,9 +203,9 @@ def editor_visitor_view(request):
     if not can_edit(request.user):
         return JsonResponse({"error": "You can't edit themes."}, status=403)
     try:
-        view = visitor_view(request.GET.get("theme", ""), request.GET.get("date", ""))
+        view = visitor_view(request.GET.get("theme", ""), request.GET.get("date", ""), request)
     except ValidationError as error:
         return JsonResponse({"errors": error.messages}, status=400)
-    response = JsonResponse({**view, "summary": visitor_summary()})
+    response = JsonResponse({**view, "summary": visitor_summary(request)})
     response["Cache-Control"] = "no-store"
     return response

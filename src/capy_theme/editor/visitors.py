@@ -11,18 +11,20 @@ from django.utils import timezone
 
 from ..css.stylesheet import render_css
 from ..themes.active import (
-    get_active_theme,
+    get_site_theme,
     offered_themes,
     scheduled_assignments,
+    site_of,
     theme_at,
     visitor_themes_allowed,
 )
 from ..themes.mode import MODE_LABELS, mode_settings
 
 
-def visitor_summary():
-    """The live theme, its mode settings, the offered themes and the schedule."""
-    live = get_active_theme()
+def visitor_summary(request=None):
+    """The live theme (for the request's domain), its mode settings, the offered
+    themes and the schedule."""
+    live = get_site_theme(request)
     now = timezone.now()
     default_mode, can_switch = mode_settings(live.live_revision) if live else ("auto", True)
     return {
@@ -38,13 +40,13 @@ def visitor_summary():
                 "ends_at": a.ends_at.isoformat() if a.ends_at else None,
                 "running": a.is_running(now),
             }
-            for a in scheduled_assignments()
+            for a in scheduled_assignments(site_of(request))
             if a.ends_at is None or a.ends_at > now
         ],
     }
 
 
-def visitor_view(theme_slug="", day=""):
+def visitor_view(theme_slug="", day="", request=None):
     """The published CSS visitors get: {"theme", "css"}.
 
     `theme_slug` picks an offered theme (as a visitor's choice would); `day`
@@ -61,9 +63,9 @@ def visitor_view(theme_slug="", day=""):
         except ValueError as error:
             raise ValidationError("Use a date like 2026-12-10.") from error
         when = timezone.make_aware(datetime.combine(date, time(12)))
-        theme = theme_at(when)
+        theme = theme_at(when, site_of(request))
     else:
-        theme = get_active_theme()
+        theme = get_site_theme(request)
     if theme is None or theme.live_revision is None:
         return {"theme": None, "css": ""}
     return {"theme": theme.name, "css": render_css(theme.live_revision)}

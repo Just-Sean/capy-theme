@@ -96,6 +96,25 @@ needs the `publish_theme` permission, like activating.
 The cached theme expires at the next start or end, so schedules switch on time
 even with a long `CAPY_THEME_CACHE_SECONDS`.
 
+## Multiple sites
+
+One install can serve several domains (for example `shop.example.com` and
+`blog.example.com`), each with its own theme:
+
+1. Activate a theme as usual (the Activate action): it's the theme for **every
+   site**.
+2. In **Admin → Capy Theme → Site themes → Add**, give a domain and the theme it
+   should use. Only that domain uses it; every other domain uses the theme for
+   every site. Needs the `publish_theme` permission.
+
+The domain comes from the request (`request.get_host()`), without the port and in
+lower case, so it must be in the project's `ALLOWED_HOSTS`. A scheduled theme can
+also be limited to one domain (its **Site** field); on that domain it wins while
+it's running. A domain's own theme or running schedule wins over the ones for
+every site. The live editor, **See it as a visitor**, the API and the downloads
+all follow the domain they're opened on. From code:
+`capy_theme.themes.active.activate(theme, site="shop.example.com")`.
+
 ## Visitor theme picker
 
 Visitors can choose among themes the operator offers:

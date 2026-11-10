@@ -1,18 +1,25 @@
 """Which theme is live: the default assignment and scheduled ones."""
 
+import re
+
 from django.core.exceptions import ValidationError
 from django.db import models
 
 from .theme import Theme
 
+# A domain such as example.com or localhost, or an IPv6 address in brackets.
+DOMAIN = re.compile(
+    r"[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*|\[[0-9a-f:.]+\]"
+)
+
 
 class ThemeAssignment(models.Model):
-    """Which theme is active on the site.
+    """Which theme is active, on every site or on one domain.
 
     The default assignment has no dates; change it with active.activate().
     Scheduled assignments have a start and/or end date and win while they're
-    running (start ≤ now < end), e.g. a holiday theme. The site field is for
-    multiple sites (8.2) and is ignored until then.
+    running (start ≤ now < end), e.g. a holiday theme. An assignment with a site
+    (domain) applies only there and wins over the ones for every site.
     """
 
     theme = models.ForeignKey(Theme, on_delete=models.CASCADE, related_name="assignments")
@@ -50,6 +57,11 @@ class ThemeAssignment(models.Model):
 
     def clean(self):
         super().clean()
+        self.site = self.site.strip().lower()
+        if self.site and not DOMAIN.fullmatch(self.site):
+            raise ValidationError(
+                {"site": "Just the domain, e.g. example.com (no https://, path or port)."}
+            )
         if self.starts_at and self.ends_at and self.ends_at <= self.starts_at:
             raise ValidationError({"ends_at": "The end must be after the start."})
         if self.theme_id and self.theme.live_revision_id is None:
@@ -63,3 +75,12 @@ class ScheduledTheme(ThemeAssignment):
         proxy = True
         verbose_name = "scheduled theme"
         verbose_name_plural = "theme schedule"
+
+
+class SiteTheme(ThemeAssignment):
+    """The admin's view of the themes for particular domains (multiple sites)."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "site theme"
+        verbose_name_plural = "site themes"

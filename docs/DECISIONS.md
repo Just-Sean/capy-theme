@@ -1287,3 +1287,23 @@ Recommended (made while building autonomously).
   it; imports drop it unless the importer has the permission.
 - **No CSS filtering:** it's served as a separate `text/css` file (so it can't
   break out into HTML), and the permission is the safeguard; the docs say so.
+
+## 8.2 Multiple sites (#60)
+
+Recommended (made while building autonomously).
+
+- **The request's domain** (`get_host()`, without port, lower case) picks the
+  assignment; no dependency on Django's sites framework, so projects don't need
+  `django.contrib.sites`.
+- **Order:** the domain's own running schedule, then its own theme, then the
+  schedule for every site, then the theme for every site. A domain with its own
+  theme keeps it during a site-wide schedule (a site-wide holiday theme doesn't
+  override a shop's own theme); give that domain its own schedule if it should
+  change too.
+- **Cache per domain** with a shared generation key: clearing bumps the
+  generation, so every domain's cached state is dropped at once without knowing
+  which domains exist.
+- **Admin:** a Site themes page (proxy model, publish permission) and a Site field
+  on the schedule. Domains are checked to be bare domains.
+- **Visitor themes stay site-wide** (offered themes aren't per domain): the plan
+  doesn't ask for it, and it keeps the picker simple.
