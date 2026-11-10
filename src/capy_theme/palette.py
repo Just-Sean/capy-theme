@@ -50,7 +50,7 @@ def from_logo(file, count=4):
         with Image.open(file) as image:
             image = image.convert("RGBA")
             image.thumbnail((96, 96))
-            pixels = [(r, g, b) for r, g, b, a in image.getdata() if a > 128]
+            pixels = [(r, g, b) for r, g, b, a in image.get_flattened_data() if a > 128]
     except OSError, ValueError:
         return None
     if not pixels:
