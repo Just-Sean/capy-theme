@@ -11,8 +11,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Theme components</title>
   <link rel="stylesheet" href="{% static 'capy_theme/editor/components.css' %}">
+  {% if can_edit_custom_css %}
+    <link rel="stylesheet" href="{% url 'capy_theme:editor_custom_css' theme.pk %}">
+  {% elif published_custom_css %}
+    <link rel="stylesheet" href="{{ published_custom_css }}">
+  {% endif %}
 </head>
 <body class="bg-base-200 p-4" id="components">
+  <main>
+  <h1 class="sr-only">Theme components</h1>
+  <div class="mb-4 space-y-1 rounded-box bg-base-100 p-4 text-sm text-base-content" data-capy-components-about>
+    <p>
+      Showing the draft of <strong>{{ theme.name }}</strong>{% if domain %} on <strong>{{ domain }}</strong>{% endif %}.
+      {% if site_theme %}Visitors on this domain see
+        <strong>{{ site_theme.name }}</strong>{% if editing_site_theme %} (this theme){% endif %}.
+      {% else %}No theme is live on this domain yet.{% endif %}
+    </p>
+    {% if can_edit_custom_css %}
+      {% if custom_selectors %}
+        <p>The draft's custom CSS is applied here. It styles: {% for selector in custom_selectors %}<code>{{ selector }}</code>{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+      {% else %}
+        <p>No custom CSS in the draft (or it's switched off).</p>
+      {% endif %}
+    {% elif published_custom_css %}
+      <p>The published custom CSS is applied here.</p>
+    {% endif %}
+  </div>
   <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
     {% for mode in modes %}
       <section data-theme="capy-{{ mode }}" aria-label="{{ mode|capfirst }} mode"
@@ -22,5 +46,6 @@
       </section>
     {% endfor %}
   </div>
+  </main>
 </body>
 </html>

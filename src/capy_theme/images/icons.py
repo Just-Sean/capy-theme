@@ -12,6 +12,7 @@ import base64
 import hashlib
 import io
 import json
+import re
 from pathlib import Path
 
 from django.core.files.base import ContentFile
@@ -160,3 +161,12 @@ def _svg(light, dark, padding, background):
         ]
     parts.append("</svg>")
     return "".join(parts).encode()
+
+
+def square_preview(asset, size, padding, background):
+    """PNG bytes of an icon image as an icon, for previews (nothing is stored).
+
+    `background` is used only if it's a #rrggbb colour; otherwise transparent.
+    """
+    colour = background if re.fullmatch(r"#[0-9a-fA-F]{6}", background or "") else None
+    return _png(_square(_open({"file": asset.original.name}), size, padding, colour))

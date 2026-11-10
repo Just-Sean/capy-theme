@@ -1323,3 +1323,28 @@ Recommended (made while building autonomously).
   `CAPY_THEME_FONT_MAX_BYTES`.
 - **Kept as they were:** the built-in themes, cache time, API mode, visitor themes
   and editor button settings; each now has a test in `tests/test_project_settings.py`.
+
+## 8.4 Editor Components view: final pass (#62)
+
+Recommended (made while building autonomously).
+
+- **"Every setting shows" is a test:** it goes through every control the editor
+  offers and checks that changing it changes either the CSS the view gets or the
+  view's page. It found two real gaps, now fixed: unsaved image choices (the view
+  showed only the saved draft) and the icon's background, padding and dark icon
+  (only visible after publishing).
+- **Unsaved choices in the address:** the view takes the editor's unsaved image,
+  logo and icon settings (`?changes=`, applied with the same `apply_changes` as
+  the preview, nothing written) and reloads when they change; colours and shape
+  still update instantly through the pushed CSS.
+- **Icon preview made on the fly** (`/theme/editor/<id>/icon-preview.png`), never
+  stored.
+- **Custom CSS:** the draft's custom CSS (and its selectors) only for people who
+  may edit it, since the draft isn't public; others get the published file.
+- **Accessibility check without Lighthouse:** Lighthouse and axe-core aren't
+  installed and adding them needs Sean's approval, so the check used Chrome's own
+  tools (computed WCAG contrast of every visible text, the accessibility tree for
+  unnamed controls, page basics) in light and dark. It found unlabelled progress
+  bars (fixed). The remaining contrast results are daisyUI's built-in colours in
+  the test theme (e.g. secondary 3.04:1), which the view is meant to show as they
+  are and the editor already flags.

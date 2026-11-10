@@ -4,16 +4,14 @@ import json
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from django.http import HttpResponseForbidden, JsonResponse
-from django.shortcuts import get_object_or_404, render
-from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_GET, require_POST
 
 from ..images.uploads import add_asset, asset_data
 from ..models import Theme
 from ..themes.publishing import NothingToPublish, publish
 from .access import can_edit, can_publish
-from .images_panel import images as images_panel
 from .preview import preview
 from .saving import save_draft, suggestions
 from .state import draft_state
@@ -156,42 +154,6 @@ def editor_upload(request, pk):
     return JsonResponse(
         {"uploaded": asset_data(asset), "assets": [asset_data(a) for a in theme.assets.all()]}
     )
-
-
-# The Components view's samples, in order (templates/capy_theme/editor/components/).
-COMPONENTS = [
-    "text",
-    "buttons",
-    "badges",
-    "alerts",
-    "cards",
-    "tabs",
-    "table",
-    "forms",
-    "progress",
-    "modal",
-    "images",
-]
-
-
-@xframe_options_sameorigin
-def editor_components(request, pk):
-    """Every daisyUI component in light and dark, plus the theme's images, for the
-    editor's Components view.
-
-    Shown in an iframe beside the editor (so only same-site framing is allowed).
-    The images come from the saved draft. Staff who can edit themes only.
-    """
-    if not can_edit(request.user):
-        return HttpResponseForbidden("You can't edit themes.")
-    theme = get_object_or_404(Theme.objects.select_related("live_revision"), pk=pk)
-    context = {
-        "modes": ["light", "dark"],
-        "sections": COMPONENTS,
-        "images_panel": images_panel(theme),
-        "site_name": theme.settings.get("site_name", ""),
-    }
-    return render(request, "capy_theme/editor/components.html", context)
 
 
 @require_GET

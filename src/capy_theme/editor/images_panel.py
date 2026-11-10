@@ -79,6 +79,15 @@ def images(theme):
         if urls
         else []
     )
+    # The icon image chosen in the draft, for a live preview of its settings.
+    icon_settings = theme.settings.get("icon", {})
+    result["icon_preview"] = {
+        "asset": theme.settings.get("images", {}).get("icon", {}).get("light"),
+        # The dark icon is only used by the browser-tab icon in dark mode.
+        "dark_asset": theme.settings.get("images", {}).get("icon", {}).get("dark"),
+        "background": icon_settings.get("background", ""),
+        "padding": icon_settings.get("padding", 0),
+    }
     share = sharing_image(snapshot)
     result["sharing"] = {
         "image": url(share["file"]) if share else "",

@@ -12,6 +12,29 @@
   var view = null;
   var frame = null;
   var toggle = null;
+  var loadedKey = null;
+
+  // The unsaved settings the page itself shows (images, logo heights, icon); the
+  // rest (colours, shape, fonts) only needs the CSS, which pushCss() swaps.
+  function imageSettings() {
+    var settings = (editor.changes || {}).settings || {};
+    return JSON.stringify({ settings: { images: settings.images || {}, logo: settings.logo || {}, icon: settings.icon || {} } });
+  }
+
+  function frameUrl() {
+    loadedKey = imageSettings();
+    return editor.mount.getAttribute("data-components-url") + "?changes=" + encodeURIComponent(loadedKey);
+  }
+
+  // Reload the page when an image choice changes (debounced while typing).
+  var reloadTimer = null;
+  function reloadIfImagesChanged() {
+    if (!frame || !view || view.hidden || imageSettings() === loadedKey) return;
+    clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(function () {
+      frame.src = frameUrl();
+    }, 400);
+  }
 
   // Give the iframe's page the draft's CSS: a stylesheet made in the iframe's own
   // window and kept on its document (the window outlives the blank page an
@@ -28,7 +51,7 @@
 
   function build() {
     if (view) return view;
-    frame = el("iframe", { title: "Theme components in the draft theme", src: editor.mount.getAttribute("data-components-url") });
+    frame = el("iframe", { title: "Theme components in the draft theme", src: frameUrl() });
     frame.addEventListener("load", pushCss);
     var close = el("button", { type: "button", text: "Close components" });
     close.addEventListener("click", hide);
@@ -47,6 +70,7 @@
   function show() {
     build().hidden = false;
     pushCss();
+    reloadIfImagesChanged();
     if (toggle) toggle.setAttribute("aria-expanded", "true");
   }
 
@@ -61,7 +85,10 @@
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && view && !view.hidden) hide();
   });
-  document.addEventListener("capy-editor:preview", pushCss);
+  document.addEventListener("capy-editor:preview", function () {
+    pushCss();
+    reloadIfImagesChanged();
+  });
   document.addEventListener("capy-editor:loaded", pushCss);
   document.addEventListener("capy-editor:view", pushCss);
   // After Save draft or Publish, reload it so its images section is up to date.

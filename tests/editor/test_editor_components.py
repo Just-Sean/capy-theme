@@ -6,7 +6,7 @@ import pytest
 from django.contrib.auth.models import Permission
 from django.urls import reverse
 
-from capy_theme.editor.views import COMPONENTS
+from capy_theme.editor.components_view import COMPONENTS
 from capy_theme.models import Theme
 
 pytestmark = pytest.mark.django_db
