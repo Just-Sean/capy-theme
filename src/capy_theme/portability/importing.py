@@ -15,12 +15,12 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import transaction
 from jsonschema import Draft7Validator
 
+from .. import conf
 from ..fonts.models import Font, FontFile
 from ..fonts.uploads import prepare
 from ..images.uploads import add_asset
 from ..themes.models.theme import Theme
 
-MAX_BYTES = 50 * 1024 * 1024  # all files in the zip, unpacked
 SCHEMA = json.loads(Path(__file__).with_name("theme_file.schema.json").read_text(encoding="utf-8"))
 
 
@@ -51,8 +51,9 @@ def _open(upload):
         archive = zipfile.ZipFile(upload)
     except zipfile.BadZipFile as error:
         raise ValidationError("That isn't a zip file.") from error
-    if sum(info.file_size for info in archive.infolist()) > MAX_BYTES:
-        raise ValidationError(f"The export is too big (over {MAX_BYTES // 1024 // 1024} MB).")
+    limit = conf.get("CAPY_THEME_IMPORT_MAX_BYTES")  # all files in the zip, unpacked
+    if sum(info.file_size for info in archive.infolist()) > limit:
+        raise ValidationError(f"The export is too big (over {limit // 1024 // 1024} MB).")
     return archive
 
 

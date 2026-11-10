@@ -179,7 +179,7 @@ Move a theme between sites (for example from staging to production):
 
 The import arrives as a new, **unpublished draft**; publish and activate it when
 it looks right. Everything is checked first: the zip's size (50 MB unpacked at
-most) and file names, `theme.json` against
+most, or `CAPY_THEME_IMPORT_MAX_BYTES`) and file names, `theme.json` against
 `src/capy_theme/portability/theme_file.schema.json`, the base themes and settings
 like any theme, images through the same checks as uploads, and font files like
 font uploads. Fonts already in the library (same family name) are reused. If a

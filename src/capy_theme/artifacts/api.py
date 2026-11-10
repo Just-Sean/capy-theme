@@ -16,11 +16,11 @@ import hashlib
 import json
 
 from django.apps import apps
-from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpResponseNotModified, JsonResponse
 from django.views.decorators.http import require_GET
 
+from .. import conf
 from .build import get_artifacts
 
 API_MODES = ("auto", "drf", "django")
@@ -59,7 +59,7 @@ def theme_api(request):
 
 def api_mode():
     """ "drf" or "django": which view serves the API in this project."""
-    mode = getattr(settings, "CAPY_THEME_API", "auto")
+    mode = conf.get("CAPY_THEME_API")
     if mode not in API_MODES:
         raise ImproperlyConfigured(
             f"CAPY_THEME_API must be one of {', '.join(API_MODES)}, not {mode!r}."

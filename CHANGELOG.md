@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Project settings:** all in `capy_theme/conf.py`, each tested and listed in the
+  README. New: `CAPY_THEME_CUSTOM_CSS`, `CAPY_THEME_IMAGE_MAX_BYTES`,
+  `CAPY_THEME_IMPORT_MAX_BYTES`.
 - **Multiple sites:** **Site themes** in the admin give a domain its own theme;
   schedules can be limited to one domain. Everything follows the request's domain.
 - **Custom CSS:** a CSS box on the theme (permission `edit_custom_css`), published

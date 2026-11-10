@@ -1307,3 +1307,19 @@ Recommended (made while building autonomously).
   on the schedule. Domains are checked to be bare domains.
 - **Visitor themes stay site-wide** (offered themes aren't per domain): the plan
   doesn't ask for it, and it keeps the picker simple.
+
+## 8.3 Project settings (#61)
+
+Recommended (made while building autonomously).
+
+- **One place for every setting:** `capy_theme/conf.py` holds the names and
+  defaults, and all code reads them with `conf.get()`. A test checks that the
+  README's table lists exactly these settings with their defaults.
+- **New, from the issue's list:** "allow custom CSS" → `CAPY_THEME_CUSTOM_CSS`
+  (False: never loaded, and the admin section is hidden even from superusers);
+  "upload limits" → `CAPY_THEME_IMAGE_MAX_BYTES` (a cap on top of each slot's
+  limit, so it can only lower them) and `CAPY_THEME_IMPORT_MAX_BYTES` (the 50 MB
+  import limit, now changeable). Font uploads already had
+  `CAPY_THEME_FONT_MAX_BYTES`.
+- **Kept as they were:** the built-in themes, cache time, API mode, visitor themes
+  and editor button settings; each now has a test in `tests/test_project_settings.py`.

@@ -1,8 +1,8 @@
 """Adding the live editor to a page (through {% theme_head %})."""
 
-from django.conf import settings as django_settings
 from django.template.loader import render_to_string
 
+from .. import conf
 from .access import can_edit, editor_theme
 from .state import editor_urls
 
@@ -22,7 +22,7 @@ def mount(request):
         "editor": {
             "theme": theme,
             "urls": editor_urls(theme),
-            "floating_button": getattr(django_settings, "CAPY_THEME_EDITOR_BUTTON", True),
+            "floating_button": conf.get("CAPY_THEME_EDITOR_BUTTON"),
         }
     }
     return render_to_string("capy_theme/editor/mount.html", context, request=request)

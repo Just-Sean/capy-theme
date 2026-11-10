@@ -14,11 +14,11 @@ between processes.
 
 from uuid import uuid4
 
-from django.conf import settings
 from django.core.cache import cache
 from django.http.request import split_domain_port
 from django.utils import timezone
 
+from .. import conf
 from ..models import Theme, ThemeAssignment
 
 CACHE_KEY = "capy_theme:active_theme"
@@ -68,7 +68,7 @@ def site_of(request):
 
 def visitor_themes_allowed():
     """CAPY_THEME_VISITOR_THEMES: whether visitors may choose a theme (default True)."""
-    return getattr(settings, "CAPY_THEME_VISITOR_THEMES", True)
+    return conf.get("CAPY_THEME_VISITOR_THEMES")
 
 
 def _state(site):
@@ -179,4 +179,4 @@ def _generation():
 
 
 def cache_seconds():
-    return getattr(settings, "CAPY_THEME_CACHE_SECONDS", 300)
+    return conf.get("CAPY_THEME_CACHE_SECONDS")

@@ -143,7 +143,8 @@ so it can override anything in it. At most 100,000 characters.
   editor never shows or changes it, and imports leave it out unless the person
   importing has the permission.
 - **Switching it off:** untick **Use the custom CSS** and publish; the CSS is kept
-  but not loaded.
+  but not loaded. A project can switch custom CSS off entirely with
+  `CAPY_THEME_CUSTOM_CSS = False`.
 - It's CSS, not code, but it can still change any page's look and load images
   from other sites, so give the permission only to people you'd trust with the
   site's design.

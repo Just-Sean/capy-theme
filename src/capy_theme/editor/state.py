@@ -12,7 +12,7 @@ from ..fonts.models import Font
 from ..images.icons import SETTINGS as ICON_SETTINGS
 from ..images.logos import FALLBACK, HEIGHTS, LOGO_SLOTS
 from ..images.slots import NO_SVG, SLOTS
-from ..images.uploads import asset_data
+from ..images.uploads import asset_data, byte_limit
 from ..themes.catalogue import get_builtin_themes
 from .access import can_publish
 from .preview import preview
@@ -74,12 +74,12 @@ def controls():
             {
                 "name": name,
                 "label": lab,
-                "max_bytes": max_bytes,
+                "max_bytes": byte_limit(name),
                 "max_pixels": px,
                 "help": text,
                 "svg": name not in NO_SVG,
             }
-            for name, (lab, max_bytes, px, text) in SLOTS.items()
+            for name, (lab, _limit, px, text) in SLOTS.items()
         ],
         "logo_slots": [
             {

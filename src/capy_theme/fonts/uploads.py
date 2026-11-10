@@ -11,11 +11,12 @@ import struct
 import zlib
 from pathlib import Path
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from fontTools import subset as subsetter
 from fontTools.ttLib import TTFont, TTLibError
+
+from .. import conf
 
 # Character sets fonts can be trimmed to, from subsets.json: {name: Unicode ranges}.
 SUBSETS = json.loads(Path(__file__).with_name("subsets.json").read_text(encoding="utf-8"))[
@@ -24,7 +25,6 @@ SUBSETS = json.loads(Path(__file__).with_name("subsets.json").read_text(encoding
 SUBSET_CHOICES = [("all", "All characters (don't trim)")] + [
     (name, name.replace("-", " ").capitalize()) for name in SUBSETS
 ]
-DEFAULT_MAX_BYTES = 5 * 1024 * 1024
 
 # What fontTools raises for files that aren't fonts (or are broken ones).
 PARSE_ERRORS = (
@@ -41,7 +41,7 @@ PARSE_ERRORS = (
 
 
 def max_bytes():
-    return getattr(settings, "CAPY_THEME_FONT_MAX_BYTES", DEFAULT_MAX_BYTES)
+    return conf.get("CAPY_THEME_FONT_MAX_BYTES")
 
 
 def codepoints(unicode_range):
