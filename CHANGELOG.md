@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Multiple sites:** **Site themes** in the admin give a domain its own theme;
+  schedules can be limited to one domain. Everything follows the request's domain.
 - **Custom CSS:** a CSS box on the theme (permission `edit_custom_css`), published
   with it and served as its own file after the theme stylesheet, with an on/off switch.
 

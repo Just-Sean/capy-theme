@@ -32,7 +32,7 @@ def editor_urls(theme):
     }
 
 
-def draft_state(theme, user):
+def draft_state(theme, user, request=None):
     """Everything the editor needs about a theme's draft, as JSON-ready data."""
     return {
         "id": theme.pk,
@@ -47,7 +47,7 @@ def draft_state(theme, user):
         "urls": editor_urls(theme),
         "assets": [asset_data(a) for a in theme.assets.all()],
         "controls": controls(),
-        "visitors": visitor_summary(),
+        "visitors": visitor_summary(request),
         **preview(theme, {}),
     }
 

@@ -96,7 +96,12 @@ def test_deleting_the_active_theme_leaves_none_active():
 
 def test_cache_time_defaults_to_5_minutes_and_follows_the_setting(settings, monkeypatch):
     timeouts = []
-    monkeypatch.setattr(active.cache, "set", lambda key, value, timeout: timeouts.append(timeout))
+
+    def record(key, value, timeout):
+        if key != active.GENERATION_KEY:  # the generation marker never expires
+            timeouts.append(timeout)
+
+    monkeypatch.setattr(active.cache, "set", record)
     get_active_theme()
     settings.CAPY_THEME_CACHE_SECONDS = 60
     get_active_theme()
