@@ -21,7 +21,7 @@ class NotPublished(Exception):
 def get_active_theme(request=None):
     """Return the active Theme (with its live revision loaded), or None.
 
-    `request` isn't used yet; multiple sites (8.2) and draft previews (5.3)
+    `request` isn't used yet; multiple sites (8.2) and editing on any page (3.6)
     will use it.
     """
     cached = cache.get(CACHE_KEY)
