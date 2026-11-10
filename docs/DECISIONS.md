@@ -1211,3 +1211,24 @@ Recommended (made while building autonomously).
   also proves the schema rejects broken tokens.
 - **Light and dark as groups** (`light.color.primary`), with fonts and type
   shared, rather than one file per mode: one download has everything.
+
+## 7.3 Theme export and import (#54)
+
+Recommended (made while building autonomously).
+
+- **Exports the draft** (what the admin sees and edits), not only the published
+  revision, so unpublished work can be moved too; the import arrives unpublished.
+- **Keys instead of ids** for fonts and images, mapped on import.
+- **Fonts with the same family name are reused** (family names are unique in the
+  library); other fonts are created from the export's files.
+- **Generated files aren't exported** (logo copies, icons): images go through the
+  normal upload checks again, which remakes the copies, and icons are made on
+  publish.
+- **Not exported:** site-level choices that aren't the theme's look ("Offer to
+  visitors", schedules, which theme is active).
+- **Safety:** a schema for `theme.json` (a JSON data file), only `fonts/*.woff2` and
+  `images/*` paths with safe characters, 50 MB unpacked at most, every file
+  checked like an upload, all in one transaction, and stored files deleted again
+  if anything fails.
+- **Checked on the demo** with two separate databases: exported from one, imported
+  into a fresh one, published: identical stylesheet (apart from file names).

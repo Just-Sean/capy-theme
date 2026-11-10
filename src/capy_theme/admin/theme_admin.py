@@ -13,6 +13,7 @@ from ..models import Theme
 from ..themes.active import NotPublished, activate, get_active_theme
 from .fieldsets import THEME_FIELDSETS
 from .form_colors import _pair
+from .import_export import ImportExportMixin
 from .inlines import ThemeAssetInline, ThemeRevisionInline
 from .publish_pages import PublishPagesMixin
 from .theme_form import ThemeForm
@@ -24,9 +25,10 @@ def edit_live_url(theme_id):
 
 
 @admin.register(Theme)
-class ThemeAdmin(PublishPagesMixin, admin.ModelAdmin):
+class ThemeAdmin(ImportExportMixin, PublishPagesMixin, admin.ModelAdmin):
     form = ThemeForm
     change_form_template = "capy_theme/admin/theme_change_form.html"
+    change_list_template = "capy_theme/admin/theme_change_list.html"
     list_display = [
         "name",
         "slug",
