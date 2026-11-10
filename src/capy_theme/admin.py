@@ -143,11 +143,13 @@ class ThemeAdmin(admin.ModelAdmin):
             else "The draft matches the live revision."
         )
         return format_html(
-            "Live: revision {} (published {} by {}). {}",
+            'Live: revision {} (published {} by {}). {} <a href="{}" target="_blank">'
+            "View its stylesheet</a>",
             live.number,
             live.published_at.strftime("%Y-%m-%d %H:%M"),
             live.published_by or "unknown",
             changes,
+            reverse("capy_theme:theme_css", args=[live.css_version]),
         )
 
     # The Publish page

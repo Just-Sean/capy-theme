@@ -37,7 +37,11 @@ def test_publish_creates_revision_with_who_and_when(theme, user):
     assert revision.published_by == user
     assert revision.published_at is not None
     assert revision.note == "First version"
-    assert revision.snapshot == {"light_base": "light", "dark_base": "dark", "settings": {}}
+    assert revision.snapshot["light_base"] == "light"
+    assert revision.snapshot["dark_base"] == "dark"
+    assert revision.snapshot["settings"] == {}
+    assert len(revision.snapshot["light_values"]) == 28
+    assert len(revision.snapshot["dark_values"]) == 28
     assert not theme.has_unpublished_changes
 
 
