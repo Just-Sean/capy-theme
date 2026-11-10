@@ -423,6 +423,29 @@ Every change shows on the page straight away (in your browser only).
   get every light-mode colour as hex in `theme.email_colors`, e.g.
   `{{ theme.email_colors.primary }}` or `{{ theme.email_colors.base_100 }}`.
 
+### Fonts
+
+Fonts live in a shared **font library** (admin → Capy Theme → **Fonts**): each
+font has a family name, a source, a fallback stack and a licence note, and its
+WOFF2 files (one per weight and style, optionally per character subset). Any
+theme can use any font.
+
+A theme chooses fonts for four roles, in the **Fonts** section of its admin page
+or in the live editor:
+
+| Role | Applies to | CSS |
+| --- | --- | --- |
+| Body text | the page's text | `--font-sans` (Tailwind's default) and `body` |
+| Headings | `h1`–`h6` | `--capy-font-heading` |
+| Monospace | `code`, `kbd`, `samp`, `pre` | `--font-mono` |
+| Display | elements with the `capy-display` class | `--capy-font-display` |
+
+Roles left on "Default" use the project's own fonts. The stylesheet adds an
+`@font-face` rule (with `font-display: swap`) for each file. The element rules
+are in `@layer base`, so a project's own utility classes, like `font-serif`, still
+win. When a theme is published, its fonts' details and file URLs are copied into
+the revision, so editing the library later can't change a published theme.
+
 ### Shape and effects
 
 The **Shape and effects** section overrides daisyUI's shape settings, for both
@@ -613,7 +636,7 @@ straight to `main`:
 | --- | --- |
 | `src/capy_theme/` | The Django app that projects install |
 | `src/capy_theme/apps.py` | The app's name, label and admin title |
-| `src/capy_theme/models.py` | Database models: `Theme` (the draft: name, slug, light and dark base, `settings` overrides, and its live revision) `ThemeRevision` (a published copy of a theme's look) and `ThemeAssignment` (which theme is active) |
+| `src/capy_theme/models.py` | Database models: `Font` and `FontFile` (the font library), `Theme` (the draft: name, slug, light and dark base, `settings` overrides, and its live revision) `ThemeRevision` (a published copy of a theme's look) and `ThemeAssignment` (which theme is active) |
 | `src/capy_theme/stylesheet.py` | Writes a published revision out as CSS variables, and makes its version hash |
 | `src/capy_theme/views.py` | The stylesheet view (`/theme/<version>.css`), the showcase (`/theme/showcase/`) and the mode switch (`/theme/mode/<mode>/`) |
 | `src/capy_theme/urls.py` | The module's URLs, included by projects under `/theme/` |
@@ -632,6 +655,7 @@ straight to `main`:
 | `src/capy_theme/templates/capy_theme/editor/mount.html` | Loads the editor on a page for staff who can edit |
 | `src/capy_theme/palette.py` | Colour suggestions from a primary colour or from the logo |
 | `src/capy_theme/history.py` | Comparing two revisions and restoring an old one |
+| `src/capy_theme/fonts.py` | Font roles, copying fonts into revisions, and the `@font-face` and font CSS |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |

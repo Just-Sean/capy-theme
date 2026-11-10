@@ -259,6 +259,29 @@
     return button;
   }
 
+  // Fonts
+
+  function fontSection() {
+    var rows = spec.font_roles.map(function (role) {
+      var select = el("select", { "data-capy-font": role.name, "aria-label": role.label + " font" });
+      select.appendChild(el("option", { value: "", text: "Default" }));
+      spec.fonts.forEach(function (font) {
+        select.appendChild(el("option", { value: String(font.id), text: font.family + " (" + font.source + ")" }));
+      });
+      select.addEventListener("change", function () {
+        var fonts = (changes.settings.fonts = changes.settings.fonts || {});
+        if (select.value === "") delete fonts[role.name];
+        else fonts[role.name] = Number(select.value);
+        update();
+      });
+      return el("label", { class: "capy-editor-field" }, [el("span", { text: role.label }), select]);
+    });
+    var note = spec.fonts.length
+      ? null
+      : el("p", { class: "capy-editor-note", text: "The font library is empty. Add fonts in the admin under Capy Theme → Fonts." });
+    return el("section", { class: "capy-editor-section" }, [el("h3", { text: "Fonts" }), note].concat(rows));
+  }
+
   // Shape
 
   function shapeSection() {
@@ -330,6 +353,11 @@
       if (document.activeElement !== input) input.value = name in shape ? shape[name] : "";
       input.placeholder = (latest.values.light[size.variable] || "").replace(size.unit, "");
     });
+    var fonts = changes.settings.fonts || {};
+    panel.querySelectorAll("[data-capy-font]").forEach(function (select) {
+      var role = select.getAttribute("data-capy-font");
+      select.value = role in fonts ? String(fonts[role]) : "";
+    });
     panel.querySelectorAll("[data-capy-effect]").forEach(function (select) {
       var name = select.getAttribute("data-capy-effect");
       select.value = name in shape ? (shape[name] ? "on" : "off") : "";
@@ -344,6 +372,7 @@
       settings: {
         colors: JSON.parse(JSON.stringify(state.settings.colors || {})),
         shape: JSON.parse(JSON.stringify(state.settings.shape || {})),
+        fonts: JSON.parse(JSON.stringify(state.settings.fonts || {})),
       },
     };
     editor.changes = normalized();
@@ -355,6 +384,7 @@
       el("section", { class: "capy-editor-section" }, [el("h3", { text: "Base themes" }), baseSelect("light"), baseSelect("dark")])
     );
     container.appendChild(colorSection());
+    container.appendChild(fontSection());
     container.appendChild(shapeSection());
     container.appendChild(actions(state));
     fill();
