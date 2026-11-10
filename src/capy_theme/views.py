@@ -22,6 +22,7 @@ from .editor import (
     suggestions,
 )
 from .images import add_asset, asset_data
+from .manifest import build as build_manifest
 from .mode import COOKIE_MAX_AGE, COOKIE_NAME, MODES, mode_settings
 from .models import Theme, ThemeRevision
 from .publishing import NothingToPublish, publish
@@ -36,6 +37,19 @@ def theme_css(request, version):
     revision = get_object_or_404(ThemeRevision.objects.select_related("theme"), css_version=version)
     response = HttpResponse(render_css(revision), content_type="text/css; charset=utf-8")
     response["Cache-Control"] = f"public, max-age={ONE_YEAR}, immutable"
+    return response
+
+
+def manifest(request):
+    """The active theme's web app manifest (JSON). 404 if no theme is published."""
+    theme = get_active_theme(request)
+    if theme is None or theme.live_revision is None:
+        raise Http404("No theme is active.")
+    response = JsonResponse(
+        build_manifest(theme.live_revision), content_type="application/manifest+json"
+    )
+    # A short cache: the URL stays the same when the theme is published again.
+    response["Cache-Control"] = "public, max-age=300"
     return response
 
 
