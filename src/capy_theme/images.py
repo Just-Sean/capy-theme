@@ -2,6 +2,7 @@
 
 Every upload is checked by its content (not its name), limited per slot, and
 re-encoded without EXIF and other metadata (camera details, GPS location).
+SVGs are cleaned instead (svg.py): scripts, event handlers and links removed.
 """
 
 import io
@@ -10,6 +11,8 @@ from pathlib import Path
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from PIL import Image, ImageOps, UnidentifiedImageError
+
+from .svg import clean_svg
 
 MB = 1024 * 1024
 
@@ -64,7 +67,17 @@ def prepare_image(data, name, slot):
             f"The {label.lower()} is too big ({len(data) // 1024} KB; the limit is "
             f"{max_bytes // 1024} KB)."
         )
-    not_an_image = "That file isn't a supported image (PNG, JPEG, WebP or GIF)."
+    not_an_image = "That file isn't a supported image (PNG, JPEG, WebP, GIF or SVG)."
+    if data.lstrip(b"\xef\xbb\xbf \t\r\n").startswith(b"<"):
+        # Text starting with "<": only an SVG can be that. Cleaned, not re-encoded.
+        svg, width, height = clean_svg(data)
+        return {
+            "file": ContentFile(svg, name=f"{Path(name).stem}.svg"),
+            "width": width,
+            "height": height,
+            "content_type": "image/svg+xml",
+            "size": len(svg),
+        }
     try:
         with Image.open(io.BytesIO(data)) as probe:
             probe.verify()  # catches truncated and corrupt files
@@ -80,7 +93,7 @@ def prepare_image(data, name, slot):
     if image.format not in FORMATS:
         raise ValidationError(not_an_image)
     # Checked before decoding, so a huge image is never unpacked into memory.
-    if max(image.size) > max_pixels:
+    if max(image.size) > max_pixels:  # (not for SVGs: they have no pixels)
         raise ValidationError(
             f"The image is {image.width} × {image.height} pixels; the {label.lower()} can be "
             f"at most {max_pixels} pixels wide or high."

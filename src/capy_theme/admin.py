@@ -349,7 +349,8 @@ class ThemeAssetForm(forms.ModelForm):
         fields = ["slot", "mode", "original", "alt_text"]
         labels = {"original": "Image"}
         help_texts = {
-            "original": "PNG, JPEG, WebP or GIF. Location and camera details are removed."
+            "original": "PNG, JPEG, WebP, GIF or SVG. Location and camera details are removed; "
+            "SVGs are cleaned of scripts and links."
         }
 
     def clean(self):
