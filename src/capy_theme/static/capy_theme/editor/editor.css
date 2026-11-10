@@ -132,3 +132,6 @@
 /* Font samples */
 .capy-editor-font-sample { margin: 0 0 0.5rem; padding: 0.25rem 0.4rem; font-size: 1rem; background: #f9fafb; border-radius: 0.25rem; }
 .capy-editor-font-sample[hidden] { display: none; }
+.capy-editor-images { list-style: none; margin: 0.5rem 0 0; padding: 0; }
+.capy-editor-images li { display: flex; align-items: center; gap: 0.5rem; margin: 0.25rem 0; font-size: 0.8rem; }
+.capy-editor-images img { width: 48px; height: 48px; object-fit: contain; background: #f3f4f6; border-radius: 0.25rem; }

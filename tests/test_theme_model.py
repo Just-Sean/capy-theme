@@ -114,6 +114,8 @@ def form_data(**kwargs):
         "dark_base": "dark",
         "settings": "{}",
         # The published-revisions inline's management form (it has no rows here).
+        "assets-TOTAL_FORMS": "0",
+        "assets-INITIAL_FORMS": "0",
         "revisions-TOTAL_FORMS": "0",
         "revisions-INITIAL_FORMS": "0",
         "revisions-MIN_NUM_FORMS": "0",

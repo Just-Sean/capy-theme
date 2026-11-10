@@ -24,6 +24,7 @@ from .colors import (
     to_oklch,
 )
 from .fonts import ROLES, external_stylesheets, preview_stack
+from .images import SLOTS, asset_data
 from .models import Font, Theme
 from .palette import from_logo, from_primary
 from .shape import EFFECTS, SIZES
@@ -62,6 +63,7 @@ def editor_urls(theme):
         "suggestions": reverse("capy_theme:editor_suggestions", args=[theme.pk]),
         "save": reverse("capy_theme:editor_save", args=[theme.pk]),
         "publish": reverse("capy_theme:editor_publish", args=[theme.pk]),
+        "upload": reverse("capy_theme:editor_upload", args=[theme.pk]),
     }
 
 
@@ -78,6 +80,7 @@ def draft_state(theme, user):
         "has_unpublished_changes": theme.has_unpublished_changes,
         "can_publish": can_publish(user),
         "urls": editor_urls(theme),
+        "assets": [asset_data(a) for a in theme.assets.all()],
         "controls": controls(),
         **preview(theme, {}),
     }
@@ -100,6 +103,10 @@ def controls():
         ],
         "effects": [
             {"name": name, "variable": v, "label": lab} for name, (v, lab, _help) in EFFECTS.items()
+        ],
+        "image_slots": [
+            {"name": name, "label": lab, "max_bytes": max_bytes, "max_pixels": px, "help": text}
+            for name, (lab, max_bytes, px, text) in SLOTS.items()
         ],
         "font_roles": [{"name": name, "label": lab} for name, lab in ROLES.items()],
         "type": [
