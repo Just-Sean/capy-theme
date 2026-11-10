@@ -25,7 +25,7 @@ def render_css(revision):
       is in dark mode.
     - Any element with data-theme="capy-light" or "capy-dark" is forced into that
       mode, whatever the device setting. The showcase uses this to show both side
-      by side, and the light/dark toggle (6.1) will too.
+      by side, and the light/dark toggle uses it on <html>.
 
     The rules aren't in a CSS layer, so they override daisyUI's own theme rules
     (which are in `@layer base`) wherever the stylesheet is loaded.

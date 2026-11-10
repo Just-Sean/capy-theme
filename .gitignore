@@ -8,3 +8,4 @@ demo/db.sqlite3
 demo/media/
 demo/.django_tailwind_cli/
 demo/static/css/tailwind.css
+.claude/settings.local.json

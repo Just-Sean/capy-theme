@@ -285,7 +285,7 @@ On a theme's admin page, the **Branding** section has the site name, tagline,
 logo and logo alt text. The site name, tagline and alt text are stored in the
 theme's `settings`. The logo is an image upload (PNG, JPEG, GIF or WebP, checked
 with Pillow) saved under `MEDIA_ROOT/capy_theme/logos/`, at the size it's
-uploaded. Resized and SVG logos come in Phase 4.
+uploaded. Resized and SVG logos come in Phase 5.
 
 Like everything else, branding changes show on the site only after publishing.
 Replacing a logo stores a new file and never overwrites the old one, so older
@@ -322,7 +322,7 @@ theme). capy-theme adds three more, given to users or groups in the admin under
 
 | Permission | Allows |
 | --- | --- |
-| `capy_theme.publish_theme` | Publishing a theme, activating it, and (from 5.4) restoring old revisions. Without it, the Publish button and the Activate action are hidden, and direct requests are refused. |
+| `capy_theme.publish_theme` | Publishing a theme, activating it, and (from 3.7) restoring old revisions. Without it, the Publish button and the Activate action are hidden, and direct requests are refused. |
 | `capy_theme.edit_custom_css` | Editing a theme's custom CSS (from 8.1). |
 | `capy_theme.import_theme` | Importing themes (from 7.3). |
 

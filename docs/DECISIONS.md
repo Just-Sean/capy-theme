@@ -314,3 +314,26 @@ Recommended (made while building):
 - There's no Node.js here, so the generated script was checked by parsing it with
   `esprima` (run in a throwaway environment, not added to the project) for both
   settings combinations, and by the end-to-end check on the demo server.
+
+## Plan reordered after v0.1.0 (#95)
+
+All chosen by Sean, after testing v0.1.0 and asking for a live edit mode.
+
+- **A live editor is the main way to edit a theme's look:** a panel on top of
+  the real page, where every change shows instantly. The admin form stays as a
+  plain fallback.
+- **It comes straight after colours** (new Phase 3, was Phase 5). Fonts (now 4)
+  and images (now 5) add their controls straight into it, instead of building
+  admin widgets the editor would replace.
+- **Phase 2 is the colours "engine":** data, colour maths and contrast on the
+  server, with plain admin fields. The colour picker, contrast badges and palette
+  suggestions (2.5, now 3.4) are in the editor.
+- **The editor starts on the showcase**, then works on any page (3.6).
+- **Data safety:** derived values (text colours, contrast) come from the server
+  with the same code as publishing (3.2). Nothing is stored until Save draft,
+  and nothing reaches visitors until Publish.
+- Issue numbers stayed the same; titles, milestones and labels were updated.
+  Entries above this one use the original step numbers (e.g. Phase 4 for
+  images, now Phase 5; 5.4 for restore, now 3.7).
+- **For this project only, Sean let Claude run the rest of the build on its own:**
+  creating issues, opening and merging PRs, and tagging releases.
