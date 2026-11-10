@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **daisyUI theme blocks** at `/theme/daisyui-theme.css`: the published theme as
+  `@plugin "daisyui/theme"` blocks (light and dark) to compile into a project's own CSS.
 - **Theme export and import:** **Export** on a theme's admin page downloads a zip
   (settings, images, fonts); **Import theme** brings it in as an unpublished draft,
   checked like uploads (needs `import_theme`).

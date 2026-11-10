@@ -29,5 +29,6 @@ urlpatterns = [
     path("editor/<int:pk>/publish/", editor_views.editor_publish, name="editor_publish"),
     path("api.json", api_view(), name="api"),
     path("tokens.json", downloads.design_tokens, name="design_tokens"),
+    path("daisyui-theme.css", downloads.daisyui_theme, name="daisyui_theme"),
     path("<slug:version>.css", css_views.theme_css, name="theme_css"),
 ]
