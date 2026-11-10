@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Showcase: mode and visitors:** the default mode and the mode toggle, the
+  visitor theme picker, and scheduled themes with their dates.
 - **Device accessibility settings:** the theme stylesheet reduces every animation
   and transition when visitors ask for reduced motion, and removes noise and depth
   and thickens borders and focus outlines when they ask for more contrast.

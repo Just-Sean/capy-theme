@@ -891,7 +891,9 @@ and source with a sample in every weight and style that's actually loaded (so
 nothing shown is a browser-faked bold), the heading scale, body text at the base
 size with its line height, a monospace code block, and a character sample for
 the fonts' character sets. It also shows
-the site name, tagline, logo and the base themes in use, and an **Images and
+the site name, tagline, logo and the base themes in use; a **Mode and visitors**
+panel (the default mode, the light/dark/auto toggle, the visitor theme picker,
+and the upcoming and running scheduled themes with their dates); and an **Images and
 icons** section: every logo slot at the header height in both modes (saying
 whether it's its own image, the light one, or what an empty slot falls back to)
 with its generated sizes and formats; every icon at its real size (the maskable

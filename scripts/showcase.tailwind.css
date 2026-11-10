@@ -9,5 +9,7 @@
 @import "tailwindcss" source(none);
 
 @source "../src/capy_theme/templates/capy_theme/showcase";
+@source "../src/capy_theme/templates/capy_theme/mode_toggle.html";
+@source "../src/capy_theme/templates/capy_theme/theme_picker.html";
 
 @plugin "../demo/tailwind/daisyui.mjs";
