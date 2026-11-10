@@ -440,7 +440,14 @@ or in the live editor:
 | Monospace | `code`, `kbd`, `samp`, `pre` | `--font-mono` |
 | Display | elements with the `capy-display` class | `--capy-font-display` |
 
-Roles left on "Default" use the project's own fonts. The stylesheet adds an
+Roles left on "Default" use the project's own fonts.
+
+**System font stacks** are in the library from the start (added by a migration):
+System sans, System serif and System mono, plus ten styles from
+[Modern Font Stacks](https://modernfontstacks.com) (CC0): Transitional, Old Style,
+Humanist, Geometric Humanist, Neo-Grotesque, Rounded, Slab Serif, Didone,
+Monospace Code and Industrial. They use fonts already on the visitor's device,
+so **nothing is downloaded**. They're the fastest option. The stylesheet adds an
 `@font-face` rule (with `font-display: swap`) for each file. The element rules
 are in `@layer base`, so a project's own utility classes, like `font-serif`, still
 win. When a theme is published, its fonts' details and file URLs are copied into

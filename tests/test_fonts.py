@@ -131,7 +131,7 @@ def test_editor_offers_fonts_and_previews_them():
     font = make_font()
     spec = controls()
     assert [r["name"] for r in spec["font_roles"]] == ["body", "heading", "mono", "display"]
-    assert spec["fonts"] == [{"id": font.pk, "family": "Lora", "source": "Uploaded"}]
+    assert {"id": font.pk, "family": "Lora", "source": "Uploaded"} in spec["fonts"]
     theme = Theme.objects.create(name="Main", slug="main")
     result = preview(theme, {"settings": {"fonts": {"heading": font.pk}}})
     assert '--capy-font-heading: "Lora"' in result["css"]
@@ -152,4 +152,4 @@ def test_editor_state_lists_fonts(client, django_user_model):
     make_font()
     theme = Theme.objects.create(name="Main", slug="main")
     data = client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()
-    assert data["controls"]["fonts"][0]["family"] == "Lora"
+    assert "Lora" in [f["family"] for f in data["controls"]["fonts"]]

@@ -22,6 +22,50 @@ DEFAULT_FALLBACK = {
 }
 
 
+# Ready-made stacks of fonts already on visitors' devices: nothing to download.
+# Added to the font library by migration 0008. Most come from Modern Font Stacks
+# (https://modernfontstacks.com, CC0).
+SYSTEM_STACKS = [
+    ("System sans", "ui-sans-serif, system-ui, sans-serif"),
+    ("System serif", 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif'),
+    ("System mono", 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace'),
+    ("Transitional", 'Charter, "Bitstream Charter", "Sitka Text", Cambria, serif'),
+    ("Old Style", '"Iowan Old Style", "Palatino Linotype", "URW Palladio L", P052, serif'),
+    (
+        "Humanist",
+        'Seravek, "Gill Sans Nova", Ubuntu, Calibri, "DejaVu Sans", source-sans-pro, sans-serif',
+    ),
+    (
+        "Geometric Humanist",
+        'Avenir, Montserrat, Corbel, "URW Gothic", source-sans-pro, sans-serif',
+    ),
+    (
+        "Neo-Grotesque",
+        'Inter, Roboto, "Helvetica Neue", "Arial Nova", "Nimbus Sans", Arial, sans-serif',
+    ),
+    (
+        "Rounded",
+        'ui-rounded, "Hiragino Maru Gothic ProN", Quicksand, Comfortaa, Manjari, '
+        '"Arial Rounded MT", "Arial Rounded MT Bold", Calibri, source-sans-pro, sans-serif',
+    ),
+    (
+        "Slab Serif",
+        'Rockwell, "Rockwell Nova", "Roboto Slab", "DejaVu Serif", "Sitka Small", serif',
+    ),
+    ("Didone", 'Didot, "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif'),
+    (
+        "Monospace Code",
+        'ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, '
+        '"DejaVu Sans Mono", monospace',
+    ),
+    (
+        "Industrial",
+        'Bahnschrift, "DIN Alternate", "Franklin Gothic Medium", "Nimbus Sans Narrow", '
+        "sans-serif-condensed, sans-serif",
+    ),
+]
+
+
 def resolve(font):
     """Return everything the stylesheet needs about a font, as plain data."""
     return {

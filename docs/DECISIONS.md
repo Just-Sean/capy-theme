@@ -630,3 +630,15 @@ Recommended (made while building autonomously).
 - **Fonts are the same in light and dark mode.**
 - **Editor:** a Fonts section with a dropdown per role, previewed live, saved
   and published like everything else.
+
+## 4.2 System font stacks (#24)
+
+Recommended (made while building autonomously).
+
+- **Fonts in the library** with source "system" and no files: the stack is their
+  fallback stack, written out as-is (no `@font-face`, no download).
+- **Added by migration 0008,** so every project has them after `migrate`.
+  Existing fonts with the same name are left alone. Removing the migration
+  deletes only these system fonts.
+- **13 stacks:** System sans, serif and mono, plus ten from Modern Font Stacks
+  (CC0), which list fonts that ship with Windows, macOS, Linux, iOS and Android.
