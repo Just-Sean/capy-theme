@@ -23,7 +23,7 @@ from .colors import (
     to_hex,
     to_oklch,
 )
-from .fonts import ROLES
+from .fonts import ROLES, preview_stack
 from .models import Font, Theme
 from .palette import from_logo, from_primary
 from .shape import EFFECTS, SIZES
@@ -102,7 +102,12 @@ def controls():
         ],
         "font_roles": [{"name": name, "label": lab} for name, lab in ROLES.items()],
         "fonts": [
-            {"id": f.pk, "family": f.family, "source": f.get_source_display()}
+            {
+                "id": f.pk,
+                "family": f.family,
+                "source": f.get_source_display(),
+                "stack": preview_stack(f),
+            }
             for f in Font.objects.all()
         ],
     }

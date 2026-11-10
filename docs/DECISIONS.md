@@ -642,3 +642,26 @@ Recommended (made while building autonomously).
   deletes only these system fonts.
 - **13 stacks:** System sans, serif and mono, plus ten from Modern Font Stacks
   (CC0), which list fonts that ship with Windows, macOS, Linux, iOS and Android.
+
+## 4.3 Curated font collection (#25)
+
+Recommended (made while building autonomously).
+
+- **30 fonts:** 15 sans, 9 serif, 4 mono and 2 display, chosen as widely used,
+  well-made Google Fonts families. All are SIL Open Font License 1.1, which
+  allows bundling as long as the licence goes with them; the script refuses any
+  other licence.
+- **From Fontsource npm packages, pinned by version,** fetched by
+  `scripts/fetch_curated_fonts.py`, the same approach as the daisyUI catalogue.
+  Each package's LICENSE is kept next to its files.
+- **Only Latin regular, bold and italic** (where the font has them): 84 files,
+  about 1.9 MB, keeping the package small. Other weights and character sets can
+  be uploaded (4.4) or imported from Google Fonts (4.5).
+- **The command copies the files into the project's media storage**
+  (`capy_theme_add_fonts`), so bundled fonts are stored and served exactly like
+  uploaded ones, on any storage backend, and their URLs go into revisions the same
+  way. Existing families are skipped.
+- **Previews:** the admin font list draws a sample of each font, and the editor
+  shows a sample line under each font choice.
+- **Tested in Chrome:** all 30 fonts loaded from the copied files, with none
+  failing.

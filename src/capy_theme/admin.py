@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import format_html, format_html_join
+from django.utils.safestring import mark_safe
 
 from .active import NotPublished, activate, get_active_theme
 from .catalogue import builtin_values, get_builtin_themes
@@ -21,7 +22,7 @@ from .colors import (
     label,
 )
 from .editor import can_edit
-from .fonts import ROLES
+from .fonts import ROLES, preview_faces, preview_stack
 from .forms import ColorField
 from .history import compare as compare_revisions
 from .history import restore as restore_revision
@@ -622,11 +623,28 @@ class FontFileInline(admin.TabularInline):
 class FontAdmin(admin.ModelAdmin):
     """The shared font library. Any theme can use these fonts."""
 
-    list_display = ["family", "source", "file_count", "created_at"]
+    list_display = ["family", "preview", "source", "file_count", "created_at"]
     list_filter = ["source"]
     search_fields = ["family"]
     inlines = [FontFileInline]
 
+    readonly_fields = ["preview"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("files")
+
     @admin.display(description="Files")
     def file_count(self, font):
-        return font.files.count()
+        return len(font.files.all())
+
+    @admin.display(description="Preview")
+    def preview(self, font):
+        """A sample of the font (system stacks show in the visitor's own fonts)."""
+        if font.pk is None:
+            return "Save the font to see a preview."
+        return format_html(
+            '<style>{}</style><span style="font-family: {}; font-size: 1.25rem;">'
+            "The quick brown fox jumps over the lazy dog</span>",
+            mark_safe(preview_faces(font)),  # noqa: S308 (built from the font's own data)
+            preview_stack(font),
+        )

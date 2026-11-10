@@ -1,0 +1,722 @@
+[
+  {
+    "id": "inter",
+    "family": "Inter",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "inter/inter-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "inter/inter-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "inter/inter-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "roboto",
+    "family": "Roboto",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "roboto/roboto-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "roboto/roboto-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "roboto/roboto-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "open-sans",
+    "family": "Open Sans",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "open-sans/open-sans-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "open-sans/open-sans-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "open-sans/open-sans-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "lato",
+    "family": "Lato",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "lato/lato-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "lato/lato-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "lato/lato-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "montserrat",
+    "family": "Montserrat",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "montserrat/montserrat-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "montserrat/montserrat-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "montserrat/montserrat-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "source-sans-3",
+    "family": "Source Sans 3",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.1",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "source-sans-3/source-sans-3-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "source-sans-3/source-sans-3-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "source-sans-3/source-sans-3-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "nunito",
+    "family": "Nunito",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "nunito/nunito-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "nunito/nunito-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "nunito/nunito-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "poppins",
+    "family": "Poppins",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "poppins/poppins-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "poppins/poppins-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "poppins/poppins-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "work-sans",
+    "family": "Work Sans",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "work-sans/work-sans-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "work-sans/work-sans-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "work-sans/work-sans-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "ibm-plex-sans",
+    "family": "IBM Plex Sans",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "ibm-plex-sans/ibm-plex-sans-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "ibm-plex-sans/ibm-plex-sans-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "ibm-plex-sans/ibm-plex-sans-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "dm-sans",
+    "family": "DM Sans",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "dm-sans/dm-sans-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "dm-sans/dm-sans-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "dm-sans/dm-sans-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "raleway",
+    "family": "Raleway",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "raleway/raleway-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "raleway/raleway-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "raleway/raleway-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "figtree",
+    "family": "Figtree",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "figtree/figtree-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "figtree/figtree-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "figtree/figtree-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "manrope",
+    "family": "Manrope",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "manrope/manrope-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "manrope/manrope-latin-700-normal.woff2"
+      }
+    ]
+  },
+  {
+    "id": "outfit",
+    "family": "Outfit",
+    "category": "sans",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "outfit/outfit-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "outfit/outfit-latin-700-normal.woff2"
+      }
+    ]
+  },
+  {
+    "id": "merriweather",
+    "family": "Merriweather",
+    "category": "serif",
+    "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "merriweather/merriweather-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "merriweather/merriweather-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "merriweather/merriweather-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "lora",
+    "family": "Lora",
+    "category": "serif",
+    "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "lora/lora-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "lora/lora-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "lora/lora-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "playfair-display",
+    "family": "Playfair Display",
+    "category": "serif",
+    "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "playfair-display/playfair-display-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "playfair-display/playfair-display-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "playfair-display/playfair-display-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "source-serif-4",
+    "family": "Source Serif 4",
+    "category": "serif",
+    "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
+    "version": "5.3.1",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "source-serif-4/source-serif-4-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "source-serif-4/source-serif-4-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "source-serif-4/source-serif-4-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "libre-baskerville",
+    "family": "Libre Baskerville",
+    "category": "serif",
+    "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "libre-baskerville/libre-baskerville-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "libre-baskerville/libre-baskerville-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "libre-baskerville/libre-baskerville-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "eb-garamond",
+    "family": "EB Garamond",
+    "category": "serif",
+    "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "eb-garamond/eb-garamond-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "eb-garamond/eb-garamond-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "eb-garamond/eb-garamond-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "crimson-pro",
+    "family": "Crimson Pro",
+    "category": "serif",
+    "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "crimson-pro/crimson-pro-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "crimson-pro/crimson-pro-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "crimson-pro/crimson-pro-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "pt-serif",
+    "family": "PT Serif",
+    "category": "serif",
+    "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "pt-serif/pt-serif-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "pt-serif/pt-serif-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "pt-serif/pt-serif-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "ibm-plex-serif",
+    "family": "IBM Plex Serif",
+    "category": "serif",
+    "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "ibm-plex-serif/ibm-plex-serif-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "ibm-plex-serif/ibm-plex-serif-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "ibm-plex-serif/ibm-plex-serif-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "jetbrains-mono",
+    "family": "JetBrains Mono",
+    "category": "mono",
+    "fallback": "ui-monospace, SFMono-Regular, Menlo, Consolas, \"Liberation Mono\", monospace",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "jetbrains-mono/jetbrains-mono-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "jetbrains-mono/jetbrains-mono-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "jetbrains-mono/jetbrains-mono-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "fira-code",
+    "family": "Fira Code",
+    "category": "mono",
+    "fallback": "ui-monospace, SFMono-Regular, Menlo, Consolas, \"Liberation Mono\", monospace",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "fira-code/fira-code-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "fira-code/fira-code-latin-700-normal.woff2"
+      }
+    ]
+  },
+  {
+    "id": "source-code-pro",
+    "family": "Source Code Pro",
+    "category": "mono",
+    "fallback": "ui-monospace, SFMono-Regular, Menlo, Consolas, \"Liberation Mono\", monospace",
+    "version": "5.3.1",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "source-code-pro/source-code-pro-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "source-code-pro/source-code-pro-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "source-code-pro/source-code-pro-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "ibm-plex-mono",
+    "family": "IBM Plex Mono",
+    "category": "mono",
+    "fallback": "ui-monospace, SFMono-Regular, Menlo, Consolas, \"Liberation Mono\", monospace",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "ibm-plex-mono/ibm-plex-mono-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "ibm-plex-mono/ibm-plex-mono-latin-700-normal.woff2"
+      },
+      {
+        "weight": 400,
+        "style": "italic",
+        "path": "ibm-plex-mono/ibm-plex-mono-latin-400-italic.woff2"
+      }
+    ]
+  },
+  {
+    "id": "oswald",
+    "family": "Oswald",
+    "category": "display",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "oswald/oswald-latin-400-normal.woff2"
+      },
+      {
+        "weight": 700,
+        "style": "normal",
+        "path": "oswald/oswald-latin-700-normal.woff2"
+      }
+    ]
+  },
+  {
+    "id": "bebas-neue",
+    "family": "Bebas Neue",
+    "category": "display",
+    "fallback": "ui-sans-serif, system-ui, sans-serif",
+    "version": "5.3.0",
+    "licence": "SIL Open Font License 1.1",
+    "files": [
+      {
+        "weight": 400,
+        "style": "normal",
+        "path": "bebas-neue/bebas-neue-latin-400-normal.woff2"
+      }
+    ]
+  }
+]

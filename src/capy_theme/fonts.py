@@ -159,3 +159,22 @@ def font_css(fonts):
         lines.append("  .capy-display { font-family: var(--capy-font-display); }")
     lines.append("}")
     return lines
+
+
+def preview_stack(font):
+    """A font-family value for showing a sample of a library font."""
+    if font.source == "system":
+        return font.fallback_stack or DEFAULT_FALLBACK["body"]
+    family = font.family.replace('"', "")
+    return f'"{family}", {font.fallback_stack or DEFAULT_FALLBACK["body"]}'
+
+
+def preview_faces(font):
+    """@font-face rules for a library font's regular file, for previews."""
+    files = [f for f in font.files.all() if f.style == "normal"] or list(font.files.all())
+    family = font.family.replace('"', "")
+    return "".join(
+        f'@font-face{{font-family:"{family}";src:url("{file_url(f.file.name)}") format("woff2");'
+        f"font-weight:{f.weight};font-style:{f.style};font-display:swap}}"
+        for f in files
+    )

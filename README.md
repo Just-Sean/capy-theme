@@ -447,7 +447,32 @@ System sans, System serif and System mono, plus ten styles from
 [Modern Font Stacks](https://modernfontstacks.com) (CC0): Transitional, Old Style,
 Humanist, Geometric Humanist, Neo-Grotesque, Rounded, Slab Serif, Didone,
 Monospace Code and Industrial. They use fonts already on the visitor's device,
-so **nothing is downloaded**. They're the fastest option. The stylesheet adds an
+so **nothing is downloaded**. They're the fastest option.
+
+**A curated collection of 30 open-licence fonts** is bundled with the module
+(Inter, Roboto, Open Sans, Lato, Montserrat, Source Sans 3, Nunito, Poppins, Work
+Sans, IBM Plex Sans, DM Sans, Raleway, Figtree, Manrope, Outfit, Merriweather,
+Lora, Playfair Display, Source Serif 4, Libre Baskerville, EB Garamond, Crimson
+Pro, PT Serif, IBM Plex Serif, JetBrains Mono, Fira Code, Source Code Pro, IBM
+Plex Mono, Oswald and Bebas Neue). Add them to the library with:
+
+```bash
+uv run python manage.py capy_theme_add_fonts     # in the demo: uv run python demo/manage.py capy_theme_add_fonts
+```
+
+It copies each font's files (Latin regular, bold and italic, where the font has
+them) into the project's media storage and adds them to the library. Fonts already
+there are skipped, so it's safe to run again. The font list in the admin shows a
+preview of each font, and the editor shows a sample under each font choice.
+
+All 30 are under the SIL Open Font License 1.1. Their licence files are in
+`src/capy_theme/static/capy_theme/fonts/<font>/LICENSE`. They come from
+[Fontsource](https://fontsource.org). To change the collection, edit the list in
+`scripts/fetch_curated_fonts.py` and run:
+
+```bash
+uv run python scripts/fetch_curated_fonts.py
+``` The stylesheet adds an
 `@font-face` rule (with `font-display: swap`) for each file. The element rules
 are in `@layer base`, so a project's own utility classes, like `font-serif`, still
 win. When a theme is published, its fonts' details and file URLs are copied into
@@ -663,6 +688,9 @@ straight to `main`:
 | `src/capy_theme/palette.py` | Colour suggestions from a primary colour or from the logo |
 | `src/capy_theme/history.py` | Comparing two revisions and restoring an old one |
 | `src/capy_theme/fonts.py` | Font roles, copying fonts into revisions, and the `@font-face` and font CSS |
+| `src/capy_theme/curated_fonts.json`, `src/capy_theme/static/capy_theme/fonts/` | The curated font collection (WOFF2 files and licences) |
+| `src/capy_theme/management/commands/capy_theme_add_fonts.py` | Adds the curated fonts to the font library |
+| `scripts/fetch_curated_fonts.py` | Fetches the curated fonts from Fontsource |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |
