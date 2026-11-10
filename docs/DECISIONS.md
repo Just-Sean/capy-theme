@@ -684,3 +684,22 @@ Recommended (made while building autonomously).
   Google Fonts import (4.5).
 - **fontTools' notes about dropped tables are silenced** while trimming, to keep
   project logs clean.
+
+## 4.5 Google Fonts import (#27)
+
+Recommended (made while building autonomously).
+
+- **The official Google Fonts CSS API** (`fonts.googleapis.com/css2`) says which
+  WOFF2 files a family has, per character subset. The server downloads them once
+  from `fonts.gstatic.com` and stores them like uploads, so pages never contact
+  Google (checked in Chrome: no Google requests).
+- **A browser User-Agent** is sent, because the API picks the file format from it.
+  It's a generic Chrome string, nothing about the site or user.
+- **Missing weights:** the API refuses the whole request if one weight is missing,
+  so the import then asks weight by weight and keeps those that exist.
+- **Variable fonts** reuse one file for several weights: each file is downloaded
+  and stored once, and shared by the weights' FontFile rows.
+- **Safety:** family names must be letters, digits and spaces; downloads are only
+  allowed from the two Google Fonts addresses over https; each file is checked by
+  fontTools (as uploads are).
+- **Default:** regular, bold and italic in Latin, changeable in the form.

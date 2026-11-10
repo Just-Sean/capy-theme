@@ -458,6 +458,12 @@ another subset (Latin Extended, Cyrillic, Greek, Vietnamese) or **All characters
 to keep everything. Leave weight and style blank to read them from the font. The
 size limit is 5 MB per file (`CAPY_THEME_FONT_MAX_BYTES`).
 
+**Importing from Google Fonts.** On the Fonts list in the admin, click **Import
+from Google Fonts**, type a family name (e.g. *Lora*), and pick the weights,
+italics and character sets. The server downloads the files **once** and stores
+them with your other media, so pages load the font **from your own site**:
+visitors' browsers never contact Google. Weights a family doesn't have are skipped.
+
 **A curated collection of 30 open-licence fonts** is bundled with the module
 (Inter, Roboto, Open Sans, Lato, Montserrat, Source Sans 3, Nunito, Poppins, Work
 Sans, IBM Plex Sans, DM Sans, Raleway, Figtree, Manrope, Outfit, Merriweather,
@@ -701,6 +707,7 @@ straight to `main`:
 | `src/capy_theme/management/commands/capy_theme_add_fonts.py` | Adds the curated fonts to the font library |
 | `scripts/fetch_curated_fonts.py` | Fetches the curated fonts from Fontsource |
 | `src/capy_theme/font_files.py` | Checks uploaded font files, converts them to WOFF2 and trims them to a character subset |
+| `src/capy_theme/google_fonts.py` | Imports a Google font into the library (downloaded once, served locally) |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |
