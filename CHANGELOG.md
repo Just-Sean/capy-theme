@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Device accessibility settings:** the theme stylesheet reduces every animation
+  and transition when visitors ask for reduced motion, and removes noise and depth
+  and thickens borders and focus outlines when they ask for more contrast.
 - **Scheduling:** a **Theme schedule** in the admin: themes that are live between
   two dates and win over the default while running; the default returns
   afterwards. The cache expires at the next start or end. Migration 0013.

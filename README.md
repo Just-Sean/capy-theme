@@ -809,6 +809,20 @@ loaded, or `None` if no theme is active. It's cached (see
 `CAPY_THEME_CACHE_SECONDS`), so a normal page load doesn't query the database.
 
 
+### Visitors' accessibility settings
+
+The theme stylesheet respects two device settings, for every page, with nothing
+to configure:
+
+- **Reduce motion** (`prefers-reduced-motion: reduce`): animations and
+  transitions finish at once and smooth scrolling is off. daisyUI only does this
+  for a few components; this covers all of them.
+- **More contrast** (`prefers-contrast: more`): no noise texture or depth
+  shading, 2 px borders and a 3 px focus outline. The theme's colours stay as
+  they are (every colour pair's contrast is already shown in the editor).
+
+To try them: Chrome DevTools → **Rendering** → "Emulate CSS media feature".
+
 ### Scheduled themes
 
 A theme can be live between two dates, e.g. a holiday theme. In the admin, go
@@ -976,6 +990,7 @@ straight to `main`:
 | `src/capy_theme/font_files.py` | Checks uploaded font files, converts them to WOFF2 and trims them to a character subset |
 | `src/capy_theme/google_fonts.py` | Imports a Google font into the library (downloaded once, served locally) |
 | `src/capy_theme/images.py` | Image slots and their limits, and checking and cleaning uploaded images |
+| `src/capy_theme/accessibility.py` | The reduce-motion and more-contrast CSS |
 | `src/capy_theme/backgrounds.py` | The background image CSS variables, helper classes and template values |
 | `src/capy_theme/artifacts.py` | `get_artifacts()`: every published theme artifact as plain data for other modules |
 | `src/capy_theme/social.py` | The 1200 × 630 sharing image |
