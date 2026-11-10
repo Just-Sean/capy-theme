@@ -1046,3 +1046,20 @@ Recommended (made while building autonomously).
   moment too. So no signal or timer is needed for a schedule to start or end.
 - **Frozen-time test** by replacing `django.utils.timezone.now` in the test (no new
   dependency such as freezegun).
+
+## 6.4 Device accessibility preferences (#49)
+
+Recommended (made while building autonomously).
+
+- **Always on, no setting:** respecting a visitor's own device setting has no
+  downside to switch off.
+- **Reduce motion** uses the common pattern (durations of 0.01 ms, not 0, so
+  `animationend`/`transitionend` still fire). daisyUI only covers 14 cases itself
+  (tooltips, the text rotator and so on); buttons, modals, toggles and spinners
+  weren't.
+- **More contrast** changes only daisyUI's effect variables (noise and depth off,
+  2 px borders) and the focus outline. Changing the theme's colours was rejected:
+  it would override the operator's choices, and contrast ratings are already
+  shown for every pair.
+- **Checked in Chrome** by emulating each setting: button transitions went from
+  0.2 s to effectively 0; borders 1 px → 2 px; noise and depth 1 → 0.

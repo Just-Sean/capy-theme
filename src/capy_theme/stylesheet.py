@@ -6,6 +6,7 @@ from importlib.metadata import version
 
 from django.urls import reverse
 
+from .accessibility import accessibility_css
 from .backgrounds import css_variables as background_variables
 from .backgrounds import helper_css as background_css
 from .colors import effective_values, focus_color
@@ -77,6 +78,7 @@ def snapshot_css(snapshot, comment):
         *type_css(snapshot.get("settings", {})),
         logo_css(snapshot),
         background_css(),
+        accessibility_css(),
     ]
     return "\n".join(lines) + "\n"
 
