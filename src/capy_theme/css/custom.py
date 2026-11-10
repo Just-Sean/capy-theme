@@ -8,6 +8,8 @@ the edit_custom_css permission can see or change it.
 
 from django.urls import reverse
 
+from .. import conf
+
 MAX_LENGTH = 100_000  # characters (also in settings.schema.json)
 PERMISSION = "capy_theme.edit_custom_css"
 
@@ -15,7 +17,7 @@ PERMISSION = "capy_theme.edit_custom_css"
 def custom_css(snapshot):
     """The revision's custom CSS if it's switched on and not empty, else ""."""
     chosen = snapshot.get("settings", {}).get("custom_css", {})
-    if not chosen.get("enabled", True):
+    if not conf.get("CAPY_THEME_CUSTOM_CSS") or not chosen.get("enabled", True):
         return ""
     return chosen.get("css", "").strip()
 
@@ -28,7 +30,8 @@ def custom_css_url(revision):
 
 
 def can_edit_custom_css(user):
-    return bool(user and user.has_perm(PERMISSION))
+    """The project allows custom CSS and the user has the permission."""
+    return bool(conf.get("CAPY_THEME_CUSTOM_CSS") and user and user.has_perm(PERMISSION))
 
 
 def summary(settings):

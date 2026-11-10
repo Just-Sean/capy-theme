@@ -14,7 +14,8 @@ with alt text. For every upload:
 - Each slot has a size limit and a maximum width and height (in
   `src/capy_theme/images/slots.json`): 1 MB for the email logo, 2 MB for the
   other logos, the icon and the background pattern, and 5 MB for the print logo,
-  social image and login background.
+  social image and login background. A project can set a lower cap for every
+  slot with `CAPY_THEME_IMAGE_MAX_BYTES`.
 - The image is saved again without EXIF, text chunks and comments, so camera
   details and GPS locations are removed. Photos are turned upright first.
   Colour profiles are kept.

@@ -14,8 +14,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
 
-from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+
+from .. import conf
 
 _DATA = json.loads(Path(__file__).with_name("builtin_themes.json").read_text(encoding="utf-8"))
 DAISYUI_VERSION = _DATA["daisyui_version"]
@@ -48,7 +49,7 @@ def get_builtin_themes():
     Limited by the optional CAPY_THEME_BUILTIN_THEMES setting (a list of theme
     names). Raises ImproperlyConfigured if it names a theme that doesn't exist.
     """
-    allowed = getattr(settings, "CAPY_THEME_BUILTIN_THEMES", None)
+    allowed = conf.get("CAPY_THEME_BUILTIN_THEMES")
     if allowed is None:
         return list(_ALL)
 

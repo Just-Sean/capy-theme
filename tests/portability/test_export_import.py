@@ -188,7 +188,7 @@ def test_a_bad_image_removes_everything_stored_so_far(media):
     assert not [p for p in media.rglob("*") if p.is_file()]
 
 
-def test_too_big_is_rejected(monkeypatch):
-    monkeypatch.setattr("capy_theme.portability.importing.MAX_BYTES", 10)
+def test_too_big_is_rejected(settings):
+    settings.CAPY_THEME_IMPORT_MAX_BYTES = 10
     with pytest.raises(ValidationError, match="too big"):
         import_theme(zip_with(minimal()))

@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 
+from .. import conf
 from .slots import MODES, NO_SVG, SLOTS
 from .svg import clean_svg
 
@@ -23,6 +24,13 @@ FORMATS = {
 }
 
 
+def byte_limit(slot):
+    """The largest upload for a slot: its own limit, or CAPY_THEME_IMAGE_MAX_BYTES if
+    that's lower."""
+    cap = conf.get("CAPY_THEME_IMAGE_MAX_BYTES")
+    return min(SLOTS[slot][1], cap) if cap else SLOTS[slot][1]
+
+
 def prepare_image(data, name, slot):
     """Check an uploaded image and return a clean copy.
 
@@ -30,7 +38,8 @@ def prepare_image(data, name, slot):
     The type is worked out from the content, not the name. Raises
     ValidationError if it's too big, isn't a supported image, or is too large.
     """
-    label, max_bytes, max_pixels, _help = SLOTS[slot]
+    label, _limit, max_pixels, _help = SLOTS[slot]
+    max_bytes = byte_limit(slot)
     if len(data) > max_bytes:
         raise ValidationError(
             f"The {label.lower()} is too big ({len(data) // 1024} KB; the limit is "
@@ -126,7 +135,7 @@ def add_asset(theme, slot, mode, upload, alt_text=""):
         raise ValidationError("Choose where the image goes.")
     if mode not in dict(MODES):
         raise ValidationError("Choose light or dark mode.")
-    max_bytes = SLOTS[slot][1]
+    max_bytes = byte_limit(slot)
     if upload.size is not None and upload.size > max_bytes:
         raise ValidationError(
             f"The {SLOTS[slot][0].lower()} is too big ({upload.size // 1024} KB; the limit is "
