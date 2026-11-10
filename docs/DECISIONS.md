@@ -536,3 +536,21 @@ Recommended (made while building autonomously).
   is clicked; click again after changing the primary for fresh ones.
 - **Swatch colours** are set through the CSSOM (`element.style`), which a strict
   CSP allows, unlike `style=""` attributes.
+
+## 3.5 Save draft and publish from the editor (#98)
+
+Recommended (made while building autonomously).
+
+- **Save draft** (`POST /theme/editor/<id>/save/`) runs the same validation as the
+  preview, then saves only the bases, colours and shape. Other settings are read
+  fresh from the database and kept, so an editor save doesn't undo branding or
+  mode changes made in the admin meanwhile.
+- **Publish** (`POST /theme/editor/<id>/publish/`, needs `publish_theme`)
+  publishes the **saved** draft through the existing `publish()`, so revisions,
+  the "Nothing to publish" check and the simultaneous-publish message all work
+  as in the admin. If the panel has unsaved changes, it saves them first.
+- **Unsaved changes** are tracked against what was last loaded or saved. The panel
+  shows "Unsaved changes", and Close and leaving the page ask before discarding
+  them.
+- **Publish asks for confirmation**, with a browser confirm dialog, since it
+  changes what visitors see.

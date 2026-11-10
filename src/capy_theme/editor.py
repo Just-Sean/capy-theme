@@ -56,6 +56,8 @@ def editor_urls(theme):
         "state": reverse("capy_theme:editor_state", args=[theme.pk]),
         "preview": reverse("capy_theme:editor_preview", args=[theme.pk]),
         "suggestions": reverse("capy_theme:editor_suggestions", args=[theme.pk]),
+        "save": reverse("capy_theme:editor_save", args=[theme.pk]),
+        "publish": reverse("capy_theme:editor_publish", args=[theme.pk]),
     }
 
 
@@ -188,3 +190,17 @@ def suggestions(theme, primary):
     if primary:
         result.extend(from_primary(primary))
     return result
+
+
+def save_draft(theme, data):
+    """Store the editor's values in the theme's draft. Visitors see nothing until publish.
+
+    Validated exactly like the preview. Only the bases, colours and shape are
+    changed; the rest of the theme (name, branding, mode) is left as it is.
+    """
+    draft = apply_changes(theme, data)
+    theme.light_base = draft.light_base
+    theme.dark_base = draft.dark_base
+    theme.settings = draft.settings
+    theme.save()
+    return theme

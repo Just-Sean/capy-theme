@@ -3,6 +3,7 @@ import json
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.db import IntegrityError
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -11,9 +12,19 @@ from django.views.decorators.http import require_POST
 
 from .active import get_active_theme
 from .branding import branding
-from .editor import can_edit, draft_state, editor_theme, editor_urls, preview, suggestions
+from .editor import (
+    can_edit,
+    can_publish,
+    draft_state,
+    editor_theme,
+    editor_urls,
+    preview,
+    save_draft,
+    suggestions,
+)
 from .mode import COOKIE_MAX_AGE, COOKIE_NAME, MODES, mode_settings
 from .models import Theme, ThemeRevision
+from .publishing import NothingToPublish, publish
 from .showcase import shape_samples, swatches
 from .stylesheet import render_css
 
@@ -162,3 +173,59 @@ def editor_suggestions(request, pk):
     response = JsonResponse({"suggestions": result})
     response["Cache-Control"] = "no-store"
     return response
+
+
+def _json_body(request):
+    data = json.loads(request.body or b"{}")
+    if not isinstance(data, dict):
+        raise ValueError("not an object")
+    return data
+
+
+@require_POST
+def editor_save(request, pk):
+    """Save the editor's values as the theme's draft (JSON in, new state out)."""
+    if not can_edit(request.user):
+        return JsonResponse({"error": "You can't edit themes."}, status=403)
+    theme = get_object_or_404(Theme.objects.select_related("live_revision"), pk=pk)
+    try:
+        data = _json_body(request)
+    except ValueError:
+        return JsonResponse({"errors": ["The request must be a JSON object."]}, status=400)
+    try:
+        save_draft(theme, data)
+    except ValidationError as error:
+        return JsonResponse({"errors": error.messages}, status=400)
+    return JsonResponse({"saved": True, "state": draft_state(theme, request.user)})
+
+
+@require_POST
+def editor_publish(request, pk):
+    """Publish the theme's saved draft from the editor. Needs publish_theme.
+
+    Takes an optional {"note": "..."}; goes through the same publish() and
+    revisions as the admin's Publish page.
+    """
+    if not can_publish(request.user):
+        return JsonResponse({"error": "You can't publish themes."}, status=403)
+    theme = get_object_or_404(Theme.objects.select_related("live_revision"), pk=pk)
+    try:
+        data = _json_body(request)
+    except ValueError:
+        return JsonResponse({"errors": ["The request must be a JSON object."]}, status=400)
+    try:
+        revision = publish(theme, user=request.user, note=str(data.get("note", ""))[:2000])
+    except NothingToPublish as error:
+        return JsonResponse({"errors": [str(error)]}, status=409)
+    except ValidationError as error:
+        return JsonResponse({"errors": ["Can't publish: " + " ".join(error.messages)]}, status=400)
+    except IntegrityError:
+        return JsonResponse(
+            {
+                "errors": [
+                    "Someone else just published this theme. Reload and check, then try again."
+                ]
+            },
+            status=409,
+        )
+    return JsonResponse({"published": revision.number, "state": draft_state(theme, request.user)})

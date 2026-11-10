@@ -9,6 +9,7 @@
 
   // The unsaved values: what the preview endpoint (and later Save) receives.
   var changes = null;
+  var baseline = "";
   var spec = null;
   var scheme = "light";
   var latest = null;
@@ -31,15 +32,82 @@
     return changes.settings.colors[mode];
   }
 
-  function update() {
+  function normalized() {
     var copy = JSON.parse(JSON.stringify(changes));
     var c = copy.settings.colors || {};
     Object.keys(c).forEach(function (mode) {
       if (!Object.keys(c[mode]).length) delete c[mode];
     });
     if (!Object.keys(c).length) copy.settings.colors = {};
-    editor.changes = copy;
-    editor.schedulePreview(copy);
+    return copy;
+  }
+
+  function update() {
+    editor.changes = normalized();
+    editor.schedulePreview(editor.changes);
+    showDirty();
+  }
+
+  editor.isDirty = function () {
+    return !!changes && JSON.stringify(normalized()) !== baseline;
+  };
+
+  function showDirty() {
+    var note = editor.panel && editor.panel.querySelector("[data-capy-dirty]");
+    if (note) note.textContent = editor.isDirty() ? "Unsaved changes." : "No unsaved changes.";
+  }
+
+  // Save draft and Publish
+
+  function actions(state) {
+    var save = el("button", { type: "button", class: "capy-editor-primary", "data-capy-save": "", text: "Save draft" });
+    var section = el("section", { class: "capy-editor-section capy-editor-actions" }, [
+      el("h3", { text: "Save and publish" }),
+      el("p", { class: "capy-editor-note", "data-capy-dirty": "", "aria-live": "polite" }),
+      save,
+    ]);
+    save.addEventListener("click", function () {
+      saveDraft().catch(function () {});
+    });
+    if (state.can_publish) {
+      var note = el("input", { type: "text", "data-capy-note": "", placeholder: "Note for the history (optional)", "aria-label": "Publish note" });
+      var publish = el("button", { type: "button", "data-capy-publish": "", text: "Publish" });
+      publish.addEventListener("click", function () {
+        if (!window.confirm("Publish this theme? Visitors will see it.")) return;
+        (editor.isDirty() ? saveDraft() : Promise.resolve())
+          .then(function () {
+            return editor.post(editor.mount.getAttribute("data-publish-url"), { note: note.value });
+          })
+          .then(function (reply) {
+            note.value = "";
+            build(reply.state);
+            editor.applyCss(reply.state.css);
+            editor.status("Published as revision " + reply.published + ". Visitors now see it.");
+          })
+          .catch(function (error) {
+            editor.status(error.message, true);
+          });
+      });
+      section.appendChild(el("div", { class: "capy-editor-publish" }, [note, publish]));
+    } else {
+      section.appendChild(el("p", { class: "capy-editor-note", text: "Publishing needs the publish permission." }));
+    }
+    return section;
+  }
+
+  function saveDraft() {
+    return editor
+      .post(editor.mount.getAttribute("data-save-url"), editor.changes)
+      .then(function (reply) {
+        build(reply.state);
+        editor.applyCss(reply.state.css);
+        editor.status("Draft saved. Visitors won't see it until it's published.");
+        return reply;
+      })
+      .catch(function (error) {
+        editor.status(error.message, true);
+        throw error;
+      });
   }
 
   // Base themes
@@ -278,7 +346,8 @@
         shape: JSON.parse(JSON.stringify(state.settings.shape || {})),
       },
     };
-    editor.changes = JSON.parse(JSON.stringify(changes));
+    editor.changes = normalized();
+    baseline = JSON.stringify(editor.changes);
     latest = state;
     var container = editor.panel.querySelector(".capy-editor-controls");
     container.textContent = "";
@@ -287,7 +356,9 @@
     );
     container.appendChild(colorSection());
     container.appendChild(shapeSection());
+    container.appendChild(actions(state));
     fill();
+    showDirty();
   }
 
   document.addEventListener("capy-editor:loaded", function (event) {

@@ -355,6 +355,15 @@ The panel has:
 
 Every change shows on the page straight away (in your browser only).
 
+- **Save draft** stores the panel's values in the theme's draft (needs the
+  change permission). Visitors don't see it until it's published. Only the bases,
+  colours and shape are changed; the name, branding and mode stay as they are.
+- **Publish** (needs `publish_theme`) saves any unsaved changes first, then
+  publishes, with an optional note, through the same revisions as the admin's
+  Publish page.
+- With unsaved changes, the panel says so, and closing it or leaving the page
+  asks before throwing them away.
+
 - It edits the active theme, or any theme with `?edit=<theme id>` on the showcase
   URL, which also opens the panel straight away.
 - The panel is plain CSS and JavaScript (`static/capy_theme/editor/`), not

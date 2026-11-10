@@ -91,10 +91,47 @@
       });
   };
 
+  // Set by the controls: true while there are changes that aren't saved yet.
+  editor.isDirty = function () {
+    return false;
+  };
+
   editor.close = function () {
+    if (editor.isDirty() && !window.confirm("Discard your unsaved changes?")) return;
     removeCss();
     if (editor.panel) editor.panel.hidden = true;
   };
+
+  // POST JSON to one of the editor's URLs; resolves with the reply, or rejects
+  // with the server's error messages.
+  editor.post = function (url, data) {
+    return fetch(url, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-CSRFToken": mount.getAttribute("data-csrf-token"),
+      },
+      body: JSON.stringify(data || {}),
+    }).then(function (response) {
+      return response.json().then(function (body) {
+        if (!response.ok) throw new Error((body.errors || [body.error || "Something went wrong."]).join(" "));
+        return body;
+      });
+    });
+  };
+
+  editor.status = function (text, isError) {
+    if (editor.panel) status(text, isError);
+  };
+
+  window.addEventListener("beforeunload", function (event) {
+    if (editor.panel && !editor.panel.hidden && editor.isDirty()) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+  });
 
   editor.applyCss = applyCss;
 
