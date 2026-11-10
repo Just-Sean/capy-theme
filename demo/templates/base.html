@@ -17,6 +17,7 @@
       {% if theme.tagline %}<span class="ml-3 text-sm opacity-70">{{ theme.tagline }}</span>{% endif %}
     </div>
     <nav class="flex-none">
+      <a href="{% url 'capy_theme:showcase' %}" class="btn btn-ghost btn-sm">Showcase</a>
       <a href="{% url 'admin:index' %}" class="btn btn-ghost btn-sm">Admin</a>
     </nav>
   </header>

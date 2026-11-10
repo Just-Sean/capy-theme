@@ -28,22 +28,38 @@ def test_stylesheet_url_is_under_theme(theme):
     assert len(revision.css_version) == 12
 
 
+def css_blocks(css):
+    """Return {selector: block text} for the stylesheet's four rule blocks."""
+    blocks = {}
+    for selector in (
+        ":root {",
+        "@media (prefers-color-scheme: dark)",
+        '[data-theme="capy-light"]',
+        '[data-theme="capy-dark"]',
+    ):
+        start = css.index(selector)
+        blocks[selector] = css[start : css.index("}", start)]
+    return blocks
+
+
 def test_stylesheet_has_variables_for_both_modes(client, theme):
     revision = publish(theme)
     response = client.get(css_url(revision))
     assert response.status_code == 200
     assert response["Content-Type"] == "text/css; charset=utf-8"
-    css = response.content.decode()
-    light, dark = css.split("@media (prefers-color-scheme: dark)")
-    cupcake = THEMES["cupcake"]["values"]
-    dracula = THEMES["dracula"]["values"]
-    assert "color-scheme: light;" in light
-    assert f"--color-primary: {cupcake['--color-primary']};" in light
-    assert "color-scheme: dark;" in dark
-    assert f"--color-primary: {dracula['--color-primary']};" in dark
-    # All 28 values in each mode.
-    assert light.count("--") == 28
-    assert dark.count("--") == 28
+    cupcake = THEMES["cupcake"]["values"]["--color-primary"]
+    dracula = THEMES["dracula"]["values"]["--color-primary"]
+    expected = {
+        ":root {": ("light", cupcake),
+        "@media (prefers-color-scheme: dark)": ("dark", dracula),
+        '[data-theme="capy-light"]': ("light", cupcake),
+        '[data-theme="capy-dark"]': ("dark", dracula),
+    }
+    for selector, block in css_blocks(response.content.decode()).items():
+        scheme, primary = expected[selector]
+        assert f"color-scheme: {scheme};" in block, selector
+        assert f"--color-primary: {primary};" in block, selector
+        assert block.count("--") == 28, selector  # all 28 values
 
 
 def test_stylesheet_is_cached_by_browsers_for_a_year(client, theme):

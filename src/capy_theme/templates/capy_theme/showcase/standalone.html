@@ -1,0 +1,18 @@
+{% load capy_theme %}<!doctype html>
+{% comment %}
+  The showcase's own page, used when the project doesn't set
+  CAPY_THEME_BASE_TEMPLATE. Projects that do must give their base template a
+  `content` block (and a `title` block if they want the title) and include
+  {% theme_head %}.
+{% endcomment %}
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Theme showcase{% endblock %}</title>
+  {% theme_head %}
+</head>
+<body>
+  {% block content %}{% endblock %}
+</body>
+</html>

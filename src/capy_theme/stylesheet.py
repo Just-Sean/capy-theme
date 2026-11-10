@@ -19,21 +19,35 @@ def css_version(theme_id, number, snapshot):
 
 
 def render_css(revision):
-    """Return the CSS for a revision: light values by default, dark ones in dark mode.
+    """Return the CSS for a revision.
+
+    - The page uses the light values, or the dark ones when the visitor's device
+      is in dark mode.
+    - Any element with data-theme="capy-light" or "capy-dark" is forced into that
+      mode, whatever the device setting. The showcase uses this to show both side
+      by side, and the light/dark toggle (6.1) will too.
 
     The rules aren't in a CSS layer, so they override daisyUI's own theme rules
     (which are in `@layer base`) wherever the stylesheet is loaded.
     """
     snapshot = revision.snapshot
+    light, dark = snapshot["light_values"], snapshot["dark_values"]
     lines = [
         f"/* capy-theme: {revision.theme.name}, revision {revision.number} */",
         ":root {",
-        *_block("light", snapshot["light_values"], indent="  "),
+        *_block("light", light, indent="  "),
         "}",
         "@media (prefers-color-scheme: dark) {",
         "  :root {",
-        *_block("dark", snapshot["dark_values"], indent="    "),
+        *_block("dark", dark, indent="    "),
         "  }",
+        "}",
+        # After the rules above, so these win over them.
+        '[data-theme="capy-light"] {',
+        *_block("light", light, indent="  "),
+        "}",
+        '[data-theme="capy-dark"] {',
+        *_block("dark", dark, indent="  "),
         "}",
     ]
     return "\n".join(lines) + "\n"

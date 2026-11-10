@@ -11,5 +11,6 @@ from . import views
 app_name = "capy_theme"
 
 urlpatterns = [
+    path("showcase/", views.showcase, name="showcase"),
     path("<slug:version>.css", views.theme_css, name="theme_css"),
 ]
