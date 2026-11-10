@@ -1,0 +1,9 @@
+{% extends "admin/change_form.html" %}
+{% comment %}The theme edit page, with a Publish button next to History.{% endcomment %}
+
+{% block object-tools-items %}
+  {% if original.pk %}
+    <li><a href="{% url 'admin:capy_theme_theme_publish' original.pk %}">Publish</a></li>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}
