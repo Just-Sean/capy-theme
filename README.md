@@ -176,6 +176,10 @@ uv run python demo/manage.py runserver      # then open http://localhost:8000/ad
 
 Stop the server with **Ctrl+C** in the terminal it's running in.
 
+The demo's navbar links to the theme showcase (`/theme/showcase/`). The demo sets
+`CAPY_THEME_BASE_TEMPLATE = "base.html"`, so the showcase appears inside the
+demo's page with its navbar.
+
 It uses SQLite (`demo/db.sqlite3`) by default. To use Postgres instead, set
 `DATABASE_URL` on each command (the database must already exist):
 
