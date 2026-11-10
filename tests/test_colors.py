@@ -91,7 +91,9 @@ def test_stylesheet_uses_the_override_and_nothing_else_changes():
     Theme.objects.all().delete()
     overridden = render_css(theme_with({"light": {"primary": PINK, "primary-content": TEAL}}))
     changed = [
-        (a, b) for a, b in zip(plain.splitlines(), overridden.splitlines(), strict=True) if a != b
+        (a, b)
+        for a, b in zip(plain.splitlines(), overridden.splitlines(), strict=True)
+        if a != b and "--capy-focus" not in b  # the focus colour may follow primary (2.7)
     ]
     # Only primary and its text colour change, in the light :root and capy-light blocks.
     assert sorted(b.strip() for _, b in changed) == sorted(

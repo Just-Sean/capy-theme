@@ -59,7 +59,7 @@ def test_stylesheet_has_variables_for_both_modes(client, theme):
         scheme, primary = expected[selector]
         assert f"color-scheme: {scheme};" in block, selector
         assert f"--color-primary: {primary};" in block, selector
-        assert block.count("--") == 28, selector  # all 28 values
+        assert block.count("--") == 29, selector  # all 28 values, plus --capy-focus
 
 
 def test_stylesheet_is_cached_by_browsers_for_a_year(client, theme):

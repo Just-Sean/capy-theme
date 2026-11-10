@@ -126,7 +126,7 @@ To show the theme's logo (or its site name if it has no logo), use
 `{% theme_logo class="h-8" %}`. Every template also gets a `theme` variable
 holding the published `site_name`, `tagline`, `logo_url`, `logo_alt`, `name`,
 `slug`, `revision`, `light_base`, `dark_base`, `stylesheet_url`, `default_mode`,
-`visitors_can_switch` and `mode` (what this visitor sees), or `None`
+`visitors_can_switch`, `mode` (what this visitor sees) and `email_colors` (hex), or `None`
 if no theme is active.
 
 Pages then show the **active** theme's **published** colours. Until a theme is
@@ -325,6 +325,19 @@ it as well. Anything you set yourself is always kept.
 lists every pair for light and dark. AA needs 4.5:1 and AAA 7:1 for normal text.
 Pairs below AA are marked "⚠ fails AA". They're warnings only: saving and
 publishing still work. Ratings are for the saved draft, so save to update them.
+
+### Browser colour, focus outline and email colours
+
+- **Browser colour:** `{% theme_head %}` adds `<meta name="theme-color">` tags, so
+  phones colour their address bar to match the page background. There's one per
+  mode (chosen by the device), or a single one when a mode is forced.
+- **Focus outline:** the stylesheet gives keyboard focus (`:focus-visible`) a 2 px
+  outline in `--capy-focus`. That's the primary colour when it has at least 3:1
+  contrast with the background (WCAG's minimum for non-text), otherwise the text
+  colour, so it's always visible.
+- **Email colours:** HTML emails can't use OKLCH or CSS variables, so templates
+  get every light-mode colour as hex in `theme.email_colors`, e.g.
+  `{{ theme.email_colors.primary }}` or `{{ theme.email_colors.base_100 }}`.
 
 ### Shape and effects
 

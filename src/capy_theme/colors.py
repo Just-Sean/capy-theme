@@ -207,3 +207,28 @@ def draft_values(theme, scheme):
     if snapshot.get(f"{scheme}_values") is None:
         return {}
     return effective_values(snapshot, scheme)
+
+
+NON_TEXT = 3.0  # WCAG 2 minimum contrast for focus outlines and other non-text parts
+
+
+def focus_color(values):
+    """Return a focus-outline colour that stays visible on the page background.
+
+    The primary colour if it has at least 3:1 contrast with the background
+    (WCAG's minimum for non-text parts), otherwise the text colour.
+    """
+    background = values["--color-base-100"]
+    primary = values["--color-primary"]
+    return primary if contrast(primary, background) >= NON_TEXT else values["--color-base-content"]
+
+
+def hex_colors(values):
+    """Return every colour as #rrggbb, keyed like "primary" or "base_100".
+
+    For HTML emails, which can't use OKLCH or CSS variables.
+    """
+    return {
+        name.replace("-", "_"): to_hex(values[f"--color-{name}"], alpha=False)
+        for name in COLOR_NAMES
+    }

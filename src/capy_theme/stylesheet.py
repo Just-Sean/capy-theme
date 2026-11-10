@@ -6,7 +6,7 @@ from importlib.metadata import version
 
 from django.urls import reverse
 
-from .colors import effective_values
+from .colors import effective_values, focus_color
 
 
 def css_version(theme_id, number, snapshot):
@@ -52,6 +52,11 @@ def render_css(revision):
         '[data-theme="capy-dark"] {',
         *_block("dark", dark, indent="  "),
         "}",
+        # A keyboard-focus outline that stays visible on the theme's colours.
+        ":focus-visible {",
+        "  outline: 2px solid var(--capy-focus);",
+        "  outline-offset: 2px;",
+        "}",
     ]
     return "\n".join(lines) + "\n"
 
@@ -60,6 +65,7 @@ def _block(scheme, values, indent):
     yield f"{indent}color-scheme: {scheme};"
     for name, value in values.items():
         yield f"{indent}{name}: {value};"
+    yield f"{indent}--capy-focus: {focus_color(values)};"
 
 
 def stylesheet_url(revision):

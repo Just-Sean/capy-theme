@@ -6,6 +6,7 @@ TEMPLATES["OPTIONS"]["context_processors"].
 
 from .active import get_active_theme
 from .branding import branding
+from .colors import effective_values, hex_colors
 from .mode import current_mode, mode_settings
 from .stylesheet import stylesheet_url
 
@@ -32,5 +33,7 @@ def theme(request):
             "default_mode": mode_settings(live)[0],
             "visitors_can_switch": mode_settings(live)[1],
             "mode": current_mode(request, live),  # what this visitor sees
+            # Light-mode colours as #rrggbb for HTML emails, e.g. theme.email_colors.primary.
+            "email_colors": hex_colors(effective_values(live.snapshot, "light")),
         }
     }
