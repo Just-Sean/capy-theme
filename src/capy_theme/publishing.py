@@ -4,6 +4,7 @@ from django.db import transaction
 from django.db.models import Max
 
 from .models import ThemeRevision
+from .stylesheet import css_version
 from .validation import validate_settings
 
 
@@ -29,11 +30,13 @@ def publish(theme, user=None, note=""):
     theme.clean()
 
     with transaction.atomic():
-        last = theme.revisions.aggregate(last=Max("number"))["last"] or 0
+        number = (theme.revisions.aggregate(last=Max("number"))["last"] or 0) + 1
+        snapshot = theme.snapshot()
         revision = ThemeRevision.objects.create(
             theme=theme,
-            number=last + 1,
-            snapshot=theme.snapshot(),
+            number=number,
+            snapshot=snapshot,
+            css_version=css_version(theme.pk, number, snapshot),
             note=note,
             published_by=user if user is not None and user.is_authenticated else None,
         )

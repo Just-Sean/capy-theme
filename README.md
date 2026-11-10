@@ -24,7 +24,18 @@ stand-in project in `tests/`.
    ]
    ```
 
-3. Create its database tables:
+3. Add its URLs to the project's `urls.py`, under `/theme/`:
+
+   ```python
+   from django.urls import include, path
+
+   urlpatterns = [
+       ...,
+       path("theme/", include("capy_theme.urls")),
+   ]
+   ```
+
+4. Create its database tables:
 
    ```bash
    uv run python manage.py migrate
@@ -178,6 +189,25 @@ From code: `from capy_theme.active import get_active_theme` then
 loaded, or `None` if no theme is active. It's cached (see
 `CAPY_THEME_CACHE_SECONDS`), so a normal page load doesn't query the database.
 
+### The theme stylesheet
+
+Each published revision has its own stylesheet at `/theme/<version>.css`, where
+`<version>` is a short hash unique to that revision (`ThemeRevision.css_version`).
+It sets daisyUI's CSS variables (`--color-primary` and the rest): light values on
+`:root`, and dark values inside `@media (prefers-color-scheme: dark)`. The rules
+aren't in a CSS layer, so they override daisyUI's own theme rules.
+
+- Browsers cache each stylesheet for a year. Publishing creates a new version,
+  so pages link to a new URL and visitors get the change straight away.
+- An old URL keeps returning the revision it was made for.
+- The values come from the revision itself, not from today's daisyUI catalogue.
+  Each publish saves both base themes' full values, so a later daisyUI update
+  can't change or break a published theme. To pick up daisyUI's changes,
+  publish again.
+
+On a theme's admin page, "View its stylesheet" opens the live revision's
+stylesheet. Linking it into pages comes with `{% theme_head %}`.
+
 ## Build the package
 
 To build the installable package (a wheel and an sdist, written to `dist/`) and
@@ -224,6 +254,9 @@ straight to `main`:
 | `src/capy_theme/` | The Django app that projects install |
 | `src/capy_theme/apps.py` | The app's name, label and admin title |
 | `src/capy_theme/models.py` | Database models: `Theme` (the draft: name, slug, light and dark base, `settings` overrides, and its live revision) `ThemeRevision` (a published copy of a theme's look) and `ThemeAssignment` (which theme is active) |
+| `src/capy_theme/stylesheet.py` | Writes a published revision out as CSS variables, and makes its version hash |
+| `src/capy_theme/views.py` | The stylesheet view, `/theme/<version>.css` |
+| `src/capy_theme/urls.py` | The module's URLs, included by projects under `/theme/` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |
 | `src/capy_theme/signals.py` | Clears the active-theme cache whenever themes, revisions or assignments change |
 | `src/capy_theme/publishing.py` | `publish()`: turns a theme's draft into its new live revision |

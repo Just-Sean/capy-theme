@@ -53,3 +53,13 @@ def get_builtin_themes():
             f"Available: {', '.join(THEMES)}."
         )
     return [theme for theme in _ALL if theme.name in allowed]
+
+
+def builtin_values(name):
+    """Return a copy of a built-in theme's values, or None if there's no such theme.
+
+    Not limited by CAPY_THEME_BUILTIN_THEMES: it's used to copy values into
+    revisions, not to offer choices.
+    """
+    theme = THEMES.get(name)
+    return dict(theme["values"]) if theme else None

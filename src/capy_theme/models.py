@@ -14,6 +14,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
+from .catalogue import builtin_values
 from .validation import validate_base, validate_settings
 
 
@@ -97,6 +98,11 @@ class Theme(models.Model):
         return {
             "light_base": self.light_base,
             "dark_base": self.dark_base,
+            # The bases' full values are copied too, so a later daisyUI update
+            # can't change or break a published theme. None if the base no
+            # longer exists (such a draft can't be published).
+            "light_values": builtin_values(self.light_base),
+            "dark_values": builtin_values(self.dark_base),
             "settings": copy.deepcopy(self.settings),
         }
 
@@ -117,7 +123,15 @@ class ThemeRevision(models.Model):
 
     theme = models.ForeignKey(Theme, on_delete=models.CASCADE, related_name="revisions")
     number = models.PositiveIntegerField(help_text="1 for the theme's first publish, then 2, 3…")
-    snapshot = models.JSONField(help_text="The theme's light base, dark base and settings.")
+    snapshot = models.JSONField(
+        help_text="The theme's light and dark base names and their values, and its settings."
+    )
+    css_version = models.CharField(
+        max_length=16,
+        unique=True,
+        editable=False,
+        help_text="Short hash naming this revision's stylesheet: /theme/<css_version>.css",
+    )
     note = models.TextField(blank=True, help_text="Why it was published (optional).")
     published_by = models.ForeignKey(
         django_settings.AUTH_USER_MODEL,
