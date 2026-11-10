@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Design tokens download** at `/theme/tokens.json`: the published theme in the
+  W3C Design Tokens format (2025.10), validated against the official schema in tests.
 - **JSON API** at `/theme/api.json`: the same data as `get_artifacts()` (now also
   with font files, shape values and type settings), public, with ETag and 304.
   In projects with Django REST Framework it's a DRF view that drf-spectacular

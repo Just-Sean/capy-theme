@@ -1195,3 +1195,19 @@ Agreed with Sean: hybrid. capy-theme never requires DRF.
   API serves the same data.
 - **Test-only dependencies:** djangorestframework and drf-spectacular (Sean
   approved), in the dev group.
+
+## 7.2 Design tokens export (#53)
+
+Recommended (made while building autonomously).
+
+- **Format version 2025.10**, the Design Tokens Community Group's first stable
+  version. Colours use its object form (`colorSpace: "oklch"`, `components`,
+  `hex` fallback), since capy-theme stores OKLCH.
+- **Built from `get_artifacts()`**, so it always matches the JSON API.
+- **Every token has its own `$type`:** the official schema doesn't check values of
+  tokens that inherit their type from a group, so this makes the validation real.
+- **The official schema is copied into `tests/artifacts/dtcg/`** (W3C Software
+  and Document License, notice included), so tests don't need the network. A test
+  also proves the schema rejects broken tokens.
+- **Light and dark as groups** (`light.color.primary`), with fonts and type
+  shared, rather than one file per mode: one download has everything.

@@ -229,6 +229,7 @@ Every command in one place. Details are in the linked pages.
 | `uv run python scripts/generate_builtin_themes.py` | Regenerate daisyUI's built-in themes after a daisyUI update ([development](docs/development.md)) |
 | `uv run python scripts/build_components_css.py` | Rebuild the Components view's stylesheet ([editor](docs/editor.md)) |
 | `gh release download v5.7.50 --repo saadeghi/daisyui -p daisyui.mjs -p daisyui-theme.mjs` | Download daisyUI's plugin files for the demo when updating daisyUI ([development](docs/development.md)) |
+| `curl -sSfL -o tests/artifacts/dtcg/format-2025.10.json https://www.designtokens.org/schemas/2025.10/format.json` | Refresh the Design Tokens format schema the tests use ([tests/artifacts/dtcg](tests/artifacts/dtcg/README.md)) |
 | `uv build` | Build the package ([below](#build-the-package)) |
 | `git tag vX.Y.Z && git push origin vX.Y.Z` | Tag a release ([below](#release-a-version)) |
 
@@ -241,7 +242,7 @@ Every command in one place. Details are in the linked pages.
 | [docs/fonts.md](docs/fonts.md) | The font library: system stacks, bundled fonts, uploads, Google Fonts, external stylesheets |
 | [docs/images.md](docs/images.md) | Uploads and SVG cleaning, logo slots, icons, the sharing image, backgrounds |
 | [docs/editor.md](docs/editor.md) | The live editor and its Components view |
-| [docs/artifacts.md](docs/artifacts.md) | What other apps get: `get_artifacts()`, `{% theme_artifacts %}` and the JSON API (`/theme/api.json`, with DRF/drf-spectacular support) |
+| [docs/artifacts.md](docs/artifacts.md) | What other apps get: `get_artifacts()`, `{% theme_artifacts %}` and the JSON API (`/theme/api.json`, with DRF/drf-spectacular support) and the design tokens download (`/theme/tokens.json`) |
 | [docs/development.md](docs/development.md) | The demo site and updating daisyUI |
 | [docs/PLAN.md](docs/PLAN.md), [docs/DECISIONS.md](docs/DECISIONS.md) | The build plan, and why things are the way they are |
 
