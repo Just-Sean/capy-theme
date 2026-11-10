@@ -421,6 +421,25 @@ from the icon image and its settings, so each revision keeps its icons:
 `{% theme_head %}` links the ICO, SVG, 192 px and Apple icons. The 512 px,
 maskable and monochrome icons are for the web app manifest.
 
+### Web app manifest
+
+`/theme/manifest.webmanifest` lets browsers install the site as an app.
+`{% theme_head %}` links it. It's built from the active theme's published
+revision:
+
+- **Name** and **short name** (at most 12 characters; blank uses the name),
+  **description**, **start URL** (a path starting with `/`; default `/`),
+  **display** (standalone by default) and **orientation**: set in the live
+  editor (**Web app**) or the admin (**Web app**). Blank fields use the site name
+  and tagline.
+- **Colours**: the background colour (base-100) of the theme's default mode.
+- **Icons**: the 192 px, 512 px, maskable and monochrome icons (see
+  [Icon and favicons](#icon-and-favicons)). Browsers only offer to install the
+  site once it has an icon.
+
+To check it: open the site in Chrome, then DevTools → **Application** →
+**Manifest**. Installing needs HTTPS (or `localhost`).
+
 Upgrading from 0.4: migration `0010_logo_slots` moves each theme's old logo into
 its main slot (light). It has no smaller copies; upload it again to get them.
 Revisions published before 0.5 keep showing their old logo.
@@ -835,7 +854,7 @@ straight to `main`:
 | `src/capy_theme/apps.py` | The app's name, label and admin title |
 | `src/capy_theme/models.py` | Database models: `Font` and `FontFile` (the font library), `ThemeAsset` and `ThemeAssetVariant` (a theme's uploaded images and their generated sizes), `Theme` (the draft: name, slug, light and dark base, `settings` overrides, and its live revision) `ThemeRevision` (a published copy of a theme's look) and `ThemeAssignment` (which theme is active) |
 | `src/capy_theme/stylesheet.py` | Writes a published revision out as CSS variables, and makes its version hash |
-| `src/capy_theme/views.py` | The stylesheet view (`/theme/<version>.css`), the showcase (`/theme/showcase/`) and the mode switch (`/theme/mode/<mode>/`) |
+| `src/capy_theme/views.py` | The stylesheet view (`/theme/<version>.css`), the showcase (`/theme/showcase/`), the mode switch (`/theme/mode/<mode>/`), the web app manifest (`/theme/manifest.webmanifest`) and the live editor's JSON views |
 | `src/capy_theme/urls.py` | The module's URLs, included by projects under `/theme/` |
 | `src/capy_theme/templatetags/capy_theme.py` | The `{% theme_head %}`, `{% theme_html_attrs %}`, `{% theme_logo %}` and `{% theme_mode_toggle %}` template tags |
 | `src/capy_theme/branding.py` | Reads a revision's published site name, tagline and logo |
@@ -859,6 +878,7 @@ straight to `main`:
 | `src/capy_theme/font_files.py` | Checks uploaded font files, converts them to WOFF2 and trims them to a character subset |
 | `src/capy_theme/google_fonts.py` | Imports a Google font into the library (downloaded once, served locally) |
 | `src/capy_theme/images.py` | Image slots and their limits, and checking and cleaning uploaded images |
+| `src/capy_theme/manifest.py` | Builds the web app manifest from the published theme |
 | `src/capy_theme/icons.py` | Makes the favicons and app icons from the icon image, and their `<link>` tags |
 | `src/capy_theme/logos.py` | Logo slots: fallbacks, smaller copies, the `<picture>` HTML and the header height CSS |
 | `src/capy_theme/svg.py` | Cleaning uploaded SVGs with an allow-list of elements and attributes |

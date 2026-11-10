@@ -897,3 +897,23 @@ Recommended (made while building autonomously).
   Chrome can't show a tab or home screen, so the check was that every linked icon
   loads as an image of the right size. The manifest (5.5) makes Android
   installation testable in DevTools.
+
+## 5.5 Web app manifest (#36)
+
+Recommended (made while building autonomously).
+
+- **URL `/theme/manifest.webmanifest`**, with the module's other URLs, instead of
+  `/manifest.webmanifest` at the site root: the module never adds URLs outside the
+  prefix the project chose. The manifest's `scope` is still `/`, so the whole site
+  installs (a manifest's location doesn't limit its scope).
+- **Built per request from the published revision**, cached for 5 minutes (the URL
+  doesn't change when the theme is republished).
+- **Fallbacks:** name → site name → "Website"; short name → the name cut to 12
+  characters; description → tagline; start URL → `/`; display → standalone.
+- **Colours:** `background_color` and `theme_color` are base-100 of the theme's
+  default mode (light for auto), matching the address-bar colour.
+- **Start URL** must be a path on the site (`/…`, not `//…` or another site), so a
+  theme can't send installed apps elsewhere.
+- **Checked in Chrome** with `Page.getAppManifest` and
+  `Page.getInstallabilityErrors` (what DevTools' Manifest panel shows): no errors,
+  and installable.

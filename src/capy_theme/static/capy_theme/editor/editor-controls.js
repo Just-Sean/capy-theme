@@ -455,6 +455,38 @@
     ]);
   }
 
+  // Web app: what the web app manifest says (names, start page, display).
+  function appSection() {
+    var app = (changes.settings.app = changes.settings.app || {});
+    var rows = spec.app_settings.map(function (item) {
+      var input;
+      if (item.choices) {
+        input = el("select", {});
+        input.appendChild(el("option", { value: "", text: "Default" }));
+        item.choices.forEach(function (choice) {
+          input.appendChild(el("option", { value: choice.value, text: choice.label }));
+        });
+      } else {
+        input = el("input", { type: "text", maxlength: item.name === "short_name" ? "12" : "300" });
+      }
+      input.setAttribute("data-capy-app", item.name);
+      input.setAttribute("aria-label", item.label);
+      input.title = item.help;
+      input.value = app[item.name] || "";
+      input.addEventListener(item.choices ? "change" : "input", function () {
+        var value = input.value.trim();
+        if (value === "") delete app[item.name];
+        else app[item.name] = value;
+        update();
+      });
+      return el("label", { class: "capy-editor-field" }, [el("span", { text: item.label }), input]);
+    });
+    return el("section", { class: "capy-editor-section" }, [
+      el("details", {}, [el("summary", { text: "Web app" }),
+        el("p", { class: "capy-editor-note", text: "How the site installs as an app. Used after you publish; the icons come from Images → icon." })].concat(rows)),
+    ]);
+  }
+
   // Shape
 
   function shapeSection() {
@@ -556,6 +588,7 @@
         images: JSON.parse(JSON.stringify(state.settings.images || {})),
         logo: JSON.parse(JSON.stringify(state.settings.logo || {})),
         icon: JSON.parse(JSON.stringify(state.settings.icon || {})),
+        app: JSON.parse(JSON.stringify(state.settings.app || {})),
       },
     };
     editor.changes = normalized();
@@ -569,6 +602,7 @@
     container.appendChild(colorSection());
     container.appendChild(fontSection());
     container.appendChild(imageSection(state));
+    container.appendChild(appSection());
     container.appendChild(shapeSection());
     container.appendChild(actions(state));
     fill();
