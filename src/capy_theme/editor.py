@@ -11,8 +11,18 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 
 from .active import get_active_theme
-from .colors import SCHEMES, contrast_report, effective_values, to_oklch
+from .catalogue import get_builtin_themes
+from .colors import (
+    COLOR_GROUPS,
+    SCHEMES,
+    contrast_report,
+    effective_values,
+    label,
+    to_hex,
+    to_oklch,
+)
 from .models import Theme
+from .shape import EFFECTS, SIZES
 from .stylesheet import snapshot_css
 from .validation import validate_base, validate_settings
 
@@ -60,6 +70,29 @@ def draft_state(theme, user):
         "has_unpublished_changes": theme.has_unpublished_changes,
         "can_publish": can_publish(user),
         "urls": editor_urls(theme),
+        "controls": controls(),
+        **preview(theme, {}),
+    }
+
+
+def controls():
+    """What the editor panel offers: bases, colour groups and shape settings."""
+    return {
+        "bases": {
+            scheme: [t.name for t in get_builtin_themes() if t.scheme == scheme]
+            for scheme in SCHEMES
+        },
+        "color_groups": [
+            {"name": group, "colors": [{"name": n, "label": label(n)} for n in names]}
+            for group, names in COLOR_GROUPS.items()
+        ],
+        "sizes": [
+            {"name": name, "variable": v, "unit": unit, "min": low, "max": high, "label": lab}
+            for name, (v, unit, low, high, lab, _help) in SIZES.items()
+        ],
+        "effects": [
+            {"name": name, "variable": v, "label": lab} for name, (v, lab, _help) in EFFECTS.items()
+        ],
     }
 
 
@@ -126,6 +159,17 @@ def preview(theme, data):
     return {
         "css": snapshot_css(snapshot, f"capy-theme editor: preview of {theme.name}"),
         "values": values,
+        # Hex for the browser's colour pickers, keyed like "primary" or "base-100".
+        "hex": {
+            scheme: {
+                key.removeprefix("--color-"): to_hex(value, alpha=False)
+                for key, value in values[scheme].items()
+                if key.startswith("--color-")
+            }
+            for scheme in SCHEMES
+        },
         "contrast": {scheme: contrast_report(values[scheme]) for scheme in SCHEMES},
         "settings": draft.settings,
+        "light_base": draft.light_base,
+        "dark_base": draft.dark_base,
     }
