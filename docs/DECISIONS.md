@@ -773,3 +773,9 @@ Recommended (made while building autonomously).
   which is more specific than the reset's bare element selectors, so they win
   whatever the order. They stay in `@layer base`, so utility classes still win
   (checked: the demo's `text-5xl` heading keeps 48 px).
+
+## 4.9 Release v0.4.0 (#31)
+
+- Released with tests on SQLite and PostgreSQL 17, the package checked (including
+  the 30 bundled fonts and migrations 0007–0008), and each font feature checked in
+  headless Chrome while it was built.

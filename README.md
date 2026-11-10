@@ -6,7 +6,7 @@ A self-contained Django app (`capy_theme`) that any Django 6.1+ project
 can install. It has no project of its own: its tests run against a tiny
 stand-in project in `tests/`, and `demo/` is a small site for trying it out.
 
-## What it does (v0.3)
+## What it does (v0.4)
 
 Whoever runs the site controls its look from the Django admin, with no code
 changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
@@ -22,6 +22,12 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   any format (hex, rgb, hsl, oklch). Readable text colours and background shades
   are worked out automatically, and every colour pair shows its WCAG contrast
   rating.
+- **Fonts:** a shared font library with body, heading, monospace and display
+  roles. Fonts come from 13 system font stacks (nothing to download), 30 bundled
+  open-licence fonts, uploads (any WOFF2/WOFF/TTF/OTF, converted to WOFF2 and
+  trimmed to a character set), Google Fonts (downloaded once and served from your
+  own site), or external stylesheets like Adobe Fonts. Plus a type scale (base
+  size, heading scale, line height, heading weight) and font preloading.
 - **Shape and effects:** corner radii, control sizes, border width, depth and noise.
 - **Branding:** each theme has a site name, tagline and main logo (with alt text).
 - **Drafts and publishing:** editing a theme changes only its draft. Publishing
@@ -41,8 +47,8 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   only by default).
 - **Permissions:** only users with `publish_theme` can publish or activate.
 
-Next: fonts (v0.4), then images and icons, scheduling, an API and more (see
-`docs/PLAN.md`).
+Next: images and icons (v0.5), then visitor choices and scheduling, an API and
+more (see `docs/PLAN.md`).
 
 ## Add it to a project
 

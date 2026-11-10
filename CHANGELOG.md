@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.4.0
+
+Fonts: fonts for every role from every source, all self-hosted (except external
+stylesheets), chosen in the live editor.
+
+- **Font library and roles:** `Font` and `FontFile` models. Body, heading,
+  monospace and display roles in theme settings, in the admin and the live editor.
+  `@font-face` rules (`font-display: swap`) and variables (`--font-sans`,
+  `--font-mono`, `--capy-font-heading`, `--capy-font-display`). Published fonts are
+  copied into revisions.
+- **System font stacks:** 13 stacks (System sans/serif/mono plus ten from Modern
+  Font Stacks), added by migration. Nothing to download.
+- **Curated collection:** 30 open-licence (OFL) fonts bundled, added with
+  `manage.py capy_theme_add_fonts`, with previews in the admin and editor.
+- **Uploads:** WOFF2, WOFF, TTF or OTF, checked and converted to WOFF2 with
+  fontTools, optionally trimmed to a character subset. Weight and style are read
+  from the font. Size limit `CAPY_THEME_FONT_MAX_BYTES`.
+- **Google Fonts import:** downloaded once and served from your own site.
+- **External font stylesheets** (e.g. Adobe Fonts), with CSP guidance.
+- **Type scale:** base size (minimum 14 px), heading scale, line height and heading
+  weight. Preload links for the body and heading fonts.
+- **Showcase:** fonts and type, showing only weights that really exist.
+- **Fixes:** every weight gets its own `@font-face` even when files are shared;
+  theme base rules beat Tailwind's reset whatever the loading order.
+- **New dependency:** fonttools[woff] (with Brotli).
+
 ## 0.3.0
 
 The live theme editor: edit a theme on the real page and see every change
