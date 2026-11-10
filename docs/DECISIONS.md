@@ -1245,3 +1245,13 @@ Recommended (made while building autonomously).
   logos, backgrounds) aren't daisyUI's.
 - **Checked by building it** with the real Tailwind CLI and the demo's daisyUI
   files (the test is skipped only if the CLI hasn't been downloaded).
+
+## 7.5 Management commands (#56)
+
+- **Names as the plan gives them** (`theme_export`, `theme_import`,
+  `theme_publish`, `theme_rebuild_images`), although the older fonts command is
+  `capy_theme_add_fonts`.
+- **`theme_import --publish/--activate`** so a fresh install can be themed with no
+  admin step (the issue's check).
+- **`theme_rebuild_images`** also fills the gap left by migration 0010 (moved
+  logos had no smaller copies) and remakes icons if their files are missing.
