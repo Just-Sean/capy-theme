@@ -176,6 +176,7 @@ Optional settings a project can add to its `settings.py`:
 | --- | --- | --- |
 | `CAPY_THEME_BUILTIN_THEMES` | all 35 | Which built-in daisyUI themes can be used as a theme's light or dark base, e.g. `["light", "dark"]`. Listing an unknown theme raises an error that names it. |
 | `CAPY_THEME_CACHE_SECONDS` | `300` | How long the active theme is cached, in seconds. Publishing or activating clears the cache straight away; this limit makes every server process catch up when the project's cache isn't shared between processes (e.g. Django's default in-memory cache). |
+| `CAPY_THEME_API` | `"auto"` | How `/theme/api.json` is served: `"auto"` (a DRF view if Django REST Framework is installed, so drf-spectacular documents it; otherwise a plain Django view), `"drf"` or `"django"`. See [docs/artifacts.md](docs/artifacts.md). |
 | `CAPY_THEME_VISITOR_THEMES` | `True` | Let visitors choose among the themes offered to them with `{% theme_picker %}`. `False` turns the picker off and ignores visitors' choices. |
 | `CAPY_THEME_EDITOR_BUTTON` | `True` | Show the live editor's **Edit theme** button in the corner of every page, for staff who can edit. `False` hides it (the editor still opens with `?edit=<theme id>`, e.g. from **Edit live** in the admin). |
 | `CAPY_THEME_FONT_MAX_BYTES` | `5242880` (5 MB) | The largest font file that can be uploaded, in bytes. |
@@ -240,7 +241,7 @@ Every command in one place. Details are in the linked pages.
 | [docs/fonts.md](docs/fonts.md) | The font library: system stacks, bundled fonts, uploads, Google Fonts, external stylesheets |
 | [docs/images.md](docs/images.md) | Uploads and SVG cleaning, logo slots, icons, the sharing image, backgrounds |
 | [docs/editor.md](docs/editor.md) | The live editor and its Components view |
-| [docs/artifacts.md](docs/artifacts.md) | What other apps get: `get_artifacts()` and `{% theme_artifacts %}` |
+| [docs/artifacts.md](docs/artifacts.md) | What other apps get: `get_artifacts()`, `{% theme_artifacts %}` and the JSON API (`/theme/api.json`, with DRF/drf-spectacular support) |
 | [docs/development.md](docs/development.md) | The demo site and updating daisyUI |
 | [docs/PLAN.md](docs/PLAN.md), [docs/DECISIONS.md](docs/DECISIONS.md) | The build plan, and why things are the way they are |
 
@@ -298,7 +299,7 @@ job and stays under 200 lines.
 | `fonts/` | `Font` and `FontFile` models, the library (roles, stacks, `@font-face`), uploads, Google Fonts import, `curated.json` |
 | `images/` | `ThemeAsset` and `ThemeAssetVariant` models, image slots, upload checks, SVG cleaning, logo slots, logo copies, the `{% theme_logo %}` HTML, icons, the sharing image |
 | `editor/` | The live editor: who can use it, its state and controls, preview, saving, adding it to pages, its JSON views and the Components view |
-| `artifacts/` | `get_artifacts()`: everything other apps get |
+| `artifacts/` | `get_artifacts()`: everything other apps get, and the JSON API (plain Django and DRF views) |
 | `admin/` | The theme form (one file per area: colours, type, shape, images), the theme admin page and its fieldsets, the Publish/Revisions/Restore pages, inlines, fonts, the theme schedule |
 | `templatetags/capy_theme.py` | The template tags; each calls its section |
 | `models.py`, `urls.py`, `apps.py`, `context_processors.py` | Django's entry points |
