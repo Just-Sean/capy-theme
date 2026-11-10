@@ -271,6 +271,18 @@ class Font(models.Model):
     def __str__(self):
         return self.family
 
+    def clean(self):
+        super().clean()
+        if self.source == "external":
+            if not self.stylesheet_url.startswith("https://"):
+                raise ValidationError(
+                    {"stylesheet_url": "External fonts need their stylesheet's https:// address."}
+                )
+        elif self.stylesheet_url:
+            raise ValidationError(
+                {"stylesheet_url": "Only external fonts use a stylesheet address."}
+            )
+
 
 class FontFile(models.Model):
     """One WOFF2 file of a font: a weight and style, optionally for one character subset."""

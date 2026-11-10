@@ -23,7 +23,7 @@ from .colors import (
     to_hex,
     to_oklch,
 )
-from .fonts import ROLES, preview_stack
+from .fonts import ROLES, external_stylesheets, preview_stack
 from .models import Font, Theme
 from .palette import from_logo, from_primary
 from .shape import EFFECTS, SIZES
@@ -195,6 +195,8 @@ def preview(theme, data):
         "settings": draft.settings,
         "light_base": draft.light_base,
         "dark_base": draft.dark_base,
+        # External font stylesheets (e.g. Adobe Fonts) the page must link.
+        "stylesheets": external_stylesheets(snapshot.get("fonts")),
     }
 
 
