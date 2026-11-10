@@ -978,3 +978,11 @@ Recommended (made while building autonomously).
   the light or dark image as the project would.
 - **Checked** with screenshots of both columns in headless Chrome. The outline on
   the masks and the size of the monochrome tile were fixed after looking at them.
+
+## 5.9 Release v0.5.0 (#40)
+
+- Released with tests on SQLite and PostgreSQL 17, the package checked (the new
+  modules and migrations 0009–0010 included, `demo/` excluded), the demo site
+  checked, and each image feature checked in headless Chrome while it was built.
+- The changelog calls out the one change that affects upgrades: the old logo
+  field moves into the main logo slot (migration 0010).

@@ -1,6 +1,6 @@
 [project]
 name = "capy-theme"
-version = "0.4.0"
+version = "0.5.0"
 description = "Theming for Django projects."
 readme = "README.md"
 requires-python = ">=3.14"
