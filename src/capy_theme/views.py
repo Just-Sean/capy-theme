@@ -17,7 +17,6 @@ from .editor import (
     can_publish,
     draft_state,
     editor_theme,
-    editor_urls,
     preview,
     save_draft,
     suggestions,
@@ -114,13 +113,14 @@ def set_mode(request, mode):
 
 
 def _editor_context(request):
-    """The editor's mount data for the showcase, or None if this user can't edit."""
+    """Whether to show the showcase's Edit theme button (the editor itself comes
+    from {% theme_head %})."""
     if not can_edit(request.user):
         return None
     theme = editor_theme(request)
     if theme is None:
         return None
-    return {"theme": theme, "urls": editor_urls(theme)}
+    return {"theme": theme}
 
 
 def editor_state(request, pk):

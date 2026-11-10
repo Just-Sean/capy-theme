@@ -554,3 +554,20 @@ Recommended (made while building autonomously).
   them.
 - **Publish asks for confirmation**, with a browser confirm dialog, since it
   changes what visitors see.
+
+## 3.6 Edit on any page (#43)
+
+Recommended (made while building autonomously).
+
+- **Loaded by `{% theme_head %}`** for staff with the change permission, so it
+  works on every page that uses it, with no template changes. Visitors get none
+  of its files. The showcase no longer loads it separately (one editor per page).
+- **Settings on the `<script>` tag:** `{% theme_head %}` is in `<head>`, where a
+  `<div>` isn't allowed, so the editor's URLs and token are data attributes on
+  its script element.
+- **Corner button and banner:** a small "Edit theme" button in the corner of
+  every page (`CAPY_THEME_EDITOR_BUTTON = False` hides it). While editing, a
+  banner says only this user sees the draft, with an Exit button.
+- **`?edit=<id>` works on any page,** even when no theme is active.
+- **No crash without auth:** requests without a user (no auth middleware) simply
+  don't get the editor.

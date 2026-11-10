@@ -1,6 +1,7 @@
 // The live theme editor: a panel on top of the page that previews a theme's
 // draft in this browser only. Data comes from the JSON views in views.py, which
-// use the same code as publishing. Loaded by templates/capy_theme/editor/mount.html.
+// use the same code as publishing. Loaded by templates/capy_theme/editor/mount.html,
+// which {% theme_head %} outputs for staff who can edit, so it works on any page.
 (function () {
   "use strict";
 
@@ -44,6 +45,26 @@
     editor.sheet = null;
   }
 
+  // A small "Edit theme" button in the corner of every page (unless the project
+  // turns it off with CAPY_THEME_EDITOR_BUTTON = False).
+  function floatingButton() {
+    if (mount.getAttribute("data-floating-button") !== "true") return null;
+    var button = el("button", { type: "button", class: "capy-editor-launch", "data-capy-editor-open": "" }, "Edit theme");
+    document.body.appendChild(button);
+    return button;
+  }
+
+  // While the editor is open, a banner says that only this user sees the draft.
+  function buildBanner() {
+    var banner = el("div", { class: "capy-editor-banner", role: "status" });
+    banner.appendChild(
+      el("span", {}, "Previewing the draft of " + mount.getAttribute("data-theme-name") + ". Only you see it.")
+    );
+    banner.appendChild(el("button", { type: "button", "data-capy-editor-close": "" }, "Exit"));
+    document.body.appendChild(banner);
+    return banner;
+  }
+
   function buildPanel() {
     var panel = el("aside", { class: "capy-editor", role: "dialog", "aria-label": "Theme editor" });
     var header = el("div", { class: "capy-editor-header" });
@@ -69,7 +90,10 @@
 
   editor.open = function () {
     if (!editor.panel) editor.panel = buildPanel();
+    if (!editor.banner) editor.banner = buildBanner();
     editor.panel.hidden = false;
+    editor.banner.hidden = false;
+    if (editor.launch) editor.launch.hidden = true;
     status("Loading the draft…");
     return fetch(mount.getAttribute("data-state-url"), {
       credentials: "same-origin",
@@ -100,6 +124,8 @@
     if (editor.isDirty() && !window.confirm("Discard your unsaved changes?")) return;
     removeCss();
     if (editor.panel) editor.panel.hidden = true;
+    if (editor.banner) editor.banner.hidden = true;
+    if (editor.launch) editor.launch.hidden = false;
   };
 
   // POST JSON to one of the editor's URLs; resolves with the reply, or rejects
@@ -188,6 +214,8 @@
       editor.close();
     }
   });
+
+  editor.launch = floatingButton();
 
   // Open straight away when the page is loaded with ?edit=… (e.g. from the admin).
   if (new URLSearchParams(window.location.search).has("edit")) editor.open();
