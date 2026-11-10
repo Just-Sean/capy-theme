@@ -115,6 +115,8 @@ def font_css(fonts):
     - Headings and display get --capy-font-heading / --capy-font-display, used by
       h1–h6 and the .capy-display class.
     Element rules are in @layer base, so a project's own utility classes still win.
+    They start with :root, so they beat Tailwind's reset (also in @layer base)
+    even when Tailwind's stylesheet loads after this one.
     """
     if not fonts:
         return []
@@ -152,13 +154,15 @@ def font_css(fonts):
     lines.append("}")
     lines.append("@layer base {")
     if "body" in fonts:
-        lines.append("  body { font-family: var(--capy-font-body); }")
+        lines.append("  :root body { font-family: var(--capy-font-body); }")
     if "heading" in fonts:
-        lines.append("  h1, h2, h3, h4, h5, h6 { font-family: var(--capy-font-heading); }")
+        lines.append(
+            "  :root :is(h1, h2, h3, h4, h5, h6) { font-family: var(--capy-font-heading); }"
+        )
     if "mono" in fonts:
-        lines.append("  code, kbd, samp, pre { font-family: var(--capy-font-mono); }")
+        lines.append("  :root :is(code, kbd, samp, pre) { font-family: var(--capy-font-mono); }")
     if "display" in fonts:
-        lines.append("  .capy-display { font-family: var(--capy-font-display); }")
+        lines.append("  :root .capy-display { font-family: var(--capy-font-display); }")
     lines.append("}")
     return lines
 

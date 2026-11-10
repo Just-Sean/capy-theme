@@ -52,7 +52,8 @@ def type_css(settings):
     """CSS lines for a theme's type settings (empty if none are set).
 
     Variables are unlayered; element rules are in @layer base, so a project's own
-    utility classes (e.g. text-5xl, font-bold) still win.
+    utility classes (e.g. text-5xl, font-bold) still win. They start with :root, so
+    they beat Tailwind's reset (also in @layer base) whatever the loading order.
     """
     chosen = settings.get("type", {})
     if not chosen:
@@ -60,17 +61,19 @@ def type_css(settings):
     variables, rules = [], []
     if "base_size" in chosen:
         variables.append(f"  --capy-base-size: {_number(chosen['base_size'])}px;")
-        rules.append("  html { font-size: var(--capy-base-size); }")
+        rules.append("  :root { font-size: var(--capy-base-size); }")
     if "line_height" in chosen:
         variables.append(f"  --capy-line-height: {_number(chosen['line_height'])};")
-        rules.append("  body { line-height: var(--capy-line-height); }")
+        rules.append("  :root body { line-height: var(--capy-line-height); }")
     if "scale" in chosen:
         for tag, size in heading_sizes(chosen["scale"]).items():
             variables.append(f"  --capy-{tag}: {_number(size)}rem;")
-            rules.append(f"  {tag} {{ font-size: var(--capy-{tag}); }}")
+            rules.append(f"  :root {tag} {{ font-size: var(--capy-{tag}); }}")
     if "heading_weight" in chosen:
         variables.append(f"  --capy-heading-weight: {int(chosen['heading_weight'])};")
-        rules.append("  h1, h2, h3, h4, h5, h6 { font-weight: var(--capy-heading-weight); }")
+        rules.append(
+            "  :root :is(h1, h2, h3, h4, h5, h6) { font-weight: var(--capy-heading-weight); }"
+        )
     return [":root {", *variables, "}", "@layer base {", *rules, "}"]
 
 

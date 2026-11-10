@@ -42,10 +42,10 @@ def test_type_css():
         )
     )
     assert "--capy-base-size: 18px;" in css
-    assert "html { font-size: var(--capy-base-size); }" in css
+    assert ":root { font-size: var(--capy-base-size); }" in css
     assert "--capy-h1: 2.4883rem;" in css
-    assert "body { line-height: var(--capy-line-height); }" in css
-    assert "h1, h2, h3, h4, h5, h6 { font-weight: var(--capy-heading-weight); }" in css
+    assert ":root body { line-height: var(--capy-line-height); }" in css
+    assert ":root :is(h1, h2, h3, h4, h5, h6) { font-weight: var(--capy-heading-weight); }" in css
     assert "@layer base {" in css
     assert type_css({}) == []
 
@@ -136,3 +136,11 @@ def test_editor_offers_type_controls():
     assert names == ["base_size", "scale", "line_height", "heading_weight"]
     base = controls()["type"][0]
     assert (base["min"], base["unit"]) == (14, "px")
+
+
+def test_base_rules_beat_tailwinds_reset_whatever_the_order():
+    # Tailwind's preflight sets h1-h6 { font-size: inherit } in @layer base. Our
+    # rules are in the same layer, so they need more specificity than a bare
+    # element selector to win when Tailwind's stylesheet loads later.
+    css = "\n".join(type_css({"type": {"scale": 1.25}}))
+    assert ":root h1 { font-size: var(--capy-h1); }" in css

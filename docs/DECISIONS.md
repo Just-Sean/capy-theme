@@ -762,3 +762,14 @@ Recommended (made while building autonomously).
 - **Found while checking:** on the showcase, Tailwind's reset in `@layer base`
   loaded after the theme's base rules and undid the heading scale. Fixed in its
   own issue.
+
+## Base rules beat Tailwind's reset (#131)
+
+- **Found in Chrome while checking 4.8:** capy-theme's element rules and Tailwind's
+  preflight reset are both in `@layer base`, so whichever stylesheet loaded later
+  won. On the showcase (Tailwind loads after `{% theme_head %}`), the heading scale
+  was undone.
+- **Fix:** the rules start with `:root` (e.g. `:root h1`, `:root :is(h1, …)`),
+  which is more specific than the reset's bare element selectors, so they win
+  whatever the order. They stay in `@layer base`, so utility classes still win
+  (checked: the demo's `text-5xl` heading keeps 48 px).
