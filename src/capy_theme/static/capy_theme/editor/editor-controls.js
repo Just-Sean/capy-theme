@@ -124,7 +124,71 @@
       });
       return details;
     });
-    return el("section", { class: "capy-editor-section" }, [el("h3", { text: "Colours" }), tabs].concat(groups));
+    return el("section", { class: "capy-editor-section" }, [el("h3", { text: "Colours" }), tabs, suggestionBox()].concat(groups));
+  }
+
+  // Palette suggestions: from the current primary colour and from the logo.
+  // Clicking one fills in the colours and previews them; nothing is saved.
+
+  function suggestionBox() {
+    var list = el("div", { class: "capy-editor-suggestions", "aria-live": "polite" });
+    var button = el("button", { type: "button", "data-capy-suggest": "", text: "Suggest colours" });
+    button.addEventListener("click", function () {
+      list.textContent = "Finding suggestions…";
+      var primary = latest.values[scheme]["--color-primary"];
+      fetch(editor.mount.getAttribute("data-suggestions-url"), {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-CSRFToken": editor.mount.getAttribute("data-csrf-token"),
+        },
+        body: JSON.stringify({ primary: primary }),
+      })
+        .then(function (response) {
+          if (!response.ok) throw new Error("Suggestions couldn't be loaded (" + response.status + ").");
+          return response.json();
+        })
+        .then(function (data) {
+          list.textContent = "";
+          data.suggestions.forEach(function (suggestion) {
+            list.appendChild(suggestionButton(suggestion));
+          });
+        })
+        .catch(function (error) {
+          list.textContent = error.message;
+        });
+    });
+    return el("details", { class: "capy-editor-suggest" }, [
+      el("summary", { text: "Suggestions" }),
+      el("p", { class: "capy-editor-note", text: "Colours that go with your primary colour, or from your logo. Click one to try it on this mode; nothing is saved." }),
+      button,
+      list,
+    ]);
+  }
+
+  function suggestionButton(suggestion) {
+    var swatches = el("span", { class: "capy-editor-swatches" });
+    Object.keys(suggestion.colors).forEach(function (name) {
+      var swatch = el("span", { class: "capy-editor-swatch", title: name + ": " + suggestion.colors[name] });
+      swatch.style.backgroundColor = suggestion.colors[name]; // CSSOM, so a strict CSP allows it
+      swatches.appendChild(swatch);
+    });
+    var button = el("button", { type: "button", class: "capy-editor-suggestion", "data-capy-suggestion": suggestion.name }, [
+      el("strong", { text: suggestion.name }),
+      swatches,
+      el("span", { class: "capy-editor-note", text: suggestion.description }),
+    ]);
+    button.addEventListener("click", function () {
+      var target = colors(scheme);
+      Object.keys(suggestion.colors).forEach(function (name) {
+        target[name] = suggestion.colors[name];
+      });
+      fill();
+      update();
+    });
+    return button;
   }
 
   // Shape

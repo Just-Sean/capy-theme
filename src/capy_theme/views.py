@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 
 from .active import get_active_theme
 from .branding import branding
-from .editor import can_edit, draft_state, editor_theme, editor_urls, preview
+from .editor import can_edit, draft_state, editor_theme, editor_urls, preview, suggestions
 from .mode import COOKIE_MAX_AGE, COOKIE_NAME, MODES, mode_settings
 from .models import Theme, ThemeRevision
 from .showcase import shape_samples, swatches
@@ -143,5 +143,22 @@ def editor_preview(request, pk):
     except ValidationError as error:
         return JsonResponse({"errors": error.messages}, status=400)
     response = JsonResponse(result)
+    response["Cache-Control"] = "no-store"
+    return response
+
+
+@require_POST
+def editor_suggestions(request, pk):
+    """Palette suggestions (JSON) from {"primary": "<any colour>"} and the theme's logo."""
+    if not can_edit(request.user):
+        return JsonResponse({"error": "You can't edit themes."}, status=403)
+    theme = get_object_or_404(Theme, pk=pk)
+    try:
+        data = json.loads(request.body or b"{}")
+        primary = str(data.get("primary") or "") if isinstance(data, dict) else ""
+        result = suggestions(theme, primary)
+    except ValueError:
+        return JsonResponse({"errors": ["That isn't a colour."]}, status=400)
+    response = JsonResponse({"suggestions": result})
     response["Cache-Control"] = "no-store"
     return response

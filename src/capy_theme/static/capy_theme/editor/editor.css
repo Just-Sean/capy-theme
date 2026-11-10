@@ -74,3 +74,10 @@
 .capy-editor-badge.capy-editor-fail { color: #b91c1c; font-weight: 600; }
 .capy-editor-overridden .capy-editor-color-label { font-weight: 700; }
 .capy-editor-overridden .capy-editor-color-label::after { content: " •"; color: #2563eb; }
+
+/* Palette suggestions */
+.capy-editor-suggest { margin-bottom: 0.5rem; }
+.capy-editor-suggestions { display: grid; gap: 0.35rem; margin-top: 0.5rem; }
+.capy-editor button.capy-editor-suggestion { display: grid; gap: 0.2rem; text-align: left; width: 100%; }
+.capy-editor-swatches { display: flex; gap: 0.2rem; }
+.capy-editor-swatch { display: inline-block; width: 1.5rem; height: 1.5rem; border-radius: 0.25rem; border: 1px solid rgba(0, 0, 0, 0.15); }

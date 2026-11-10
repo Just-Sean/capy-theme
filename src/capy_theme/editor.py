@@ -22,6 +22,7 @@ from .colors import (
     to_oklch,
 )
 from .models import Theme
+from .palette import from_logo, from_primary
 from .shape import EFFECTS, SIZES
 from .stylesheet import snapshot_css
 from .validation import validate_base, validate_settings
@@ -54,6 +55,7 @@ def editor_urls(theme):
     return {
         "state": reverse("capy_theme:editor_state", args=[theme.pk]),
         "preview": reverse("capy_theme:editor_preview", args=[theme.pk]),
+        "suggestions": reverse("capy_theme:editor_suggestions", args=[theme.pk]),
     }
 
 
@@ -173,3 +175,16 @@ def preview(theme, data):
         "light_base": draft.light_base,
         "dark_base": draft.dark_base,
     }
+
+
+def suggestions(theme, primary):
+    """Palette suggestions for the editor: from `primary`, and from the theme's logo."""
+    result = []
+    if theme.logo:
+        with theme.logo.open("rb") as file:
+            logo = from_logo(file)
+        if logo:
+            result.append(logo)
+    if primary:
+        result.extend(from_primary(primary))
+    return result
