@@ -22,6 +22,7 @@ from .colors import (
     label,
 )
 from .editor import can_edit
+from .font_files import SUBSET_CHOICES, prepare
 from .fonts import ROLES, preview_faces, preview_stack
 from .forms import ColorField
 from .history import compare as compare_revisions
@@ -613,10 +614,60 @@ def _int(value, default):
         return default
 
 
+class FontFileForm(forms.ModelForm):
+    """Upload a WOFF2, WOFF, TTF or OTF file. It's checked, converted to WOFF2 and
+    optionally trimmed to a character subset. Weight and style are read from the
+    font when left blank."""
+
+    weight = forms.IntegerField(
+        required=False,
+        min_value=100,
+        max_value=900,
+        help_text="Blank: read from the font. 400 is regular, 700 bold.",
+    )
+    style = forms.ChoiceField(
+        required=False,
+        choices=[("", "Read from the font")] + FontFile.STYLES,
+    )
+    subset = forms.ChoiceField(
+        choices=SUBSET_CHOICES,
+        initial="latin",
+        help_text="Trim the font to these characters (smaller files), or keep all.",
+    )
+    file = forms.FileField(
+        help_text="WOFF2, WOFF, TTF or OTF. Converted to WOFF2.",
+        widget=forms.ClearableFileInput(attrs={"accept": ".woff2,.woff,.ttf,.otf"}),
+    )
+
+    class Meta:
+        model = FontFile
+        fields = ["file", "subset", "weight", "style"]
+
+    def clean(self):
+        cleaned = super().clean()
+        upload = cleaned.get("file")
+        if upload is None or not hasattr(upload, "content_type"):
+            # Not a new upload (an existing file): keep what's stored.
+            cleaned["weight"] = cleaned.get("weight") or self.instance.weight
+            cleaned["style"] = cleaned.get("style") or self.instance.style
+            return cleaned
+        try:
+            prepared = prepare(upload.read(), upload.name, cleaned.get("subset", "all"))
+        except ValidationError as error:
+            raise ValidationError({"file": error.messages}) from None
+        cleaned["file"] = prepared["file"]
+        cleaned["weight"] = cleaned.get("weight") or prepared["weight"]
+        cleaned["style"] = cleaned.get("style") or prepared["style"]
+        self.instance.unicode_range = prepared["unicode_range"]
+        return cleaned
+
+
 class FontFileInline(admin.TabularInline):
     model = FontFile
+    form = FontFileForm
     extra = 1
-    fields = ["weight", "style", "subset", "unicode_range", "file"]
+    fields = ["file", "subset", "weight", "style", "unicode_range"]
+    readonly_fields = ["unicode_range"]
 
 
 @admin.register(Font)

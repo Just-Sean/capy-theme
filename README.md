@@ -158,6 +158,7 @@ Optional settings a project can add to its `settings.py`:
 | `CAPY_THEME_SHOWCASE` | `"staff"` | Who can see the theme showcase at `/theme/showcase/`: `"staff"` (logged-in staff; others are sent to the admin login), `"public"` (anyone) or `"off"` (nobody: 404). |
 | `CAPY_THEME_BASE_TEMPLATE` | not set | A project template for the showcase to extend, e.g. `"base.html"`. It needs a `content` block (and a `title` block for the page title) and should include `{% theme_head %}`. Not set: the showcase uses its own standalone page. |
 | `CAPY_THEME_EDITOR_BUTTON` | `True` | Show the live editor's **Edit theme** button in the corner of every page, for staff who can edit. `False` hides it (the editor still opens from the showcase or with `?edit=<theme id>`). |
+| `CAPY_THEME_FONT_MAX_BYTES` | `5242880` (5 MB) | The largest font file that can be uploaded, in bytes. |
 
 ## Develop it
 
@@ -449,6 +450,14 @@ Humanist, Geometric Humanist, Neo-Grotesque, Rounded, Slab Serif, Didone,
 Monospace Code and Industrial. They use fonts already on the visitor's device,
 so **nothing is downloaded**. They're the fastest option.
 
+**Uploading fonts.** On a font's admin page, add files under **Files**: WOFF2,
+WOFF, TTF or OTF. Each file is checked with fontTools (anything that isn't a font,
+like a renamed image, is refused), converted to WOFF2, and by default trimmed to
+the **Latin** characters, which often cuts it to a few percent of its size. Choose
+another subset (Latin Extended, Cyrillic, Greek, Vietnamese) or **All characters**
+to keep everything. Leave weight and style blank to read them from the font. The
+size limit is 5 MB per file (`CAPY_THEME_FONT_MAX_BYTES`).
+
 **A curated collection of 30 open-licence fonts** is bundled with the module
 (Inter, Roboto, Open Sans, Lato, Montserrat, Source Sans 3, Nunito, Poppins, Work
 Sans, IBM Plex Sans, DM Sans, Raleway, Figtree, Manrope, Outfit, Merriweather,
@@ -691,6 +700,7 @@ straight to `main`:
 | `src/capy_theme/curated_fonts.json`, `src/capy_theme/static/capy_theme/fonts/` | The curated font collection (WOFF2 files and licences) |
 | `src/capy_theme/management/commands/capy_theme_add_fonts.py` | Adds the curated fonts to the font library |
 | `scripts/fetch_curated_fonts.py` | Fetches the curated fonts from Fontsource |
+| `src/capy_theme/font_files.py` | Checks uploaded font files, converts them to WOFF2 and trims them to a character subset |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |
