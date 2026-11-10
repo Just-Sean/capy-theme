@@ -34,9 +34,12 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   - six logo slots (main, stacked, mark, wordmark, email, print) with dark
     versions and fallbacks, served as responsive AVIF/WebP/PNG at the header height;
   - every favicon and app icon made from one square icon;
-  - a web app manifest, so the site can be installed as an app;
-  - a link-preview image and Open Graph / Twitter tags;
+  - a 1200 × 630 sharing image for link previews;
   - optional login and page background images.
+- **Theme artifacts for other modules:** `get_artifacts()` (and
+  `{% theme_artifacts %}`) give every colour, font, logo, icon and image as plain
+  data, so an email module, app shell or PWA module can use the theme. capy-theme
+  doesn't apply them outside the page's own look.
 - **Drafts and publishing:** editing a theme changes only its draft. Publishing
   saves a numbered revision, recording who published it and when, and the site
   shows that. Every revision is kept; any two can be compared, and an old one
@@ -426,57 +429,19 @@ from the icon image and its settings, so each revision keeps its icons:
 | `icon-maskable-512.png` | Android adaptive icons: the icon sits in the middle 80%, on a solid background |
 | `icon-monochrome-512.png` | Single-colour icons: white in the icon's shape |
 
-`{% theme_head %}` links the ICO, SVG, 192 px and Apple icons. The 512 px,
-maskable and monochrome icons are for the web app manifest.
+`{% theme_head %}` links the ICO, SVG, 192 px and Apple icons (the tab and
+home-screen icon are part of the site's look). The 512 px, maskable and
+monochrome icons are for a web app manifest, which capy-theme doesn't serve: a
+project or PWA module gets them from [theme artifacts](#theme-artifacts-for-other-modules).
 
-### Web app manifest
+### Sharing image
 
-`/theme/manifest.webmanifest` lets browsers install the site as an app.
-`{% theme_head %}` links it. It's built from the active theme's published
-revision:
-
-- **Name** and **short name** (at most 12 characters; blank uses the name),
-  **description**, **start URL** (a path starting with `/`; default `/`),
-  **display** (standalone by default) and **orientation**: set in the live
-  editor (**Web app**) or the admin (**Web app**). Blank fields use the site name
-  and tagline.
-- **Colours**: the background colour (base-100) of the theme's default mode.
-- **Icons**: the 192 px, 512 px, maskable and monochrome icons (see
-  [Icon and favicons](#icon-and-favicons)). Browsers only offer to install the
-  site once it has an icon.
-
-To check it: open the site in Chrome, then DevTools → **Application** →
-**Manifest**. Installing needs HTTPS (or `localhost`).
-
-### Link previews (sharing image and tags)
-
-When a link to the site is shared, chat apps and social sites show a preview
-from the page's Open Graph and Twitter card tags. `{% theme_head %}` outputs
-them with the theme's defaults:
-
-- **Title**: the site name.
-- **Description**: the **Sharing description**, or else the tagline.
-- **Image**: the **social** slot's image (PNG or JPEG, not SVG), cropped from its
-  centre to 1200 × 630 when uploaded (transparent parts become white), with its
-  alt text. Without an image, the tags ask for a small card.
-- **URL**: the current page. Image and page URLs are made absolute.
-
-Set them in the live editor (**Images** for the image, **Web app and link
-previews** for the description) or the admin (**Link previews**), then publish.
-
-To change them per page, turn them off in `{% theme_head %}` and output them
-with `{% theme_social_tags %}` in a block that pages can override:
-
-```html
-{# base.html #}
-{% theme_head social=False %}
-{% block social %}{% theme_social_tags %}{% endblock %}
-
-{# about.html #}
-{% block social %}{% theme_social_tags title="About us" description="Who we are" image="/static/about.png" image_alt="Our team" %}{% endblock %}
-```
-
-Any argument left out uses the theme's default.
+Choose an image for the **social** slot (PNG or JPEG, not SVG) in the live
+editor (**Images**) or the admin (**Sharing image**), then publish. It's cropped
+from its centre to 1200 × 630 when uploaded (transparent parts become white).
+capy-theme doesn't output link-preview tags (Open Graph, Twitter cards): the
+project or another module adds them, using the image from
+[theme artifacts](#theme-artifacts-for-other-modules).
 
 ### Background images
 
@@ -495,6 +460,47 @@ use them:
   `{{ theme.background_pattern_url }}` (the light versions; `""` if not set).
 
 Dark mode uses the light image if there's no dark one.
+
+### Theme artifacts for other modules
+
+capy-theme owns the theme but only applies it to the page's own look (the
+stylesheet, the logo tag, the tab icon). Everything else it produces is made
+available for other parts of the project, e.g. an email module, an app shell,
+or something that builds a web app manifest or link-preview tags:
+
+```python
+from capy_theme.artifacts import get_artifacts
+
+artifacts = get_artifacts(request)  # None if no theme is published
+artifacts["logos"]["logo_email"]["light"]["url"]   # every logo slot, light and dark
+artifacts["colors_hex"]["light"]["primary"]        # also "colors" (OKLCH)
+artifacts["icons"]["icon-512.png"]                 # every generated icon
+artifacts["sharing_image"]                         # url, width, height, alt
+```
+
+In templates: `{% theme_artifacts as artifacts %}`, then e.g.
+`{{ artifacts.logos.logo_email.light.url }}`.
+
+What's in it (all from the published revision; with a request, URLs are absolute):
+
+| Key | Contents |
+| --- | --- |
+| `theme` | `name`, `slug`, `revision` |
+| `branding` | `site_name`, `tagline`, `logo_alt` |
+| `colors`, `colors_hex` | The 20 colours per mode (`light`, `dark`), as OKLCH and as `#rrggbb` |
+| `fonts` | Per role the theme sets: `family`, `stack` (CSS `font-family`), `source` |
+| `logos` | The six logo slots, `light` and `dark`, after fallbacks: `url`, `width`, `height`, `alt`, `content_type`, `variants` (smaller copies: `url`, `width`, `format`) |
+| `icons` | File name → URL: `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `icon-monochrome-512.png` |
+| `sharing_image` | `url`, `width`, `height`, `alt` (1200 × 630), or `None` |
+| `backgrounds` | `login` and `pattern`, each `light` and `dark` URL (or `None`) |
+| `mode` | `default`, `visitors_can_switch` |
+| `stylesheet_url` | The theme stylesheet |
+
+The JSON API (7.1) will serve the same data.
+
+Upgrading from 0.5: migration `0011_remove_app_and_social_settings` removes the
+web app manifest and link-preview settings from 0.5.0 (the manifest view and
+the tags are gone; the icons and sharing image stay).
 
 Upgrading from 0.4: migration `0010_logo_slots` moves each theme's old logo into
 its main slot (light). It has no smaller copies; upload it again to get them.
@@ -844,9 +850,8 @@ the site name, tagline, logo and the base themes in use, and an **Images and
 icons** section: every logo slot at the header height in both modes (saying
 whether it's its own image, the light one, or what an empty slot falls back to)
 with its generated sizes and formats; every icon at its real size (the maskable
-icon inside a circle and a squircle, the monochrome icon on a dark tile); a
-mock link-preview card; the background images; and the web app manifest's
-values. Staff only by default
+icon inside a circle and a squircle, the monochrome icon on a dark tile); the
+sharing image; and the background images. Staff only by default
 (see `CAPY_THEME_SHOWCASE`). The demo's navbar links to it.
 
 Each section is its own template in
@@ -916,9 +921,9 @@ straight to `main`:
 | `src/capy_theme/apps.py` | The app's name, label and admin title |
 | `src/capy_theme/models.py` | Database models: `Font` and `FontFile` (the font library), `ThemeAsset` and `ThemeAssetVariant` (a theme's uploaded images and their generated sizes), `Theme` (the draft: name, slug, light and dark base, `settings` overrides, and its live revision) `ThemeRevision` (a published copy of a theme's look) and `ThemeAssignment` (which theme is active) |
 | `src/capy_theme/stylesheet.py` | Writes a published revision out as CSS variables, and makes its version hash |
-| `src/capy_theme/views.py` | The stylesheet view (`/theme/<version>.css`), the showcase (`/theme/showcase/`), the mode switch (`/theme/mode/<mode>/`), the web app manifest (`/theme/manifest.webmanifest`) and the live editor's JSON views |
+| `src/capy_theme/views.py` | The stylesheet view (`/theme/<version>.css`), the showcase (`/theme/showcase/`), the mode switch (`/theme/mode/<mode>/`) and the live editor's JSON views |
 | `src/capy_theme/urls.py` | The module's URLs, included by projects under `/theme/` |
-| `src/capy_theme/templatetags/capy_theme.py` | The `{% theme_head %}`, `{% theme_html_attrs %}`, `{% theme_logo %}`, `{% theme_mode_toggle %}` and `{% theme_social_tags %}` template tags |
+| `src/capy_theme/templatetags/capy_theme.py` | The `{% theme_head %}`, `{% theme_html_attrs %}`, `{% theme_logo %}`, `{% theme_mode_toggle %}` and `{% theme_artifacts %}` template tags |
 | `src/capy_theme/branding.py` | Reads a revision's published site name, tagline and logo |
 | `src/capy_theme/context_processors.py` | Gives every template `theme`: the active theme's published values (or `None`) |
 | `src/capy_theme/templates/capy_theme/showcase/` | The showcase page, its standalone base page, and one template per section |
@@ -941,8 +946,8 @@ straight to `main`:
 | `src/capy_theme/google_fonts.py` | Imports a Google font into the library (downloaded once, served locally) |
 | `src/capy_theme/images.py` | Image slots and their limits, and checking and cleaning uploaded images |
 | `src/capy_theme/backgrounds.py` | The background image CSS variables, helper classes and template values |
-| `src/capy_theme/social.py` | The 1200 × 630 sharing image and the Open Graph / Twitter card tags |
-| `src/capy_theme/manifest.py` | Builds the web app manifest from the published theme |
+| `src/capy_theme/artifacts.py` | `get_artifacts()`: every published theme artifact as plain data for other modules |
+| `src/capy_theme/social.py` | The 1200 × 630 sharing image |
 | `src/capy_theme/icons.py` | Makes the favicons and app icons from the icon image, and their `<link>` tags |
 | `src/capy_theme/logos.py` | Logo slots: fallbacks, smaller copies, the `<picture>` HTML and the header height CSS |
 | `src/capy_theme/svg.py` | Cleaning uploaded SVGs with an allow-list of elements and attributes |

@@ -986,3 +986,28 @@ Recommended (made while building autonomously).
   checked, and each image feature checked in headless Chrome while it was built.
 - The changelog calls out the one change that affects upgrades: the old logo
   field moves into the main logo slot (migration 0010).
+
+## Scope: expose artifacts, don't apply them (#143)
+
+Sean's decision after v0.5.0: "Capy theme handles every aspect of theme, but it
+doesn't automatically apply those to anything, it just makes them available."
+Other modules (an email module, a planned app-shell module, a PWA module) pull
+what they need.
+
+- **Removed:** the web app manifest (view, link, Web app settings) and the
+  link-preview tags (`{% theme_head %}` tags, `{% theme_social_tags %}`, sharing
+  description). A manifest's names, start URL and display, and a page's title and
+  description, aren't theme values.
+- **Kept as artifacts:** every logo slot (email and print included), every
+  generated icon (512, maskable and monochrome included: what a manifest needs),
+  the 1200 × 630 sharing image, backgrounds, colours (OKLCH and hex), fonts.
+- **Still applied by capy-theme:** the stylesheet, `{% theme_logo %}`, the mode
+  script, the address-bar colour and the tab/home-screen icon links in
+  `{% theme_head %}`. They're the page's own look. (Judgment call: favicons are
+  branding of the page itself, like the stylesheet.)
+- **`get_artifacts(request=None)`** returns plain data (no model objects) from the
+  published revision: logos after fallbacks, with smaller copies for header slots;
+  absolute URLs when given a request, for emails and manifests. The JSON API (7.1)
+  will serve the same dict. `{% theme_artifacts as a %}` gives templates the same.
+- **Migration 0011** drops the `app` and `social` settings keys so themes saved
+  with them stay valid under the schema.

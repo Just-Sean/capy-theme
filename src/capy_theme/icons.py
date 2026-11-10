@@ -99,7 +99,7 @@ def head_links(snapshot):
 
 
 def icon_urls(snapshot):
-    """{file name: URL} for this revision's icons (e.g. for the web app manifest)."""
+    """{file name: URL} for this revision's icons (other modules get them via artifacts)."""
     folder = icon_folder(snapshot)
     if folder is None:
         return {}

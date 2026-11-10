@@ -74,18 +74,14 @@
   </div>
 
   <div class="space-y-3">
-    <h4 class="font-semibold">Link preview</h4>
-    <div class="card max-w-md overflow-hidden border border-base-300 bg-base-200" data-capy-link-preview>
-      {% if image_samples.preview.image %}
-        <figure><img src="{{ image_samples.preview.image }}" alt="{{ image_samples.preview.alt }}" width="{{ image_samples.preview.size.0 }}" height="{{ image_samples.preview.size.1 }}" class="h-auto w-full"></figure>
-      {% endif %}
-      <div class="card-body gap-1 p-4">
-        <div class="text-xs uppercase opacity-60">{{ request.get_host }}</div>
-        <div class="font-semibold">{{ image_samples.preview.title|default:"(no site name)" }}</div>
-        <div class="text-sm opacity-80">{{ image_samples.preview.description|default:"(no description)" }}</div>
-      </div>
-    </div>
-    {% if not image_samples.preview.image %}<p class="text-sm opacity-70">No sharing image: previews show a small card.</p>{% endif %}
+    <h4 class="font-semibold">Sharing image</h4>
+    {% if image_samples.sharing.image %}
+      <img src="{{ image_samples.sharing.image }}" alt="{{ image_samples.sharing.alt }}" width="{{ image_samples.sharing.size.0 }}" height="{{ image_samples.sharing.size.1 }}"
+           class="h-auto w-full max-w-md rounded-box border border-base-300" data-capy-sharing-image>
+      <p class="text-xs opacity-70">1200 × 630, for link previews. Other modules get it from <code>get_artifacts()</code>.</p>
+    {% else %}
+      <p class="text-sm opacity-70">No sharing image chosen.</p>
+    {% endif %}
   </div>
 
   <div class="space-y-3">
@@ -97,19 +93,6 @@
           <div class="text-xs opacity-70">{{ background.label }}: {% if background.set %}<code>.{{ background.class }}</code>{% else %}not set{% endif %}</div>
         </div>
       {% endfor %}
-    </div>
-  </div>
-
-  <div class="space-y-3">
-    <h4 class="font-semibold">Web app manifest</h4>
-    <div class="overflow-x-auto">
-      <table class="table table-sm">
-        <tbody>
-          {% for key, value in image_samples.manifest %}
-            <tr><th class="font-mono text-xs">{{ key }}</th><td class="text-sm">{{ value }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
     </div>
   </div>
 

@@ -92,7 +92,7 @@ def test_without_any_logo_slots_show_the_site_name(theme, staff):
     content = staff.get(URL).content.decode()
     assert "Images and icons" in content
     assert "No icon chosen" in content
-    assert "No sharing image" in content
+    assert "No sharing image chosen" in content
 
 
 def test_the_issue_check_new_logo_and_icon_update_every_place(theme, staff):
@@ -127,16 +127,14 @@ def test_every_icon_is_shown(theme, staff):
     assert 'width="180" height="180"' in content  # the Apple icon at its real size
 
 
-def test_link_preview_card_and_manifest(theme, staff):
+def test_sharing_image(theme, staff):
     share = add_asset(theme, "social", "light", png((1300, 700)), "Our shop")
     choose(theme, social={"light": share})
     content = staff.get(URL).content.decode()
-    card = content.split("data-capy-link-preview", 1)[1].split("</div>\n    </div>", 1)[0]
-    assert "-1200x630.png" in card
-    assert 'alt="Our shop"' in card
-    assert "Capy" in card and "Hello" in card
-    assert ">start_url</th>" in content
-    assert ">standalone</td>" in content
+    image = content.split("data-capy-sharing-image", 1)[0].rsplit("<img", 1)[1]
+    assert "-1200x630.png" in image
+    assert 'alt="Our shop"' in image
+    assert "manifest" not in content.lower()
 
 
 def test_backgrounds_use_the_helper_classes(theme, staff):
