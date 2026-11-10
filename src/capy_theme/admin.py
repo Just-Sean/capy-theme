@@ -1,6 +1,7 @@
 import json
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError
@@ -19,6 +20,7 @@ from .colors import (
     draft_values,
     label,
 )
+from .editor import can_edit
 from .forms import ColorField
 from .history import compare as compare_revisions
 from .history import restore as restore_revision
@@ -242,6 +244,13 @@ def color_fieldsets():
     return sets
 
 
+def edit_live_url(theme_id):
+    """Where "Edit live" opens the editor: the showcase, or the home page if it's off."""
+    if getattr(settings, "CAPY_THEME_SHOWCASE", "staff") != "off":
+        return f"{reverse('capy_theme:showcase')}?edit={theme_id}"
+    return f"/?edit={theme_id}"
+
+
 class PublishForm(forms.Form):
     note = forms.CharField(
         required=False,
@@ -304,16 +313,41 @@ class ThemeAdmin(admin.ModelAdmin):
         "updated_at",
     ]
     fieldsets = [
-        (None, {"fields": ["name", "slug"]}),
+        (
+            None,
+            {
+                "fields": ["name", "slug"],
+                "description": "The name and slug are labels in the admin; visitors never see "
+                "them. Tip: <strong>Edit live</strong> (top right) changes this theme on the "
+                "page itself and shows every change as you make it.",
+            },
+        ),
         ("Publishing", {"fields": ["publish_status"]}),
+        (
+            "Base themes",
+            {
+                "fields": ["light_base", "dark_base"],
+                "description": "Every theme starts from two of daisyUI's built-in themes. "
+                "Anything you don't change below comes from them.",
+            },
+        ),
         ("Branding", {"fields": ["site_name", "tagline", "logo", "logo_alt"]}),
-        ("Base themes", {"fields": ["light_base", "dark_base"]}),
-        ("Mode", {"fields": ["default_mode", "visitors_can_switch"]}),
         *color_fieldsets(),
-        ("Shape and effects", {"fields": [f"shape_{name}" for name in SHAPE_NAMES]}),
-        ("Contrast", {"fields": ["contrast_table"]}),
-        ("Overrides", {"fields": ["settings_json"]}),
-        ("Details", {"fields": ["public_id", "created_at", "updated_at"]}),
+        ("Contrast", {"fields": ["contrast_table"], "classes": ["collapse"]}),
+        (
+            "Shape and effects",
+            {"fields": [f"shape_{name}" for name in SHAPE_NAMES], "classes": ["collapse"]},
+        ),
+        ("Mode", {"fields": ["default_mode", "visitors_can_switch"]}),
+        (
+            "Advanced",
+            {
+                "fields": ["settings_json", "public_id", "created_at", "updated_at"],
+                "classes": ["collapse"],
+                "description": "The stored settings, read-only: they're edited through the "
+                "sections above or the live editor.",
+            },
+        ),
     ]
     inlines = [ThemeRevisionInline]
 
@@ -366,6 +400,7 @@ class ThemeAdmin(admin.ModelAdmin):
         extra_context = {
             **(extra_context or {}),
             "can_publish": self.has_publish_permission(request),
+            "edit_live_url": edit_live_url(object_id) if can_edit(request.user) else None,
         }
         return super().change_view(request, object_id, form_url, extra_context)
 

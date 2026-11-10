@@ -287,6 +287,25 @@ After pulling changes that add migrations, apply them to the demo database:
 uv run python demo/manage.py migrate
 ```
 
+### The theme's admin page
+
+The admin page is the plain fallback to the live editor. Its sections, top to
+bottom:
+
+1. Name and slug
+2. Publishing status
+3. Base themes
+4. Branding
+5. Colours (light and dark; Basic open, Advanced and Expert folded)
+6. Contrast (folded)
+7. Shape and effects (folded)
+8. Mode
+9. Advanced (folded: stored settings, ID and dates)
+
+At the top right: **Edit live** opens the theme in the live editor (on the
+showcase, or the home page if the showcase is off), next to **Revisions**,
+**Publish** and Django's **History**.
+
 ### Branding
 
 On a theme's admin page, the **Branding** section has the site name, tagline,
