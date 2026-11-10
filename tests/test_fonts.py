@@ -59,7 +59,7 @@ def test_the_issue_check_heading_font_in_the_stylesheet():
     assert css.count("@font-face") == 3
     assert "font-display: swap;" in css
     assert '--capy-font-heading: "Lora", Georgia, serif;' in css
-    assert "h1, h2, h3, h4, h5, h6 { font-family: var(--capy-font-heading); }" in css
+    assert ":root :is(h1, h2, h3, h4, h5, h6) { font-family: var(--capy-font-heading); }" in css
     assert "@layer base {" in css
 
 
@@ -68,7 +68,7 @@ def test_body_and_mono_set_tailwinds_variables():
     css = "\n".join(font_css(snapshot_fonts({"fonts": {"body": body.pk, "mono": mono.pk}})))
     assert '--font-sans: "Inter", Georgia, serif;' in css
     assert '--font-mono: "JetBrains Mono", Georgia, serif;' in css
-    assert "body { font-family: var(--capy-font-body); }" in css
+    assert ":root body { font-family: var(--capy-font-body); }" in css
 
 
 def test_default_fallbacks_by_role():
