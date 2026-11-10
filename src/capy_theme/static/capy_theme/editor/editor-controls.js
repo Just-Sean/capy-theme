@@ -312,6 +312,85 @@
     sample.hidden = !font;
   }
 
+  // Images: upload straight away (they're checked and cleaned on the server).
+  // An upload is stored as a new image of the theme; it isn't used anywhere
+  // until a slot setting (5.3 onwards) points at it, so visitors see nothing new.
+
+  function imageList(assets) {
+    var list = el("ul", { class: "capy-editor-images", "data-capy-images": "" });
+    if (!assets.length) list.appendChild(el("li", { class: "capy-editor-note", text: "No images yet." }));
+    assets.forEach(function (asset) {
+      list.appendChild(
+        el("li", {}, [
+          el("img", { src: asset.url, alt: asset.alt_text, width: "48", height: "48" }),
+          el("span", {
+            text: asset.slot_label + " (" + asset.mode + "): " + asset.width + " × " + asset.height + ", " + Math.ceil(asset.size / 1024) + " KB",
+          }),
+        ])
+      );
+    });
+    return list;
+  }
+
+  function imageSection(state) {
+    var slot = el("select", { "data-capy-image-slot": "", "aria-label": "Where the image goes" });
+    spec.image_slots.forEach(function (item) {
+      slot.appendChild(el("option", { value: item.name, text: item.label + " (up to " + Math.round(item.max_bytes / 1048576) + " MB)" }));
+    });
+    var mode = el("select", { "data-capy-image-mode": "", "aria-label": "Light or dark mode" });
+    [["light", "Light mode"], ["dark", "Dark mode"]].forEach(function (pair) {
+      mode.appendChild(el("option", { value: pair[0], text: pair[1] }));
+    });
+    var alt = el("input", { type: "text", maxlength: "200", "data-capy-image-alt": "", placeholder: "Describe the image (alt text)" });
+    var file = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp,image/gif", "data-capy-image-file": "" });
+    var button = el("button", { type: "button", text: "Upload" });
+    var list = imageList(state.assets || []);
+    button.addEventListener("click", function () {
+      if (!file.files.length) {
+        editor.status("Choose an image to upload.", true);
+        return;
+      }
+      var data = new FormData();
+      data.append("slot", slot.value);
+      data.append("mode", mode.value);
+      data.append("alt_text", alt.value);
+      data.append("file", file.files[0]);
+      editor.status("Uploading…");
+      fetch(state.urls.upload, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { Accept: "application/json", "X-CSRFToken": editor.mount.getAttribute("data-csrf-token") },
+        body: data,
+      })
+        .then(function (response) {
+          return response.json().then(function (body) {
+            if (!response.ok) throw new Error((body.errors || [body.error || "The upload failed."]).join(" "));
+            return body;
+          });
+        })
+        .then(function (body) {
+          var fresh = imageList(body.assets);
+          list.replaceWith(fresh);
+          list = fresh;
+          file.value = "";
+          alt.value = "";
+          editor.status("Uploaded. Location and camera details were removed.");
+        })
+        .catch(function (error) {
+          editor.status(error.message, true);
+        });
+    });
+    return el("section", { class: "capy-editor-section" }, [
+      el("h3", { text: "Images" }),
+      el("label", { class: "capy-editor-field" }, [el("span", { text: "Slot" }), slot]),
+      el("label", { class: "capy-editor-field" }, [el("span", { text: "Mode" }), mode]),
+      el("label", { class: "capy-editor-field" }, [el("span", { text: "Alt text" }), alt]),
+      el("label", { class: "capy-editor-field" }, [el("span", { text: "File" }), file]),
+      button,
+      list,
+    ]);
+  }
+
   // Shape
 
   function shapeSection() {
@@ -422,6 +501,7 @@
     );
     container.appendChild(colorSection());
     container.appendChild(fontSection());
+    container.appendChild(imageSection(state));
     container.appendChild(shapeSection());
     container.appendChild(actions(state));
     fill();

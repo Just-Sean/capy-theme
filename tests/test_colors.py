@@ -177,6 +177,8 @@ def test_admin_page_shows_and_saves_colours(client, django_user_model):
     url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
     assert b"Light colours: Basic" in client.get(url).content
     data = form_data(color_light_primary=PINK) | {
+        "assets-TOTAL_FORMS": "0",
+        "assets-INITIAL_FORMS": "0",
         "revisions-TOTAL_FORMS": "0",
         "revisions-INITIAL_FORMS": "0",
         "revisions-MIN_NUM_FORMS": "0",

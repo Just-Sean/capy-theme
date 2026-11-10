@@ -85,6 +85,8 @@ def test_designer_can_edit_drafts(designer, theme):
             "slug": "main",
             "light_base": "cupcake",
             "dark_base": "dark",
+            "assets-TOTAL_FORMS": "0",
+            "assets-INITIAL_FORMS": "0",
             "revisions-TOTAL_FORMS": "0",
             "revisions-INITIAL_FORMS": "0",
             "revisions-MIN_NUM_FORMS": "0",

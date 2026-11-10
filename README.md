@@ -331,6 +331,27 @@ Like everything else, branding changes show on the site only after publishing.
 Replacing a logo stores a new file and never overwrites the old one, so older
 revisions keep their logo.
 
+### Images
+
+A theme's images (logos, the icon, the social sharing image, backgrounds) are
+uploaded in the live editor's **Images** section or in the **Images** list on
+the theme's admin page. Each upload goes in a slot, for light or dark mode,
+with alt text. For every upload:
+
+- The type is worked out from the file's content, not its name. Only PNG, JPEG,
+  WebP and GIF are accepted, so a text file renamed `.png` is rejected.
+- Each slot has a size limit and a maximum width and height (in
+  `src/capy_theme/images.py`, `SLOTS`): 1 MB for the email logo, 2 MB for the
+  other logos, the icon and the background pattern, and 5 MB for the print logo,
+  social image and login background.
+- The image is saved again without EXIF, text chunks and comments, so camera
+  details and GPS locations are removed. Photos are turned upright first.
+  Colour profiles are kept.
+
+Files are stored under `MEDIA_ROOT/capy_theme/assets/<slot>/`. An image is never
+changed after upload: a new image is a new asset, so older revisions keep theirs.
+Uploading doesn't change what visitors see; the slots are used from 5.3 on.
+
 The "Overrides" section shows the theme's stored `settings` as read-only JSON.
 They're edited through the fields above, not typed by hand.
 
@@ -739,7 +760,7 @@ straight to `main`:
 | --- | --- |
 | `src/capy_theme/` | The Django app that projects install |
 | `src/capy_theme/apps.py` | The app's name, label and admin title |
-| `src/capy_theme/models.py` | Database models: `Font` and `FontFile` (the font library), `Theme` (the draft: name, slug, light and dark base, `settings` overrides, and its live revision) `ThemeRevision` (a published copy of a theme's look) and `ThemeAssignment` (which theme is active) |
+| `src/capy_theme/models.py` | Database models: `Font` and `FontFile` (the font library), `ThemeAsset` and `ThemeAssetVariant` (a theme's uploaded images and their generated sizes), `Theme` (the draft: name, slug, light and dark base, `settings` overrides, and its live revision) `ThemeRevision` (a published copy of a theme's look) and `ThemeAssignment` (which theme is active) |
 | `src/capy_theme/stylesheet.py` | Writes a published revision out as CSS variables, and makes its version hash |
 | `src/capy_theme/views.py` | The stylesheet view (`/theme/<version>.css`), the showcase (`/theme/showcase/`) and the mode switch (`/theme/mode/<mode>/`) |
 | `src/capy_theme/urls.py` | The module's URLs, included by projects under `/theme/` |
@@ -754,7 +775,7 @@ straight to `main`:
 | `src/capy_theme/shape.py` | The shape and effect settings (radii, sizes, border, depth, noise) |
 | `src/capy_theme/showcase.py` | Data for the showcase's colour swatches and shape samples |
 | `src/capy_theme/editor.py` | The live editor: who can use it, which theme it edits, and the draft data it reads |
-| `src/capy_theme/static/capy_theme/editor/` | The editor panel: `editor.js` (panel, preview), `editor-controls.js` (bases, colours, shape) and `editor.css` |
+| `src/capy_theme/static/capy_theme/editor/` | The editor panel: `editor.js` (panel, preview), `editor-controls.js` (bases, colours, fonts, images, shape) and `editor.css` |
 | `src/capy_theme/templates/capy_theme/editor/mount.html` | Loads the editor on a page for staff who can edit |
 | `src/capy_theme/palette.py` | Colour suggestions from a primary colour or from the logo |
 | `src/capy_theme/history.py` | Comparing two revisions and restoring an old one |
@@ -764,6 +785,7 @@ straight to `main`:
 | `scripts/fetch_curated_fonts.py` | Fetches the curated fonts from Fontsource |
 | `src/capy_theme/font_files.py` | Checks uploaded font files, converts them to WOFF2 and trims them to a character subset |
 | `src/capy_theme/google_fonts.py` | Imports a Google font into the library (downloaded once, served locally) |
+| `src/capy_theme/images.py` | Image slots and their limits, and checking and cleaning uploaded images |
 | `src/capy_theme/typography.py` | The type scale settings and their CSS |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |

@@ -21,6 +21,7 @@ from .editor import (
     save_draft,
     suggestions,
 )
+from .images import add_asset, asset_data
 from .mode import COOKIE_MAX_AGE, COOKIE_NAME, MODES, mode_settings
 from .models import Theme, ThemeRevision
 from .publishing import NothingToPublish, publish
@@ -231,3 +232,31 @@ def editor_publish(request, pk):
             status=409,
         )
     return JsonResponse({"published": revision.number, "state": draft_state(theme, request.user)})
+
+
+@require_POST
+def editor_upload(request, pk):
+    """Upload an image from the editor (multipart: slot, mode, alt_text, file).
+
+    The file is checked and cleaned by the same code as the admin and stored as a
+    new asset. Returns the theme's images (JSON).
+    """
+    if not can_edit(request.user):
+        return JsonResponse({"error": "You can't edit themes."}, status=403)
+    theme = get_object_or_404(Theme, pk=pk)
+    upload = request.FILES.get("file")
+    if upload is None:
+        return JsonResponse({"errors": ["Choose an image to upload."]}, status=400)
+    try:
+        asset = add_asset(
+            theme,
+            request.POST.get("slot", ""),
+            request.POST.get("mode", "light"),
+            upload,
+            request.POST.get("alt_text", ""),
+        )
+    except ValidationError as error:
+        return JsonResponse({"errors": error.messages}, status=400)
+    return JsonResponse(
+        {"uploaded": asset_data(asset), "assets": [asset_data(a) for a in theme.assets.all()]}
+    )

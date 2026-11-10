@@ -779,3 +779,29 @@ Recommended (made while building autonomously).
 - Released with tests on SQLite and PostgreSQL 17, the package checked (including
   the 30 bundled fonts and migrations 0007–0008), and each font feature checked in
   headless Chrome while it was built.
+
+## 5.1 Safe image uploads (#32)
+
+Recommended (made while building autonomously).
+
+- **Ten slots** (`images.SLOTS`), each with a label, a size limit in bytes and a
+  maximum width or height: the six logo slots, the icon, the social image and two
+  backgrounds. Later steps (5.3–5.7) use them. Kept in code, not settings, until a
+  project needs to change them.
+- **Type from content:** Pillow opens and verifies the file; its detected format
+  (PNG, JPEG, WebP or GIF) sets the content type and file extension, whatever the
+  name says. SVG is separate (5.2).
+- **Size checked before decoding:** the byte limit first, then the width and height
+  from the header, so a huge image is never unpacked into memory.
+- **Metadata removed by re-saving:** the image is turned upright by its EXIF
+  orientation, then saved again with only the colour profile, transparency and GIF
+  timing kept. No EXIF, PNG text or comments survive. JPEGs are saved at quality 92.
+  Animated WebP and PNG keep only their first frame; animated GIFs keep all frames.
+- **Never edited in place:** the admin shows existing images read-only (upload a new
+  one to replace it); the editor only adds. Deleting is in the admin.
+- **Editor uploads are stored straight away**, unlike the editor's other changes
+  (which wait for Save draft). They're safe to store early: an image isn't used
+  anywhere until a slot setting points at it, and those settings go through the
+  draft and Publish as usual.
+- **`ThemeAssetVariant`** is created now (size, format, purpose, file) so 5.3 and 5.4
+  can fill it in.

@@ -30,7 +30,8 @@ from .google_fonts import WEIGHTS as GOOGLE_WEIGHTS
 from .google_fonts import import_family
 from .history import compare as compare_revisions
 from .history import restore as restore_revision
-from .models import Font, FontFile, Theme, ThemeRevision
+from .images import prepare_image
+from .models import Font, FontFile, Theme, ThemeAsset, ThemeRevision
 from .publishing import NothingToPublish, publish
 from .shape import EFFECTS, SHAPE_NAMES, SIZES
 from .stylesheet import stylesheet_url
@@ -340,6 +341,73 @@ class ThemeRevisionInline(admin.TabularInline):
         return revision.theme.live_revision_id == revision.pk
 
 
+class ThemeAssetForm(forms.ModelForm):
+    """Upload an image: checked by content, size-limited per slot, metadata removed."""
+
+    class Meta:
+        model = ThemeAsset
+        fields = ["slot", "mode", "original", "alt_text"]
+        labels = {"original": "Image"}
+        help_texts = {
+            "original": "PNG, JPEG, WebP or GIF. Location and camera details are removed."
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        upload = cleaned.get("original")
+        slot = cleaned.get("slot")
+        if upload and slot and self.instance.pk is None:
+            try:
+                upload.seek(0)
+                self.clean_image = prepare_image(upload.read(), upload.name, slot)
+            except ValidationError as error:
+                self.add_error("original", error)
+        return cleaned
+
+    def save(self, commit=True):
+        asset = super().save(commit=False)
+        clean = getattr(self, "clean_image", None)
+        if clean:
+            asset.original = clean["file"]
+            asset.width, asset.height = clean["width"], clean["height"]
+            asset.size, asset.content_type = clean["size"], clean["content_type"]
+        if commit:
+            asset.save()
+        return asset
+
+
+class ThemeAssetInline(admin.TabularInline):
+    """A theme's images. An image is never changed once uploaded: to replace one,
+    upload a new image (and delete the old one if nothing needs it)."""
+
+    model = ThemeAsset
+    form = ThemeAssetForm
+    extra = 0
+    fields = ["preview", "slot", "mode", "original", "alt_text", "details"]
+    readonly_fields = ["preview", "details"]
+    verbose_name = "image"
+    verbose_name_plural = "Images"
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description="Preview")
+    def preview(self, asset):
+        if not asset.pk:
+            return ""
+        return format_html(
+            '<img src="{}" alt="{}" style="max-width: 120px; max-height: 60px">',
+            asset.original.url,
+            asset.alt_text,
+        )
+
+    @admin.display(description="Details")
+    def details(self, asset):
+        if not asset.pk:
+            return ""
+        return f"{asset.width} × {asset.height}, {asset.size // 1024} KB, {asset.content_type}"
+
+
 @admin.register(Theme)
 class ThemeAdmin(admin.ModelAdmin):
     form = ThemeForm
@@ -406,7 +474,7 @@ class ThemeAdmin(admin.ModelAdmin):
             },
         ),
     ]
-    inlines = [ThemeRevisionInline]
+    inlines = [ThemeAssetInline, ThemeRevisionInline]
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("live_revision")

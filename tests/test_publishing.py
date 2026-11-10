@@ -195,6 +195,8 @@ def test_saving_the_edit_form_doesnt_publish(admin, theme, user):
         "light_base": "cupcake",
         "dark_base": "dark",
         "settings": "{}",
+        "assets-TOTAL_FORMS": "0",
+        "assets-INITIAL_FORMS": "0",
         "revisions-TOTAL_FORMS": "1",
         "revisions-INITIAL_FORMS": "1",
         "revisions-MIN_NUM_FORMS": "0",
