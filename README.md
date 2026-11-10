@@ -135,8 +135,9 @@ The module and the demo both use daisyUI 5.7.50. Keep them on the same version:
    (e.g. `gh release download v5.7.50 --repo saadeghi/daisyui -p daisyui.mjs -p daisyui-theme.mjs`).
 
 The script warns if the demo's `daisyui.mjs` is a different version from the
-catalogue. Run the tests afterwards. They check that every theme still has all
-28 values.
+catalogue. Published themes keep the values they were published with, and the
+admin flags any whose base daisyUI has changed or removed. Run the tests
+afterwards. They check that every theme still has all 28 values.
 
 To create migrations after changing models, run Django's command against the
 test project:
@@ -204,6 +205,10 @@ aren't in a CSS layer, so they override daisyUI's own theme rules.
   Each publish saves both base themes' full values, so a later daisyUI update
   can't change or break a published theme. To pick up daisyUI's changes,
   publish again.
+- After a daisyUI update (see [Updating daisyUI](#updating-daisyui)), the admin
+  shows which published themes are affected. The theme list's "Base changed in
+  daisyUI" column ticks them, and each theme's page says whether a base was
+  changed or removed. The site keeps using the saved version until someone publishes.
 
 On a theme's admin page, "View its stylesheet" opens the live revision's
 stylesheet. Linking it into pages comes with `{% theme_head %}`.

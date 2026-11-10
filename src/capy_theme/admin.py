@@ -82,6 +82,7 @@ class ThemeAdmin(admin.ModelAdmin):
         "is_active",
         "live_revision_number",
         "unpublished_changes",
+        "base_changed_in_daisyui",
         "updated_at",
     ]
     actions = ["activate_theme"]
@@ -130,6 +131,10 @@ class ThemeAdmin(admin.ModelAdmin):
     def unpublished_changes(self, theme):
         return theme.has_unpublished_changes
 
+    @admin.display(boolean=True, description="Base changed in daisyUI")
+    def base_changed_in_daisyui(self, theme):
+        return bool(theme.base_changes())
+
     @admin.display(description="Status")
     def publish_status(self, theme):
         if theme.pk is None:
@@ -142,7 +147,7 @@ class ThemeAdmin(admin.ModelAdmin):
             if theme.has_unpublished_changes
             else "The draft matches the live revision."
         )
-        return format_html(
+        status = format_html(
             'Live: revision {} (published {} by {}). {} <a href="{}" target="_blank">'
             "View its stylesheet</a>",
             live.number,
@@ -151,6 +156,9 @@ class ThemeAdmin(admin.ModelAdmin):
             changes,
             reverse("capy_theme:theme_css", args=[live.css_version]),
         )
+        for note in theme.base_changes():
+            status += format_html('<p class="errornote">{}</p>', note)
+        return status
 
     # The Publish page
 

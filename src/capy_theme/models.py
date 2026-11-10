@@ -106,6 +106,33 @@ class Theme(models.Model):
             "settings": copy.deepcopy(self.settings),
         }
 
+    def base_changes(self):
+        """Return notes on daisyUI changes to the live revision's base themes.
+
+        The live revision keeps the base values saved when it was published. If
+        the daisyUI catalogue the module now ships has different values for a
+        base, or no longer has it, this explains that the site still uses the
+        saved version. Empty if nothing changed or the theme isn't published.
+        """
+        live = self.live_revision
+        if live is None:
+            return []
+        notes = []
+        for scheme in ("light", "dark"):
+            name = live.snapshot.get(f"{scheme}_base")
+            current = builtin_values(name)
+            if current is None:
+                notes.append(
+                    f"“{name}” no longer exists in daisyUI. Your site keeps using the saved "
+                    f"version. Choose a new {scheme} base to publish changes."
+                )
+            elif current != live.snapshot.get(f"{scheme}_values"):
+                notes.append(
+                    f"daisyUI has changed “{name}” since this theme was published. Your site "
+                    "keeps using the saved version. Publish again to use daisyUI's new one."
+                )
+        return notes
+
     @property
     def has_unpublished_changes(self):
         """True if the draft's look differs from the live revision (or was never published)."""
