@@ -589,3 +589,16 @@ Recommended (made while building autonomously).
   from the catalogue the module ships now. If daisyUI changed a base since the old
   revision, the restored look uses today's base, and the #78 notice explains it.
   (Keeping the old values exactly would need a second publishing path.)
+
+## 3.8 Admin form tidy-up (#41)
+
+Recommended (made while building autonomously).
+
+- **Order follows how people work:** name, publishing, base themes, branding,
+  colours, contrast, shape, mode, then Advanced (stored JSON, ID and dates).
+  Contrast, Shape and Advanced are folded, as are the Advanced and Expert colours.
+- **Edit live** on the theme page opens the live editor for that theme: on the
+  showcase (all components at once), or on the home page if the showcase is turned
+  off. Only for staff who can edit.
+- **Short descriptions** on the first sections point people to Edit live and
+  explain what the bases do.
