@@ -12,6 +12,7 @@ from django.utils.html import format_html
 from .active import NotPublished, activate, get_active_theme
 from .catalogue import builtin_values, get_builtin_themes
 from .colors import COLOR_GROUPS, COLOR_NAMES, SCHEMES, label
+from .forms import ColorField
 from .models import Theme, ThemeRevision
 from .publishing import NothingToPublish, publish
 from .stylesheet import stylesheet_url
@@ -131,20 +132,17 @@ def color_field_name(scheme, name):
     return f"color_{scheme}_{name.replace('-', '_')}"
 
 
-COLOR_PATTERN = r"^oklch\(\s*[0-9.]+%?\s+[0-9.]+\s+[0-9.]+(\s*/\s*[0-9.]+%?)?\s*\)$"
-
 for _scheme in SCHEMES:
     for _name in COLOR_NAMES:
         # Added to both, so the admin's own copy of the form (built with
         # modelform_factory) knows these fields too.
         ThemeForm.base_fields[color_field_name(_scheme, _name)] = ThemeForm.declared_fields[
             color_field_name(_scheme, _name)
-        ] = forms.RegexField(
-            regex=COLOR_PATTERN,
+        ] = ColorField(
             required=False,
             label=label(_name),
-            error_messages={"invalid": "Enter a colour like oklch(62% 0.19 260)."},
-            help_text="Leave blank to use the base theme's colour (shown greyed out).",
+            help_text="Any colour format (hex, rgb, hsl, oklch); saved as OKLCH. "
+            "Leave blank to use the base theme's colour (shown greyed out).",
         )
 
 

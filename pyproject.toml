@@ -5,6 +5,7 @@ description = "Theming for Django projects."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "coloraide>=8,<9",        # reads colours in any CSS format and converts to OKLCH
     "django>=6.1,<7",          # the Django versions this module supports
     "jsonschema>=4.26,<5",    # validates Theme.settings against settings.schema.json
     "pillow>=13,<14",         # checks uploaded logo images (Django ImageField)

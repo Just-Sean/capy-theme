@@ -307,8 +307,11 @@ On a theme's admin page, the colour sections let you override any of daisyUI's
 
 Leave a field blank to use the base theme's colour, which is shown greyed out
 in the empty field. Only the colours you set are stored, in `settings["colors"]`;
-the rest always come from the base. Colours are written in OKLCH, e.g.
-`oklch(62% 0.19 260)`. Like everything else, they show on the site after publishing.
+the rest always come from the base. Enter colours any common way, such as `#3b82f6`, `rgb(59 130 246)`,
+`hsl(217 91% 60%)`, `oklch(62% 0.19 260)` or a colour name, or use the colour
+picker beside each field. They're converted to and stored as OKLCH (daisyUI's
+format), so after saving the field shows e.g. `oklch(62.31% 0.188 259.81)`.
+Like everything else, they show on the site after publishing.
 
 ### Light and dark mode
 
@@ -484,6 +487,7 @@ straight to `main`:
 | `src/capy_theme/static/capy_theme/showcase.css` | The showcase's bundled stylesheet (built; don't edit) |
 | `scripts/build_showcase_css.py`, `scripts/showcase.tailwind.css` | Build `showcase.css` with Tailwind and daisyUI |
 | `src/capy_theme/colors.py` | The 20 overridable colours, their groups, and merging overrides over the base theme |
+| `src/capy_theme/forms.py` | `ColorField`: accepts any colour format, with the browser's colour picker (`static/capy_theme/admin/color_input.js`) |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |
