@@ -1,4 +1,4 @@
-"""Tests for the live editor on the showcase (issue #42)."""
+"""Tests for who gets the live editor, which theme it edits, and its state (issue #42)."""
 
 from pathlib import Path
 
@@ -13,7 +13,7 @@ from capy_theme.themes.active import activate
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
-SHOWCASE = "/theme/showcase/"
+PAGE = "/page/"  # an ordinary project page with {% theme_head %} (tests/urls.py)
 PINK = "oklch(65% 0.24 350)"
 STATIC = Path(__file__).resolve().parents[2] / "src/capy_theme/static/capy_theme/editor"
 
@@ -64,27 +64,27 @@ def test_staff_without_change_permission_cant(django_user_model):
     assert not can_edit(staff_user(django_user_model, "view_theme"))
 
 
-def test_edit_button_shows_for_editors(editor_client, active):
-    content = editor_client.get(SHOWCASE).content.decode()
-    assert "data-capy-editor-open" in content
+def test_editors_get_the_editor(editor_client, active):
+    content = editor_client.get(PAGE).content.decode()
+    assert 'id="capy-editor"' in content
     assert "capy_theme/editor/editor.js" in content
     assert f'data-state-url="{state_url(active)}"' in content
 
 
-def test_no_edit_button_without_permission(client, django_user_model, active):
+def test_no_editor_without_permission(client, django_user_model, active):
     client.force_login(staff_user(django_user_model, "view_theme"))
-    content = client.get(SHOWCASE).content.decode()
-    assert "data-capy-editor-open" not in content
+    content = client.get(PAGE).content.decode()
+    assert 'id="capy-editor"' not in content
     assert "editor.js" not in content
 
 
-def test_no_edit_button_without_a_theme(editor_client):
-    assert "data-capy-editor-open" not in editor_client.get(SHOWCASE).content.decode()
+def test_no_editor_without_a_theme(editor_client):
+    assert 'id="capy-editor"' not in editor_client.get(PAGE).content.decode()
 
 
 def test_edit_parameter_picks_another_theme(editor_client, active):
     other = Theme.objects.create(name="Other", slug="other")
-    content = editor_client.get(f"{SHOWCASE}?edit={other.pk}").content.decode()
+    content = editor_client.get(f"{PAGE}?edit={other.pk}").content.decode()
     assert f'data-state-url="{state_url(other)}"' in content
     assert 'data-theme-name="Other"' in content
 
@@ -130,8 +130,8 @@ def test_viewing_the_state_changes_nothing(editor_client, active):
 
 
 def test_visitors_dont_get_the_editor(client, settings, active):
-    settings.CAPY_THEME_SHOWCASE = "public"
-    assert "editor.js" not in client.get(SHOWCASE).content.decode()
+    settings.CAPY_THEME_PAGE = "public"
+    assert "editor.js" not in client.get(PAGE).content.decode()
 
 
 # The bundled files

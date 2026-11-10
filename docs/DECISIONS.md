@@ -1127,3 +1127,28 @@ generate data files, like `generate_builtin_themes.py`, are fine.)
   migration must give the same result forever.
 - Not moved: the showcase's sample characters, since the showcase page is being
   replaced.
+
+## 6.7 Components view in the editor (#155)
+
+Sean's decision: a separate showcase page isn't needed, because the editor already
+runs on the real page; every daisyUI component should be visible while editing.
+
+- **An iframe**, not components injected into the page: the bundled daisyUI
+  stylesheet includes Tailwind's reset, which would restyle the project's own
+  page. The iframe page (`/theme/editor/components/`, staff who can edit only)
+  has its own stylesheet; the editor gives it the draft theme's CSS on every
+  preview, as a constructed stylesheet (CSP-safe).
+- **Found in Chrome:** the iframe's window is reused from the blank page it
+  starts with, so the draft stylesheet is kept on the document, not the window.
+  Without that, the draft CSS never reached the loaded page.
+- **Same-site framing only** (`X-Frame-Options: SAMEORIGIN` on that view; Django's
+  default is to forbid framing).
+- **Samples kept:** the component templates that need no server data (buttons,
+  badges, alerts, cards, tabs, table, form fields, progress, modal) plus a plain
+  text sample, so the type scale and fonts show. Colour swatches, shape and font
+  samples are already in the editor's controls.
+- **Removed with the showcase:** its settings (`CAPY_THEME_SHOWCASE`,
+  `CAPY_THEME_BASE_TEMPLATE`), its mode/visitor panel and image section, and the
+  demo's navbar link. "Edit live" opens `/?edit=<id>`.
+- **Tests** now use an ordinary test-project page (`/page/` in `tests/urls.py`) as
+  "a page with the editor on it".

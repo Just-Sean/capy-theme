@@ -80,8 +80,7 @@ def test_corner_button_can_be_turned_off(rf, django_user_model, active, settings
     assert 'data-floating-button="false"' in html
 
 
-def test_showcase_has_one_editor(client, django_user_model, active):
+def test_a_page_has_one_editor(client, django_user_model, active):
     client.force_login(user_with(django_user_model, "change_theme"))
-    content = client.get("/theme/showcase/").content.decode()
+    content = client.get("/page/").content.decode()
     assert content.count('id="capy-editor"') == 1
-    assert "data-capy-editor-open" in content

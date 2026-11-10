@@ -65,7 +65,7 @@ def test_state_includes_controls_and_current_values(editor_client):
 
 def test_mount_loads_the_controls_script(editor_client):
     theme = Theme.objects.create(name="Main", slug="main")
-    content = editor_client.get(f"/theme/showcase/?edit={theme.pk}").content.decode()
+    content = editor_client.get(f"/page/?edit={theme.pk}").content.decode()
     assert content.index("editor/editor.js") < content.index("editor/controls/core.js")
     assert content.index("editor/controls/core.js") < content.index("editor/controls/colors.js")
 

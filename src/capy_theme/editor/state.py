@@ -25,6 +25,7 @@ def editor_urls(theme):
         "save": reverse("capy_theme:editor_save", args=[theme.pk]),
         "publish": reverse("capy_theme:editor_publish", args=[theme.pk]),
         "upload": reverse("capy_theme:editor_upload", args=[theme.pk]),
+        "components": reverse("capy_theme:editor_components"),
     }
 
 

@@ -52,14 +52,7 @@ def page(client, theme):
     return client.get(reverse("admin:capy_theme_theme_change", args=[theme.pk])).content.decode()
 
 
-def test_edit_live_opens_the_editor_on_the_showcase(client, django_user_model):
-    login(client, django_user_model, "view_theme", "change_theme")
-    theme = Theme.objects.create(name="Main", slug="main")
-    assert f'href="/theme/showcase/?edit={theme.pk}">Edit live</a>' in page(client, theme)
-
-
-def test_edit_live_uses_the_home_page_when_the_showcase_is_off(client, django_user_model, settings):
-    settings.CAPY_THEME_SHOWCASE = "off"
+def test_edit_live_opens_the_editor_on_the_home_page(client, django_user_model):
     login(client, django_user_model, "view_theme", "change_theme")
     theme = Theme.objects.create(name="Main", slug="main")
     assert f'href="/?edit={theme.pk}">Edit live</a>' in page(client, theme)

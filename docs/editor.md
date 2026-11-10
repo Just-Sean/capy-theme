@@ -1,10 +1,10 @@
-# The live editor and the showcase
+# The live editor and its Components view
 
-Code: `src/capy_theme/editor/` (Python) and `src/capy_theme/static/capy_theme/editor/` (the panel: `editor.js`, and one file per section in `controls/`). The showcase is in `src/capy_theme/showcase/` until it's replaced by the editor's Components view.
+Code: `src/capy_theme/editor/` (Python) and `src/capy_theme/static/capy_theme/editor/` (the panel: `editor.js`, and one file per section in `controls/`). The Components view's page and samples are in `src/capy_theme/templates/capy_theme/editor/`.
 
 ## The live theme editor
 
-Staff who can change themes see an **Edit theme** button: on the showcase, and in
+Staff who can change themes see an **Edit theme** button in
 the bottom-right corner of **every page** that uses `{% theme_head %}`. It opens
 a panel on the right and shows the theme's **draft** on the page you're on, in
 your browser only. Visitors keep seeing the published theme, and a banner at the
@@ -53,41 +53,32 @@ Every change shows on the page straight away (in your browser only).
   with change permission only, and **never write anything**. The preview needs
   Django's CSRF token, which the page passes to the script.
 
-## The theme showcase
+## The Components view
 
-`/theme/showcase/` shows the active theme on every kind of daisyUI component
-(buttons, badges, alerts, cards, tabs, a table, form fields, progress bars, a
-modal, headings and text), with light and dark mode side by side. It also has a
-swatch for each of the 20 colours (with its text colour, OKLCH and hex values,
-contrast rating, and whether it's overridden, worked out or from the base
-theme), and samples of every shape setting, and a **Fonts and type** section: each role's font
-and source with a sample in every weight and style that's actually loaded (so
-nothing shown is a browser-faked bold), the heading scale, body text at the base
-size with its line height, a monospace code block, and a character sample for
-the fonts' character sets. It also shows
-the site name, tagline, logo and the base themes in use; a **Mode and visitors**
-panel (the default mode, the light/dark/auto toggle, the visitor theme picker,
-and the upcoming and running scheduled themes with their dates); and an **Images and
-icons** section: every logo slot at the header height in both modes (saying
-whether it's its own image, the light one, or what an empty slot falls back to)
-with its generated sizes and formats; every icon at its real size (the maskable
-icon inside a circle and a squircle, the monochrome icon on a dark tile); the
-sharing image; and the background images. Staff only by default
-(see `CAPY_THEME_SHOWCASE`). The demo's navbar links to it.
+**Show all components** at the top of the editor panel opens every daisyUI
+component (buttons, badges, alerts, cards, tabs, a table, form fields, progress
+bars, a modal, headings and text) in the **draft** theme, light and dark side by
+side, beside the panel. Every change in the editor shows on them straight away.
+**Close components** or Escape closes it.
 
-Each section is its own template in
-`src/capy_theme/templates/capy_theme/showcase/sections/`, listed in
-`SHOWCASE_SECTIONS` in `showcase/views.py`. To add a section, add a template there and
-its name to the list. It's included once per mode, with `mode` set to `"light"`
-or `"dark"`, so use `{{ mode }}` in any `id` or `name` that must be unique.
+It's a page of its own (`/theme/editor/components/`, staff who can edit themes
+only) shown in an iframe, so its daisyUI stylesheet can never change the page
+being edited. The editor puts the draft theme's CSS into it each time the preview
+changes. The page may only be framed by the same site.
 
-The showcase brings its own stylesheet, `src/capy_theme/static/capy_theme/showcase.css`
-(daisyUI plus the Tailwind classes the showcase templates use), so it works in
-any project. It's built from the showcase templates, so **rebuild it after
-changing them** (or after updating daisyUI):
+Each sample is a template in
+`src/capy_theme/templates/capy_theme/editor/components/`, listed in `COMPONENTS`
+in `src/capy_theme/editor/views.py`. It's included once per mode, with `mode` set
+to `"light"` or `"dark"`, so use `{{ mode }}` in any `id` or `name` that must be
+unique.
+
+The view brings its own stylesheet,
+`src/capy_theme/static/capy_theme/editor/components.css` (daisyUI plus the
+Tailwind classes the samples use), so it works in any project. It's built from
+those templates, so **rebuild it after changing them** (or after updating daisyUI):
 
 ```bash
-uv run python scripts/build_showcase_css.py
+uv run python scripts/build_components_css.py
 ```
 
 It uses the Tailwind CLI that the demo downloads. If it says the CLI isn't found,

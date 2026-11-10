@@ -1,10 +1,10 @@
-"""Build the showcase's bundled stylesheet with Tailwind CSS and daisyUI.
+"""Build the live editor's Components view stylesheet with Tailwind CSS and daisyUI.
 
-Writes src/capy_theme/static/capy_theme/showcase.css from
-scripts/showcase.tailwind.css, scanning only the showcase templates. Run it from
-the repo root after changing the showcase templates or updating daisyUI:
+Writes src/capy_theme/static/capy_theme/editor/components.css from
+scripts/components.tailwind.css, scanning only the Components view's templates. Run
+it from the repo root after changing those templates or updating daisyUI:
 
-    uv run python scripts/build_showcase_css.py
+    uv run python scripts/build_components_css.py
 
 It uses the Tailwind CLI that django-tailwind-cli downloads for the demo site.
 If it isn't there yet, run `uv run python demo/manage.py tailwind build` once.
@@ -16,8 +16,8 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SOURCE = REPO_ROOT / "scripts" / "showcase.tailwind.css"
-OUTPUT = REPO_ROOT / "src" / "capy_theme" / "static" / "capy_theme" / "showcase.css"
+SOURCE = REPO_ROOT / "scripts" / "components.tailwind.css"
+OUTPUT = REPO_ROOT / "src" / "capy_theme" / "static" / "capy_theme" / "editor" / "components.css"
 CLI_DIR = REPO_ROOT / "demo" / ".django_tailwind_cli"
 DAISYUI_PLUGIN = REPO_ROOT / "demo" / "tailwind" / "daisyui.mjs"
 
