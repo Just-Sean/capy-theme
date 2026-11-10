@@ -352,6 +352,10 @@ with alt text. For every upload:
   and so on), embedded HTML, animation, links to other files or sites, and CSS
   `@import` or external `url()` are removed. SVGs must be UTF-8, and SVGs with a
   DOCTYPE or entities are rejected.
+- SVGs aren't converted to PNG. The slots where SVG can't be used take a PNG,
+  JPEG, WebP or GIF instead: the email logo (email programs don't show SVG), the
+  social sharing image (social sites don't accept it) and the icon (favicons are
+  made from it). They're listed in `NO_SVG` in `src/capy_theme/images.py`.
 
 Files are stored under `MEDIA_ROOT/capy_theme/assets/<slot>/`. An image is never
 changed after upload: a new image is a new asset, so older revisions keep theirs.

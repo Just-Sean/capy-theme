@@ -335,7 +335,7 @@
   function imageSection(state) {
     var slot = el("select", { "data-capy-image-slot": "", "aria-label": "Where the image goes" });
     spec.image_slots.forEach(function (item) {
-      slot.appendChild(el("option", { value: item.name, text: item.label + " (up to " + Math.round(item.max_bytes / 1048576) + " MB)" }));
+      slot.appendChild(el("option", { value: item.name, text: item.label + " (up to " + Math.round(item.max_bytes / 1048576) + " MB" + (item.svg ? "" : ", no SVG") + ")" }));
     });
     var mode = el("select", { "data-capy-image-mode": "", "aria-label": "Light or dark mode" });
     [["light", "Light mode"], ["dark", "Dark mode"]].forEach(function (pair) {

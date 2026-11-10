@@ -39,6 +39,14 @@ SLOTS = {
         "A tiling pattern behind pages.",
     ),
 }
+# Slots where SVG can't be used, so a PNG, JPEG, WebP or GIF must be uploaded:
+# email clients (Gmail, Outlook) don't show SVG, social sites don't accept it for
+# link previews, and favicons and app icons are made from the icon with Pillow.
+NO_SVG = {
+    "logo_email": "Email programs don't show SVG",
+    "social": "Social sites don't accept SVG for link previews",
+    "icon": "Favicons and app icons are made from it as PNGs",
+}
 SLOT_CHOICES = [(slot, spec[0]) for slot, spec in SLOTS.items()]
 MODES = [("light", "Light"), ("dark", "Dark")]
 
@@ -70,6 +78,11 @@ def prepare_image(data, name, slot):
     not_an_image = "That file isn't a supported image (PNG, JPEG, WebP, GIF or SVG)."
     if data.lstrip(b"\xef\xbb\xbf \t\r\n").startswith(b"<"):
         # Text starting with "<": only an SVG can be that. Cleaned, not re-encoded.
+        if slot in NO_SVG:
+            raise ValidationError(
+                f"{NO_SVG[slot]}, so the {label.lower()} can't be an SVG. "
+                "Upload a PNG or JPEG instead."
+            )
         svg, width, height = clean_svg(data)
         return {
             "file": ContentFile(svg, name=f"{Path(name).stem}.svg"),

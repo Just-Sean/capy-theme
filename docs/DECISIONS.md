@@ -826,3 +826,9 @@ Recommended (made while building autonomously).
 - **Detected by content:** an upload that starts with `<` is treated as SVG and must
   have an `<svg>` root; anything else goes through Pillow as before.
 - **Size** is read from the `viewBox` (or `width` and `height`).
+- **No PNG copy (Sean's decision):** the issue asked for a PNG copy of each SVG.
+  That needs an SVG renderer, which means a new dependency: resvg-py (MIT, but
+  one main maintainer) or CairoSVG (LGPL, needs the Cairo system library). Instead,
+  the slots where SVG can't go refuse it and ask for a PNG or JPEG: the email logo,
+  the social image and the icon (`images.NO_SVG`). People upload the format each
+  place needs; nothing is converted.

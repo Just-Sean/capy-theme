@@ -155,3 +155,18 @@ def test_an_uploaded_svg_is_stored_clean(settings, tmp_path):
         stored = f.read()
     assert b"script" not in stored and b"<rect" in stored
     assert asset.content_type == "image/svg+xml"
+
+
+@pytest.mark.parametrize("slot", ["logo_email", "social", "icon"])
+def test_slots_that_cant_use_svg_ask_for_a_png(slot):
+    with pytest.raises(ValidationError, match="Upload a PNG or JPEG instead"):
+        prepare_image(svg("<rect width='4'/>"), "logo.svg", slot)
+
+
+@pytest.mark.django_db
+def test_editor_marks_slots_without_svg():
+    from capy_theme.editor import controls
+
+    slots = {s["name"]: s["svg"] for s in controls()["image_slots"]}
+    assert slots["logo_main"] and slots["logo_print"]
+    assert not slots["logo_email"] and not slots["social"] and not slots["icon"]
