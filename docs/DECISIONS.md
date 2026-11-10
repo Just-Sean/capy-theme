@@ -370,3 +370,20 @@ Recommended (made while building autonomously).
   linked by a small static script (not inline, so it works under a strict CSP).
   It works in hex, so picking writes hex into the box, which is converted to OKLCH
   on save. The full picker is the editor's (3.3).
+
+## 2.3 Automatic text colours and background shades (#16)
+
+Recommended (made while building autonomously).
+
+- **When it applies:** only for colours the theme overrides. A colour's text
+  colour is worked out when the colour is set but its `-content` isn't. base-200,
+  base-300 and base-content are worked out when base-100 is set but they aren't.
+  Untouched colours keep the base theme's values, and anything set by hand wins.
+- **Text colour:** a very light (98%) or very dark (22%) tint of the colour's own
+  hue, whichever has the higher WCAG contrast. If neither tint reaches AA (4.5:1),
+  which happens only on some mid-tones, pure white or black is used instead,
+  because nothing reads better on those.
+- **Background shades:** 2.5% and 5% darker in OKLCH lightness (daisyUI's own
+  themes step about the same). Very dark backgrounds get lighter shades instead.
+- **Worked out when the stylesheet is written,** from the revision's saved values,
+  in `colors.effective_values()`, the same function the editor will use.
