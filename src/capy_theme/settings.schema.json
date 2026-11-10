@@ -4,6 +4,22 @@
   "title": "capy-theme Theme.settings",
   "description": "Every override a theme makes on top of its light and dark base themes. Each phase adds its own keys here (colours, fonts, shape and so on). Keys not listed are rejected.",
   "type": "object",
-  "properties": {},
+  "properties": {
+    "site_name": {
+      "description": "The site's name, shown in headers and used as the logo's fallback.",
+      "type": "string",
+      "maxLength": 100
+    },
+    "tagline": {
+      "description": "A short line describing the site.",
+      "type": "string",
+      "maxLength": 200
+    },
+    "logo_alt": {
+      "description": "Alt text for the main logo. Falls back to the site name.",
+      "type": "string",
+      "maxLength": 200
+    }
+  },
   "additionalProperties": false
 }

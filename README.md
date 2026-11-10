@@ -66,11 +66,33 @@ stand-in project in `tests/`.
    </head>
    ```
 
-6. Create its database tables:
+6. Make sure the project stores and serves uploaded files, for theme logos.
+   Set `MEDIA_ROOT` and `MEDIA_URL` in `settings.py`. While developing, serve them
+   from `urls.py`; in production, serve that folder from the web server or a
+   storage service:
+
+   ```python
+   from django.conf import settings
+   from django.conf.urls.static import static
+
+   urlpatterns = [
+       ...,
+       *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),  # DEBUG only
+   ]
+   ```
+
+7. Create its database tables:
 
    ```bash
    uv run python manage.py migrate
    ```
+
+To show the theme's logo (or its site name if it has no logo), use
+`{% theme_logo %}`. Extra attributes are passed through, e.g.
+`{% theme_logo class="h-8" %}`. Every template also gets a `theme` variable
+holding the published `site_name`, `tagline`, `logo_url`, `logo_alt`, `name`,
+`slug`, `revision`, `light_base`, `dark_base` and `stylesheet_url`, or `None`
+if no theme is active.
 
 Pages then show the **active** theme's **published** colours. Until a theme is
 published and activated in the admin, they show daisyUI's defaults.
@@ -197,6 +219,21 @@ After pulling changes that add migrations, apply them to the demo database:
 uv run python demo/manage.py migrate
 ```
 
+### Branding
+
+On a theme's admin page, the **Branding** section has the site name, tagline,
+logo and logo alt text. The site name, tagline and alt text are stored in the
+theme's `settings`. The logo is an image upload (PNG, JPEG, GIF or WebP, checked
+with Pillow) saved under `MEDIA_ROOT/capy_theme/logos/`, at the size it's
+uploaded. Resized and SVG logos come in Phase 4.
+
+Like everything else, branding changes show on the site only after publishing.
+Replacing a logo stores a new file and never overwrites the old one, so older
+revisions keep their logo.
+
+The "Overrides" section shows the theme's stored `settings` as read-only JSON.
+They're edited through the fields above, not typed by hand.
+
 ### Drafts and publishing
 
 Editing a theme in the admin changes only its **draft**. Pages will use the
@@ -296,8 +333,9 @@ straight to `main`:
 | `src/capy_theme/stylesheet.py` | Writes a published revision out as CSS variables, and makes its version hash |
 | `src/capy_theme/views.py` | The stylesheet view, `/theme/<version>.css` |
 | `src/capy_theme/urls.py` | The module's URLs, included by projects under `/theme/` |
-| `src/capy_theme/templatetags/capy_theme.py` | The `{% theme_head %}` and `{% theme_html_attrs %}` template tags |
-| `src/capy_theme/context_processors.py` | Gives every template `theme`: the active theme's name, slug, revision, bases and stylesheet URL (or `None`) |
+| `src/capy_theme/templatetags/capy_theme.py` | The `{% theme_head %}`, `{% theme_html_attrs %}` and `{% theme_logo %}` template tags |
+| `src/capy_theme/branding.py` | Reads a revision's published site name, tagline and logo |
+| `src/capy_theme/context_processors.py` | Gives every template `theme`: the active theme's published values (or `None`) |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |
 | `src/capy_theme/signals.py` | Clears the active-theme cache whenever themes, revisions or assignments change |
 | `src/capy_theme/publishing.py` | `publish()`: turns a theme's draft into its new live revision |

@@ -7,13 +7,14 @@ TEMPLATES["OPTIONS"]["context_processors"].
 from django.urls import reverse
 
 from .active import get_active_theme
+from .branding import branding
 
 
 def theme(request):
     """Return {"theme": ...}: the active theme's published values, or None.
 
     The values come from the live revision, not the draft, so templates show
-    what's published. Later phases add more (site name, logo and so on).
+    what's published. Later phases add more (colours, fonts and so on).
     """
     active = get_active_theme(request)
     if active is None or active.live_revision is None:
@@ -27,5 +28,6 @@ def theme(request):
             "light_base": live.snapshot["light_base"],
             "dark_base": live.snapshot["dark_base"],
             "stylesheet_url": reverse("capy_theme:theme_css", args=[live.css_version]),
+            **branding(live),  # site_name, tagline, logo_url, logo_alt
         }
     }
