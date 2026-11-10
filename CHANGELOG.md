@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Scheduling:** a **Theme schedule** in the admin: themes that are live between
+  two dates and win over the default while running; the default returns
+  afterwards. The cache expires at the next start or end. Migration 0013.
 - **Visitor theme picker:** tick **Offer to visitors** on published themes;
   `{% theme_picker %}` lets visitors choose one (stored in a cookie, only offered
   themes count). `CAPY_THEME_VISITOR_THEMES` turns it off. Migration 0012.
