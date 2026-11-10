@@ -348,6 +348,10 @@ The panel has:
   **Reset** (back to the base colour) and its contrast rating, e.g. "AA 5.19" or
   "⚠ fail 2.1". Overridden colours are shown in bold with a dot.
 - **Shape and effects:** the radii, sizes and border width, plus depth and noise.
+- **Suggestions** (in the Colours section): click **Suggest colours** for colours
+  that go with the current primary (analogous, complementary, triadic) and, if the
+  theme has a logo, the logo's main colours. Clicking a suggestion fills in those
+  colours for the current mode.
 
 Every change shows on the page straight away (in your browser only).
 
@@ -578,6 +582,7 @@ straight to `main`:
 | `src/capy_theme/editor.py` | The live editor: who can use it, which theme it edits, and the draft data it reads |
 | `src/capy_theme/static/capy_theme/editor/` | The editor panel: `editor.js` (panel, preview), `editor-controls.js` (bases, colours, shape) and `editor.css` |
 | `src/capy_theme/templates/capy_theme/editor/mount.html` | Loads the editor on a page for staff who can edit |
+| `src/capy_theme/palette.py` | Colour suggestions from a primary colour or from the logo |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |

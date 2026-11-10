@@ -516,3 +516,23 @@ Recommended (made while building autonomously).
 - **Tested in headless Chrome** with real input events: picking a colour,
   switching tabs, reset, changing a base and changing a radius all update the
   page as expected, and nothing is saved.
+
+## 3.4 Palette suggestions (#18)
+
+Recommended (made while building autonomously).
+
+- **From the primary colour:** three classic colour schemes in OKLCH, each
+  keeping the primary's lightness and strength and changing only the hue:
+  analogous (±30°), complementary (180° and 150°) and triadic (120° and 240°).
+  Neutral is a dark (27%), nearly grey version of the primary's hue.
+- **From the logo:** Pillow shrinks the logo and reduces it to 12 colours. It
+  ignores transparent, near-white, near-black and grey areas and colours too
+  close in hue to one already picked, then uses the rest in order of area as
+  primary, secondary and accent.
+- **Endpoint:** `POST /theme/editor/<id>/suggestions/` with the current primary.
+  It writes nothing.
+- **Applying** a suggestion fills those colours into the current mode's controls
+  and previews them. Suggestions use the primary at the moment "Suggest colours"
+  is clicked; click again after changing the primary for fresh ones.
+- **Swatch colours** are set through the CSSOM (`element.style`), which a strict
+  CSP allows, unlike `style=""` attributes.

@@ -15,5 +15,6 @@ urlpatterns = [
     path("mode/<slug:mode>/", views.set_mode, name="set_mode"),
     path("editor/<int:pk>/state/", views.editor_state, name="editor_state"),
     path("editor/<int:pk>/preview/", views.editor_preview, name="editor_preview"),
+    path("editor/<int:pk>/suggestions/", views.editor_suggestions, name="editor_suggestions"),
     path("<slug:version>.css", views.theme_css, name="theme_css"),
 ]
