@@ -1255,3 +1255,11 @@ Recommended (made while building autonomously).
   admin step (the issue's check).
 - **`theme_rebuild_images`** also fills the gap left by migration 0010 (moved
   logos had no smaller copies) and remakes icons if their files are missing.
+
+## 7.6 Developer docs page (#57)
+
+- **In the repo** (`docs/developers.md`), versioned with each release (agreed with
+  Sean instead of a showcase section or the wiki).
+- **Tests hold it to the code:** the variable table must list exactly the variables
+  a fully-featured theme stylesheet defines, and every download address in it must
+  answer 200. So adding a variable without documenting it fails the tests.
