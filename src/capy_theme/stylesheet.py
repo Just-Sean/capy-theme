@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from .colors import effective_values, focus_color
 from .fonts import font_css
+from .typography import type_css
 
 
 def css_version(theme_id, number, snapshot):
@@ -69,6 +70,7 @@ def snapshot_css(snapshot, comment):
         "  outline-offset: 2px;",
         "}",
         *font_css(snapshot.get("fonts", {})),
+        *type_css(snapshot.get("settings", {})),
     ]
     return "\n".join(lines) + "\n"
 

@@ -190,3 +190,28 @@ def external_stylesheets(fonts):
         if font.get("source") == "external" and url and url not in urls:
             urls.append(url)
     return urls
+
+
+def preload_urls(fonts):
+    """The body and heading fonts' regular files, to preload in <head>.
+
+    One file per role (Latin, weight 400, normal style if there is one), no
+    repeats, so text appears in the right font sooner.
+    """
+    urls = []
+    for role in ("body", "heading"):
+        font = (fonts or {}).get(role)
+        if not font or not font.get("files"):
+            continue
+        files = font["files"]
+        best = sorted(
+            files,
+            key=lambda f: (
+                f["style"] != "normal",
+                abs(f["weight"] - 400),
+                f["subset"] not in ("latin", "all"),
+            ),
+        )[0]
+        if best["url"] not in urls:
+            urls.append(best["url"])
+    return urls

@@ -278,10 +278,27 @@
       });
       return el("div", {}, [el("label", { class: "capy-editor-field" }, [el("span", { text: role.label }), select]), sample]);
     });
+    spec.type.forEach(function (item) {
+      var input = el("input", {
+        type: "number",
+        step: String(item.step),
+        min: String(item.min),
+        max: String(item.max),
+        "data-capy-type": item.name,
+        "aria-label": item.label,
+      });
+      input.addEventListener("input", function () {
+        var type = (changes.settings.type = changes.settings.type || {});
+        if (input.value === "") delete type[item.name];
+        else type[item.name] = Number(input.value);
+        update();
+      });
+      rows.push(el("label", { class: "capy-editor-field" }, [el("span", { text: item.label + (item.unit ? " (" + item.unit + ")" : "") }), input]));
+    });
     var note = spec.fonts.length
       ? null
       : el("p", { class: "capy-editor-note", text: "The font library is empty. Add fonts in the admin under Capy Theme → Fonts." });
-    return el("section", { class: "capy-editor-section" }, [el("h3", { text: "Fonts" }), note].concat(rows));
+    return el("section", { class: "capy-editor-section" }, [el("h3", { text: "Fonts and type" }), note].concat(rows));
   }
 
   // A sample line under each font dropdown, in the chosen font (the preview's
@@ -366,6 +383,11 @@
       if (document.activeElement !== input) input.value = name in shape ? shape[name] : "";
       input.placeholder = (latest.values.light[size.variable] || "").replace(size.unit, "");
     });
+    var typeSettings = changes.settings.type || {};
+    panel.querySelectorAll("[data-capy-type]").forEach(function (input) {
+      var name = input.getAttribute("data-capy-type");
+      if (document.activeElement !== input) input.value = name in typeSettings ? typeSettings[name] : "";
+    });
     var fonts = changes.settings.fonts || {};
     panel.querySelectorAll("[data-capy-font]").forEach(function (select) {
       var role = select.getAttribute("data-capy-font");
@@ -387,6 +409,7 @@
         colors: JSON.parse(JSON.stringify(state.settings.colors || {})),
         shape: JSON.parse(JSON.stringify(state.settings.shape || {})),
         fonts: JSON.parse(JSON.stringify(state.settings.fonts || {})),
+        type: JSON.parse(JSON.stringify(state.settings.type || {})),
       },
     };
     editor.changes = normalized();

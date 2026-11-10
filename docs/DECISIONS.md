@@ -728,3 +728,22 @@ Recommended (made while building autonomously).
 - **Checked in Chrome** with a public provider stylesheet: linked in `<head>`, the
   headings used it, and the font loaded. A real Adobe kit needs an account, so it
   wasn't tested directly.
+
+## 4.7 Type scale and font loading (#29)
+
+Recommended (made while building autonomously).
+
+- **Settings** in `settings["type"]`: base size (14–24 px), heading scale
+  (1.05–1.6), line height (1.1–2.2) and heading weight (100–900).
+- **Minimum 14 px** for the base size: smaller body text is hard to read. The
+  schema, the admin form and the editor all refuse less.
+- **The base size sets the root font size** (`html { font-size }`), so everything
+  in rem (Tailwind's text sizes and spacing) scales together, which is what
+  "scales text across the page" needs.
+- **A modular scale for headings:** `h6` = 1 rem, each level × the ratio.
+- **Variables plus `@layer base` rules,** so utility classes still win, like all
+  capy-theme element rules.
+- **Preload:** one regular file each for body and heading (Latin, 400, normal
+  where available), with `crossorigin` (required for font preloads). System and
+  external fonts aren't preloaded. `font-display: swap` was already on every
+  `@font-face` (4.1).

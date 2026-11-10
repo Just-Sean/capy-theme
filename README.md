@@ -518,6 +518,27 @@ are in `@layer base`, so a project's own utility classes, like `font-serif`, sti
 win. When a theme is published, its fonts' details and file URLs are copied into
 the revision, so editing the library later can't change a published theme.
 
+### Type scale
+
+The **Type scale** section (and the editor's "Fonts and type") sets:
+
+| Setting | Range | Effect |
+| --- | --- | --- |
+| Base text size | 14–24 px | The root font size: body text, and everything sized in rem, scales with it. **At least 14 px**, so text stays readable. |
+| Heading scale | 1.05–1.6 | `h6` is 1 rem and each level up multiplies by this (1.25 gives `h1` ≈ 3 rem). |
+| Line height | 1.1–2.2 | Space between lines of body text. |
+| Heading weight | 100–900 | How bold headings are. |
+
+Blank values leave the project's own styles alone. They're written as variables
+(`--capy-base-size`, `--capy-h1` … `--capy-h6`, `--capy-line-height`,
+`--capy-heading-weight`) plus default rules in `@layer base`, so utility classes on
+an element (like the demo's `text-5xl` headings) still win.
+
+**Font loading:** every `@font-face` uses `font-display: swap`, so text shows
+straight away in a fallback font. `{% theme_head %}` also **preloads** the body
+and heading fonts' regular files (`<link rel="preload" as="font">`), so the right
+font arrives sooner.
+
 ### Shape and effects
 
 The **Shape and effects** section overrides daisyUI's shape settings, for both
@@ -733,6 +754,7 @@ straight to `main`:
 | `scripts/fetch_curated_fonts.py` | Fetches the curated fonts from Fontsource |
 | `src/capy_theme/font_files.py` | Checks uploaded font files, converts them to WOFF2 and trims them to a character subset |
 | `src/capy_theme/google_fonts.py` | Imports a Google font into the library (downloaded once, served locally) |
+| `src/capy_theme/typography.py` | The type scale settings and their CSS |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |

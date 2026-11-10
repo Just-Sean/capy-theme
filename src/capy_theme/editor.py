@@ -28,6 +28,7 @@ from .models import Font, Theme
 from .palette import from_logo, from_primary
 from .shape import EFFECTS, SIZES
 from .stylesheet import snapshot_css
+from .typography import TYPE_SETTINGS
 from .validation import validate_base, validate_settings
 
 
@@ -101,6 +102,10 @@ def controls():
             {"name": name, "variable": v, "label": lab} for name, (v, lab, _help) in EFFECTS.items()
         ],
         "font_roles": [{"name": name, "label": lab} for name, lab in ROLES.items()],
+        "type": [
+            {"name": name, "label": lab, "unit": unit, "min": low, "max": high, "step": step}
+            for name, (lab, unit, low, high, step, _help) in TYPE_SETTINGS.items()
+        ],
         "fonts": [
             {
                 "id": f.pk,
@@ -115,7 +120,7 @@ def controls():
 
 # The settings the editor manages. Anything else in a theme's settings (site
 # name, mode and so on) is kept as it is.
-EDITOR_SETTINGS = ("colors", "shape", "fonts")
+EDITOR_SETTINGS = ("colors", "shape", "fonts", "type")
 
 
 def apply_changes(theme, data):

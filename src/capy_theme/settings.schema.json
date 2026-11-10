@@ -245,6 +245,37 @@
         }
       },
       "additionalProperties": false
+    },
+    "type": {
+      "description": "The type scale. Unset values leave the project's styles alone.",
+      "type": "object",
+      "properties": {
+        "base_size": {
+          "description": "Base text size (px). The size of body text. Everything sized in rem scales with it. At least 14px, so text stays readable.",
+          "type": "number",
+          "minimum": 14,
+          "maximum": 24
+        },
+        "scale": {
+          "description": "Heading scale (\u00d7). How much bigger each heading level is than the next (h6 is the base size). 1.25 is a common choice.",
+          "type": "number",
+          "minimum": 1.05,
+          "maximum": 1.6
+        },
+        "line_height": {
+          "description": "Line height (\u00d7). Space between lines of body text, e.g. 1.5.",
+          "type": "number",
+          "minimum": 1.1,
+          "maximum": 2.2
+        },
+        "heading_weight": {
+          "description": "Heading weight. 400 is regular, 700 bold.",
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 900
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,

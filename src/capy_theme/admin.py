@@ -34,6 +34,7 @@ from .models import Font, FontFile, Theme, ThemeRevision
 from .publishing import NothingToPublish, publish
 from .shape import EFFECTS, SHAPE_NAMES, SIZES
 from .stylesheet import stylesheet_url
+from .typography import TYPE_SETTINGS
 
 
 def _base_choices(scheme):
@@ -109,6 +110,10 @@ class ThemeForm(forms.ModelForm):
         for role in ROLES:
             self.fields[f"font_{role}"].choices = font_choices
             self.fields[f"font_{role}"].initial = str(chosen_fonts.get(role, ""))
+        type_settings = self.instance.settings.get("type", {})
+        for name, spec in TYPE_SETTINGS.items():
+            self.fields[f"type_{name}"].initial = type_settings.get(name)
+            self.fields[f"type_{name}"].widget.attrs["step"] = str(spec[4])
         shape = self.instance.settings.get("shape", {})
         base = builtin_values(self.instance.light_base) or {}
         for name, (variable, unit, *_rest) in SIZES.items():
@@ -177,6 +182,15 @@ class ThemeForm(forms.ModelForm):
             settings["fonts"] = fonts
         else:
             settings.pop("fonts", None)
+        type_settings = {}
+        for name in TYPE_SETTINGS:
+            value = cleaned.get(f"type_{name}")
+            if value is not None:
+                type_settings[name] = int(value) if name == "heading_weight" else float(value)
+        if type_settings:
+            settings["type"] = type_settings
+        else:
+            settings.pop("type", None)
         shape = {}
         for name in SIZES:
             value = cleaned.get(f"shape_{name}")
@@ -250,6 +264,19 @@ for _role, _label in ROLES.items():
             required=False,
             label=_label,
             help_text="Blank uses the project's default font. Add fonts under Capy Theme → Fonts.",
+        )
+    )
+
+
+for _name, (_label, _unit, _low, _high, _step, _help) in TYPE_SETTINGS.items():
+    ThemeForm.base_fields[f"type_{_name}"] = ThemeForm.declared_fields[f"type_{_name}"] = (
+        forms.DecimalField(
+            required=False,
+            min_value=_low,
+            max_value=_high,
+            decimal_places=2,
+            label=f"{_label} ({_unit})" if _unit else _label,
+            help_text=f"{_help} Leave blank to keep the project's own.",
         )
     )
 
@@ -361,6 +388,7 @@ class ThemeAdmin(admin.ModelAdmin):
         ),
         ("Branding", {"fields": ["site_name", "tagline", "logo", "logo_alt"]}),
         ("Fonts", {"fields": [f"font_{role}" for role in ROLES]}),
+        ("Type scale", {"fields": [f"type_{name}" for name in TYPE_SETTINGS]}),
         *color_fieldsets(),
         ("Contrast", {"fields": ["contrast_table"], "classes": ["collapse"]}),
         (
