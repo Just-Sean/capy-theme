@@ -107,3 +107,25 @@ media type `application/design-tokens+json`.
 Every token states its `$type`. The tests validate the download against the
 format's official JSON Schema (`tests/artifacts/dtcg/`).
 
+## daisyUI theme blocks
+
+`/theme/daisyui-theme.css` downloads the published theme as two daisyUI theme
+blocks, for projects that compile the theme into their own Tailwind stylesheet
+instead of loading capy-theme's: `<slug>-light` (the default) and `<slug>-dark`
+(used when the device prefers dark). Paste it into your Tailwind source after the
+daisyUI plugin:
+
+```css
+@import "tailwindcss";
+@plugin "daisyui";
+/* the downloaded blocks: */
+@plugin "daisyui/theme" { name: "main-light"; default: true; ... }
+@plugin "daisyui/theme" { name: "main-dark"; prefersdark: true; ... }
+```
+
+With daisyUI's standalone plugin files (no npm), change `"daisyui/theme"` to the
+path of your `daisyui-theme.mjs`. The blocks carry daisyUI's own variables only
+(colours, radii, sizes, border, depth, noise); fonts, the type scale, logos and
+the other extras need `{% theme_head %}` or the API. The download is a snapshot:
+download it again after publishing changes.
+

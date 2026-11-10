@@ -242,7 +242,7 @@ Every command in one place. Details are in the linked pages.
 | [docs/fonts.md](docs/fonts.md) | The font library: system stacks, bundled fonts, uploads, Google Fonts, external stylesheets |
 | [docs/images.md](docs/images.md) | Uploads and SVG cleaning, logo slots, icons, the sharing image, backgrounds |
 | [docs/editor.md](docs/editor.md) | The live editor and its Components view |
-| [docs/artifacts.md](docs/artifacts.md) | What other apps get: `get_artifacts()`, `{% theme_artifacts %}` and the JSON API (`/theme/api.json`, with DRF/drf-spectacular support) and the design tokens download (`/theme/tokens.json`) |
+| [docs/artifacts.md](docs/artifacts.md) | What other apps get: `get_artifacts()`, `{% theme_artifacts %}` and the JSON API (`/theme/api.json`, with DRF/drf-spectacular support) the design tokens download (`/theme/tokens.json`) and daisyUI theme blocks (`/theme/daisyui-theme.css`) |
 | [docs/development.md](docs/development.md) | The demo site and updating daisyUI |
 | [docs/PLAN.md](docs/PLAN.md), [docs/DECISIONS.md](docs/DECISIONS.md) | The build plan, and why things are the way they are |
 

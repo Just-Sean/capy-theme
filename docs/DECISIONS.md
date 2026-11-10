@@ -1232,3 +1232,16 @@ Recommended (made while building autonomously).
   if anything fails.
 - **Checked on the demo** with two separate databases: exported from one, imported
   into a fresh one, published: identical stylesheet (apart from file names).
+
+## 7.4 daisyUI theme block export (#55)
+
+Recommended (made while building autonomously).
+
+- **Two blocks, `<slug>-light` (default) and `<slug>-dark` (prefersdark)**, named by
+  the theme's slug so they can't clash with daisyUI's built-in names or with
+  capy-theme's own `capy-light`/`capy-dark`.
+- **daisyUI variables only:** colours, radii, sizes, border, depth, noise.
+  daisyUI theme blocks don't take fonts, and capy-theme's extras (type scale,
+  logos, backgrounds) aren't daisyUI's.
+- **Checked by building it** with the real Tailwind CLI and the demo's daisyUI
+  files (the test is skipped only if the CLI hasn't been downloaded).
