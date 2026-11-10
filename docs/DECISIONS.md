@@ -747,3 +747,18 @@ Recommended (made while building autonomously).
   where available), with `crossorigin` (required for font preloads). System and
   external fonts aren't preloaded. `font-display: swap` was already on every
   `@font-face` (4.1).
+
+## 4.8 Showcase: typography (#30)
+
+Recommended (made while building autonomously).
+
+- **Only real weights are shown:** each role's samples are the weights and styles
+  it has files for, so the showcase never displays a browser-faked bold (checked in
+  Chrome: every shown weight had a loaded face). System and external fonts show
+  regular and bold, with a note that what exists depends on the device or provider.
+- **Plain `h1`–`h6`** (no size classes), so they follow the theme's heading scale.
+- **Character samples** for Latin plus every other subset the theme's fonts
+  include.
+- **Found while checking:** on the showcase, Tailwind's reset in `@layer base`
+  loaded after the theme's base rules and undid the heading scale. Fixed in its
+  own issue.

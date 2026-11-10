@@ -660,7 +660,11 @@ stylesheet. Pages link it with `{% theme_head %}` (see [Add it to a project](#ad
 modal, headings and text), with light and dark mode side by side. It also has a
 swatch for each of the 20 colours (with its text colour, OKLCH and hex values,
 contrast rating, and whether it's overridden, worked out or from the base
-theme), and samples of every shape setting. It also shows
+theme), and samples of every shape setting, and a **Fonts and type** section: each role's font
+and source with a sample in every weight and style that's actually loaded (so
+nothing shown is a browser-faked bold), the heading scale, body text at the base
+size with its line height, a monospace code block, and a character sample for
+the fonts' character sets. It also shows
 the site name, tagline, logo and the base themes in use. Staff only by default
 (see `CAPY_THEME_SHOWCASE`). The demo's navbar links to it.
 

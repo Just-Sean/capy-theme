@@ -24,7 +24,7 @@ from .editor import (
 from .mode import COOKIE_MAX_AGE, COOKIE_NAME, MODES, mode_settings
 from .models import Theme, ThemeRevision
 from .publishing import NothingToPublish, publish
-from .showcase import shape_samples, swatches
+from .showcase import shape_samples, swatches, typography
 from .stylesheet import render_css
 
 ONE_YEAR = 60 * 60 * 24 * 365
@@ -45,6 +45,7 @@ SHOWCASE_SECTIONS = [
     "branding",
     "colors",
     "shape",
+    "fonts",
     "typography",
     "buttons",
     "badges",
@@ -84,6 +85,7 @@ def showcase(request):
         "sections": [f"capy_theme/showcase/sections/{name}.html" for name in SHOWCASE_SECTIONS],
         "swatches": swatches(revision),
         "shape_samples": shape_samples(revision),
+        "type_samples": typography(revision),
         "editor": _editor_context(request),
     }
     return render(request, "capy_theme/showcase/page.html", context)
