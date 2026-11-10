@@ -345,57 +345,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "app": {
-      "description": "The web app manifest: how the site installs as an app.",
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "maxLength": 100
-        },
-        "short_name": {
-          "type": "string",
-          "maxLength": 12
-        },
-        "description": {
-          "type": "string",
-          "maxLength": 300
-        },
-        "start_url": {
-          "description": "A path on this site, starting with / (not //).",
-          "type": "string",
-          "maxLength": 500,
-          "pattern": "^/(?!/)"
-        },
-        "display": {
-          "enum": [
-            "standalone",
-            "minimal-ui",
-            "fullscreen",
-            "browser"
-          ]
-        },
-        "orientation": {
-          "enum": [
-            "any",
-            "portrait",
-            "landscape"
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "social": {
-      "description": "Link previews (Open Graph and Twitter cards).",
-      "type": "object",
-      "properties": {
-        "description": {
-          "type": "string",
-          "maxLength": 300
-        }
-      },
-      "additionalProperties": false
     }
   },
   "additionalProperties": false,

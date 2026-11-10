@@ -33,11 +33,9 @@ from .history import restore as restore_revision
 from .icons import SETTINGS as ICON_SETTINGS
 from .images import SLOTS, prepare_image
 from .logos import HEIGHTS, LOGO_SLOTS
-from .manifest import APP_SETTINGS
 from .models import Font, FontFile, Theme, ThemeAsset, ThemeRevision
 from .publishing import NothingToPublish, publish
 from .shape import EFFECTS, SHAPE_NAMES, SIZES
-from .social import SETTINGS as SOCIAL_SETTINGS
 from .stylesheet import stylesheet_url
 from .typography import TYPE_SETTINGS
 
@@ -154,12 +152,6 @@ class ThemeForm(forms.ModelForm):
         heights = self.instance.settings.get("logo", {})
         for name in HEIGHTS:
             self.fields[f"logo_{name}"].initial = heights.get(name)
-        app = self.instance.settings.get("app", {})
-        for name in APP_SETTINGS:
-            self.fields[f"app_{name}"].initial = app.get(name, "")
-        self.fields["social_description"].initial = self.instance.settings.get("social", {}).get(
-            "description", ""
-        )
         icon = self.instance.settings.get("icon", {})
         for name in ICON_SETTINGS:
             self.fields[f"icon_{name}"].initial = icon.get(name)
@@ -263,20 +255,6 @@ class ThemeForm(forms.ModelForm):
             settings["logo"] = heights
         else:
             settings.pop("logo", None)
-        app = {
-            name: cleaned[f"app_{name}"].strip()
-            for name in APP_SETTINGS
-            if (cleaned.get(f"app_{name}") or "").strip()
-        }
-        if app:
-            settings["app"] = app
-        else:
-            settings.pop("app", None)
-        description = (cleaned.get("social_description") or "").strip()
-        if description:
-            settings["social"] = {"description": description}
-        else:
-            settings.pop("social", None)
         icon = {}
         if cleaned.get("icon_background"):
             icon["background"] = cleaned["icon_background"].lower()
@@ -324,30 +302,6 @@ for _name, (_label, _default) in HEIGHTS.items():
     )
 
 
-for _name, (_label, _help, _choices) in APP_SETTINGS.items():
-    if _choices:
-        _field = forms.ChoiceField(choices=[("", "Default")] + _choices, required=False)
-    else:
-        _field = forms.CharField(required=False, max_length=12 if _name == "short_name" else 500)
-    if _name == "start_url":
-        _field = forms.RegexField(
-            regex=r"^/(?!/)",
-            required=False,
-            max_length=500,
-            error_messages={"invalid": "Use a path on this site starting with /, e.g. /app/."},
-        )
-    _field.label, _field.help_text = _label, _help
-    ThemeForm.base_fields[f"app_{_name}"] = ThemeForm.declared_fields[f"app_{_name}"] = _field
-
-ThemeForm.base_fields["social_description"] = ThemeForm.declared_fields["social_description"] = (
-    forms.CharField(
-        required=False,
-        max_length=300,
-        widget=forms.Textarea(attrs={"rows": 2}),
-        label=SOCIAL_SETTINGS["description"][0],
-        help_text=SOCIAL_SETTINGS["description"][1],
-    )
-)
 ThemeForm.base_fields["icon_background"] = ThemeForm.declared_fields["icon_background"] = (
     forms.RegexField(
         regex=r"^#[0-9a-fA-F]{6}$",
@@ -625,7 +579,7 @@ class ThemeAdmin(admin.ModelAdmin):
                     "icon_padding",
                 ],
                 "description": "One square image (at least 512 × 512 px is best): the browser "
-                "tab icon, home screen and app icons are all made from it when you publish.",
+                "tab icon, home-screen and app icons are all made from it when you publish.",
             },
         ),
         (
@@ -664,21 +618,13 @@ class ThemeAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Link previews",
+            "Sharing image",
             {
-                "fields": ["image_social_light", "social_description"],
+                "fields": ["image_social_light"],
                 "classes": ["collapse"],
-                "description": "What shows when a link to the site is shared. The image is "
-                "cropped to 1200 × 630 from its centre.",
-            },
-        ),
-        (
-            "Web app",
-            {
-                "fields": [f"app_{name}" for name in APP_SETTINGS],
-                "classes": ["collapse"],
-                "description": "How the site installs as an app (the web app manifest at "
-                "/theme/manifest.webmanifest). The app icons come from the Icon section.",
+                "description": "An image for link previews, cropped to 1200 × 630 from its "
+                "centre. capy-theme makes it available (see Theme artifacts in the README); "
+                "the project's own templates or another module add the preview tags.",
             },
         ),
         (

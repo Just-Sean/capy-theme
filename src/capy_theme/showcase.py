@@ -159,7 +159,7 @@ def images(revision):
     """Data for the showcase's images section, per mode.
 
     {mode: {"logos": [...], "icons": [...], "backgrounds": [...]}, plus
-    "preview" (the link-preview card) and "manifest" (the manifest's values)}.
+    "sharing" (the sharing image)}.
     Each logo says which image it shows and why (its own, the light one, or the
     main logo it falls back to).
     """
@@ -168,7 +168,6 @@ def images(revision):
     from .icons import FILES, icon_urls
     from .images import SLOTS
     from .logos import FALLBACK, HEADER_SLOTS, LOGO_SLOTS, resolve
-    from .manifest import build as build_manifest
     from .social import SIZE, sharing_image
 
     if revision is None:
@@ -232,15 +231,9 @@ def images(revision):
         else []
     )
     share = sharing_image(snapshot)
-    result["preview"] = {
+    result["sharing"] = {
         "image": url(share["file"]) if share else "",
         "alt": share["alt"] if share else "",
         "size": SIZE,
-        "title": settings.get("site_name", ""),
-        "description": settings.get("social", {}).get("description") or settings.get("tagline", ""),
     }
-    manifest = build_manifest(revision)
-    result["manifest"] = [(key, value) for key, value in manifest.items() if key != "icons"] + [
-        ("icons", f"{len(manifest['icons'])} icons")
-    ]
     return result

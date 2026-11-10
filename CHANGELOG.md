@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- **Scope: capy-theme exposes theme artifacts, other modules apply them.**
+  `capy_theme.artifacts.get_artifacts()` and `{% theme_artifacts %}` give every
+  published colour (OKLCH and hex), font, logo slot (with fallbacks and smaller
+  copies), icon, sharing image and background as plain data, with absolute URLs
+  when given a request.
+- **Removed** (added in 0.5.0, out of scope): the web app manifest view and its
+  link, the Web app settings, the Open Graph/Twitter tags in `{% theme_head %}`,
+  `{% theme_social_tags %}` and the sharing description. Migration
+  `0011_remove_app_and_social_settings` removes their settings. The icons and the
+  sharing image stay, as artifacts.
+
 ## 0.5.0
 
 Images and icons: logos, icons, link previews and backgrounds, all made from

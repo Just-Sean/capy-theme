@@ -2,6 +2,8 @@
 
 capy-theme is a reusable Django app that lets whoever runs a site control its whole look from the admin: themes, colours, fonts, logos, icons and more, with no code changes or redeploys. It works in any Django project with a daisyUI 5 stylesheet, and gives the same branding to other front ends through a JSON API.
 
+> **Scope (after v0.5.0, 2026-11-10):** capy-theme handles every aspect of the theme but only applies it to the page's own look. Everything else it produces (logos for email and print, icons, the sharing image, colours, fonts) is **made available** to other modules through `capy_theme.artifacts.get_artifacts()`, `{% theme_artifacts %}` and the JSON API (7.1). It doesn't serve a web app manifest, output link-preview tags or send email; the project or another module (e.g. an app shell) does that with the artifacts. 5.5 and the tags part of 5.6 were removed in #143.
+
 > **Revised after v0.1.0 (2026-11-10):** the live theme editor moved up to Phase 3, straight after colours, and is now the main way to edit a theme's look (the admin form stays as a fallback). Fonts and images follow it and add their controls to it. 6.1 (light/dark toggle) was done early, in v0.1.0. Reasons are in `docs/DECISIONS.md`. GitHub issue numbers didn't change; their titles and milestones did.
 
 The work is split into 9 phases and 66 small steps. Each step is one GitHub issue that changes a few files and ends with something you can see and check yourself. Each phase ends with a tagged release.
@@ -108,7 +110,7 @@ sequenceDiagram
         D-->>T: values
         T->>C: store until next publish
     end
-    T-->>P: link to /theme/3f9a1c.css, fonts, icons, manifest, social tags
+    T-->>P: link to /theme/3f9a1c.css, fonts, tab icons
     P-->>V: HTML page
     V->>T: GET /theme/3f9a1c.css (only if not already cached)
     T-->>V: CSS variables for light + dark, cached for a year
@@ -265,15 +267,16 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 
 ### Phase 5: Images and icons (v0.5.0)
 
-- [ ] **5.1 Safe image uploads** (#32): Uploads can't carry attacks or leak data.
-- [ ] **5.2 SVG cleaning** (#33): SVG logos without the security risk.
-- [ ] **5.3 Logo slots and responsive images** (#34): The right logo, at the right size, everywhere.
-- [ ] **5.4 Icons and favicons** (#35): Every icon from one square image.
-- [ ] **5.5 Web app manifest** (#36): The site can be installed as an app.
-- [ ] **5.6 Social sharing image and tags** (#37): Good-looking link previews.
-- [ ] **5.7 Background images** (#38): Optional decorative images.
-- [ ] **5.8 Showcase: images and icons** (#39): See every image the theme produces on the showcase.
-- [ ] **5.9 Release v0.5.0** (#40)
+- [x] **5.1 Safe image uploads** (#32): Uploads can't carry attacks or leak data.
+- [x] **5.2 SVG cleaning** (#33): SVG logos without the security risk.
+- [x] **5.3 Logo slots and responsive images** (#34): The right logo, at the right size, everywhere.
+- [x] **5.4 Icons and favicons** (#35): Every icon from one square image.
+- [x] **5.5 Web app manifest** (#36): built, then removed in #143 (out of scope; the icons a manifest needs are artifacts).
+- [x] **5.6 Social sharing image and tags** (#37): the 1200 × 630 image stays as an artifact; the tags were removed in #143.
+- [x] **5.7 Background images** (#38): Optional decorative images.
+- [x] **5.8 Showcase: images and icons** (#39): See every image the theme produces on the showcase.
+- [x] **5.9 Release v0.5.0** (#40)
+- [ ] **Scope: expose artifacts, don't apply them** (#143): `get_artifacts()`, manifest and tags removed.
 
 ### Phase 6: Visitors and scheduling (v0.6.0)
 
@@ -286,7 +289,7 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 
 ### Phase 7: Portability and API (v0.7.0)
 
-- [ ] **7.1 JSON API** (#52): Front ends and mobile apps get the branding.
+- [ ] **7.1 JSON API** (#52): Front ends, mobile apps and other modules get the branding (the same data as `get_artifacts()`).
 - [ ] **7.2 Design tokens export** (#53): Theme values for design tools and native app builds.
 - [ ] **7.3 Theme export and import** (#54): Move a theme between sites.
 - [ ] **7.4 daisyUI theme block export** (#55): For projects that want the theme compiled into their stylesheet.

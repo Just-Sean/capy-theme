@@ -9,11 +9,11 @@ from django import template
 from django.middleware.csp import get_nonce
 from django.template import TemplateSyntaxError
 from django.template.loader import render_to_string
-from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
 from ..active import get_active_theme
+from ..artifacts import get_artifacts
 from ..branding import branding
 from ..colors import SCHEMES, effective_values, to_hex
 from ..editor import mount as editor_mount
@@ -21,14 +21,13 @@ from ..fonts import external_stylesheets, preload_urls
 from ..icons import head_links as icon_links
 from ..logos import LOGO_SLOTS, logo_html
 from ..mode import MODE_LABELS, MODES, current_mode, head_script, html_theme_value, mode_settings
-from ..social import tags as social_tags
 from ..stylesheet import stylesheet_url
 
 register = template.Library()
 
 
 @register.simple_tag(takes_context=True)
-def theme_head(context, social=True):
+def theme_head(context):
     """Output the active theme's stylesheet link, theme-color tags and mode script.
 
     Also the theme-color meta tags (the browser's address-bar colour) and, for
@@ -46,7 +45,7 @@ def theme_head(context, social=True):
     nonce_attr = format_html(' nonce="{}"', nonce) if nonce else ""
     fonts = revision.snapshot.get("fonts")
     return format_html(
-        '{}{}<link rel="stylesheet" href="{}">\n{}{}{}{}<script{}>{}</script>{}',
+        '{}{}<link rel="stylesheet" href="{}">\n{}{}<script{}>{}</script>{}',
         format_html_join(
             "",
             '<link rel="preload" href="{}" as="font" type="font/woff2" crossorigin>\n',
@@ -60,8 +59,6 @@ def theme_head(context, social=True):
         stylesheet_url(revision),
         theme_color_meta(revision, current_mode(request, revision)),
         icon_links(revision.snapshot),
-        social_tags(request, revision.snapshot) if social else "",
-        format_html('<link rel="manifest" href="{}">\n', reverse("capy_theme:manifest")),
         nonce_attr,
         mark_safe(head_script(revision)),  # noqa: S308 (built from fixed text and JSON values)
         editor,
@@ -88,21 +85,15 @@ def theme_color_meta(revision, mode):
 
 
 @register.simple_tag(takes_context=True)
-def theme_social_tags(context, title=None, description=None, image=None, image_alt=None):
-    """Output the link-preview tags (Open Graph and Twitter cards), with overrides.
+def theme_artifacts(context):
+    """The active theme's artifacts (see capy_theme.artifacts), for templates.
 
-    `{% theme_head %}` already outputs them with the theme's defaults. To change
-    them per page, use `{% theme_head social=False %}` and put this tag in a
-    block that pages can override, e.g.
-    `{% block social %}{% theme_social_tags %}{% endblock %}` in the base
-    template and `{% block social %}{% theme_social_tags title="About us" %}{% endblock %}`
-    in a page. `image` is a URL; relative URLs are made absolute.
+    `{% theme_artifacts as artifacts %}` then e.g.
+    `{{ artifacts.logos.logo_email.light.url }}` or `{{ artifacts.icons.icon-192.png }}`
+    (use `artifacts.icons|capy_get:"icon-192.png"` for names with dots).
+    None if no theme is published. URLs are absolute.
     """
-    request = context.get("request")
-    theme = get_active_theme(request)
-    if theme is None or theme.live_revision is None:
-        return ""
-    return social_tags(request, theme.live_revision.snapshot, title, description, image, image_alt)
+    return get_artifacts(context.get("request"))
 
 
 @register.simple_tag(takes_context=True)
