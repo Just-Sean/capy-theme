@@ -188,3 +188,44 @@ All recommended (made while building without a stop for every decision).
   migrates itself, instead of `demo/db.sqlite3`.
 - **Why:** since 1.6 the home page reads the database. The test failed whenever
   the local demo database wasn't migrated, and would fail on a fresh copy of the repo.
+
+## 1.8 Theme showcase page (#11)
+
+All recommended (made while building without a stop for every decision).
+
+### A trimmed stylesheet instead of daisyUI's prebuilt CSS
+- **Chosen:** bundle `showcase.css`, built by `scripts/build_showcase_css.py` with
+  the Tailwind CLI and the daisyUI plugin from only the showcase templates
+  (about 96 KB).
+- **Alternative (the issue's wording):** bundle daisyUI's prebuilt `daisyui.css`.
+- **Why:** that file is 1.1 MB (every component in every variant) and has no
+  Tailwind layout classes (grid, flex, gap), which the showcase needs. The
+  trimmed file has exactly what the showcase uses. The cost is a rebuild step
+  after changing showcase templates or updating daisyUI (in the README).
+- The build adds daisyUI's MIT licence notice back, since minifying drops it.
+
+### Forcing light or dark on part of a page
+- **Chosen:** the theme stylesheet also has `[data-theme="capy-light"]` and
+  `[data-theme="capy-dark"]` rules, so any element can be forced into either
+  mode. The showcase uses them to show both side by side. The light/dark toggle
+  (6.1) can use the same rules on `<html>`.
+- **Why:** before this, the stylesheet only set colours for the whole page from
+  the device setting, so both modes couldn't appear at once.
+- **Note:** this changed the CSS that existing stylesheet URLs return. Browsers
+  that cached an older copy (for up to a year) won't see the new rules. That only
+  affects development so far (nothing is released). How to handle future format
+  changes is a separate issue.
+
+### Access
+- **Chosen:** with `"staff"`, logged-out visitors and non-staff users are sent to
+  the admin login (like Django's staff-only views). `"off"` returns 404. An
+  unknown value raises `ImproperlyConfigured`.
+
+### Smaller choices
+- With no active theme, the showcase shows daisyUI's default light and dark
+  themes, with a notice.
+- The modal and tabs work without JavaScript (checkbox and radio based), and
+  their `id`s and `name`s include the mode so both copies work.
+- The showcase's stylesheet link sits inside the `content` block, so it loads
+  whether the showcase uses its standalone page or the project's base template.
+- The demo's navbar gets a "Showcase" link.

@@ -1,0 +1,32 @@
+<div class="space-y-3">
+  <h3 class="text-xl font-semibold">Form fields</h3>
+  <form class="grid gap-4 sm:grid-cols-2" onsubmit="return false">
+    <label class="flex flex-col gap-1">
+      <span class="label">Text</span>
+      <input type="text" class="input w-full" placeholder="Lorem ipsum">
+    </label>
+    <label class="flex flex-col gap-1">
+      <span class="label">Select</span>
+      <select class="select w-full"><option>Designer</option><option>Editor</option></select>
+    </label>
+    <label class="flex flex-col gap-1 sm:col-span-2">
+      <span class="label">Textarea</span>
+      <textarea class="textarea w-full" placeholder="Dolor sit amet"></textarea>
+    </label>
+    <label class="flex flex-col gap-1">
+      <span class="label">Error state</span>
+      <input type="text" class="input input-error w-full" value="Not valid">
+    </label>
+    <label class="flex flex-col gap-1">
+      <span class="label">Disabled</span>
+      <input type="text" class="input w-full" placeholder="Disabled" disabled>
+    </label>
+    <div class="flex flex-wrap items-center gap-4 sm:col-span-2">
+      <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-primary" checked> Checkbox</label>
+      <label class="flex items-center gap-2"><input type="checkbox" class="toggle toggle-primary" checked> Toggle</label>
+      <label class="flex items-center gap-2"><input type="radio" name="showcase-radio-{{ mode }}" class="radio radio-primary" checked> Radio</label>
+      <label class="flex items-center gap-2"><input type="radio" name="showcase-radio-{{ mode }}" class="radio radio-primary"> Radio</label>
+    </div>
+    <input type="range" class="range range-primary sm:col-span-2" value="40" aria-label="Range">
+  </form>
+</div>

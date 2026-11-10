@@ -107,6 +107,8 @@ Optional settings a project can add to its `settings.py`:
 | --- | --- | --- |
 | `CAPY_THEME_BUILTIN_THEMES` | all 35 | Which built-in daisyUI themes can be used as a theme's light or dark base, e.g. `["light", "dark"]`. Listing an unknown theme raises an error that names it. |
 | `CAPY_THEME_CACHE_SECONDS` | `300` | How long the active theme is cached, in seconds. Publishing or activating clears the cache straight away; this limit makes every server process catch up when the project's cache isn't shared between processes (e.g. Django's default in-memory cache). |
+| `CAPY_THEME_SHOWCASE` | `"staff"` | Who can see the theme showcase at `/theme/showcase/`: `"staff"` (logged-in staff; others are sent to the admin login), `"public"` (anyone) or `"off"` (nobody: 404). |
+| `CAPY_THEME_BASE_TEMPLATE` | not set | A project template for the showcase to extend, e.g. `"base.html"`. It needs a `content` block (and a `title` block for the page title) and should include `{% theme_head %}`. Not set: the showcase uses its own standalone page. |
 
 ## Develop it
 
@@ -174,7 +176,7 @@ files (`daisyui.mjs`, `daisyui-theme.mjs`) kept next to it. To update them, see
 
 ### Updating daisyUI
 
-The module and the demo both use daisyUI 5.7.50. Keep them on the same version:
+The module, the demo and the showcase all use daisyUI 5.7.50. Keep them on the same version:
 
 1. **The module's theme catalogue.** `src/capy_theme/builtin_themes.py` lists
    daisyUI's built-in themes and their values. Don't edit it by hand: it's
@@ -189,6 +191,12 @@ The module and the demo both use daisyUI 5.7.50. Keep them on the same version:
    `daisyui-theme.mjs` with the same version from the
    [daisyUI releases](https://github.com/saadeghi/daisyui/releases)
    (e.g. `gh release download v5.7.50 --repo saadeghi/daisyui -p daisyui.mjs -p daisyui-theme.mjs`).
+
+3. **The showcase's bundled stylesheet.** After replacing the demo's plugin files, rebuild it:
+
+   ```bash
+   uv run python scripts/build_showcase_css.py
+   ```
 
 The script warns if the demo's `daisyui.mjs` is a different version from the
 catalogue. Published themes keep the values they were published with, and the
@@ -284,6 +292,32 @@ aren't in a CSS layer, so they override daisyUI's own theme rules.
 On a theme's admin page, "View its stylesheet" opens the live revision's
 stylesheet. Pages link it with `{% theme_head %}` (see [Add it to a project](#add-it-to-a-project)).
 
+### The theme showcase
+
+`/theme/showcase/` shows the active theme on every kind of daisyUI component
+(buttons, badges, alerts, cards, tabs, a table, form fields, progress bars, a
+modal, headings and text), with light and dark mode side by side. It also shows
+the site name, tagline, logo and the base themes in use. Staff only by default
+(see `CAPY_THEME_SHOWCASE`). The demo's navbar links to it.
+
+Each section is its own template in
+`src/capy_theme/templates/capy_theme/showcase/sections/`, listed in
+`SHOWCASE_SECTIONS` in `views.py`. To add a section, add a template there and
+its name to the list. It's included once per mode, with `mode` set to `"light"`
+or `"dark"`, so use `{{ mode }}` in any `id` or `name` that must be unique.
+
+The showcase brings its own stylesheet, `src/capy_theme/static/capy_theme/showcase.css`
+(daisyUI plus the Tailwind classes the showcase templates use), so it works in
+any project. It's built from the showcase templates, so **rebuild it after
+changing them** (or after updating daisyUI):
+
+```bash
+uv run python scripts/build_showcase_css.py
+```
+
+It uses the Tailwind CLI that the demo downloads. If it says the CLI isn't found,
+run `uv run python demo/manage.py tailwind build` once first.
+
 ## Build the package
 
 To build the installable package (a wheel and an sdist, written to `dist/`) and
@@ -331,11 +365,14 @@ straight to `main`:
 | `src/capy_theme/apps.py` | The app's name, label and admin title |
 | `src/capy_theme/models.py` | Database models: `Theme` (the draft: name, slug, light and dark base, `settings` overrides, and its live revision) `ThemeRevision` (a published copy of a theme's look) and `ThemeAssignment` (which theme is active) |
 | `src/capy_theme/stylesheet.py` | Writes a published revision out as CSS variables, and makes its version hash |
-| `src/capy_theme/views.py` | The stylesheet view, `/theme/<version>.css` |
+| `src/capy_theme/views.py` | The stylesheet view (`/theme/<version>.css`) and the showcase (`/theme/showcase/`) |
 | `src/capy_theme/urls.py` | The module's URLs, included by projects under `/theme/` |
 | `src/capy_theme/templatetags/capy_theme.py` | The `{% theme_head %}`, `{% theme_html_attrs %}` and `{% theme_logo %}` template tags |
 | `src/capy_theme/branding.py` | Reads a revision's published site name, tagline and logo |
 | `src/capy_theme/context_processors.py` | Gives every template `theme`: the active theme's published values (or `None`) |
+| `src/capy_theme/templates/capy_theme/showcase/` | The showcase page, its standalone base page, and one template per section |
+| `src/capy_theme/static/capy_theme/showcase.css` | The showcase's bundled stylesheet (built; don't edit) |
+| `scripts/build_showcase_css.py`, `scripts/showcase.tailwind.css` | Build `showcase.css` with Tailwind and daisyUI |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |
 | `src/capy_theme/signals.py` | Clears the active-theme cache whenever themes, revisions or assignments change |
 | `src/capy_theme/publishing.py` | `publish()`: turns a theme's draft into its new live revision |

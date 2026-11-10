@@ -1,6 +1,12 @@
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
+from django.conf import settings
+from django.contrib.auth.views import redirect_to_login
+from django.core.exceptions import ImproperlyConfigured
+from django.http import Http404, HttpResponse
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 
+from .active import get_active_theme
+from .branding import branding
 from .models import ThemeRevision
 from .stylesheet import render_css
 
@@ -13,3 +19,49 @@ def theme_css(request, version):
     response = HttpResponse(render_css(revision), content_type="text/css; charset=utf-8")
     response["Cache-Control"] = f"public, max-age={ONE_YEAR}, immutable"
     return response
+
+
+# The showcase page. Each section is its own template in
+# templates/capy_theme/showcase/sections/, shown once per mode. Later phases add
+# their sections by adding a template and a name here.
+SHOWCASE_SECTIONS = [
+    "branding",
+    "typography",
+    "buttons",
+    "badges",
+    "alerts",
+    "cards",
+    "tabs",
+    "table",
+    "forms",
+    "progress",
+    "modal",
+]
+SHOWCASE_ACCESS = ("staff", "public", "off")
+
+
+def showcase(request):
+    """Show the active theme's choices on every kind of component, in light and dark."""
+    access = getattr(settings, "CAPY_THEME_SHOWCASE", "staff")
+    if access not in SHOWCASE_ACCESS:
+        raise ImproperlyConfigured(
+            f"CAPY_THEME_SHOWCASE must be one of {', '.join(SHOWCASE_ACCESS)}, not {access!r}."
+        )
+    if access == "off":
+        raise Http404("The theme showcase is turned off.")
+    if access == "staff" and not (request.user.is_active and request.user.is_staff):
+        return redirect_to_login(request.get_full_path(), reverse("admin:login"))
+
+    theme = get_active_theme(request)
+    revision = theme.live_revision if theme else None
+    context = {
+        "base_template": getattr(
+            settings, "CAPY_THEME_BASE_TEMPLATE", "capy_theme/showcase/standalone.html"
+        ),
+        "active_theme": theme,
+        "revision": revision,
+        "brand": branding(revision) if revision else {},
+        "modes": ["light", "dark"],
+        "sections": [f"capy_theme/showcase/sections/{name}.html" for name in SHOWCASE_SECTIONS],
+    }
+    return render(request, "capy_theme/showcase/page.html", context)
