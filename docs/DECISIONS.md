@@ -263,3 +263,13 @@ Recommended (made while building without a stop for every decision).
   actions menu, and Django ignores it if requested directly.
 - Restore doesn't exist yet. It will check the same permission when it arrives
   in 5.4.
+
+## 1.10 Release v0.1.0 (#13)
+
+- **No version bump:** `pyproject.toml` was already `0.1.0` (the template's
+  starting version), and nothing had been released, so v0.1.0 is that version.
+- **Postgres tests (chosen by Sean):** run against a throwaway Docker container
+  (`postgres:17` on port 55432), removed afterwards. The README has the commands
+  for future releases.
+- **Tagging:** follows the README's release steps. The release PR is merged first,
+  then `v0.1.0` is tagged on the merged `main` and only the tag is pushed.

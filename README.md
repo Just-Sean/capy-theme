@@ -4,7 +4,30 @@ Theming for Django projects.
 
 A self-contained Django app (`capy_theme`) that any Django 6.1+ project
 can install. It has no project of its own: its tests run against a tiny
-stand-in project in `tests/`.
+stand-in project in `tests/`, and `demo/` is a small site for trying it out.
+
+## What it does (v0.1)
+
+Whoever runs the site controls its look from the Django admin, with no code
+changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
+
+- **Themes** are based on any of daisyUI's 35 built-in themes: one light base and
+  one dark base. A project can limit which are offered.
+- **Branding:** each theme has a site name, tagline and main logo (with alt text).
+- **Drafts and publishing:** editing a theme changes only its draft. Publishing
+  saves a numbered revision, recording who published it and when, and the site
+  shows that. Every revision is kept.
+- **One active theme:** pick it with the admin's Activate action. It's cached, so
+  pages don't query the database for it.
+- **On every page:** `{% theme_head %}` links the theme's stylesheet (light and dark
+  values, following the visitor's device setting), `{% theme_logo %}` shows the
+  logo or site name, and every template gets a `theme` variable.
+- **Theme showcase** at `/theme/showcase/`: every daisyUI component in the
+  active theme, with light and dark side by side (staff only by default).
+- **Permissions:** only users with `publish_theme` can publish or activate.
+
+Colour, font, shape and image settings, an editor with live preview, scheduling,
+an API and more come in later versions (see `docs/PLAN.md`).
 
 ## Add it to a project
 
@@ -119,11 +142,24 @@ uv run ruff check .        # finds problems
 uv run ruff format .       # formats the code
 ```
 
-To run the tests on Postgres instead (for Postgres-only features):
+To run the tests on Postgres instead (needed before each release):
 
 ```bash
 DATABASE_URL=postgres://app:app@localhost:5432/module_tests uv run pytest
 ```
+
+If you don't have Postgres running, use a throwaway Docker container. It's
+removed when stopped, and keeps no data:
+
+```bash
+docker run -d --rm --name capy-theme-pg-test -e POSTGRES_USER=app -e POSTGRES_PASSWORD=app \
+  -e POSTGRES_DB=module_tests -p 127.0.0.1:55432:5432 postgres:17
+docker exec capy-theme-pg-test pg_isready -U app        # repeat until it says "accepting connections"
+DATABASE_URL=postgres://app:app@127.0.0.1:55432/module_tests uv run pytest
+docker stop capy-theme-pg-test                            # stops and removes it
+```
+
+(`docker rmi postgres:17` deletes the downloaded image when you no longer need it.)
 
 ### Demo site
 
@@ -352,7 +388,9 @@ unzip -l dist/capy_theme-*.whl     # should list only capy_theme/ files, nothing
 
 ## Release a version
 
-Each release has its own issue (e.g. "1.10 Release v0.1.0"). Nothing is pushed
+Each release has its own issue (e.g. "1.10 Release v0.1.0"). Before it, run
+the tests on SQLite and on Postgres (above), and check the package with
+`uv build` (see [Build the package](#build-the-package)). Nothing is pushed
 straight to `main`:
 
 1. On the release issue's branch, change `version` in `pyproject.toml` and add an
