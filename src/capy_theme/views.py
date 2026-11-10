@@ -1,14 +1,17 @@
+import json
+
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
 
 from .active import get_active_theme
 from .branding import branding
-from .editor import can_edit, draft_state, editor_theme, editor_urls
+from .editor import can_edit, draft_state, editor_theme, editor_urls, preview
 from .mode import COOKIE_MAX_AGE, COOKIE_NAME, MODES, mode_settings
 from .models import Theme, ThemeRevision
 from .showcase import shape_samples, swatches
@@ -115,5 +118,30 @@ def editor_state(request, pk):
         return JsonResponse({"error": "You can't edit themes."}, status=403)
     theme = get_object_or_404(Theme.objects.select_related("live_revision"), pk=pk)
     response = JsonResponse(draft_state(theme, request.user))
+    response["Cache-Control"] = "no-store"
+    return response
+
+
+@require_POST
+def editor_preview(request, pk):
+    """Preview unsaved editor values (JSON in, JSON out). Never writes anything.
+
+    Returns the CSS, every colour's value and the contrast ratings, from the same
+    code as publishing. Invalid values give 400 with the problems listed.
+    """
+    if not can_edit(request.user):
+        return JsonResponse({"error": "You can't edit themes."}, status=403)
+    theme = get_object_or_404(Theme, pk=pk)
+    try:
+        data = json.loads(request.body or b"{}")
+    except ValueError:
+        return JsonResponse({"errors": ["The request isn't valid JSON."]}, status=400)
+    if not isinstance(data, dict):
+        return JsonResponse({"errors": ["The request must be a JSON object."]}, status=400)
+    try:
+        result = preview(theme, data)
+    except ValidationError as error:
+        return JsonResponse({"errors": error.messages}, status=400)
+    response = JsonResponse(result)
     response["Cache-Control"] = "no-store"
     return response

@@ -5,11 +5,16 @@ that browser only (visitors keep seeing the published theme) and talks to the
 JSON views in views.py, which use the same code as publishing.
 """
 
+import copy
+
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 
 from .active import get_active_theme
+from .colors import SCHEMES, contrast_report, effective_values, to_oklch
 from .models import Theme
 from .stylesheet import snapshot_css
+from .validation import validate_base, validate_settings
 
 
 def can_edit(user):
@@ -36,7 +41,10 @@ def editor_theme(request):
 
 
 def editor_urls(theme):
-    return {"state": reverse("capy_theme:editor_state", args=[theme.pk])}
+    return {
+        "state": reverse("capy_theme:editor_state", args=[theme.pk]),
+        "preview": reverse("capy_theme:editor_preview", args=[theme.pk]),
+    }
 
 
 def draft_state(theme, user):
@@ -52,4 +60,72 @@ def draft_state(theme, user):
         "has_unpublished_changes": theme.has_unpublished_changes,
         "can_publish": can_publish(user),
         "urls": editor_urls(theme),
+    }
+
+
+# The settings the editor manages. Anything else in a theme's settings (site
+# name, mode and so on) is kept as it is.
+EDITOR_SETTINGS = ("colors", "shape")
+
+
+def apply_changes(theme, data):
+    """Return an unsaved copy of `theme` with the editor's values applied.
+
+    `data` may have "light_base", "dark_base" and "settings" (with "colors" and
+    "shape"). Colours can be in any CSS format; they're converted to OKLCH.
+    Raises ValidationError (with every problem) if anything is invalid.
+    The theme itself and the database are never changed.
+    """
+    draft = copy.copy(theme)
+    errors = []
+    for field, scheme in (("light_base", "light"), ("dark_base", "dark")):
+        if field in data:
+            setattr(draft, field, str(data[field]))
+            try:
+                validate_base(getattr(draft, field), scheme)
+            except ValidationError as error:
+                errors.extend(error.messages)
+    settings = copy.deepcopy(theme.settings)
+    changes = data.get("settings", {})
+    if not isinstance(changes, dict):
+        raise ValidationError("settings must be an object.")
+    for key in EDITOR_SETTINGS:
+        if key in changes:
+            if changes[key]:
+                settings[key] = changes[key]
+            else:
+                settings.pop(key, None)
+    for scheme, colors in settings.get("colors", {}).items():
+        if not isinstance(colors, dict):
+            continue
+        for name, value in colors.items():
+            try:
+                colors[name] = to_oklch(str(value))
+            except ValueError:
+                errors.append(f"{scheme} {name}: {value!r} isn't a colour.")
+    if not errors:
+        try:
+            validate_settings(settings)
+        except ValidationError as error:
+            errors.extend(error.messages)
+    if errors:
+        raise ValidationError(errors)
+    draft.settings = settings
+    return draft
+
+
+def preview(theme, data):
+    """Return what the editor shows for unsaved values: CSS, values and contrast.
+
+    Uses the same code as publishing, so the preview matches what would be
+    published. Writes nothing.
+    """
+    draft = apply_changes(theme, data)
+    snapshot = draft.snapshot()
+    values = {scheme: effective_values(snapshot, scheme) for scheme in SCHEMES}
+    return {
+        "css": snapshot_css(snapshot, f"capy-theme editor: preview of {theme.name}"),
+        "values": values,
+        "contrast": {scheme: contrast_report(values[scheme]) for scheme in SCHEMES},
+        "settings": draft.settings,
     }

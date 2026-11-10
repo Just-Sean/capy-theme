@@ -8,5 +8,7 @@
 <div id="capy-editor" hidden
      data-theme-id="{{ editor.theme.pk }}"
      data-theme-name="{{ editor.theme.name }}"
-     data-state-url="{{ editor.urls.state }}"></div>
+     data-state-url="{{ editor.urls.state }}"
+     data-preview-url="{{ editor.urls.preview }}"
+     data-csrf-token="{{ csrf_token }}"></div>
 <script src="{% static 'capy_theme/editor/editor.js' %}" defer></script>
