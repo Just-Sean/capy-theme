@@ -602,3 +602,9 @@ Recommended (made while building autonomously).
   off. Only for staff who can edit.
 - **Short descriptions** on the first sections point people to Edit live and
   explain what the bases do.
+
+## 3.9 Release v0.3.0 (#45)
+
+- Released with tests on SQLite and PostgreSQL 17, the package checked, and each
+  editor step checked in headless Chrome while it was built. No database
+  migrations were needed in Phase 3.

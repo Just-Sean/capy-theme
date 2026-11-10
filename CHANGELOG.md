@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.3.0
+
+The live theme editor: edit a theme on the real page and see every change
+instantly, then save the draft or publish it.
+
+- **Editor on the showcase and on any page:** staff who can change themes get an
+  **Edit theme** button (on the showcase, and in the corner of every page via
+  `{% theme_head %}`; `CAPY_THEME_EDITOR_BUTTON` hides the corner one) and
+  `?edit=<id>`. The draft shows for that user only, with a banner and Exit.
+- **Controls:** base themes; the 20 colours for light and dark (picker, any
+  format, reset, live contrast badge); shape and effects.
+- **Palette suggestions:** analogous, complementary and triadic from the primary
+  colour, and the logo's main colours.
+- **Preview endpoint:** the server works out text colours, shades, contrast and
+  CSS with the same code as publishing, and never writes.
+- **Save draft and Publish** from the editor (Publish needs `publish_theme`), with
+  an unsaved-changes warning.
+- **History:** a Revisions page per theme to compare any two revisions and
+  restore an old one as a new revision.
+- **Admin:** sections reordered, advanced parts folded, and an **Edit live** link.
+- Plain JavaScript and CSS (no framework), CSP-safe.
+
 ## 0.2.0
 
 Colours and shape: every colour and shape value can be overridden, with readable
