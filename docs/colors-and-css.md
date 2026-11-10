@@ -126,3 +126,25 @@ aren't in a CSS layer, so they override daisyUI's own theme rules.
 
 On a theme's admin page, "View its stylesheet" opens the live revision's
 stylesheet. Pages link it with `{% theme_head %}` (see [Add it to a project](../README.md#add-it-to-a-project)).
+
+## Custom CSS
+
+For anything the settings don't cover. On a theme's admin page, the **Custom
+CSS** section (folded) has a CSS box and **Use the custom CSS**. Like everything
+else it takes effect when the theme is published: each revision's custom CSS is
+served as its own file (`/theme/custom/<version>.css`, cached like the theme
+stylesheet), and `{% theme_head %}` links it right after the theme stylesheet,
+so it can override anything in it. At most 100,000 characters.
+
+- **Permission:** only users with **Can edit a theme's custom CSS**
+  (`edit_custom_css`) see the section or can change the CSS. Others don't see it
+  anywhere (the stored-settings box and revision comparisons only say whether
+  it's on and how long it is), and saving the form leaves it as it was. The live
+  editor never shows or changes it, and imports leave it out unless the person
+  importing has the permission.
+- **Switching it off:** untick **Use the custom CSS** and publish; the CSS is kept
+  but not loaded.
+- It's CSS, not code, but it can still change any page's look and load images
+  from other sites, so give the permission only to people you'd trust with the
+  site's design.
+

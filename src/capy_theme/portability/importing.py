@@ -24,14 +24,18 @@ MAX_BYTES = 50 * 1024 * 1024  # all files in the zip, unpacked
 SCHEMA = json.loads(Path(__file__).with_name("theme_file.schema.json").read_text(encoding="utf-8"))
 
 
-def import_theme(upload):
+def import_theme(upload, keep_custom_css=True):
     """Create a new, unpublished theme from an export zip. Returns the Theme.
 
-    `upload` is a file object (e.g. an uploaded file). Raises ValidationError
-    with a readable message if the file isn't a valid capy-theme export.
+    `upload` is a file object (e.g. an uploaded file). Without `keep_custom_css`
+    (the importer can't edit custom CSS), the export's custom CSS is left out.
+    Raises ValidationError with a readable message if the file isn't a valid
+    capy-theme export.
     """
     archive = _open(upload)
     manifest = _manifest(archive)
+    if not keep_custom_css:
+        manifest["theme"]["settings"].pop("custom_css", None)
     stored = []  # files saved so far, deleted again if the import fails
     try:
         with transaction.atomic():

@@ -13,6 +13,7 @@ from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
 from ..artifacts import get_artifacts
+from ..css.custom import custom_css_url
 from ..css.stylesheet import stylesheet_url
 from ..editor.mount import mount as editor_mount
 from ..fonts.library import external_stylesheets, preload_urls
@@ -53,7 +54,7 @@ def theme_head(context):
     nonce_attr = format_html(' nonce="{}"', nonce) if nonce else ""
     fonts = revision.snapshot.get("fonts")
     return format_html(
-        '{}{}<link rel="stylesheet" href="{}">\n{}{}<script{}>{}</script>{}',
+        '{}{}<link rel="stylesheet" href="{}">\n{}{}{}<script{}>{}</script>{}',
         format_html_join(
             "",
             '<link rel="preload" href="{}" as="font" type="font/woff2" crossorigin>\n',
@@ -65,12 +66,19 @@ def theme_head(context):
             ((url,) for url in external_stylesheets(fonts)),
         ),
         stylesheet_url(revision),
+        _custom_css_link(revision),
         theme_color_meta(revision, current_mode(request, revision)),
         icon_links(revision.snapshot),
         nonce_attr,
         mark_safe(head_script(revision)),  # noqa: S308 (built from fixed text and JSON values)
         editor,
     )
+
+
+def _custom_css_link(revision):
+    """The <link> to the revision's custom CSS, after the theme stylesheet ("" if none)."""
+    url = custom_css_url(revision)
+    return format_html('<link rel="stylesheet" href="{}">\n', url) if url else ""
 
 
 @register.simple_tag(takes_context=True)

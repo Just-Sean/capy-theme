@@ -249,7 +249,7 @@ Every command in one place. Details are in the linked pages.
 | Page | About |
 | --- | --- |
 | [docs/themes.md](docs/themes.md) | Theme settings, the admin page, branding, drafts and publishing, the live theme, scheduling, the visitor theme picker, light and dark mode, permissions, export and import |
-| [docs/colors-and-css.md](docs/colors-and-css.md) | Colours and contrast, address-bar/focus/email colours, type scale, shape, accessibility settings, the theme stylesheet |
+| [docs/colors-and-css.md](docs/colors-and-css.md) | Colours and contrast, address-bar/focus/email colours, type scale, shape, accessibility settings, the theme stylesheet, custom CSS |
 | [docs/fonts.md](docs/fonts.md) | The font library: system stacks, bundled fonts, uploads, Google Fonts, external stylesheets |
 | [docs/images.md](docs/images.md) | Uploads and SVG cleaning, logo slots, icons, the sharing image, backgrounds |
 | [docs/editor.md](docs/editor.md) | The live editor and its Components view |

@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from ..colors.maths import to_hex, to_oklch
 from ..colors.names import SCHEMES
 from ..colors.values import contrast_report, effective_values
+from ..css.custom import without_custom_css
 from ..css.stylesheet import snapshot_css
 from ..fonts.library import external_stylesheets
 from ..themes.validation import validate_base, validate_settings
@@ -98,7 +99,7 @@ def preview(theme, data):
             for scheme in SCHEMES
         },
         "contrast": {scheme: contrast_report(values[scheme]) for scheme in SCHEMES},
-        "settings": draft.settings,
+        "settings": without_custom_css(draft.settings),  # the editor doesn't edit it
         "light_base": draft.light_base,
         "dark_base": draft.dark_base,
         # External font stylesheets (e.g. Adobe Fonts) the page must link.
