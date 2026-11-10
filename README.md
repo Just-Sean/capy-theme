@@ -224,6 +224,10 @@ Every command in one place. Details are in the linked pages.
 | `uv run python demo/manage.py createsuperuser` | Make a demo admin account |
 | `uv run python demo/manage.py tailwind runserver` | Run the demo site at http://localhost:8000/ (with Tailwind) |
 | `uv run python demo/manage.py runserver` | Run the demo without rebuilding Tailwind |
+| `uv run python manage.py theme_export <slug> [-o FILE]` | Export a theme as a zip ([themes](docs/themes.md#from-the-command-line)) |
+| `uv run python manage.py theme_import FILE [--publish] [--activate]` | Import an exported theme (as a draft, or published and made the site's theme) |
+| `uv run python manage.py theme_publish <slug> [--note TEXT] [--activate]` | Publish a theme's draft (and optionally make it the site's theme) |
+| `uv run python manage.py theme_rebuild_images [<slug>]` | Remake logo copies, sharing-image crops and icons (after an update, or for logos from before 0.5) |
 | `uv run python manage.py capy_theme_add_fonts` | Add the 30 bundled fonts to a project's font library ([fonts](docs/fonts.md)) |
 | `uv run python scripts/fetch_curated_fonts.py` | Re-download the bundled fonts from Fontsource ([fonts](docs/fonts.md)) |
 | `uv run python scripts/generate_builtin_themes.py` | Regenerate daisyUI's built-in themes after a daisyUI update ([development](docs/development.md)) |

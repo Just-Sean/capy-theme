@@ -168,3 +168,29 @@ From code: `capy_theme.portability.export.export_theme(theme)` returns the zip's
 bytes, and `capy_theme.portability.importing.import_theme(file)` returns the new
 theme.
 
+### From the command line
+
+The same, plus publishing, as management commands (in the demo, use
+`uv run python demo/manage.py …`):
+
+```bash
+uv run python manage.py theme_export main -o main.capy-theme.zip   # default file: <slug>.capy-theme.zip
+uv run python manage.py theme_import main.capy-theme.zip            # as a draft
+uv run python manage.py theme_import main.capy-theme.zip --activate # publish it and make it the site's theme
+uv run python manage.py theme_publish main --note "New colours" --activate
+uv run python manage.py theme_rebuild_images                        # every theme, or give a slug
+```
+
+So a fresh install can be themed without the admin:
+
+```bash
+uv run python manage.py migrate
+uv run python manage.py capy_theme_add_fonts        # only if the theme uses the bundled fonts
+uv run python manage.py theme_import main.capy-theme.zip --activate
+```
+
+`theme_rebuild_images` remakes the logo copies and sharing-image crops from the
+uploaded originals, and the icons of published revisions. Use it after a
+capy-theme update changes how they're made, or for logos moved into the main
+slot by migration 0010 (they have no smaller copies until then).
+

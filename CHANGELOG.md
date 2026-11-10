@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Management commands:** `theme_export`, `theme_import` (`--publish`,
+  `--activate`), `theme_publish` (`--note`, `--activate`) and `theme_rebuild_images`.
 - **daisyUI theme blocks** at `/theme/daisyui-theme.css`: the published theme as
   `@plugin "daisyui/theme"` blocks (light and dark) to compile into a project's own CSS.
 - **Theme export and import:** **Export** on a theme's admin page downloads a zip
