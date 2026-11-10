@@ -5,7 +5,7 @@ its Latin regular (400), bold (700) and italic (400) WOFF2 files, where the font
 has them, plus its licence. Writes:
 
 - src/capy_theme/static/capy_theme/fonts/<id>/  the WOFF2 files and LICENSE
-- src/capy_theme/curated_fonts.json              what the add-fonts command reads
+- src/capy_theme/fonts/curated.json              what the add-fonts command reads
 
 Run it from the repo root after changing the list:
 
@@ -23,7 +23,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 STATIC = REPO_ROOT / "src" / "capy_theme" / "static" / "capy_theme" / "fonts"
-MANIFEST = REPO_ROOT / "src" / "capy_theme" / "curated_fonts.json"
+MANIFEST = REPO_ROOT / "src" / "capy_theme" / "fonts" / "curated.json"
 PACKAGE_URL = "https://registry.npmjs.org/@fontsource/{id}/-/{id}-{version}.tgz"
 WANTED = [(400, "normal"), (700, "normal"), (400, "italic")]
 

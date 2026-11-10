@@ -6,19 +6,24 @@ A project includes them under /theme/ in its urls.py, with
 
 from django.urls import path
 
-from . import views
+from .css import views as css_views
+from .editor import views as editor_views
+from .showcase import views as showcase_views
+from .themes import views as theme_views
 
 app_name = "capy_theme"
 
 urlpatterns = [
-    path("showcase/", views.showcase, name="showcase"),
-    path("mode/<slug:mode>/", views.set_mode, name="set_mode"),
-    path("choose/<slug:slug>/", views.choose_theme, name="choose_theme"),
-    path("editor/<int:pk>/state/", views.editor_state, name="editor_state"),
-    path("editor/<int:pk>/preview/", views.editor_preview, name="editor_preview"),
-    path("editor/<int:pk>/suggestions/", views.editor_suggestions, name="editor_suggestions"),
-    path("editor/<int:pk>/save/", views.editor_save, name="editor_save"),
-    path("editor/<int:pk>/upload/", views.editor_upload, name="editor_upload"),
-    path("editor/<int:pk>/publish/", views.editor_publish, name="editor_publish"),
-    path("<slug:version>.css", views.theme_css, name="theme_css"),
+    path("showcase/", showcase_views.showcase, name="showcase"),
+    path("mode/<slug:mode>/", theme_views.set_mode, name="set_mode"),
+    path("choose/<slug:slug>/", theme_views.choose_theme, name="choose_theme"),
+    path("editor/<int:pk>/state/", editor_views.editor_state, name="editor_state"),
+    path("editor/<int:pk>/preview/", editor_views.editor_preview, name="editor_preview"),
+    path(
+        "editor/<int:pk>/suggestions/", editor_views.editor_suggestions, name="editor_suggestions"
+    ),
+    path("editor/<int:pk>/save/", editor_views.editor_save, name="editor_save"),
+    path("editor/<int:pk>/upload/", editor_views.editor_upload, name="editor_upload"),
+    path("editor/<int:pk>/publish/", editor_views.editor_publish, name="editor_publish"),
+    path("<slug:version>.css", css_views.theme_css, name="theme_css"),
 ]

@@ -27,6 +27,7 @@ uv run django-admin makemigrations capy_theme --settings=tests.settings --python
 - The installed package is only `src/capy_theme/`. `demo/` is development-only and never ships.
 - Never import from a project or another module. Link to users with `settings.AUTH_USER_MODEL`.
 - Templates go in `src/capy_theme/templates/capy_theme/` and static files in `src/capy_theme/static/capy_theme/`.
+- Code lives in its section (`themes/`, `colors/`, `css/`, `fonts/`, `images/`, `editor/`, `artifacts/`, `admin/`), one job per file, and every Python file stays under 200 lines. Split a file before it grows past that.
 - Project-configurable settings use the `CAPY_THEME_` prefix and have a sensible default.
 - capy-theme handles every aspect of the theme but only applies it to the page's own look. Anything else (email, web app manifests, link-preview tags, an app shell) gets theme artifacts from `capy_theme.artifacts.get_artifacts()`, `{% theme_artifacts %}` or the JSON API; capy-theme doesn't do those jobs itself.
 

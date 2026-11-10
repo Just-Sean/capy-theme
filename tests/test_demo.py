@@ -8,7 +8,7 @@ import subprocess  # noqa: S404
 import sys
 from pathlib import Path
 
-MANAGE = Path(__file__).resolve().parent.parent / "demo" / "manage.py"
+MANAGE = Path(__file__).resolve().parents[1] / "demo" / "manage.py"
 
 
 def run_manage(*args):
@@ -41,16 +41,16 @@ def test_demo_header_logo_uses_the_themes_header_height():
         "from django.conf import settings; import tempfile; "
         "settings.MEDIA_ROOT = tempfile.mkdtemp(); "
         "from capy_theme.models import Theme; "
-        "from capy_theme.publishing import publish; "
-        "from capy_theme.active import activate; "
+        "from capy_theme.themes.publishing import publish; "
+        "from capy_theme.themes.active import activate; "
         "b = io.BytesIO(); Image.new('RGB', (2000, 1000), 'red').save(b, 'PNG'); "
         "from django.core.files.uploadedfile import SimpleUploadedFile; "
-        "from capy_theme.images import add_asset; "
+        "from capy_theme.images.uploads import add_asset; "
         "t = Theme.objects.create(name='Big', slug='big'); "
         "a = add_asset(t, 'logo_main', 'light', SimpleUploadedFile('big.png', b.getvalue())); "
         "t.settings = {'images': {'logo_main': {'light': a.pk}}}; t.save(); "
         "r = publish(t); activate(t); "
-        "from capy_theme.stylesheet import render_css; "
+        "from capy_theme.css.stylesheet import render_css; "
         "from django.test import Client; "
         "html = Client().get('/', SERVER_NAME='localhost').content.decode(); "
         "print('class=\"capy-logo\"' in html, 'img.capy-logo { height: 40px' in render_css(r))"
@@ -99,8 +99,8 @@ def test_demo_navbar_has_the_mode_toggle():
         "from django.core.management import call_command; "
         "call_command('migrate', verbosity=0); "
         "from capy_theme.models import Theme; "
-        "from capy_theme.publishing import publish; "
-        "from capy_theme.active import activate; "
+        "from capy_theme.themes.publishing import publish; "
+        "from capy_theme.themes.active import activate; "
         "t = Theme.objects.create(name='M', slug='m'); publish(t); activate(t); "
         "from django.test import Client; "
         "html = Client().get('/', SERVER_NAME='localhost').content.decode(); "

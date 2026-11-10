@@ -12,7 +12,7 @@ from django.db import migrations, models
 
 
 def css_version(theme_id, number, snapshot):
-    # A frozen copy of capy_theme.stylesheet.css_version, so this migration
+    # A frozen copy of capy_theme.css.stylesheet.css_version, so this migration
     # keeps working even if that function changes later.
     data = json.dumps({"theme": theme_id, "number": number, "snapshot": snapshot}, sort_keys=True)
     return hashlib.sha256(data.encode("utf-8")).hexdigest()[:12]
@@ -29,7 +29,7 @@ def fill_values(snapshot, themes):
 
 
 def forwards(apps, schema_editor):
-    from capy_theme.builtin_themes import THEMES
+    from capy_theme.themes.catalogue import THEMES
 
     ThemeRevision = apps.get_model("capy_theme", "ThemeRevision")
     for revision in ThemeRevision.objects.all():

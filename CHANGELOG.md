@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- **Reorganised into sections** (no behaviour change): `themes/`, `colors/`,
+  `css/`, `fonts/`, `images/`, `editor/`, `artifacts/`, `admin/` and `showcase/`,
+  each made of small files (every Python file under 200 lines). daisyUI's
+  built-in themes are now a JSON data file. Import paths inside the package
+  changed; `capy_theme.artifacts.get_artifacts`, `capy_theme.models`, the template
+  tags, URLs and the context processor are unchanged. The README is shorter, with
+  one page per section in `docs/`.
+
 ## 0.6.0
 
 Visitors and scheduling, and a clearer scope: capy-theme owns the theme and

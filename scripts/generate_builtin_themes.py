@@ -1,4 +1,4 @@
-"""Generate src/capy_theme/builtin_themes.py from the daisyUI package.
+"""Generate src/capy_theme/themes/builtin_themes.json from the daisyUI package.
 
 Downloads the published daisyUI package (DAISYUI_VERSION) from npm and reads two
 data files from it:
@@ -25,7 +25,7 @@ from pathlib import Path
 DAISYUI_VERSION = "5.7.50"
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-OUTPUT = REPO_ROOT / "src" / "capy_theme" / "builtin_themes.py"
+OUTPUT = REPO_ROOT / "src" / "capy_theme" / "themes" / "builtin_themes.json"
 DEMO_PLUGIN = REPO_ROOT / "demo" / "tailwind" / "daisyui.mjs"
 PACKAGE_URL = "https://registry.npmjs.org/daisyui/-/daisyui-{version}.tgz"
 
@@ -75,38 +75,12 @@ def build_themes(themes, order):
 
 
 def render(themes, version):
-    """Return the Python source of builtin_themes.py."""
-    lines = [
-        '"""The built-in daisyUI themes and their values.',
-        "",
-        "GENERATED FILE: don't edit by hand. To update it, change DAISYUI_VERSION in",
-        "scripts/generate_builtin_themes.py and run:",
-        "",
-        "    uv run python scripts/generate_builtin_themes.py",
-        "",
-        'Each theme has a scheme ("light" or "dark") and its CSS variable values.',
-        "Use capy_theme.catalogue.get_builtin_themes() rather than reading this directly.",
-        '"""',
-        "",
-        f"DAISYUI_VERSION = {q(version)}",
-        "",
-        "THEMES = {",
-    ]
-    for name, theme in themes.items():
-        lines.append(f"    {q(name)}: {{")
-        lines.append(f'        "scheme": {q(theme["scheme"])},')
-        lines.append('        "values": {')
-        for key, value in theme["values"].items():
-            lines.append(f"            {q(key)}: {q(value)},")
-        lines.append("        },")
-        lines.append("    },")
-    lines.append("}")
-    return "\n".join(lines) + "\n"
+    """Return builtin_themes.json: the daisyUI version and every theme's scheme and values.
 
-
-def q(text):
-    """Quote a string as a double-quoted Python literal (JSON strings are valid Python)."""
-    return json.dumps(text)
+    Generated: don't edit it by hand. capy_theme.themes.catalogue reads it.
+    """
+    data = {"daisyui_version": version, "themes": themes}
+    return json.dumps(data, indent=1, ensure_ascii=False) + "\n"
 
 
 def demo_plugin_version():
