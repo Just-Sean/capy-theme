@@ -1,18 +1,18 @@
-{% load static %}
-{% comment %}
-  Loads the live theme editor for a staff user. The panel itself is built by
-  editor.js; this only passes it the theme and its URLs. Open it with any
-  element carrying data-capy-editor-open (e.g. the showcase's Edit theme button).
+{% load static %}{% comment %}
+  Loads the live theme editor for a staff user who can edit. Output by
+  {% theme_head %}, so it sits in <head>: the editor's settings are data
+  attributes on its <script> tag (a <div> isn't allowed in <head>). The panel
+  itself is built by editor.js. Any element with data-capy-editor-open opens it.
 {% endcomment %}
 <link rel="stylesheet" href="{% static 'capy_theme/editor/editor.css' %}">
-<div id="capy-editor" hidden
-     data-theme-id="{{ editor.theme.pk }}"
-     data-theme-name="{{ editor.theme.name }}"
-     data-state-url="{{ editor.urls.state }}"
-     data-preview-url="{{ editor.urls.preview }}"
-     data-suggestions-url="{{ editor.urls.suggestions }}"
-     data-save-url="{{ editor.urls.save }}"
-     data-publish-url="{{ editor.urls.publish }}"
-     data-csrf-token="{{ csrf_token }}"></div>
-<script src="{% static 'capy_theme/editor/editor.js' %}" defer></script>
+<script id="capy-editor" src="{% static 'capy_theme/editor/editor.js' %}" defer
+        data-theme-id="{{ editor.theme.pk }}"
+        data-theme-name="{{ editor.theme.name }}"
+        data-floating-button="{% if editor.floating_button %}true{% else %}false{% endif %}"
+        data-state-url="{{ editor.urls.state }}"
+        data-preview-url="{{ editor.urls.preview }}"
+        data-suggestions-url="{{ editor.urls.suggestions }}"
+        data-save-url="{{ editor.urls.save }}"
+        data-publish-url="{{ editor.urls.publish }}"
+        data-csrf-token="{{ csrf_token }}"></script>
 <script src="{% static 'capy_theme/editor/editor-controls.js' %}" defer></script>

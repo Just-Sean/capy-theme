@@ -14,6 +14,7 @@ from django.utils.safestring import mark_safe
 from ..active import get_active_theme
 from ..branding import branding
 from ..colors import SCHEMES, effective_values, to_hex
+from ..editor import mount as editor_mount
 from ..mode import MODE_LABELS, MODES, current_mode, head_script, html_theme_value, mode_settings
 from ..stylesheet import stylesheet_url
 
@@ -24,23 +25,26 @@ register = template.Library()
 def theme_head(context):
     """Output the active theme's stylesheet link, theme-color tags and mode script.
 
-    Also the theme-color meta tags (the browser's address-bar colour). Outputs
-    nothing if no theme is active. The script carries the CSP nonce when
+    Also the theme-color meta tags (the browser's address-bar colour) and, for
+    staff who can edit, the live editor. Outputs nothing (except the editor)
+    if no theme is active. The script carries the CSP nonce when
     Django's CSP middleware is on.
     """
     request = context.get("request")
+    editor = mark_safe(editor_mount(request))  # noqa: S308 (rendered template)
     theme = get_active_theme(request)
     if theme is None or theme.live_revision is None:
-        return ""
+        return editor
     revision = theme.live_revision
     nonce = get_nonce(request) if request is not None else None
     nonce_attr = format_html(' nonce="{}"', nonce) if nonce else ""
     return format_html(
-        '<link rel="stylesheet" href="{}">\n{}<script{}>{}</script>',
+        '<link rel="stylesheet" href="{}">\n{}<script{}>{}</script>{}',
         stylesheet_url(revision),
         theme_color_meta(revision, current_mode(request, revision)),
         nonce_attr,
         mark_safe(head_script(revision)),  # noqa: S308 (built from fixed text and JSON values)
+        editor,
     )
 
 

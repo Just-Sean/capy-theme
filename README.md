@@ -151,6 +151,7 @@ Optional settings a project can add to its `settings.py`:
 | `CAPY_THEME_CACHE_SECONDS` | `300` | How long the active theme is cached, in seconds. Publishing or activating clears the cache straight away; this limit makes every server process catch up when the project's cache isn't shared between processes (e.g. Django's default in-memory cache). |
 | `CAPY_THEME_SHOWCASE` | `"staff"` | Who can see the theme showcase at `/theme/showcase/`: `"staff"` (logged-in staff; others are sent to the admin login), `"public"` (anyone) or `"off"` (nobody: 404). |
 | `CAPY_THEME_BASE_TEMPLATE` | not set | A project template for the showcase to extend, e.g. `"base.html"`. It needs a `content` block (and a `title` block for the page title) and should include `{% theme_head %}`. Not set: the showcase uses its own standalone page. |
+| `CAPY_THEME_EDITOR_BUTTON` | `True` | Show the live editor's **Edit theme** button in the corner of every page, for staff who can edit. `False` hides it (the editor still opens from the showcase or with `?edit=<theme id>`). |
 
 ## Develop it
 
@@ -335,10 +336,17 @@ publishing still work. Ratings are for the saved draft, so save to update them.
 
 ### The live theme editor
 
-Staff who can change themes see an **Edit theme** button on the showcase. It
-opens a panel on the right and shows the theme's **draft** on the page, in your
-browser only; visitors keep seeing the published theme. **Close** puts the page
-back to the published look.
+Staff who can change themes see an **Edit theme** button: on the showcase, and in
+the bottom-right corner of **every page** that uses `{% theme_head %}`. It opens
+a panel on the right and shows the theme's **draft** on the page you're on, in
+your browser only. Visitors keep seeing the published theme, and a banner at the
+top says so. **Close** (or **Exit** in the banner) puts the page back to the
+published look.
+
+The editor is loaded by `{% theme_head %}` only for staff with the change-theme
+permission; visitors get none of its files. To hide the corner button (for
+example, to put your own link to `?edit=<id>` somewhere), set
+`CAPY_THEME_EDITOR_BUTTON = False`.
 
 The panel has:
 
@@ -364,7 +372,7 @@ Every change shows on the page straight away (in your browser only).
 - With unsaved changes, the panel says so, and closing it or leaving the page
   asks before throwing them away.
 
-- It edits the active theme, or any theme with `?edit=<theme id>` on the showcase
+- It edits the active theme, or any theme with `?edit=<theme id>` on any page's
   URL, which also opens the panel straight away.
 - The panel is plain CSS and JavaScript (`static/capy_theme/editor/`), not
   Tailwind or daisyUI classes, so it looks the same on any page. The script is a
