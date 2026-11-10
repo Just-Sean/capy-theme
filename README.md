@@ -451,7 +451,10 @@ stylesheet. Pages link it with `{% theme_head %}` (see [Add it to a project](#ad
 
 `/theme/showcase/` shows the active theme on every kind of daisyUI component
 (buttons, badges, alerts, cards, tabs, a table, form fields, progress bars, a
-modal, headings and text), with light and dark mode side by side. It also shows
+modal, headings and text), with light and dark mode side by side. It also has a
+swatch for each of the 20 colours (with its text colour, OKLCH and hex values,
+contrast rating, and whether it's overridden, worked out or from the base
+theme), and samples of every shape setting. It also shows
 the site name, tagline, logo and the base themes in use. Staff only by default
 (see `CAPY_THEME_SHOWCASE`). The demo's navbar links to it.
 
@@ -533,6 +536,7 @@ straight to `main`:
 | `src/capy_theme/colors.py` | The 20 overridable colours, their groups, and merging overrides over the base theme |
 | `src/capy_theme/forms.py` | `ColorField`: accepts any colour format, with the browser's colour picker (`static/capy_theme/admin/color_input.js`) |
 | `src/capy_theme/shape.py` | The shape and effect settings (radii, sizes, border, depth, noise) |
+| `src/capy_theme/showcase.py` | Data for the showcase's colour swatches and shape samples |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |

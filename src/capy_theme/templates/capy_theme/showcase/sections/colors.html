@@ -1,0 +1,22 @@
+{% load capy_theme %}
+<div class="space-y-3">
+  <h3 class="text-xl font-semibold">Colours</h3>
+  <p class="text-sm opacity-70">Each colour with its text colour on top, its value, and the WCAG
+    contrast of that pair (AA needs 4.5:1, AAA 7:1). The label says whether it's overridden in the
+    theme, worked out automatically, or from the base theme.</p>
+  <div class="grid gap-3 sm:grid-cols-2">
+    {% for swatch in swatches|capy_get:mode %}
+      <div class="rounded-box border border-base-300 overflow-hidden">
+        <div class="p-3 font-semibold" style="background: var(--color-{{ swatch.name }}); color: var(--color-{{ swatch.fg }});">
+          {{ swatch.label }}{% if swatch.text %} <span class="font-normal">Aa lorem ipsum</span>{% endif %}
+        </div>
+        <div class="p-3 text-xs space-y-1 bg-base-100">
+          <div><code>--color-{{ swatch.name }}</code> <span class="badge badge-sm {% if swatch.source == 'overridden' %}badge-primary{% elif swatch.source == 'worked out' %}badge-secondary{% else %}badge-ghost{% endif %}">{{ swatch.source }}</span></div>
+          <div><code>{{ swatch.oklch }}</code> · <code>{{ swatch.hex }}</code></div>
+          {% if swatch.ratio %}<div>Contrast {{ swatch.ratio }}:1 ·
+            {% if swatch.rating == "fail" %}<span class="text-error font-semibold">⚠ fails AA</span>{% else %}<span class="font-semibold">{{ swatch.rating }}</span>{% endif %}</div>{% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>

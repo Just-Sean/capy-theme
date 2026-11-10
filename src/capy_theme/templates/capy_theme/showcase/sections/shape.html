@@ -1,0 +1,33 @@
+{% load capy_theme %}
+{% with samples=shape_samples|capy_get:mode %}
+<div class="space-y-3">
+  <h3 class="text-xl font-semibold">Shape and effects</h3>
+  <div class="grid gap-3 sm:grid-cols-3">
+    <div class="space-y-2 text-center"><div class="mx-auto h-12 w-12 border-2 border-primary bg-primary/20" style="border-radius: var(--radius-selector);"></div><div class="text-xs">Small radius</div></div>
+    <div class="space-y-2 text-center"><div class="mx-auto h-12 w-24 border-2 border-primary bg-primary/20" style="border-radius: var(--radius-field);"></div><div class="text-xs">Field radius</div></div>
+    <div class="space-y-2 text-center"><div class="mx-auto h-16 w-28 border-2 border-primary bg-primary/20" style="border-radius: var(--radius-box);"></div><div class="text-xs">Box radius</div></div>
+  </div>
+  <div class="flex flex-wrap items-center gap-3">
+    <span class="badge badge-primary">Badge</span>
+    <input type="checkbox" class="checkbox checkbox-primary" checked aria-label="Checkbox">
+    <input type="checkbox" class="toggle toggle-primary" checked aria-label="Toggle">
+    <button class="btn btn-primary">Button</button>
+    <input type="text" class="input w-40" placeholder="Input" aria-label="Input">
+  </div>
+  <div class="flex flex-wrap items-center gap-3">
+    {% for effect in samples.effects %}
+      <button class="btn btn-primary" style="{{ effect.variable }}: 0;">{{ effect.label }} off</button>
+      <button class="btn btn-primary" style="{{ effect.variable }}: 1;">{{ effect.label }} on</button>
+    {% endfor %}
+  </div>
+  <div class="overflow-x-auto">
+    <table class="table table-sm">
+      <thead><tr><th>Setting</th><th>Variable</th><th>Value</th></tr></thead>
+      <tbody>
+        {% for size in samples.sizes %}<tr><td>{{ size.label }}</td><td><code>{{ size.variable }}</code></td><td><code>{{ size.value }}</code></td></tr>{% endfor %}
+        {% for effect in samples.effects %}<tr><td>{{ effect.label }}</td><td><code>{{ effect.variable }}</code></td><td>{% if effect.on %}On{% else %}Off{% endif %}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endwith %}
