@@ -43,6 +43,11 @@ class Theme(models.Model):
         validators=[validate_settings],
         help_text="Every override on top of the base themes.",
     )
+    logo = models.ImageField(
+        upload_to="capy_theme/logos/",
+        blank=True,
+        help_text="The main logo (PNG, JPEG, GIF or WebP). Shown at the size it's uploaded.",
+    )
     live_revision = models.ForeignKey(
         "ThemeRevision",
         on_delete=models.SET_NULL,
@@ -103,6 +108,9 @@ class Theme(models.Model):
             # longer exists (such a draft can't be published).
             "light_values": builtin_values(self.light_base),
             "dark_values": builtin_values(self.dark_base),
+            # The stored file's name. Replacing the logo stores a new file and
+            # never overwrites the old one, so older revisions keep theirs.
+            "logo": self.logo.name or "",
             "settings": copy.deepcopy(self.settings),
         }
 
@@ -151,7 +159,7 @@ class ThemeRevision(models.Model):
     theme = models.ForeignKey(Theme, on_delete=models.CASCADE, related_name="revisions")
     number = models.PositiveIntegerField(help_text="1 for the theme's first publish, then 2, 3…")
     snapshot = models.JSONField(
-        help_text="The theme's light and dark base names and their values, and its settings."
+        help_text="The theme's light and dark base names and their values, logo and settings."
     )
     css_version = models.CharField(
         max_length=16,

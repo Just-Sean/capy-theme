@@ -1,3 +1,5 @@
+import json
+
 from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -18,14 +20,36 @@ def _base_choices(scheme):
 
 
 class ThemeForm(forms.ModelForm):
-    """Offers only light themes as the light base and dark themes as the dark base."""
+    """The theme edit form.
+
+    Only light themes are offered as the light base and dark themes as the dark
+    base. Values stored in `settings` (site name, tagline, logo alt text) get
+    their own fields here and are written back into `settings` on save.
+    """
 
     light_base = forms.ChoiceField()
     dark_base = forms.ChoiceField()
+    site_name = forms.CharField(
+        required=False,
+        max_length=100,
+        help_text="Shown in headers, and instead of the logo if there's none.",
+    )
+    tagline = forms.CharField(
+        required=False, max_length=200, help_text="A short line describing the site."
+    )
+    logo_alt = forms.CharField(
+        required=False,
+        max_length=200,
+        label="Logo alt text",
+        help_text="Describes the logo for screen readers. Leave blank to use the site name.",
+    )
+
+    # Form fields stored as keys in Theme.settings.
+    SETTINGS_FIELDS = ["site_name", "tagline", "logo_alt"]
 
     class Meta:
         model = Theme
-        fields = ["name", "slug", "light_base", "dark_base", "settings"]
+        fields = ["name", "slug", "light_base", "dark_base", "logo"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -34,6 +58,20 @@ class ThemeForm(forms.ModelForm):
             self.fields[field].choices = _base_choices(scheme)
             self.fields[field].help_text = Theme._meta.get_field(field).help_text
             self.fields[field].initial = Theme._meta.get_field(field).default
+        for field in self.SETTINGS_FIELDS:
+            self.fields[field].initial = self.instance.settings.get(field, "")
+
+    def clean(self):
+        cleaned = super().clean()
+        settings = dict(self.instance.settings)
+        for field in self.SETTINGS_FIELDS:
+            value = cleaned.get(field, "").strip()
+            if value:
+                settings[field] = value
+            else:
+                settings.pop(field, None)
+        self.instance.settings = settings
+        return cleaned
 
 
 class PublishForm(forms.Form):
@@ -89,18 +127,24 @@ class ThemeAdmin(admin.ModelAdmin):
     list_filter = ["light_base", "dark_base"]
     search_fields = ["name", "slug"]
     prepopulated_fields = {"slug": ["name"]}
-    readonly_fields = ["publish_status", "public_id", "created_at", "updated_at"]
+    readonly_fields = ["publish_status", "settings_json", "public_id", "created_at", "updated_at"]
     fieldsets = [
         (None, {"fields": ["name", "slug"]}),
         ("Publishing", {"fields": ["publish_status"]}),
+        ("Branding", {"fields": ["site_name", "tagline", "logo", "logo_alt"]}),
         ("Base themes", {"fields": ["light_base", "dark_base"]}),
-        ("Overrides", {"fields": ["settings"]}),
+        ("Overrides", {"fields": ["settings_json"]}),
         ("Details", {"fields": ["public_id", "created_at", "updated_at"]}),
     ]
     inlines = [ThemeRevisionInline]
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("live_revision")
+
+    @admin.display(description="Stored settings")
+    def settings_json(self, theme):
+        """The draft's `settings` as JSON, read-only. Edited through the fields above."""
+        return format_html("<pre>{}</pre>", json.dumps(theme.settings, indent=2, sort_keys=True))
 
     @admin.display(boolean=True, description="Active")
     def is_active(self, theme):

@@ -151,3 +151,40 @@ decision (from 1.7 onwards), to be reviewed later.
 - The `theme` template variable holds name, slug, revision, both bases and the
   stylesheet URL, all from the **published** revision, or `None` without an
   active theme.
+
+## 1.7 Site name, tagline and main logo (#10)
+
+All recommended (made while building without a stop for every decision).
+
+### Branding gets proper admin fields
+- **Chosen:** site name, tagline and logo alt text get their own fields in the
+  admin. They're stored as keys in `settings`. The raw `settings` JSON box is
+  replaced by a read-only view.
+- **Alternative:** keep editing `settings` as a JSON text box.
+- **Why:** typing JSON by hand is error-prone, and every later setting will get
+  a proper field too.
+
+### Logo upload uses Django's ImageField and Pillow
+- **Chosen:** `Theme.logo` is an `ImageField` (PNG, JPEG, GIF, WebP), adding
+  `pillow>=13,<14` as a dependency.
+- **Alternative:** a plain file upload with no image check.
+- **Why:** Pillow confirms the file really is an image. Phase 4 needs it anyway
+  for resizing. SVG logos and stricter upload checks come in 4.1 and 4.2.
+
+### Revisions record the logo's file name
+- **Chosen:** the snapshot stores the logo file's stored name. Replacing a logo
+  saves a new file (Django never overwrites), so old revisions keep their logo.
+- **Alternative:** copy the file per revision.
+- **Why:** no duplicate files. Phase 4's assets are never edited in place either.
+
+### `{% theme_logo %}`
+- **Chosen:** outputs `<img src alt>` for the logo, or `<span>` with the site
+  name. Extra attributes are passed through (`class="h-8"`). Alt text falls back
+  to the site name. Outputs nothing if there's no active theme, or no logo and
+  no site name.
+
+### The demo's tests use a throwaway database
+- **Chosen:** `tests/test_demo.py` runs the demo against an in-memory database it
+  migrates itself, instead of `demo/db.sqlite3`.
+- **Why:** since 1.6 the home page reads the database. The test failed whenever
+  the local demo database wasn't migrated, and would fail on a fresh copy of the repo.

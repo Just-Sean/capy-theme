@@ -10,7 +10,11 @@
 <body class="min-h-screen bg-base-100 text-base-content">
   <header class="navbar bg-base-200 px-4">
     <div class="flex-1">
-      <a href="{% url 'home' %}" class="text-xl font-bold">Capy Theme demo</a>
+      <a href="{% url 'home' %}" class="flex items-center gap-3 text-xl font-bold">
+        {% if theme.logo_url or theme.site_name %}{% theme_logo class="h-8 w-auto" %}{% else %}Capy Theme demo{% endif %}
+      </a>
+      {% if theme.logo_url and theme.site_name %}<span class="ml-3 text-xl font-bold">{{ theme.site_name }}</span>{% endif %}
+      {% if theme.tagline %}<span class="ml-3 text-sm opacity-70">{{ theme.tagline }}</span>{% endif %}
     </div>
     <nav class="flex-none">
       <a href="{% url 'admin:index' %}" class="btn btn-ghost btn-sm">Admin</a>

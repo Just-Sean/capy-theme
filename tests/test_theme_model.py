@@ -148,10 +148,10 @@ def test_form_saves_a_valid_theme():
     assert (theme.light_base, theme.dark_base) == ("cupcake", "dracula")
 
 
-def test_form_rejects_bad_settings():
-    form = ThemeForm(data=form_data(settings='{"not_a_setting": 1}'))
+def test_form_rejects_too_long_branding():
+    form = ThemeForm(data=form_data(site_name="x" * 101))
     assert not form.is_valid()
-    assert "settings" in form.errors
+    assert "site_name" in form.errors
 
 
 # The admin pages
