@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.2.0
+
+Colours and shape: every colour and shape value can be overridden, with readable
+text guaranteed.
+
+- **Colour overrides:** any of the 20 daisyUI colours, separately for light and
+  dark, in `settings["colors"]`. Admin fields grouped Basic / Advanced / Expert;
+  blank fields use (and show) the base theme's colour.
+- **Colour input:** hex, rgb(), hsl(), oklch() or colour names, stored as OKLCH
+  (ColorAide), with the browser's colour picker beside each field.
+- **Automatic text colours and background shades:** readable `-content` colours
+  for overridden colours (WCAG AA, white/black fallback), and base-200, base-300
+  and base-content from an overridden background.
+- **Contrast warnings:** WCAG ratings (fail, AA, AAA) for every colour pair, next
+  to each colour field and in a table. Warnings only.
+- **Shape and effects:** radii, control sizes, border width, depth and noise, in
+  `settings["shape"]`, for both modes.
+- **Browser, focus and email colours:** `theme-color` meta tags, an always-visible
+  `:focus-visible` outline (`--capy-focus`), and `theme.email_colors` in hex.
+- **Showcase:** colour swatches (values, contrast, source) and shape samples.
+- **New dependency:** coloraide.
+
 ## 0.1.0
 
 The foundation: themes exist, one is live, and every page uses it. Publishing,

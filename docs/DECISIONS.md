@@ -447,3 +447,9 @@ Recommended (made while building autonomously).
   border, and every effect shown both off and on (by setting `--depth` / `--noise`
   on the sample), plus a table of the current values.
 - A small `capy_get` template filter looks up each mode's data by name.
+
+## 2.9 Release v0.2.0 (#22)
+
+- Released with tests passing on SQLite and PostgreSQL 17 (throwaway Docker
+  container), and the package checked. No database migrations were needed in
+  Phase 2: colours and shape live in the theme's `settings` JSON.
