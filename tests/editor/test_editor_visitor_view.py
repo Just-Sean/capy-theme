@@ -8,7 +8,7 @@ from django.core.cache import cache
 from django.urls import reverse
 
 from capy_theme.css.stylesheet import render_css
-from capy_theme.models import Theme, ThemeAssignment
+from capy_theme.models import Theme, ThemeAssignment, ThemeRevision
 from capy_theme.themes.active import activate, theme_at
 from capy_theme.themes.publishing import publish
 
@@ -54,7 +54,10 @@ def editor_client(client, django_user_model):
 def test_the_issue_check_visitors_see_the_published_theme(editor_client, site):
     body = editor_client.get(URL).json()
     assert body["theme"] == "Main"
-    assert body["css"] == render_css(site["main"].live_revision)
+    # Compared with the revision as stored: Postgres (JSONB) doesn't keep key order,
+    # so an in-memory copy can list the same variables in another order.
+    stored = ThemeRevision.objects.get(pk=site["main"].live_revision_id)
+    assert body["css"] == render_css(stored)
 
 
 def test_the_issue_check_a_date_inside_a_schedule(editor_client, site):
