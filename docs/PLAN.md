@@ -276,16 +276,16 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 - [x] **5.7 Background images** (#38): Optional decorative images.
 - [x] **5.8 Showcase: images and icons** (#39): See every image the theme produces on the showcase.
 - [x] **5.9 Release v0.5.0** (#40)
-- [ ] **Scope: expose artifacts, don't apply them** (#143): `get_artifacts()`, manifest and tags removed.
+- [x] **Scope: expose artifacts, don't apply them** (#143): `get_artifacts()`, manifest and tags removed.
 
 ### Phase 6: Visitors and scheduling (v0.6.0)
 
 - [x] **6.1 Mode settings and toggle** (#46): done in v0.1.0.
-- [ ] **6.2 Visitor theme picker** (#47): Visitors choose among themes the operator allows.
-- [ ] **6.3 Scheduling** (#48): Themes that go live and end on given dates.
-- [ ] **6.4 Device accessibility preferences** (#49): Respect visitors' system settings.
-- [ ] **6.5 Showcase: mode and visitor choices** (#50): Try the visitor-facing controls on the showcase.
-- [ ] **6.6 Release v0.6.0** (#51)
+- [x] **6.2 Visitor theme picker** (#47): Visitors choose among themes the operator allows.
+- [x] **6.3 Scheduling** (#48): Themes that go live and end on given dates.
+- [x] **6.4 Device accessibility preferences** (#49): Respect visitors' system settings.
+- [x] **6.5 Showcase: mode and visitor choices** (#50): Try the visitor-facing controls on the showcase.
+- [x] **6.6 Release v0.6.0** (#51)
 
 ### Phase 7: Portability and API (v0.7.0)
 

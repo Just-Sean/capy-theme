@@ -1073,3 +1073,10 @@ Recommended (made while building autonomously).
   Chrome: after Dark on the showcase, the home page is served with
   `data-theme="capy-dark"`). Their templates are added to the showcase CSS build.
 - **Schedule list** shows running and upcoming schedules; finished ones are left out.
+
+## 6.6 Release v0.6.0 (#51)
+
+- Released with tests on SQLite and PostgreSQL 17, the package checked (migrations
+  0011–0013 and the new templates included, `demo/` excluded), and the demo site
+  checked. The changelog's first entry is the scope change, because it removes
+  0.5.0 features (manifest view, link-preview tags).

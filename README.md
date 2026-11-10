@@ -6,7 +6,7 @@ A self-contained Django app (`capy_theme`) that any Django 6.1+ project
 can install. It has no project of its own: its tests run against a tiny
 stand-in project in `tests/`, and `demo/` is a small site for trying it out.
 
-## What it does (v0.5)
+## What it does (v0.6)
 
 Whoever runs the site controls its look from the Django admin, with no code
 changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
@@ -52,13 +52,17 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   (including hex colours for HTML emails).
 - **Light and dark mode:** follow the device or force one, and visitors can switch
   with `{% theme_mode_toggle %}`, with no flash on page load.
+- **Visitors and scheduling:** visitors can pick among themes the operator offers
+  (`{% theme_picker %}`); themes can be scheduled between two dates (e.g. a
+  holiday theme) and the default returns afterwards; visitors' "reduce motion"
+  and "more contrast" device settings are respected.
 - **Theme showcase** at `/theme/showcase/`: every daisyUI component, colour swatch
   and shape setting in the active theme, with light and dark side by side (staff
   only by default).
 - **Permissions:** only users with `publish_theme` can publish or activate.
 
-Next: visitor choices and scheduling (v0.6), then import/export and an API, and
-more (see `docs/PLAN.md`).
+Next: portability and the JSON API (v0.7), then custom CSS, multiple sites and
+1.0 (see `docs/PLAN.md`).
 
 ## Add it to a project
 
