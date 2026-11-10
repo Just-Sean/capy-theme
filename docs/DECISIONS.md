@@ -1152,3 +1152,23 @@ runs on the real page; every daisyUI component should be visible while editing.
   demo's navbar link. "Edit live" opens `/?edit=<id>`.
 - **Tests** now use an ordinary test-project page (`/page/` in `tests/urls.py`) as
   "a page with the editor on it".
+
+## 6.8 See it as a visitor (#158)
+
+Sean chose my recommendation: a switch that shows what visitors see, plus a
+summary of what's set up for them, plus the images panel in the Components view.
+
+- **Published CSS from the server**, using the same rules as the live site: the
+  schedule logic was moved into one function (`themes.active._current`) used by
+  both the cached live theme and `theme_at(date)` for previews, so a preview of a
+  date can't disagree with what the site will do.
+- **The summary sits in the editor panel**, next to the switch (not inside the
+  Components view as first described), because it's about the site, not the theme
+  being edited; the Components view follows the switch.
+- **A date preview uses noon** that day, so a schedule that starts or ends that
+  day in another time zone isn't missed by midnight.
+- **While it's on**, the draft controls are hidden and draft previews don't
+  replace the page's CSS; turning it off restores the draft and the page's mode.
+- **Images panel** shows the saved draft (uploads and choices are saved data);
+  the icons come from the published revision because they're made when
+  publishing. The Components view reloads after Save draft or Publish.

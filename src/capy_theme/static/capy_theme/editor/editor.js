@@ -200,7 +200,8 @@
       })
       .then(function (result) {
         linkStylesheets(result.stylesheets);
-        applyCss(result.css);
+        // While "See it as a visitor" is on, the page keeps the visitors' theme.
+        if (!editor.viewCss) applyCss(result.css);
         if (editor.panel) status("Previewing unsaved changes. Nothing is saved yet.");
         document.dispatchEvent(new CustomEvent("capy-editor:preview", { detail: result }));
         return result;

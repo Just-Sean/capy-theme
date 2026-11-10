@@ -14,6 +14,7 @@
         ui.build(reply.state);
         editor.applyCss(reply.state.css);
         editor.status("Draft saved. Visitors won't see it until it's published.");
+        document.dispatchEvent(new CustomEvent("capy-editor:saved"));
         return reply;
       })
       .catch(function (error) {
@@ -36,6 +37,7 @@
           ui.build(reply.state);
           editor.applyCss(reply.state.css);
           editor.status("Published as revision " + reply.published + ". Visitors now see it.");
+          document.dispatchEvent(new CustomEvent("capy-editor:saved"));
         })
         .catch(function (error) {
           editor.status(error.message, true);

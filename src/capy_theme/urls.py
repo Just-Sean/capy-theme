@@ -15,7 +15,8 @@ app_name = "capy_theme"
 urlpatterns = [
     path("mode/<slug:mode>/", theme_views.set_mode, name="set_mode"),
     path("choose/<slug:slug>/", theme_views.choose_theme, name="choose_theme"),
-    path("editor/components/", editor_views.editor_components, name="editor_components"),
+    path("editor/<int:pk>/components/", editor_views.editor_components, name="editor_components"),
+    path("editor/visitor-view/", editor_views.editor_visitor_view, name="editor_visitor_view"),
     path("editor/<int:pk>/state/", editor_views.editor_state, name="editor_state"),
     path("editor/<int:pk>/preview/", editor_views.editor_preview, name="editor_preview"),
     path(
