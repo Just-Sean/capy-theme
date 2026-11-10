@@ -1,10 +1,11 @@
-{% load tailwind_cli %}<!doctype html>
-<html lang="en">
+{% load tailwind_cli capy_theme %}<!doctype html>
+<html lang="en" {% theme_html_attrs %}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Capy Theme demo{% endblock %}</title>
   {% tailwind_css %}
+  {% theme_head %}
 </head>
 <body class="min-h-screen bg-base-100 text-base-content">
   <header class="navbar bg-base-200 px-4">
