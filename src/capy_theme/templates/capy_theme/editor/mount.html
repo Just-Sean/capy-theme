@@ -1,0 +1,12 @@
+{% load static %}
+{% comment %}
+  Loads the live theme editor for a staff user. The panel itself is built by
+  editor.js; this only passes it the theme and its URLs. Open it with any
+  element carrying data-capy-editor-open (e.g. the showcase's Edit theme button).
+{% endcomment %}
+<link rel="stylesheet" href="{% static 'capy_theme/editor/editor.css' %}">
+<div id="capy-editor" hidden
+     data-theme-id="{{ editor.theme.pk }}"
+     data-theme-name="{{ editor.theme.name }}"
+     data-state-url="{{ editor.urls.state }}"></div>
+<script src="{% static 'capy_theme/editor/editor.js' %}" defer></script>

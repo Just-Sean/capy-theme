@@ -333,6 +333,22 @@ lists every pair for light and dark. AA needs 4.5:1 and AAA 7:1 for normal text.
 Pairs below AA are marked "⚠ fails AA". They're warnings only: saving and
 publishing still work. Ratings are for the saved draft, so save to update them.
 
+### The live theme editor
+
+Staff who can change themes see an **Edit theme** button on the showcase. It
+opens a panel on the right and shows the theme's **draft** on the page, in your
+browser only; visitors keep seeing the published theme. **Close** puts the page
+back to the published look. (The editing controls arrive in the next steps.)
+
+- It edits the active theme, or any theme with `?edit=<theme id>` on the showcase
+  URL, which also opens the panel straight away.
+- The panel is plain CSS and JavaScript (`static/capy_theme/editor/`), not
+  Tailwind or daisyUI classes, so it looks the same on any page. The script is a
+  static file and the preview uses a constructed stylesheet, so both work under a
+  strict Content Security Policy.
+- It reads the draft from `/theme/editor/<id>/state/` (staff with change
+  permission only), which writes the CSS with the same code as publishing.
+
 ### Browser colour, focus outline and email colours
 
 - **Browser colour:** `{% theme_head %}` adds `<meta name="theme-color">` tags, so
@@ -544,6 +560,9 @@ straight to `main`:
 | `src/capy_theme/forms.py` | `ColorField`: accepts any colour format, with the browser's colour picker (`static/capy_theme/admin/color_input.js`) |
 | `src/capy_theme/shape.py` | The shape and effect settings (radii, sizes, border, depth, noise) |
 | `src/capy_theme/showcase.py` | Data for the showcase's colour swatches and shape samples |
+| `src/capy_theme/editor.py` | The live editor: who can use it, which theme it edits, and the draft data it reads |
+| `src/capy_theme/static/capy_theme/editor/` | The editor panel's script and stylesheet (plain JS and CSS) |
+| `src/capy_theme/templates/capy_theme/editor/mount.html` | Loads the editor on a page for staff who can edit |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |
