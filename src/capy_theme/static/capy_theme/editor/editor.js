@@ -98,6 +98,50 @@
 
   editor.applyCss = applyCss;
 
+  // Ask the server for the CSS, values and contrast of unsaved values, and show
+  // them on the page. `changes` is {light_base?, dark_base?, settings?: {colors?, shape?}}.
+  // Nothing is saved.
+  editor.preview = function (changes) {
+    return fetch(mount.getAttribute("data-preview-url"), {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-CSRFToken": mount.getAttribute("data-csrf-token"),
+      },
+      body: JSON.stringify(changes),
+    })
+      .then(function (response) {
+        return response.json().then(function (body) {
+          if (!response.ok) {
+            throw new Error((body.errors || [body.error || "Preview failed."]).join(" "));
+          }
+          return body;
+        });
+      })
+      .then(function (result) {
+        applyCss(result.css);
+        if (editor.panel) status("Previewing unsaved changes. Nothing is saved yet.");
+        document.dispatchEvent(new CustomEvent("capy-editor:preview", { detail: result }));
+        return result;
+      })
+      .catch(function (error) {
+        if (editor.panel) status(error.message, true);
+        throw error;
+      });
+  };
+
+  // The same, but waits until changes stop for a moment (e.g. while dragging a
+  // colour picker), so the server gets one request instead of dozens.
+  var pending = null;
+  editor.schedulePreview = function (changes) {
+    clearTimeout(pending);
+    pending = setTimeout(function () {
+      editor.preview(changes).catch(function () {});
+    }, 150);
+  };
+
   document.addEventListener("click", function (event) {
     if (event.target.closest("[data-capy-editor-open]")) {
       event.preventDefault();

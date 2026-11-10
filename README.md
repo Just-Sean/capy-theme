@@ -346,8 +346,12 @@ back to the published look. (The editing controls arrive in the next steps.)
   Tailwind or daisyUI classes, so it looks the same on any page. The script is a
   static file and the preview uses a constructed stylesheet, so both work under a
   strict Content Security Policy.
-- It reads the draft from `/theme/editor/<id>/state/` (staff with change
-  permission only), which writes the CSS with the same code as publishing.
+- It reads the draft from `/theme/editor/<id>/state/`, and previews unsaved
+  values by POSTing them as JSON to `/theme/editor/<id>/preview/`, which returns
+  the CSS, every colour's value and the contrast ratings. Both use the same code
+  as publishing (so the preview matches what would be published), are for staff
+  with change permission only, and **never write anything**. The preview needs
+  Django's CSRF token, which the page passes to the script.
 
 ### Browser colour, focus outline and email colours
 

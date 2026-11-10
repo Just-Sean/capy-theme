@@ -475,3 +475,24 @@ Recommended (made while building autonomously).
   protocol by a script kept outside the repo. It checked that the panel opens,
   the page shows the draft colour, Close restores the published one, and
   reopening works.
+
+## 3.2 Draft preview endpoint (#96)
+
+Recommended (made while building autonomously).
+
+- **One endpoint:** `POST /theme/editor/<id>/preview/` takes JSON with any of
+  `light_base`, `dark_base` and `settings` (`colors`, `shape`) and returns
+  `css`, `values` (every variable, per mode), `contrast` (per mode) and the
+  cleaned `settings`.
+- **Same code as publishing:** it applies the changes to an unsaved copy of the
+  theme (`editor.apply_changes`) and runs `snapshot()`, `effective_values()` and
+  `snapshot_css()`, so the preview matches what publishing would produce (tested).
+- **Never writes:** no save on the copy, `no-store` on the response. Other
+  settings (site name, mode and so on) are left as they are.
+- **Validation:** colours in any format are converted to OKLCH, bases are
+  checked against the catalogue, and the schema is checked. All problems come back
+  as a 400 with a list, which the panel shows.
+- **CSRF:** a normal Django POST. The token is passed to the script with a data
+  attribute, because Django's CSRF cookie may be HttpOnly in projects.
+- **Debounced in the browser:** `capyEditor.schedulePreview()` waits 150 ms after
+  the last change, so dragging a picker sends one request, not dozens.
