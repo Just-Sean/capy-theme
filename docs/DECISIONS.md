@@ -608,3 +608,25 @@ Recommended (made while building autonomously).
 - Released with tests on SQLite and PostgreSQL 17, the package checked, and each
   editor step checked in headless Chrome while it was built. No database
   migrations were needed in Phase 3.
+
+## 4.1 Font library and roles (#23)
+
+Recommended (made while building autonomously).
+
+- **Models:** `Font` (family, source, fallback stack, licence, stylesheet URL for
+  external fonts) and `FontFile` (weight, style, subset, unicode-range, WOFF2
+  file), as the issue described.
+- **Themes pick fonts by id** in `settings["fonts"]` for body, heading, mono and
+  display. Unknown ids are refused when saving.
+- **Copied into revisions:** at publish, each chosen font's family, source,
+  fallbacks and file URLs go into the snapshot, the same principle as base colour
+  values. Library changes can't change a published theme. The `fonts` key is only
+  added when fonts are chosen, so existing revisions still compare equal.
+- **How fonts apply:** body sets Tailwind's `--font-sans`, so Tailwind/daisyUI
+  pages pick it up, and mono sets `--font-mono`. Headings and display get their
+  own variables, used by `h1`–`h6` and `.capy-display`. Element rules are in
+  `@layer base`, so project utility classes still win. The variables themselves
+  are unlayered, so they override Tailwind's defaults.
+- **Fonts are the same in light and dark mode.**
+- **Editor:** a Fonts section with a dropdown per role, previewed live, saved
+  and published like everything else.

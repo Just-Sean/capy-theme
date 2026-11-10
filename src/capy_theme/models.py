@@ -15,6 +15,7 @@ from django.db import models
 from django.utils import timezone
 
 from .catalogue import builtin_values
+from .fonts import snapshot_fonts
 from .validation import validate_base, validate_settings
 
 
@@ -91,6 +92,13 @@ class Theme(models.Model):
     def clean(self):
         super().clean()
         errors = {}
+        missing = set(self.settings.get("fonts", {}).values()) - set(
+            Font.objects.filter(pk__in=self.settings.get("fonts", {}).values()).values_list(
+                "pk", flat=True
+            )
+        )
+        if missing:
+            errors["settings"] = [f"Font {pk} isn't in the font library." for pk in sorted(missing)]
         for field, scheme in (("light_base", "light"), ("dark_base", "dark")):
             try:
                 validate_base(getattr(self, field), scheme)
@@ -105,7 +113,7 @@ class Theme(models.Model):
         The name and slug are admin labels, so they aren't part of it: renaming
         a theme takes effect without publishing.
         """
-        return {
+        snapshot = {
             "light_base": self.light_base,
             "dark_base": self.dark_base,
             # The bases' full values are copied too, so a later daisyUI update
@@ -118,6 +126,13 @@ class Theme(models.Model):
             "logo": self.logo.name or "",
             "settings": copy.deepcopy(self.settings),
         }
+        # Chosen fonts are copied in (family, fallbacks, file URLs), so later
+        # changes to the font library can't change a published theme. Only
+        # added when fonts are chosen, so older revisions still compare equal.
+        fonts = snapshot_fonts(self.settings)
+        if fonts:
+            snapshot["fonts"] = fonts
+        return snapshot
 
     def base_changes(self):
         """Return notes on daisyUI changes to the live revision's base themes.
@@ -221,3 +236,62 @@ class ThemeAssignment(models.Model):
 
     def __str__(self):
         return f"{self.theme} on {self.site or 'every site'}"
+
+
+class Font(models.Model):
+    """A font in the library, shared by all themes. Its files are in FontFile."""
+
+    SOURCES = [
+        ("system", "System font stack"),
+        ("bundled", "Bundled with capy-theme"),
+        ("upload", "Uploaded"),
+        ("google", "Imported from Google Fonts"),
+        ("external", "External stylesheet"),
+    ]
+
+    family = models.CharField(
+        max_length=100, unique=True, help_text="The font's name, e.g. Inter or Source Serif."
+    )
+    source = models.CharField(max_length=20, choices=SOURCES, default="upload")
+    fallback_stack = models.CharField(
+        max_length=300,
+        blank=True,
+        help_text="Fonts to use while this one loads or if it can't, e.g. "
+        "ui-sans-serif, system-ui, sans-serif. Blank uses a sensible default for the role.",
+    )
+    licence = models.TextField(blank=True, help_text="The font's licence, or where to find it.")
+    stylesheet_url = models.URLField(
+        blank=True, help_text="For external fonts only: the stylesheet that loads it."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["family"]
+
+    def __str__(self):
+        return self.family
+
+
+class FontFile(models.Model):
+    """One WOFF2 file of a font: a weight and style, optionally for one character subset."""
+
+    STYLES = [("normal", "Normal"), ("italic", "Italic")]
+
+    font = models.ForeignKey(Font, on_delete=models.CASCADE, related_name="files")
+    weight = models.PositiveSmallIntegerField(
+        default=400, help_text="100 (thin) to 900 (black); 400 is regular, 700 bold."
+    )
+    style = models.CharField(max_length=10, choices=STYLES, default="normal")
+    subset = models.CharField(
+        max_length=50, default="latin", help_text="Which characters it covers, e.g. latin."
+    )
+    unicode_range = models.CharField(
+        max_length=500, blank=True, help_text="Optional CSS unicode-range for this subset."
+    )
+    file = models.FileField(upload_to="capy_theme/fonts/", help_text="A WOFF2 font file.")
+
+    class Meta:
+        ordering = ["font", "weight", "style"]
+
+    def __str__(self):
+        return f"{self.font} {self.weight} {self.style} ({self.subset})"

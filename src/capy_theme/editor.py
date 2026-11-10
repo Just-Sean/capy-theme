@@ -23,7 +23,8 @@ from .colors import (
     to_hex,
     to_oklch,
 )
-from .models import Theme
+from .fonts import ROLES
+from .models import Font, Theme
 from .palette import from_logo, from_primary
 from .shape import EFFECTS, SIZES
 from .stylesheet import snapshot_css
@@ -99,12 +100,17 @@ def controls():
         "effects": [
             {"name": name, "variable": v, "label": lab} for name, (v, lab, _help) in EFFECTS.items()
         ],
+        "font_roles": [{"name": name, "label": lab} for name, lab in ROLES.items()],
+        "fonts": [
+            {"id": f.pk, "family": f.family, "source": f.get_source_display()}
+            for f in Font.objects.all()
+        ],
     }
 
 
 # The settings the editor manages. Anything else in a theme's settings (site
 # name, mode and so on) is kept as it is.
-EDITOR_SETTINGS = ("colors", "shape")
+EDITOR_SETTINGS = ("colors", "shape", "fonts")
 
 
 def apply_changes(theme, data):
@@ -145,6 +151,12 @@ def apply_changes(theme, data):
     if not errors:
         try:
             validate_settings(settings)
+        except ValidationError as error:
+            errors.extend(error.messages)
+    if not errors:
+        draft.settings = settings
+        try:
+            draft.clean()  # e.g. fonts that aren't in the library
         except ValidationError as error:
             errors.extend(error.messages)
     if errors:

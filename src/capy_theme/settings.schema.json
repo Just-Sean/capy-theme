@@ -222,6 +222,29 @@
         }
       },
       "additionalProperties": false
+    },
+    "fonts": {
+      "description": "Fonts from the library (by id) for each role. Roles not set use the project's defaults.",
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "heading": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "mono": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "display": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,

@@ -21,10 +21,11 @@ from .colors import (
     label,
 )
 from .editor import can_edit
+from .fonts import ROLES
 from .forms import ColorField
 from .history import compare as compare_revisions
 from .history import restore as restore_revision
-from .models import Theme, ThemeRevision
+from .models import Font, FontFile, Theme, ThemeRevision
 from .publishing import NothingToPublish, publish
 from .shape import EFFECTS, SHAPE_NAMES, SIZES
 from .stylesheet import stylesheet_url
@@ -98,6 +99,11 @@ class ThemeForm(forms.ModelForm):
                 field = self.fields[color_field_name(scheme, name)]
                 field.initial = colors.get(scheme, {}).get(name, "")
                 field.widget.attrs["placeholder"] = base.get(f"--color-{name}", "")
+        font_choices = [("", "Default")] + [(str(f.pk), str(f)) for f in Font.objects.all()]
+        chosen_fonts = self.instance.settings.get("fonts", {})
+        for role in ROLES:
+            self.fields[f"font_{role}"].choices = font_choices
+            self.fields[f"font_{role}"].initial = str(chosen_fonts.get(role, ""))
         shape = self.instance.settings.get("shape", {})
         base = builtin_values(self.instance.light_base) or {}
         for name, (variable, unit, *_rest) in SIZES.items():
@@ -159,6 +165,13 @@ class ThemeForm(forms.ModelForm):
             settings["colors"] = colors
         else:
             settings.pop("colors", None)
+        fonts = {
+            role: int(cleaned[f"font_{role}"]) for role in ROLES if cleaned.get(f"font_{role}")
+        }
+        if fonts:
+            settings["fonts"] = fonts
+        else:
+            settings.pop("fonts", None)
         shape = {}
         for name in SIZES:
             value = cleaned.get(f"shape_{name}")
@@ -222,6 +235,16 @@ for _name, (_variable, _label, _help) in EFFECTS.items():
             choices=[("", "From the base theme"), ("on", "On"), ("off", "Off")],
             label=_label,
             help_text=_help,
+        )
+    )
+
+
+for _role, _label in ROLES.items():
+    ThemeForm.base_fields[f"font_{_role}"] = ThemeForm.declared_fields[f"font_{_role}"] = (
+        forms.ChoiceField(
+            required=False,
+            label=_label,
+            help_text="Blank uses the project's default font. Add fonts under Capy Theme → Fonts.",
         )
     )
 
@@ -332,6 +355,7 @@ class ThemeAdmin(admin.ModelAdmin):
             },
         ),
         ("Branding", {"fields": ["site_name", "tagline", "logo", "logo_alt"]}),
+        ("Fonts", {"fields": [f"font_{role}" for role in ROLES]}),
         *color_fieldsets(),
         ("Contrast", {"fields": ["contrast_table"], "classes": ["collapse"]}),
         (
@@ -586,3 +610,23 @@ def _int(value, default):
         return int(value)
     except TypeError, ValueError:
         return default
+
+
+class FontFileInline(admin.TabularInline):
+    model = FontFile
+    extra = 1
+    fields = ["weight", "style", "subset", "unicode_range", "file"]
+
+
+@admin.register(Font)
+class FontAdmin(admin.ModelAdmin):
+    """The shared font library. Any theme can use these fonts."""
+
+    list_display = ["family", "source", "file_count", "created_at"]
+    list_filter = ["source"]
+    search_fields = ["family"]
+    inlines = [FontFileInline]
+
+    @admin.display(description="Files")
+    def file_count(self, font):
+        return font.files.count()

@@ -7,6 +7,7 @@ from importlib.metadata import version
 from django.urls import reverse
 
 from .colors import effective_values, focus_color
+from .fonts import font_css
 
 
 def css_version(theme_id, number, snapshot):
@@ -67,6 +68,7 @@ def snapshot_css(snapshot, comment):
         "  outline: 2px solid var(--capy-focus);",
         "  outline-offset: 2px;",
         "}",
+        *font_css(snapshot.get("fonts", {})),
     ]
     return "\n".join(lines) + "\n"
 
