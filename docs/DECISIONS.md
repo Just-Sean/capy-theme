@@ -709,3 +709,22 @@ Recommended (made while building autonomously).
 - **Bug found in Chrome while checking 4.5:** `font_css()` skipped repeated file
   URLs, so a variable font's shared file lost its bold rule. Now only exact
   repeats (same file, weight, style and unicode-range) are skipped.
+
+## 4.6 External font stylesheets (#28)
+
+Recommended (made while building autonomously).
+
+- **The external source uses the font's own stylesheet** (`Font.stylesheet_url`,
+  which must be https). The family is the name the provider's CSS defines. No
+  `@font-face` is written for it.
+- **Linked with `<link>`, not `@import`:** `{% theme_head %}` adds the provider's
+  stylesheet before the theme's. An `@import` inside our stylesheet would have
+  to come first and can't be used in the editor's constructed stylesheet, so the
+  editor adds `<link>` elements for previews too.
+- **No `crossorigin` attribute** on the link: some providers don't send CORS
+  headers for their CSS, and the attribute would then block it.
+- **CSP:** the README shows the Django 6.1 `SECURE_CSP` entries for Adobe Fonts.
+  Self-hosted fonts need none.
+- **Checked in Chrome** with a public provider stylesheet: linked in `<head>`, the
+  headings used it, and the font loaded. A real Adobe kit needs an account, so it
+  wasn't tested directly.

@@ -180,3 +180,13 @@ def preview_faces(font):
         f"font-weight:{f.weight};font-style:{f.style};font-display:swap}}"
         for f in files
     )
+
+
+def external_stylesheets(fonts):
+    """The external stylesheet URLs a snapshot's fonts need, in role order, no repeats."""
+    urls = []
+    for font in (fonts or {}).values():
+        url = font.get("stylesheet")
+        if font.get("source") == "external" and url and url not in urls:
+            urls.append(url)
+    return urls

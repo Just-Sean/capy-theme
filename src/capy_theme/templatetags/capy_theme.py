@@ -15,6 +15,7 @@ from ..active import get_active_theme
 from ..branding import branding
 from ..colors import SCHEMES, effective_values, to_hex
 from ..editor import mount as editor_mount
+from ..fonts import external_stylesheets
 from ..mode import MODE_LABELS, MODES, current_mode, head_script, html_theme_value, mode_settings
 from ..stylesheet import stylesheet_url
 
@@ -39,7 +40,12 @@ def theme_head(context):
     nonce = get_nonce(request) if request is not None else None
     nonce_attr = format_html(' nonce="{}"', nonce) if nonce else ""
     return format_html(
-        '<link rel="stylesheet" href="{}">\n{}<script{}>{}</script>{}',
+        '{}<link rel="stylesheet" href="{}">\n{}<script{}>{}</script>{}',
+        format_html_join(
+            "",
+            '<link rel="stylesheet" href="{}">\n',
+            ((url,) for url in external_stylesheets(revision.snapshot.get("fonts"))),
+        ),
         stylesheet_url(revision),
         theme_color_meta(revision, current_mode(request, revision)),
         nonce_attr,

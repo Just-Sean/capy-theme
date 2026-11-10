@@ -464,6 +464,31 @@ italics and character sets. The server downloads the files **once** and stores
 them with your other media, so pages load the font **from your own site**:
 visitors' browsers never contact Google. Weights a family doesn't have are skipped.
 
+**External font stylesheets** are for licensed fonts that can't be self-hosted,
+like **Adobe Fonts**. Add a font with source **External stylesheet**, the font's
+CSS family name as the family (e.g. `proxima-nova`), and the provider's https
+stylesheet address (e.g. your Adobe Fonts kit, `https://use.typekit.net/abc1234.css`).
+`{% theme_head %}` then links that stylesheet before the theme's own, and the live
+editor links it while previewing. The provider's stylesheet defines the font
+faces, so the browser loads them from the provider.
+
+If the project uses a **Content Security Policy**, allow the provider's domains:
+the stylesheet's domain in `style-src` and the font files' domain in `font-src`.
+For Adobe Fonts, with Django 6.1's built-in CSP setting:
+
+```python
+from django.utils.csp import CSP
+
+SECURE_CSP = {
+    "style-src": [CSP.SELF, "https://use.typekit.net", "https://p.typekit.net"],
+    "font-src": [CSP.SELF, "https://use.typekit.net"],
+    # ...the project's other directives
+}
+```
+
+(Self-hosted fonts, which means uploaded, imported, bundled and system ones,
+need no extra CSP entries.)
+
 **A curated collection of 30 open-licence fonts** is bundled with the module
 (Inter, Roboto, Open Sans, Lato, Montserrat, Source Sans 3, Nunito, Poppins, Work
 Sans, IBM Plex Sans, DM Sans, Raleway, Figtree, Manrope, Outfit, Merriweather,

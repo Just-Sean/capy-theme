@@ -36,6 +36,20 @@
     editor.sheet.replaceSync(css);
   }
 
+  // External font stylesheets (e.g. Adobe Fonts) can't go in a constructed
+  // stylesheet, so they're added as <link> elements, once each.
+  function linkStylesheets(urls) {
+    (urls || []).forEach(function (url) {
+      var already = Array.prototype.some.call(document.querySelectorAll('link[rel="stylesheet"]'), function (link) {
+        return link.href === url;
+      });
+      if (!already) {
+        var link = el("link", { rel: "stylesheet", href: url, "data-capy-editor-font": "" });
+        document.head.appendChild(link);
+      }
+    });
+  }
+
   function removeCss() {
     if (!editor.sheet) return;
     var sheet = editor.sheet;
@@ -105,6 +119,7 @@
       })
       .then(function (state) {
         editor.state = state;
+        linkStylesheets(state.stylesheets);
         applyCss(state.css);
         var live = state.live_revision ? "Live: revision " + state.live_revision + "." : "Not published yet.";
         status(live + (state.has_unpublished_changes ? " The draft has unpublished changes." : ""));
@@ -184,6 +199,7 @@
         });
       })
       .then(function (result) {
+        linkStylesheets(result.stylesheets);
         applyCss(result.css);
         if (editor.panel) status("Previewing unsaved changes. Nothing is saved yet.");
         document.dispatchEvent(new CustomEvent("capy-editor:preview", { detail: result }));
