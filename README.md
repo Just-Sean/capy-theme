@@ -809,6 +809,20 @@ loaded, or `None` if no theme is active. It's cached (see
 `CAPY_THEME_CACHE_SECONDS`), so a normal page load doesn't query the database.
 
 
+### Scheduled themes
+
+A theme can be live between two dates, e.g. a holiday theme. In the admin, go
+to **Capy Theme → Theme schedule → Add**, choose a published theme and give a
+start and/or end date (blank start: straight away; blank end: until removed).
+While a schedule is running (start ≤ now < end) its theme replaces the site's
+default; afterwards the default returns by itself. If schedules overlap, the one
+that started most recently wins. A visitor's own choice (below) still wins over
+both. The list shows each schedule as Upcoming, Running or Finished. Scheduling
+needs the `publish_theme` permission, like activating.
+
+The cached theme expires at the next start or end, so schedules switch on time
+even with a long `CAPY_THEME_CACHE_SECONDS`.
+
 ### Visitor theme picker
 
 Visitors can choose among themes the operator offers:

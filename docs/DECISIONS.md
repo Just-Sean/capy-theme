@@ -1029,3 +1029,20 @@ Recommended (made while building autonomously).
   entry, cleared by the same signals.
 - **`get_active_theme(request)`** returns the visitor's choice; without a request
   it's the site's theme (used by the admin's "Active" column).
+
+## 6.3 Scheduling (#48)
+
+Recommended (made while building autonomously).
+
+- **Uses the existing dates on `ThemeAssignment`.** Running means start ≤ now < end
+  (either may be blank). A running schedule beats the default; overlapping ones:
+  the most recent start wins (a one-day sale inside a season). The visitor's own
+  choice still beats both.
+- **Admin page "Theme schedule"** through a proxy model, so it lists only dated
+  assignments; the default stays under the Activate action. Only published themes
+  can be chosen; it needs `publish_theme` (same as activating).
+- **Cache timing:** the cached state records when it stops being valid (the next
+  start or end) and is recomputed after that, and the cache timeout is cut to that
+  moment too. So no signal or timer is needed for a schedule to start or end.
+- **Frozen-time test** by replacing `django.utils.timezone.now` in the test (no new
+  dependency such as freezegun).

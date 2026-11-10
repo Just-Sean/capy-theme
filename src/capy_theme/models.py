@@ -237,10 +237,10 @@ class ThemeRevision(models.Model):
 class ThemeAssignment(models.Model):
     """Which theme is active on the site.
 
-    For now there's one default assignment: no site and no dates. The site and
-    date fields exist from the start for multiple sites (8.2) and scheduling
-    (6.3), and are ignored until then. Change it with active.activate(), not
-    directly.
+    The default assignment has no dates; change it with active.activate().
+    Scheduled assignments have a start and/or end date and win while they're
+    running (start ≤ now < end), e.g. a holiday theme. The site field is for
+    multiple sites (8.2) and is ignored until then.
     """
 
     theme = models.ForeignKey(Theme, on_delete=models.CASCADE, related_name="assignments")
@@ -262,7 +262,35 @@ class ThemeAssignment(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.theme} on {self.site or 'every site'}"
+        if not self.is_scheduled:
+            return f"{self.theme} (default)"
+        return f"{self.theme} ({self.starts_at or '…'} to {self.ends_at or '…'})"
+
+    @property
+    def is_scheduled(self):
+        return self.starts_at is not None or self.ends_at is not None
+
+    def is_running(self, now):
+        """True if `now` is inside the dates (start included, end not)."""
+        return (self.starts_at is None or self.starts_at <= now) and (
+            self.ends_at is None or now < self.ends_at
+        )
+
+    def clean(self):
+        super().clean()
+        if self.starts_at and self.ends_at and self.ends_at <= self.starts_at:
+            raise ValidationError({"ends_at": "The end must be after the start."})
+        if self.theme_id and self.theme.live_revision_id is None:
+            raise ValidationError({"theme": "Publish this theme before scheduling it."})
+
+
+class ScheduledTheme(ThemeAssignment):
+    """The admin's view of scheduled assignments (those with dates)."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "scheduled theme"
+        verbose_name_plural = "theme schedule"
 
 
 class Font(models.Model):
