@@ -2,6 +2,8 @@
 
 capy-theme is a reusable Django app that lets whoever runs a site control its whole look from the admin: themes, colours, fonts, logos, icons and more, with no code changes or redeploys. It works in any Django project with a daisyUI 5 stylesheet, and gives the same branding to other front ends through a JSON API.
 
+> **Revised before Phase 7 (2026-11-10):** the showcase page is replaced by a **Components** view in the live editor (new step 6.7). 7.1's API is hybrid: a plain Django view, or a DRF view documented automatically by drf-spectacular when the project uses DRF (`CAPY_THEME_API` overrides). 7.6 becomes a developer docs page in the repo. 8.4 becomes the Components view's final pass. The module was also reorganised into sections of small files (#150) and its data tables moved to JSON (#152).
+
 > **Scope (after v0.5.0, 2026-11-10):** capy-theme handles every aspect of the theme but only applies it to the page's own look. Everything else it produces (logos for email and print, icons, the sharing image, colours, fonts) is **made available** to other modules through `capy_theme.artifacts.get_artifacts()`, `{% theme_artifacts %}` and the JSON API (7.1). It doesn't serve a web app manifest, output link-preview tags or send email; the project or another module (e.g. an app shell) does that with the artifacts. 5.5 and the tags part of 5.6 were removed in #143.
 
 > **Revised after v0.1.0 (2026-11-10):** the live theme editor moved up to Phase 3, straight after colours, and is now the main way to edit a theme's look (the admin form stays as a fallback). Fonts and images follow it and add their controls to it. 6.1 (light/dark toggle) was done early, in v0.1.0. Reasons are in `docs/DECISIONS.md`. GitHub issue numbers didn't change; their titles and milestones did.
@@ -16,7 +18,7 @@ Full feature list: [capy-theme: Full Feature Spec](https://claude.ai/artifact/Ne
 
 - [How to work through it](#how-to-work-through-it)
 - [Setting up GitHub](#setting-up-github)
-- [The demo site and the showcase page](#the-demo-site-and-the-showcase-page)
+- [The demo site and the editor's Components view](#the-demo-site-and-the-editors-components-view)
 - [How the module works](#how-the-module-works)
 - [The phases](#the-phases)
 - [Every step](#every-step)
@@ -64,29 +66,20 @@ Each phase is a **milestone** (GitHub shows its progress as a bar), each step is
 
 **3. Link commits to issues.** `#5` in a commit message links the commit to issue 5; `Closes #5` closes the issue when pushed to `main`.
 
-## The demo site and the showcase page
+## The demo site and the editor's Components view
 
 Two places to see the module working, for different purposes:
 
-| | Demo site | Showcase page |
+| | Demo site | Components view |
 | --- | --- | --- |
-| What it is | A tiny Django site in the repo's `demo/` folder | A page the module itself provides, at `/theme/showcase/` |
-| Ships with the module? | No. Development only | Yes. Every project that installs the module gets it |
-| Purpose | Run the module while building it, and check it works on ordinary pages it doesn't own | Let operators and designers see every theme choice in action |
-| Who sees it | You, locally | Staff by default; can be made public or turned off (`CAPY_THEME_SHOWCASE`) |
+| What it is | A tiny Django site in the repo's `demo/` folder | A view inside the live editor showing every daisyUI component |
+| Ships with the module? | No. Development only | Yes, as part of the editor |
+| Purpose | Run the module while building it, and check it works on ordinary pages it doesn't own | Let theme editors see every component in the draft theme while they edit |
+| Who sees it | You, locally | Staff who can edit themes |
 
-The showcase page uses lorem ipsum text and grows with every phase, so each feature is visible as soon as it exists:
-
-- **1.8 Theme showcase page:** One page where anyone allowed can see every theme choice in action. Later phases add their sections to it.
-- **2.8 Showcase: colours and shape:** See every colour and shape setting on the showcase.
-- **3.1 Editor on the showcase:** Edit the theme right on the showcase and see every change instantly.
-- **4.8 Showcase: typography:** See every font and type setting on the showcase.
-- **5.8 Showcase: images and icons:** See every image the theme produces on the showcase.
-- **6.5 Showcase: mode and visitor choices:** Try the visitor-facing controls on the showcase.
-- **7.6 Showcase: developer section:** Everything a front-end developer needs, on one page.
-- **8.4 Showcase: final pass:** The showcase shows every choice in the spec.
-
-By 1.0 it shows the logos in every slot and mode, every icon, every font role and weight, all 20 colours with contrast ratings, the shape settings, the light/dark switch and theme picker, the social preview, and every CSS variable, in light and dark side by side.
+Until v0.6 this was a separate showcase page (`/theme/showcase/`). It was replaced
+because the editor already runs on the real page; step 6.7 moves the component
+samples into the editor, and 8.4 is its final pass.
 
 ## How the module works
 
@@ -286,15 +279,17 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 - [x] **6.4 Device accessibility preferences** (#49): Respect visitors' system settings.
 - [x] **6.5 Showcase: mode and visitor choices** (#50): Try the visitor-facing controls on the showcase.
 - [x] **6.6 Release v0.6.0** (#51)
+- [x] **Reorganise into small sections** (#150) and **data tables to JSON** (#152)
+- [ ] **6.7 Components view in the editor** (#155): Replace the showcase page with every daisyUI component inside the live editor.
 
 ### Phase 7: Portability and API (v0.7.0)
 
-- [ ] **7.1 JSON API** (#52): Front ends, mobile apps and other modules get the branding (the same data as `get_artifacts()`).
+- [ ] **7.1 JSON API** (#52): Front ends, mobile apps and other modules get the branding (the same data as `get_artifacts()`). A plain Django view, or a DRF view that drf-spectacular documents automatically when the project uses DRF (`CAPY_THEME_API` = auto / drf / django).
 - [ ] **7.2 Design tokens export** (#53): Theme values for design tools and native app builds.
 - [ ] **7.3 Theme export and import** (#54): Move a theme between sites.
 - [ ] **7.4 daisyUI theme block export** (#55): For projects that want the theme compiled into their stylesheet.
 - [ ] **7.5 Management commands** (#56): Scripted installs and maintenance.
-- [ ] **7.6 Showcase: developer section** (#57): Everything a front-end developer needs, on one page.
+- [ ] **7.6 Developer docs page** (#57): `docs/developers.md`: every CSS variable, the API and how to read it, the downloads, the API-mode and CORS notes.
 - [ ] **7.7 Release v0.7.0** (#58)
 
 ### Phase 8: Advanced and 1.0 (v1.0.0)
@@ -302,6 +297,6 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 - [ ] **8.1 Custom CSS** (#59): An escape hatch for anything the settings don't cover.
 - [ ] **8.2 Multiple sites** (#60): One install serving several domains, each with its own theme.
 - [ ] **8.3 Project settings** (#61): Projects can set limits.
-- [ ] **8.4 Showcase: final pass** (#62): The showcase shows every choice in the spec.
+- [ ] **8.4 Editor Components view: final pass** (#62): Every editor setting changes something visible in the Components view; accessibility check in both modes.
 - [ ] **8.5 Prove it works in a real project** (#63): Confirm the module is truly pluggable.
 - [ ] **8.6 Release v1.0.0** (#64): The first stable version.
