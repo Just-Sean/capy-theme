@@ -6,6 +6,8 @@ from importlib.metadata import version
 
 from django.urls import reverse
 
+from .colors import effective_values
+
 
 def css_version(theme_id, number, snapshot):
     """Return the short hash that names a revision's stylesheet.
@@ -31,7 +33,8 @@ def render_css(revision):
     (which are in `@layer base`) wherever the stylesheet is loaded.
     """
     snapshot = revision.snapshot
-    light, dark = snapshot["light_values"], snapshot["dark_values"]
+    light = effective_values(snapshot, "light")
+    dark = effective_values(snapshot, "dark")
     lines = [
         f"/* capy-theme: {revision.theme.name}, revision {revision.number} */",
         ":root {",

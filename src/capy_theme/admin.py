@@ -10,7 +10,8 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 
 from .active import NotPublished, activate, get_active_theme
-from .catalogue import get_builtin_themes
+from .catalogue import builtin_values, get_builtin_themes
+from .colors import COLOR_GROUPS, COLOR_NAMES, SCHEMES, label
 from .models import Theme, ThemeRevision
 from .publishing import NothingToPublish, publish
 from .stylesheet import stylesheet_url
@@ -77,6 +78,13 @@ class ThemeForm(forms.ModelForm):
             self.fields[field].initial = Theme._meta.get_field(field).default
         for field in self.SETTINGS_FIELDS:
             self.fields[field].initial = self.instance.settings.get(field, "")
+        colors = self.instance.settings.get("colors", {})
+        for scheme in SCHEMES:
+            base = builtin_values(getattr(self.instance, f"{scheme}_base")) or {}
+            for name in COLOR_NAMES:
+                field = self.fields[color_field_name(scheme, name)]
+                field.initial = colors.get(scheme, {}).get(name, "")
+                field.widget.attrs["placeholder"] = base.get(f"--color-{name}", "")
         self.fields["default_mode"].initial = self.instance.settings.get("default_mode", "auto")
         self.fields["visitors_can_switch"].initial = self.instance.settings.get(
             "visitors_can_switch", True
@@ -101,8 +109,61 @@ class ThemeForm(forms.ModelForm):
             settings.pop("visitors_can_switch", None)
         else:
             settings["visitors_can_switch"] = False
+        colors = {}
+        for scheme in SCHEMES:
+            chosen = {}
+            for name in COLOR_NAMES:
+                value = (cleaned.get(color_field_name(scheme, name)) or "").strip()
+                if value:
+                    chosen[name] = value
+            if chosen:
+                colors[scheme] = chosen
+        if colors:
+            settings["colors"] = colors
+        else:
+            settings.pop("colors", None)
         self.instance.settings = settings
         return cleaned
+
+
+def color_field_name(scheme, name):
+    """The form field for one colour override, e.g. color_light_base_100."""
+    return f"color_{scheme}_{name.replace('-', '_')}"
+
+
+COLOR_PATTERN = r"^oklch\(\s*[0-9.]+%?\s+[0-9.]+\s+[0-9.]+(\s*/\s*[0-9.]+%?)?\s*\)$"
+
+for _scheme in SCHEMES:
+    for _name in COLOR_NAMES:
+        # Added to both, so the admin's own copy of the form (built with
+        # modelform_factory) knows these fields too.
+        ThemeForm.base_fields[color_field_name(_scheme, _name)] = ThemeForm.declared_fields[
+            color_field_name(_scheme, _name)
+        ] = forms.RegexField(
+            regex=COLOR_PATTERN,
+            required=False,
+            label=label(_name),
+            error_messages={"invalid": "Enter a colour like oklch(62% 0.19 260)."},
+            help_text="Leave blank to use the base theme's colour (shown greyed out).",
+        )
+
+
+def color_fieldsets():
+    """Admin fieldsets for the colour overrides: Basic, Advanced, Expert, per mode."""
+    sets = []
+    for scheme in SCHEMES:
+        for group, names in COLOR_GROUPS.items():
+            classes = [] if group == "Basic" else ["collapse"]
+            sets.append(
+                (
+                    f"{scheme.capitalize()} colours: {group}",
+                    {
+                        "fields": [color_field_name(scheme, n) for n in names],
+                        "classes": classes,
+                    },
+                )
+            )
+    return sets
 
 
 class PublishForm(forms.Form):
@@ -165,6 +226,7 @@ class ThemeAdmin(admin.ModelAdmin):
         ("Branding", {"fields": ["site_name", "tagline", "logo", "logo_alt"]}),
         ("Base themes", {"fields": ["light_base", "dark_base"]}),
         ("Mode", {"fields": ["default_mode", "visitors_can_switch"]}),
+        *color_fieldsets(),
         ("Overrides", {"fields": ["settings_json"]}),
         ("Details", {"fields": ["public_id", "created_at", "updated_at"]}),
     ]

@@ -337,3 +337,21 @@ All chosen by Sean, after testing v0.1.0 and asking for a live edit mode.
   images, now Phase 5; 5.4 for restore, now 3.7).
 - **For this project only, Sean let Claude run the rest of the build on its own:**
   creating issues, opening and merging PRs, and tagging releases.
+
+## 2.1 Colour overrides (#14)
+
+Recommended (made while building autonomously).
+
+- **Stored as** `settings["colors"]["light" | "dark"][name]`, using daisyUI's
+  names without `--color-` (e.g. `primary`, `base-100`, `primary-content`). Only
+  the colours set are stored.
+- **Merged when the stylesheet is written**, from the revision's saved base
+  values plus its overrides (`colors.effective_values`). The same function will
+  serve the editor's preview.
+- **Groups:** Basic = primary, secondary, accent, neutral, background (base-100),
+  text on background (base-content); Advanced = info, success, warning, error,
+  base-200, base-300; Expert = the eight `-content` colours. Advanced and Expert
+  are folded in the admin.
+- **OKLCH only for now:** fields accept `oklch(...)` values (daisyUI's own
+  format). 2.2 adds hex, RGB and HSL input, converted to OKLCH.
+- **Empty fields show the base colour as a greyed-out hint.**

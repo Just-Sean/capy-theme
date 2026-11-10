@@ -294,6 +294,22 @@ revisions keep their logo.
 The "Overrides" section shows the theme's stored `settings` as read-only JSON.
 They're edited through the fields above, not typed by hand.
 
+### Colours
+
+On a theme's admin page, the colour sections let you override any of daisyUI's
+20 colours, separately for light and dark mode:
+
+- **Basic** (shown open): primary, secondary, accent, neutral, background and
+  text on background.
+- **Advanced** (folded): info, success, warning, error, and the two darker
+  background shades.
+- **Expert** (folded): the text colour on each coloured element.
+
+Leave a field blank to use the base theme's colour, which is shown greyed out
+in the empty field. Only the colours you set are stored, in `settings["colors"]`;
+the rest always come from the base. Colours are written in OKLCH, e.g.
+`oklch(62% 0.19 260)`. Like everything else, they show on the site after publishing.
+
 ### Light and dark mode
 
 On a theme's admin page, the **Mode** section has:
@@ -467,6 +483,7 @@ straight to `main`:
 | `src/capy_theme/templates/capy_theme/showcase/` | The showcase page, its standalone base page, and one template per section |
 | `src/capy_theme/static/capy_theme/showcase.css` | The showcase's bundled stylesheet (built; don't edit) |
 | `scripts/build_showcase_css.py`, `scripts/showcase.tailwind.css` | Build `showcase.css` with Tailwind and daisyUI |
+| `src/capy_theme/colors.py` | The 20 overridable colours, their groups, and merging overrides over the base theme |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |

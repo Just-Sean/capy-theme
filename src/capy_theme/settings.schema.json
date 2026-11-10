@@ -32,7 +32,153 @@
     "visitors_can_switch": {
       "description": "Whether visitors can choose light, dark or auto with {% theme_mode_toggle %}. Default true.",
       "type": "boolean"
+    },
+    "colors": {
+      "description": "Colour overrides, separately for light and dark. Anything not set comes from the base theme.",
+      "type": "object",
+      "properties": {
+        "light": {
+          "type": "object",
+          "properties": {
+            "primary": {
+              "$ref": "#/$defs/color"
+            },
+            "secondary": {
+              "$ref": "#/$defs/color"
+            },
+            "accent": {
+              "$ref": "#/$defs/color"
+            },
+            "neutral": {
+              "$ref": "#/$defs/color"
+            },
+            "base-100": {
+              "$ref": "#/$defs/color"
+            },
+            "base-content": {
+              "$ref": "#/$defs/color"
+            },
+            "info": {
+              "$ref": "#/$defs/color"
+            },
+            "success": {
+              "$ref": "#/$defs/color"
+            },
+            "warning": {
+              "$ref": "#/$defs/color"
+            },
+            "error": {
+              "$ref": "#/$defs/color"
+            },
+            "base-200": {
+              "$ref": "#/$defs/color"
+            },
+            "base-300": {
+              "$ref": "#/$defs/color"
+            },
+            "primary-content": {
+              "$ref": "#/$defs/color"
+            },
+            "secondary-content": {
+              "$ref": "#/$defs/color"
+            },
+            "accent-content": {
+              "$ref": "#/$defs/color"
+            },
+            "neutral-content": {
+              "$ref": "#/$defs/color"
+            },
+            "info-content": {
+              "$ref": "#/$defs/color"
+            },
+            "success-content": {
+              "$ref": "#/$defs/color"
+            },
+            "warning-content": {
+              "$ref": "#/$defs/color"
+            },
+            "error-content": {
+              "$ref": "#/$defs/color"
+            }
+          },
+          "additionalProperties": false
+        },
+        "dark": {
+          "type": "object",
+          "properties": {
+            "primary": {
+              "$ref": "#/$defs/color"
+            },
+            "secondary": {
+              "$ref": "#/$defs/color"
+            },
+            "accent": {
+              "$ref": "#/$defs/color"
+            },
+            "neutral": {
+              "$ref": "#/$defs/color"
+            },
+            "base-100": {
+              "$ref": "#/$defs/color"
+            },
+            "base-content": {
+              "$ref": "#/$defs/color"
+            },
+            "info": {
+              "$ref": "#/$defs/color"
+            },
+            "success": {
+              "$ref": "#/$defs/color"
+            },
+            "warning": {
+              "$ref": "#/$defs/color"
+            },
+            "error": {
+              "$ref": "#/$defs/color"
+            },
+            "base-200": {
+              "$ref": "#/$defs/color"
+            },
+            "base-300": {
+              "$ref": "#/$defs/color"
+            },
+            "primary-content": {
+              "$ref": "#/$defs/color"
+            },
+            "secondary-content": {
+              "$ref": "#/$defs/color"
+            },
+            "accent-content": {
+              "$ref": "#/$defs/color"
+            },
+            "neutral-content": {
+              "$ref": "#/$defs/color"
+            },
+            "info-content": {
+              "$ref": "#/$defs/color"
+            },
+            "success-content": {
+              "$ref": "#/$defs/color"
+            },
+            "warning-content": {
+              "$ref": "#/$defs/color"
+            },
+            "error-content": {
+              "$ref": "#/$defs/color"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "color": {
+      "description": "A colour in OKLCH, as daisyUI writes them, e.g. oklch(62% 0.19 260).",
+      "type": "string",
+      "pattern": "^oklch\\(\\s*[0-9.]+%?\\s+[0-9.]+\\s+[0-9.]+(\\s*/\\s*[0-9.]+%?)?\\s*\\)$"
+    }
+  }
 }
