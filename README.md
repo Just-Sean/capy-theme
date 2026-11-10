@@ -76,7 +76,7 @@ Next: custom CSS, multiple sites, project settings and 1.0 (see `docs/PLAN.md`).
 
    ```bash
    uv add --editable ../capy-theme                     # while developing it
-   uv add git+https://github.com/Just-Sean/capy-theme --tag v0.1.0   # a pinned release
+   uv add git+https://github.com/Just-Sean/capy-theme --tag vX.Y.Z   # a pinned release: use the latest tag
    ```
 
 2. Add it to the project's `INSTALLED_APPS` in `config/settings.py`:
@@ -137,7 +137,14 @@ Next: custom CSS, multiple sites, project settings and 1.0 (see `docs/PLAN.md`).
    The toggle uses daisyUI's `join` and `btn` classes. Tailwind only includes
    classes it finds in scanned files, so add the module's templates to the
    project's Tailwind source with an `@source` line pointing at the installed
-   `capy_theme/templates` folder.
+   `capy_theme/templates` folder. This prints where that is:
+
+   ```bash
+   uv run python -c "import capy_theme, pathlib; print(pathlib.Path(capy_theme.__file__).parent / 'templates')"
+   ```
+
+   If the project doesn't have Tailwind CSS and daisyUI yet, see
+   [Tailwind and daisyUI for a new project](#tailwind-and-daisyui-for-a-new-project) below.
 
 6. Make sure the project stores and serves uploaded files, for theme logos.
    Set `MEDIA_ROOT` and `MEDIA_URL` in `settings.py`. While developing, serve them
@@ -174,6 +181,47 @@ Pages then show the **active** theme's **published** colours. Until a theme is
 published and activated in the admin, they show daisyUI's defaults.
 
 The module's tables go into whatever database the project uses.
+
+### Tailwind and daisyUI for a new project
+
+capy-theme themes a daisyUI 5 stylesheet; it doesn't build one. A project without
+Tailwind CSS can add it without Node, with django-tailwind-cli (the same set-up as
+the demo):
+
+1. Install it and the daisyUI plugin files:
+
+   ```bash
+   uv add django-tailwind-cli
+   mkdir -p tailwind static
+   gh release download v5.7.50 --repo saadeghi/daisyui -p daisyui.mjs -p daisyui-theme.mjs -D tailwind
+   ```
+
+2. In `settings.py`, add `"django_tailwind_cli"` to `INSTALLED_APPS`, and:
+
+   ```python
+   STATICFILES_DIRS = [BASE_DIR / "static"]
+   TAILWIND_CLI_VERSION = "4.3.4"
+   TAILWIND_CLI_SRC_CSS = "tailwind/source.css"
+   TAILWIND_CLI_DIST_CSS = "css/site.css"
+   ```
+
+3. Create `tailwind/source.css`, with your templates and capy-theme's (the path
+   printed by the command above, relative to `tailwind/`):
+
+   ```css
+   @import "tailwindcss";
+   @source "../templates";
+   @source "../.venv/lib/python3.14/site-packages/capy_theme/templates";
+   @plugin "./daisyui.mjs";
+   ```
+
+4. Link it in the base template, before `{% theme_head %}`:
+   `<link rel="stylesheet" href="{% static 'css/site.css' %}">`, then build it:
+
+   ```bash
+   uv run python manage.py tailwind build       # once, or for production
+   uv run python manage.py tailwind runserver   # while developing: rebuilds on changes
+   ```
 
 ## Settings
 
@@ -235,6 +283,7 @@ Every command in one place. Details are in the linked pages.
 | `uv run python demo/manage.py createsuperuser` | Make a demo admin account |
 | `uv run python demo/manage.py tailwind runserver` | Run the demo site at http://localhost:8000/ (with Tailwind) |
 | `uv run python demo/manage.py runserver` | Run the demo without rebuilding Tailwind |
+| `uv run python manage.py tailwind build` / `tailwind runserver` | Build the project's Tailwind/daisyUI stylesheet, or run the server rebuilding it (projects using django-tailwind-cli, [below](#tailwind-and-daisyui-for-a-new-project)) |
 | `uv run python manage.py theme_export <slug> [-o FILE]` | Export a theme as a zip ([themes](docs/themes.md#from-the-command-line)) |
 | `uv run python manage.py theme_import FILE [--publish] [--activate]` | Import an exported theme (as a draft, or published and made the site's theme) |
 | `uv run python manage.py theme_publish <slug> [--note TEXT] [--activate]` | Publish a theme's draft (and optionally make it the site's theme) |

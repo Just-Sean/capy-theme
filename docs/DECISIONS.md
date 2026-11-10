@@ -1348,3 +1348,24 @@ Recommended (made while building autonomously).
   bars (fixed). The remaining contrast results are daisyUI's built-in colours in
   the test theme (e.g. secondary 3.04:1), which the view is meant to show as they
   are and the editor already flags.
+
+## 8.5 Prove it works in a real project (#63)
+
+- **The run:** a brand-new project from `Just-Sean/django-starter` (Copier,
+  Postgres 18 in Docker, custom User model), capy-theme installed from GitHub
+  pinned to the current `main` commit (the v0.7.0 tag predates 8.1–8.4, and
+  v1.0.0 will be cut from this commit), then only the README's steps.
+- **Worked without touching the module's code:** migrations on Postgres 18; the
+  admin (create, colour, publish, activate); the themed page; the light/dark
+  toggle; the editor (every section, a colour change on the page and in the
+  Components view, publish from the editor reaching visitors); the API and the
+  downloads. Checked with Django's test client and in headless Chrome.
+- **README gaps it found, fixed here:** no recipe for a project without Tailwind
+  and daisyUI (new "Tailwind and daisyUI for a new project" section, the
+  django-tailwind-cli set-up the demo uses); no way to find the installed
+  templates for `@source` (a command now prints it); the install example still
+  named `v0.1.0`.
+- **One module quirk it found** (separate issue): saving the theme form without
+  the custom CSS fields stored an empty, switched-off custom CSS.
+- Everything made for the run (the project, its database container and volume,
+  and its admin account) was deleted afterwards.
