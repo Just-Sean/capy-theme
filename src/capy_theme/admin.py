@@ -7,11 +7,18 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 
 from .active import NotPublished, activate, get_active_theme
 from .catalogue import builtin_values, get_builtin_themes
-from .colors import COLOR_GROUPS, COLOR_NAMES, SCHEMES, label
+from .colors import (
+    COLOR_GROUPS,
+    COLOR_NAMES,
+    SCHEMES,
+    contrast_report,
+    draft_values,
+    label,
+)
 from .forms import ColorField
 from .models import Theme, ThemeRevision
 from .publishing import NothingToPublish, publish
@@ -86,10 +93,24 @@ class ThemeForm(forms.ModelForm):
                 field = self.fields[color_field_name(scheme, name)]
                 field.initial = colors.get(scheme, {}).get(name, "")
                 field.widget.attrs["placeholder"] = base.get(f"--color-{name}", "")
+        if self.instance.pk:
+            self._add_contrast_ratings()
         self.fields["default_mode"].initial = self.instance.settings.get("default_mode", "auto")
         self.fields["visitors_can_switch"].initial = self.instance.settings.get(
             "visitors_can_switch", True
         )
+
+    def _add_contrast_ratings(self):
+        """Show each colour's WCAG contrast rating (from the saved draft) in its help text."""
+        for scheme in SCHEMES:
+            values = draft_values(self.instance, scheme)
+            if not values:
+                continue
+            for entry in contrast_report(values):
+                note = _rating_note(entry)
+                for name in (entry["background"], entry["text"]):
+                    field = self.fields[color_field_name(scheme, name)]
+                    field.help_text = f"{field.help_text} {note}"
 
     def clean(self):
         cleaned = super().clean()
@@ -125,6 +146,15 @@ class ThemeForm(forms.ModelForm):
             settings.pop("colors", None)
         self.instance.settings = settings
         return cleaned
+
+
+def _pair(entry):
+    return f"{label(entry['background'])} / {label(entry['text'])}"
+
+
+def _rating_note(entry):
+    words = {"AAA": "passes AAA", "AA": "passes AA", "fail": "⚠ fails AA, hard to read"}
+    return f"Contrast {_pair(entry)}: {entry['ratio']}:1, {words[entry['rating']]}."
 
 
 def color_field_name(scheme, name):
@@ -217,7 +247,14 @@ class ThemeAdmin(admin.ModelAdmin):
     list_filter = ["light_base", "dark_base"]
     search_fields = ["name", "slug"]
     prepopulated_fields = {"slug": ["name"]}
-    readonly_fields = ["publish_status", "settings_json", "public_id", "created_at", "updated_at"]
+    readonly_fields = [
+        "publish_status",
+        "contrast_table",
+        "settings_json",
+        "public_id",
+        "created_at",
+        "updated_at",
+    ]
     fieldsets = [
         (None, {"fields": ["name", "slug"]}),
         ("Publishing", {"fields": ["publish_status"]}),
@@ -225,6 +262,7 @@ class ThemeAdmin(admin.ModelAdmin):
         ("Base themes", {"fields": ["light_base", "dark_base"]}),
         ("Mode", {"fields": ["default_mode", "visitors_can_switch"]}),
         *color_fieldsets(),
+        ("Contrast", {"fields": ["contrast_table"]}),
         ("Overrides", {"fields": ["settings_json"]}),
         ("Details", {"fields": ["public_id", "created_at", "updated_at"]}),
     ]
@@ -232,6 +270,34 @@ class ThemeAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("live_revision")
+
+    @admin.display(description="WCAG contrast (saved draft)")
+    def contrast_table(self, theme):
+        """Every colour pair's contrast rating, for light and dark. Warnings only."""
+        if theme.pk is None:
+            return "Save the theme to see its contrast ratings."
+        rows = []
+        for scheme in SCHEMES:
+            values = draft_values(theme, scheme)
+            if not values:
+                continue
+            for entry in contrast_report(values):
+                rows.append(
+                    format_html(
+                        "<tr><td>{}</td><td>{}</td><td>{}:1</td><td>{}</td></tr>",
+                        scheme.capitalize(),
+                        _pair(entry),
+                        entry["ratio"],
+                        "⚠ fails AA" if entry["rating"] == "fail" else entry["rating"],
+                    )
+                )
+        return format_html(
+            "<table><thead><tr><th>Mode</th><th>Pair</th><th>Ratio</th><th>Rating</th></tr>"
+            "</thead><tbody>{}</tbody></table>"
+            "<p>AA needs 4.5:1 and AAA 7:1 for normal text. These are warnings: saving and "
+            "publishing still work.</p>",
+            format_html_join("", "{}", ((row,) for row in rows)),
+        )
 
     @admin.display(description="Stored settings")
     def settings_json(self, theme):

@@ -320,6 +320,12 @@ back to pure white or black if a tint wouldn't meet WCAG AA (4.5:1). When you se
 the background but not its darker shades or its text, those are worked out from
 it as well. Anything you set yourself is always kept.
 
+**Contrast warnings.** Each colour field shows the WCAG contrast of its pair
+(e.g. *Primary / Primary text: 4.7:1, passes AA*), and the **Contrast** section
+lists every pair for light and dark. AA needs 4.5:1 and AAA 7:1 for normal text.
+Pairs below AA are marked "⚠ fails AA". They're warnings only: saving and
+publishing still work. Ratings are for the saved draft, so save to update them.
+
 ### Light and dark mode
 
 On a theme's admin page, the **Mode** section has:

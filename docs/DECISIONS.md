@@ -387,3 +387,17 @@ Recommended (made while building autonomously).
   themes step about the same). Very dark backgrounds get lighter shades instead.
 - **Worked out when the stylesheet is written,** from the revision's saved values,
   in `colors.effective_values()`, the same function the editor will use.
+
+## 2.4 Contrast warnings (#17)
+
+Recommended (made while building autonomously).
+
+- **Pairs rated:** each of the eight colours with its text colour, plus the three
+  backgrounds (base-100/200/300) with the text on them.
+- **Ratings:** WCAG 2 contrast for normal-size text: AAA at 7:1, AA at 4.5:1,
+  otherwise "fails AA". Calculated on the server with ColorAide (`wcag21`).
+- **Where:** in each colour field's help text (both colours of a pair show it),
+  and a full table in a **Contrast** section. Both use the **saved draft**,
+  through the same merging as publishing, so they match what would be published.
+  Live ratings as you type come with the editor (3.3).
+- **Warnings only:** nothing stops saving or publishing.

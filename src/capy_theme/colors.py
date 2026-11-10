@@ -156,3 +156,51 @@ def _number(value, places):
     """Round and drop trailing zeros: 62.300 -> "62.3", 260.0 -> "260"."""
     text = f"{round(value, places):.{places}f}".rstrip("0").rstrip(".")
     return text if text not in ("-0", "") else "0"
+
+
+# The colour pairs WCAG ratings are given for: (background, text on it).
+CONTRAST_PAIRS = [(name, f"{name}-content") for name in WITH_CONTENT] + [
+    ("base-100", "base-content"),
+    ("base-200", "base-content"),
+    ("base-300", "base-content"),
+]
+
+
+def rating(ratio):
+    """Return "AAA", "AA" or "fail" for a WCAG 2 contrast ratio (normal-size text)."""
+    if ratio >= AAA:
+        return "AAA"
+    if ratio >= AA:
+        return "AA"
+    return "fail"
+
+
+def contrast_report(values):
+    """Return one entry per colour pair: background, text, ratio and rating.
+
+    `values` are a scheme's CSS values (from effective_values). Ratings are
+    warnings only; they never stop a theme being saved or published.
+    """
+    report = []
+    for background, text in CONTRAST_PAIRS:
+        ratio = contrast(values[f"--color-{text}"], values[f"--color-{background}"])
+        report.append(
+            {
+                "background": background,
+                "text": text,
+                "ratio": round(ratio, 2),
+                "rating": rating(ratio),
+            }
+        )
+    return report
+
+
+def draft_values(theme, scheme):
+    """Return the CSS values a theme's draft would publish for one scheme.
+
+    Uses the same merging as publishing. Empty if a base no longer exists.
+    """
+    snapshot = theme.snapshot()
+    if snapshot.get(f"{scheme}_values") is None:
+        return {}
+    return effective_values(snapshot, scheme)
