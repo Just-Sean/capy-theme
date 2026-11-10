@@ -171,6 +171,57 @@
         }
       },
       "additionalProperties": false
+    },
+    "shape": {
+      "description": "Shape and effect overrides, for both light and dark. Anything not set comes from the base theme.",
+      "type": "object",
+      "properties": {
+        "radius_selector": {
+          "description": "Small corner radius (--radius-selector), in rem. Checkboxes, toggles and badges. 0 is square.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "radius_field": {
+          "description": "Field corner radius (--radius-field), in rem. Buttons, inputs, selects and tabs. 0 is square.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "radius_box": {
+          "description": "Box corner radius (--radius-box), in rem. Cards, alerts, modals and other boxes. 0 is square.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "size_selector": {
+          "description": "Small control size (--size-selector), in rem. Base size of checkboxes, toggles and badges (daisyUI uses 0.1875\u20130.3125).",
+          "type": "number",
+          "minimum": 0.125,
+          "maximum": 0.5
+        },
+        "size_field": {
+          "description": "Field size (--size-field), in rem. Base size of buttons and inputs (daisyUI uses 0.1875\u20130.3125).",
+          "type": "number",
+          "minimum": 0.125,
+          "maximum": 0.5
+        },
+        "border": {
+          "description": "Border width (--border), in px. Width of borders, in pixels.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "depth": {
+          "description": "Depth (--depth): on or off. A subtle 3D shadow on buttons and other controls.",
+          "type": "boolean"
+        },
+        "noise": {
+          "description": "Noise (--noise): on or off. A subtle grain texture on controls.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,

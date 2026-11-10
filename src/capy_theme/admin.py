@@ -22,6 +22,7 @@ from .colors import (
 from .forms import ColorField
 from .models import Theme, ThemeRevision
 from .publishing import NothingToPublish, publish
+from .shape import EFFECTS, SHAPE_NAMES, SIZES
 from .stylesheet import stylesheet_url
 
 
@@ -93,6 +94,16 @@ class ThemeForm(forms.ModelForm):
                 field = self.fields[color_field_name(scheme, name)]
                 field.initial = colors.get(scheme, {}).get(name, "")
                 field.widget.attrs["placeholder"] = base.get(f"--color-{name}", "")
+        shape = self.instance.settings.get("shape", {})
+        base = builtin_values(self.instance.light_base) or {}
+        for name, (variable, unit, *_rest) in SIZES.items():
+            field = self.fields[f"shape_{name}"]
+            field.initial = shape.get(name)
+            field.widget.attrs["placeholder"] = base.get(variable, "").removesuffix(unit)
+            field.widget.attrs["step"] = "any"
+        for name in EFFECTS:
+            if name in shape:
+                self.fields[f"shape_{name}"].initial = "on" if shape[name] else "off"
         if self.instance.pk:
             self._add_contrast_ratings()
         self.fields["default_mode"].initial = self.instance.settings.get("default_mode", "auto")
@@ -144,6 +155,19 @@ class ThemeForm(forms.ModelForm):
             settings["colors"] = colors
         else:
             settings.pop("colors", None)
+        shape = {}
+        for name in SIZES:
+            value = cleaned.get(f"shape_{name}")
+            if value is not None:
+                shape[name] = float(value)
+        for name in EFFECTS:
+            choice = cleaned.get(f"shape_{name}")
+            if choice in ("on", "off"):
+                shape[name] = choice == "on"
+        if shape:
+            settings["shape"] = shape
+        else:
+            settings.pop("shape", None)
         self.instance.settings = settings
         return cleaned
 
@@ -174,6 +198,28 @@ for _scheme in SCHEMES:
             help_text="Any colour format (hex, rgb, hsl, oklch); saved as OKLCH. "
             "Leave blank to use the base theme's colour (shown greyed out).",
         )
+
+
+for _name, (_variable, _unit, _low, _high, _label, _help) in SIZES.items():
+    ThemeForm.base_fields[f"shape_{_name}"] = ThemeForm.declared_fields[f"shape_{_name}"] = (
+        forms.DecimalField(
+            required=False,
+            min_value=_low,
+            max_value=_high,
+            decimal_places=4,
+            label=f"{_label} ({_unit})",
+            help_text=f"{_help} Leave blank to use the base theme's value (shown greyed out).",
+        )
+    )
+for _name, (_variable, _label, _help) in EFFECTS.items():
+    ThemeForm.base_fields[f"shape_{_name}"] = ThemeForm.declared_fields[f"shape_{_name}"] = (
+        forms.ChoiceField(
+            required=False,
+            choices=[("", "From the base theme"), ("on", "On"), ("off", "Off")],
+            label=_label,
+            help_text=_help,
+        )
+    )
 
 
 def color_fieldsets():
@@ -262,6 +308,7 @@ class ThemeAdmin(admin.ModelAdmin):
         ("Base themes", {"fields": ["light_base", "dark_base"]}),
         ("Mode", {"fields": ["default_mode", "visitors_can_switch"]}),
         *color_fieldsets(),
+        ("Shape and effects", {"fields": [f"shape_{name}" for name in SHAPE_NAMES]}),
         ("Contrast", {"fields": ["contrast_table"]}),
         ("Overrides", {"fields": ["settings_json"]}),
         ("Details", {"fields": ["public_id", "created_at", "updated_at"]}),

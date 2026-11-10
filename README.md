@@ -326,6 +326,24 @@ lists every pair for light and dark. AA needs 4.5:1 and AAA 7:1 for normal text.
 Pairs below AA are marked "⚠ fails AA". They're warnings only: saving and
 publishing still work. Ratings are for the saved draft, so save to update them.
 
+### Shape and effects
+
+The **Shape and effects** section overrides daisyUI's shape settings, for both
+light and dark mode:
+
+| Setting | daisyUI variable | Range |
+| --- | --- | --- |
+| Small corner radius (checkboxes, toggles, badges) | `--radius-selector` | 0–2 rem |
+| Field corner radius (buttons, inputs, tabs) | `--radius-field` | 0–2 rem |
+| Box corner radius (cards, alerts, modals) | `--radius-box` | 0–3 rem |
+| Small control size / Field size | `--size-selector` / `--size-field` | 0.125–0.5 rem |
+| Border width | `--border` | 0–4 px |
+| Depth (3D shadow) / Noise (grain) | `--depth` / `--noise` | on or off |
+
+Blank fields (and "From the base theme") use the base theme's value, which is
+shown greyed out. A radius of 0 gives square corners. Stored in
+`settings["shape"]`.
+
 ### Light and dark mode
 
 On a theme's admin page, the **Mode** section has:
@@ -501,6 +519,7 @@ straight to `main`:
 | `scripts/build_showcase_css.py`, `scripts/showcase.tailwind.css` | Build `showcase.css` with Tailwind and daisyUI |
 | `src/capy_theme/colors.py` | The 20 overridable colours, their groups, and merging overrides over the base theme |
 | `src/capy_theme/forms.py` | `ColorField`: accepts any colour format, with the browser's colour picker (`static/capy_theme/admin/color_input.js`) |
+| `src/capy_theme/shape.py` | The shape and effect settings (radii, sizes, border, depth, noise) |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |
