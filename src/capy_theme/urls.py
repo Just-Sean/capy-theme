@@ -6,6 +6,7 @@ A project includes them under /theme/ in its urls.py, with
 
 from django.urls import path
 
+from .artifacts import downloads
 from .artifacts.api import api_view
 from .css import views as css_views
 from .editor import views as editor_views
@@ -27,5 +28,6 @@ urlpatterns = [
     path("editor/<int:pk>/upload/", editor_views.editor_upload, name="editor_upload"),
     path("editor/<int:pk>/publish/", editor_views.editor_publish, name="editor_publish"),
     path("api.json", api_view(), name="api"),
+    path("tokens.json", downloads.design_tokens, name="design_tokens"),
     path("<slug:version>.css", css_views.theme_css, name="theme_css"),
 ]

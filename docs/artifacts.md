@@ -89,3 +89,21 @@ Revisions published before 0.5 keep showing their old logo.
 
 The "Overrides" section shows the theme's stored `settings` as read-only JSON.
 They're edited through the fields above, not typed by hand.
+
+## Design tokens
+
+`/theme/tokens.json` downloads the published theme in the W3C
+[Design Tokens Format Module 2025.10](https://www.designtokens.org/TR/2025.10/format/),
+for design tools (Figma, Tokens Studio, Style Dictionary) and native app builds.
+It's made from the same data as the JSON API. File name `<theme slug>.tokens.json`,
+media type `application/design-tokens+json`.
+
+- `light` and `dark` groups: `color` (all 20, as OKLCH components with a 6-digit
+  `hex` fallback; colourless greys have hue `"none"`) and `shape` (radii and sizes
+  as `rem`/`px` dimensions, depth and noise as numbers).
+- `font`: a `fontFamily` token per role the theme sets (the stack as a list).
+- `type`: base size, heading scale, line height and heading weight, if set.
+
+Every token states its `$type`. The tests validate the download against the
+format's official JSON Schema (`tests/artifacts/dtcg/`).
+
