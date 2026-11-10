@@ -79,17 +79,6 @@ const logo = theme.logos.logo_main.light;   // { url, width, height, alt, varian
 - capy-theme never requires DRF or drf-spectacular; they're only used when the
   project has them.
 
-Upgrading from 0.5: migration `0011_remove_app_and_social_settings` removes the
-web app manifest and link-preview settings from 0.5.0 (the manifest view and
-the tags are gone; the icons and sharing image stay).
-
-Upgrading from 0.4: migration `0010_logo_slots` moves each theme's old logo into
-its main slot (light). It has no smaller copies; upload it again to get them.
-Revisions published before 0.5 keep showing their old logo.
-
-The "Overrides" section shows the theme's stored `settings` as read-only JSON.
-They're edited through the fields above, not typed by hand.
-
 ## Design tokens
 
 `/theme/tokens.json` downloads the published theme in the W3C
