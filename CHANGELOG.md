@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Custom CSS:** a CSS box on the theme (permission `edit_custom_css`), published
+  with it and served as its own file after the theme stylesheet, with an on/off switch.
+
 ## 0.7.0
 
 Portability and the API: other apps and sites can use the theme, and the

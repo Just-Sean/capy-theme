@@ -94,6 +94,15 @@ THEME_FIELDSETS = [
         },
     ),
     (
+        "Custom CSS",
+        {
+            "fields": ["custom_css", "custom_css_enabled"],
+            "classes": ["collapse"],
+            "description": "Only shown to users with the “Can edit a theme's custom CSS” "
+            "permission. Published with the theme and served as its own file.",
+        },
+    ),
+    (
         "Advanced",
         {
             "fields": ["settings_json", "public_id", "created_at", "updated_at"],

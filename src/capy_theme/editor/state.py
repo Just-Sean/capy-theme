@@ -3,6 +3,7 @@
 from django.urls import reverse
 
 from ..colors.names import COLOR_GROUPS, SCHEMES, label
+from ..css.custom import without_custom_css
 from ..css.shape import EFFECTS, SIZES
 from ..css.stylesheet import snapshot_css
 from ..css.typography import TYPE_SETTINGS
@@ -38,7 +39,7 @@ def draft_state(theme, user):
         "name": theme.name,
         "light_base": theme.light_base,
         "dark_base": theme.dark_base,
-        "settings": theme.settings,
+        "settings": without_custom_css(theme.settings),  # the editor doesn't edit it
         "css": snapshot_css(theme.snapshot(), f"capy-theme editor: draft of {theme.name}"),
         "live_revision": theme.live_revision.number if theme.live_revision else None,
         "has_unpublished_changes": theme.has_unpublished_changes,

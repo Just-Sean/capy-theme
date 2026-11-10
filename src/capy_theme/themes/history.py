@@ -1,6 +1,7 @@
 """Revision history: comparing two revisions and restoring an old one."""
 
 from ..colors.names import COLOR_NAMES, label
+from ..css.custom import summary as custom_css_summary
 from ..css.shape import EFFECTS, SIZES
 from ..images.slots import SLOTS
 from .publishing import publish
@@ -41,7 +42,9 @@ def describe(snapshot):
         rows[f"Shape: {spec[4]}"] = shape.get(name)
     for name, spec in EFFECTS.items():
         rows[f"Shape: {spec[1]}"] = shape.get(name)
-    known = set(SETTING_LABELS) | {"colors", "shape", "images"}
+    # Custom CSS: whether it's on and its length, never its content.
+    rows["Custom CSS"] = custom_css_summary(settings)
+    known = set(SETTING_LABELS) | {"colors", "shape", "images", "custom_css"}
     for key, value in settings.items():
         if key not in known:
             rows[key] = value  # settings added by later versions

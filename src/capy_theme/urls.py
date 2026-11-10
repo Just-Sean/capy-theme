@@ -30,5 +30,6 @@ urlpatterns = [
     path("api.json", api_view(), name="api"),
     path("tokens.json", downloads.design_tokens, name="design_tokens"),
     path("daisyui-theme.css", downloads.daisyui_theme, name="daisyui_theme"),
+    path("custom/<slug:version>.css", css_views.custom_css_file, name="custom_css"),
     path("<slug:version>.css", css_views.theme_css, name="theme_css"),
 ]

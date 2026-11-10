@@ -345,6 +345,20 @@
         }
       },
       "additionalProperties": false
+    },
+    "custom_css": {
+      "description": "Custom CSS, served as its own file after the theme stylesheet. Only users with edit_custom_css can change it.",
+      "type": "object",
+      "properties": {
+        "css": {
+          "type": "string",
+          "maxLength": 100000
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,

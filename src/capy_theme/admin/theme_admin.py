@@ -7,6 +7,8 @@ from django.utils.html import format_html, format_html_join
 
 from ..colors.names import SCHEMES
 from ..colors.values import contrast_report, draft_values
+from ..css.custom import can_edit_custom_css, without_custom_css
+from ..css.custom import summary as custom_css_summary
 from ..css.stylesheet import stylesheet_url
 from ..editor.access import can_edit
 from ..models import Theme
@@ -56,6 +58,17 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, admin.ModelAdmin):
     fieldsets = THEME_FIELDSETS
     inlines = [ThemeAssetInline, ThemeRevisionInline]
 
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.can_edit_custom_css = can_edit_custom_css(request.user)
+        return form
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if can_edit_custom_css(request.user):
+            return fieldsets
+        return [(name, options) for name, options in fieldsets if name != "Custom CSS"]
+
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("live_revision")
 
@@ -89,8 +102,14 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, admin.ModelAdmin):
 
     @admin.display(description="Stored settings")
     def settings_json(self, theme):
-        """The draft's `settings` as JSON, read-only. Edited through the fields above."""
-        return format_html("<pre>{}</pre>", json.dumps(theme.settings, indent=2, sort_keys=True))
+        """The draft's `settings` as JSON, read-only. Edited through the fields above.
+
+        Custom CSS is only summarised: its content is in its own (permission-only) field.
+        """
+        settings = without_custom_css(theme.settings)
+        if "custom_css" in theme.settings:
+            settings["custom_css"] = f"({custom_css_summary(theme.settings)})"
+        return format_html("<pre>{}</pre>", json.dumps(settings, indent=2, sort_keys=True))
 
     @admin.display(boolean=True, description="Active")
     def is_active(self, theme):

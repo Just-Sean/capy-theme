@@ -1270,3 +1270,20 @@ Recommended (made while building autonomously).
   modules, JSON data files and templates included, `demo/` and the tests' copy of
   the Design Tokens schema excluded), and the demo site checked. The changelog
   lists the showcase's removal and its two settings, which affect upgrades.
+
+## 8.1 Custom CSS (#59)
+
+Recommended (made while building autonomously).
+
+- **Part of the theme's settings**, so it's drafted, published, compared, restored
+  and exported like everything else. Served per revision at
+  `/theme/custom/<version>.css`, cached a year (the address changes with every
+  publish).
+- **The "disable switch" is per theme** (Use the custom CSS), for switching broken
+  CSS off without losing it. The project-wide "allow custom CSS" setting is 8.3.
+- **Permission everywhere:** the admin fields only exist for `edit_custom_css`
+  (so saving the form without it can't wipe the CSS); the stored-settings box and
+  revision comparisons show only "on/off, N characters"; the editor never gets
+  it; imports drop it unless the importer has the permission.
+- **No CSS filtering:** it's served as a separate `text/css` file (so it can't
+  break out into HTML), and the permission is the safeguard; the docs say so.

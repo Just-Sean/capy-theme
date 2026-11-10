@@ -59,7 +59,10 @@ class ImportExportMixin:
         form = ImportForm(request.POST or None, request.FILES or None)
         if request.method == "POST" and form.is_valid():
             try:
-                theme = import_theme(form.cleaned_data["file"])
+                theme = import_theme(
+                    form.cleaned_data["file"],
+                    keep_custom_css=request.user.has_perm("capy_theme.edit_custom_css"),
+                )
             except ValidationError as error:
                 form.add_error("file", error)
             else:
