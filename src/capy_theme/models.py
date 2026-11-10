@@ -136,3 +136,34 @@ class ThemeRevision(models.Model):
 
     def __str__(self):
         return f"{self.theme} revision {self.number}"
+
+
+class ThemeAssignment(models.Model):
+    """Which theme is active on the site.
+
+    For now there's one default assignment: no site and no dates. The site and
+    date fields exist from the start for multiple sites (8.2) and scheduling
+    (6.3), and are ignored until then. Change it with active.activate(), not
+    directly.
+    """
+
+    theme = models.ForeignKey(Theme, on_delete=models.CASCADE, related_name="assignments")
+    site = models.CharField(
+        max_length=255, blank=True, help_text="Domain this applies to. Blank means every site."
+    )
+    starts_at = models.DateTimeField(null=True, blank=True)
+    ends_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            # Only one default (undated) assignment per site.
+            models.UniqueConstraint(
+                fields=["site"],
+                condition=models.Q(starts_at__isnull=True, ends_at__isnull=True),
+                name="one_default_assignment_per_site",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.theme} on {self.site or 'every site'}"
