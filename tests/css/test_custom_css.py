@@ -161,3 +161,12 @@ def test_imports_drop_it_unless_the_importer_may_edit_it():
     data = export_theme(theme)
     assert "custom_css" not in import_theme(io.BytesIO(data), keep_custom_css=False).settings
     assert import_theme(io.BytesIO(data)).settings["custom_css"]["css"] == CSS
+
+
+def test_an_empty_custom_css_isnt_stored(client, django_user_model):
+    theme = Theme.objects.create(name="Main", slug="main")
+    staff(client, django_user_model, "view_theme", "change_theme", "edit_custom_css")
+    url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
+    client.post(url, form_data(custom_css="   "))  # switch unticked too
+    theme.refresh_from_db()
+    assert "custom_css" not in theme.settings

@@ -46,8 +46,7 @@ def clean(form, cleaned, settings):
     if not getattr(form, "can_edit_custom_css", False):
         return  # left exactly as it was
     css = (cleaned.get("custom_css") or "").strip()
-    enabled = cleaned.get("custom_css_enabled", True)
-    if css or not enabled:
-        settings["custom_css"] = {"css": css, "enabled": bool(enabled)}
+    if css:
+        settings["custom_css"] = {"css": css, "enabled": bool(cleaned.get("custom_css_enabled"))}
     else:
-        settings.pop("custom_css", None)
+        settings.pop("custom_css", None)  # nothing to store, switched on or off
