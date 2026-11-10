@@ -416,3 +416,19 @@ Recommended (made while building autonomously).
 - **Depth and noise** have three choices, "From the base theme", On and Off, so
   "not set" is possible (a plain checkbox can't express it).
 - **Hints:** blank fields show the light base's value.
+
+## 2.7 Browser colour, focus colour and email colours (#20)
+
+Recommended (made while building autonomously).
+
+- **theme-color** comes from the page background (base-100), as hex (browsers
+  don't all accept OKLCH there). Two tags with `prefers-color-scheme` media
+  queries when the mode follows the device; one tag when a mode is forced.
+- **Focus colour** is worked out, not a separate setting: primary if it has at
+  least 3:1 contrast with base-100 (WCAG 2's non-text minimum), else base-content.
+  It's written as `--capy-focus` in each block, and an unlayered
+  `:focus-visible { outline: 2px solid var(--capy-focus) }` rule applies it
+  everywhere, overriding daisyUI's own focus outlines.
+- **Email colours** are the light-mode colours (emails have no dark mode to rely
+  on) as `#rrggbb`, keyed with underscores (`base_100`) so templates can use dot
+  lookups.
