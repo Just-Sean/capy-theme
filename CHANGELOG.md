@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Developer docs page** (`docs/developers.md`): every CSS variable, the API with an
+  example, and the downloads; tests keep it matching the code.
 - **Management commands:** `theme_export`, `theme_import` (`--publish`,
   `--activate`), `theme_publish` (`--note`, `--activate`) and `theme_rebuild_images`.
 - **daisyUI theme blocks** at `/theme/daisyui-theme.css`: the published theme as
