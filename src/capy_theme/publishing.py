@@ -3,7 +3,7 @@
 from django.db import transaction
 from django.db.models import Max
 
-from .models import Theme, ThemeRevision
+from .models import ThemeRevision
 from .validation import validate_settings
 
 
@@ -22,16 +22,13 @@ def publish(theme, user=None, note=""):
     ValidationError if the draft isn't valid (e.g. a base the project no
     longer allows).
     """
-    original = theme
+    if not theme.has_unpublished_changes:
+        raise NothingToPublish("Nothing to publish: the draft matches the live revision.")
+
+    validate_settings(theme.settings)
+    theme.clean()
+
     with transaction.atomic():
-        # Lock the theme row so two publishes at once can't get the same number.
-        theme = Theme.objects.select_for_update().get(pk=theme.pk)
-        if not theme.has_unpublished_changes:
-            raise NothingToPublish("Nothing to publish: the draft matches the live revision.")
-
-        validate_settings(theme.settings)
-        theme.clean()
-
         last = theme.revisions.aggregate(last=Max("number"))["last"] or 0
         revision = ThemeRevision.objects.create(
             theme=theme,
@@ -42,6 +39,4 @@ def publish(theme, user=None, note=""):
         )
         theme.live_revision = revision
         theme.save(update_fields=["live_revision"])
-    # Keep the caller's copy up to date too.
-    original.live_revision = revision
     return revision
