@@ -15,10 +15,10 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from capy_theme.models import Font, FontFile
+from ...fonts.models import Font, FontFile
 
 MODULE = Path(__file__).resolve().parent.parent.parent
-MANIFEST = MODULE / "curated_fonts.json"
+MANIFEST = MODULE / "fonts" / "curated.json"
 STATIC_FONTS = MODULE / "static" / "capy_theme" / "fonts"
 
 

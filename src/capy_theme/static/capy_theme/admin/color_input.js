@@ -1,5 +1,5 @@
 // Links each colour text box with the browser's colour picker beside it
-// (capy_theme.forms.ColorWidget). Picking writes the hex value into the box;
+// (capy_theme.colors.fields.ColorWidget). Picking writes the hex value into the box;
 // typing a hex value moves the picker. Other formats are converted on save.
 document.addEventListener("input", function (event) {
   var target = event.target;

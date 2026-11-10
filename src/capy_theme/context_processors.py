@@ -4,12 +4,13 @@ Add "capy_theme.context_processors.theme" to the project's
 TEMPLATES["OPTIONS"]["context_processors"].
 """
 
-from .active import get_active_theme
-from .backgrounds import template_values as background_urls
-from .branding import branding
-from .colors import effective_values, hex_colors
-from .mode import current_mode, mode_settings
-from .stylesheet import stylesheet_url
+from .colors.maths import hex_colors
+from .colors.values import effective_values
+from .css.backgrounds import template_values as background_urls
+from .css.stylesheet import stylesheet_url
+from .themes.active import get_active_theme
+from .themes.branding import branding
+from .themes.mode import current_mode, mode_settings
 
 
 def theme(request):

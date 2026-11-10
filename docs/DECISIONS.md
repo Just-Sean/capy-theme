@@ -1080,3 +1080,31 @@ Recommended (made while building autonomously).
   0011–0013 and the new templates included, `demo/` excluded), and the demo site
   checked. The changelog's first entry is the scope change, because it removes
   0.5.0 features (manifest view, link-preview tags).
+
+## Reorganised into sections (#150)
+
+Sean's decision: the module was too hard to read (files up to 1,100 lines), so it
+was reorganised into sections of small files. No behaviour, setting or database
+change; the same 574 tests pass on SQLite and Postgres.
+
+- **One Django app, sections as folders** (`themes/`, `colors/`, `css/`, `fonts/`,
+  `images/`, `editor/`, `artifacts/`, `admin/`, `showcase/`). Splitting into
+  several Django apps was considered and rejected: the parts depend on each other
+  (theme settings point at fonts and images), so separate apps would add
+  migrations work and more setup for projects without any independence.
+- **Every Python file under 200 lines.** `admin.py` (1,109 lines) became 11 files;
+  the theme form calls one module per area (colours, type, shape, images), each
+  with `add_fields`, `set_initial` and `clean`. The editor's JavaScript became one
+  file per section in `static/capy_theme/editor/controls/`, sharing state on
+  `capyEditor.ui`.
+- **Models stay importable from `capy_theme.models`**, which imports each
+  section's models. Image models link to `Theme` by name (`"capy_theme.Theme"`) to
+  avoid a circular import; the database is unchanged.
+- **daisyUI's built-in themes are data** (`themes/builtin_themes.json`), not 1,170
+  lines of generated Python. The generator script writes JSON.
+- **Old migrations** point at the new import paths of the functions they use
+  (settings validator, image upload paths, built-in themes). Nothing in the
+  database changes.
+- **Docs:** the README keeps everything needed to install and use the module and
+  every command; details moved to one page per section in `docs/`.
+- **Tests** follow the sections (`tests/themes/`, `tests/images/`, …).

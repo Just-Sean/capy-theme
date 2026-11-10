@@ -15,4 +15,13 @@
         data-save-url="{{ editor.urls.save }}"
         data-publish-url="{{ editor.urls.publish }}"
         data-csrf-token="{{ csrf_token }}"></script>
-<script src="{% static 'capy_theme/editor/editor-controls.js' %}" defer></script>
+{# The panel's controls: core.js first, then one file per section (run in this order). #}
+<script src="{% static 'capy_theme/editor/controls/core.js' %}" defer></script>
+<script src="{% static 'capy_theme/editor/controls/bases.js' %}" defer></script>
+<script src="{% static 'capy_theme/editor/controls/colors.js' %}" defer></script>
+<script src="{% static 'capy_theme/editor/controls/suggestions.js' %}" defer></script>
+<script src="{% static 'capy_theme/editor/controls/fonts.js' %}" defer></script>
+<script src="{% static 'capy_theme/editor/controls/images.js' %}" defer></script>
+<script src="{% static 'capy_theme/editor/controls/image-choices.js' %}" defer></script>
+<script src="{% static 'capy_theme/editor/controls/shape.js' %}" defer></script>
+<script src="{% static 'capy_theme/editor/controls/actions.js' %}" defer></script>

@@ -12,16 +12,24 @@ from django.template.loader import render_to_string
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
-from ..active import CHOICE_COOKIE, get_active_theme, offered_themes, visitor_themes_allowed
 from ..artifacts import get_artifacts
-from ..branding import branding
-from ..colors import SCHEMES, effective_values, to_hex
-from ..editor import mount as editor_mount
-from ..fonts import external_stylesheets, preload_urls
-from ..icons import head_links as icon_links
-from ..logos import LOGO_SLOTS, logo_html
-from ..mode import MODE_LABELS, MODES, current_mode, head_script, html_theme_value, mode_settings
-from ..stylesheet import stylesheet_url
+from ..css.stylesheet import stylesheet_url
+from ..editor.mount import mount as editor_mount
+from ..fonts.library import external_stylesheets, preload_urls
+from ..images.icons import head_links as icon_links
+from ..images.logo_tag import logo_html
+from ..images.logos import LOGO_SLOTS
+from ..themes.active import CHOICE_COOKIE, get_active_theme, offered_themes, visitor_themes_allowed
+from ..themes.branding import branding
+from ..themes.mode import (
+    MODE_LABELS,
+    MODES,
+    current_mode,
+    head_script,
+    html_theme_value,
+    mode_settings,
+    theme_color_meta,
+)
 
 register = template.Library()
 
@@ -62,25 +70,6 @@ def theme_head(context):
         nonce_attr,
         mark_safe(head_script(revision)),  # noqa: S308 (built from fixed text and JSON values)
         editor,
-    )
-
-
-def theme_color_meta(revision, mode):
-    """The <meta name="theme-color"> tags: the browser's address-bar colour.
-
-    Matches the page background. With a forced mode, one tag for that mode;
-    otherwise one each for light and dark, chosen by the device setting.
-    """
-    colors = {
-        scheme: to_hex(effective_values(revision.snapshot, scheme)["--color-base-100"], alpha=False)
-        for scheme in SCHEMES
-    }
-    if mode in SCHEMES:
-        return format_html('<meta name="theme-color" content="{}">\n', colors[mode])
-    return format_html_join(
-        "",
-        '<meta name="theme-color" media="(prefers-color-scheme: {})" content="{}">\n',
-        ((scheme, colors[scheme]) for scheme in SCHEMES),
     )
 
 
