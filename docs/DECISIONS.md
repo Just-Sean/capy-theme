@@ -960,3 +960,21 @@ Recommended (made while building autonomously).
   become a background.
 - **Checked in Chrome:** a pattern chosen through the admin form showed as the demo
   body's background, and switching to dark mode swapped in the dark one.
+
+## 5.8 Showcase: images and icons (#39)
+
+Recommended (made while building autonomously).
+
+- **One new section**, `images`, after Branding. It works out each slot per
+  section mode on the server (with `resolve()`), because the logo tag's light/dark
+  CSS follows the page's mode, not the showcase's light and dark columns.
+- **It shows what the tag outputs:** email and print logos are the light version
+  with no copies in both modes, like `{% theme_logo %}` (found while checking in
+  Chrome: the first version showed the dark main logo there).
+- **Real sizes**: header logos use `capy-logo` (the theme's header height); icons
+  at their pixel size, except the maskable and monochrome icons (128 px, labelled),
+  which are there to show the mask and the shape.
+- **Backgrounds** use the helper classes inside each mode's column, so they show
+  the light or dark image as the project would.
+- **Checked** with screenshots of both columns in headless Chrome. The outline on
+  the masks and the size of the monochrome tile were fixed after looking at them.

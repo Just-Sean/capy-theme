@@ -26,6 +26,7 @@ from .manifest import build as build_manifest
 from .mode import COOKIE_MAX_AGE, COOKIE_NAME, MODES, mode_settings
 from .models import Theme, ThemeRevision
 from .publishing import NothingToPublish, publish
+from .showcase import images as showcase_images
 from .showcase import shape_samples, swatches, typography
 from .stylesheet import render_css
 
@@ -58,6 +59,7 @@ def manifest(request):
 # their sections by adding a template and a name here.
 SHOWCASE_SECTIONS = [
     "branding",
+    "images",
     "colors",
     "shape",
     "fonts",
@@ -101,6 +103,7 @@ def showcase(request):
         "swatches": swatches(revision),
         "shape_samples": shape_samples(revision),
         "type_samples": typography(revision),
+        "image_samples": showcase_images(revision),
         "editor": _editor_context(request),
     }
     return render(request, "capy_theme/showcase/page.html", context)

@@ -833,7 +833,13 @@ and source with a sample in every weight and style that's actually loaded (so
 nothing shown is a browser-faked bold), the heading scale, body text at the base
 size with its line height, a monospace code block, and a character sample for
 the fonts' character sets. It also shows
-the site name, tagline, logo and the base themes in use. Staff only by default
+the site name, tagline, logo and the base themes in use, and an **Images and
+icons** section: every logo slot at the header height in both modes (saying
+whether it's its own image, the light one, or what an empty slot falls back to)
+with its generated sizes and formats; every icon at its real size (the maskable
+icon inside a circle and a squircle, the monochrome icon on a dark tile); a
+mock link-preview card; the background images; and the web app manifest's
+values. Staff only by default
 (see `CAPY_THEME_SHOWCASE`). The demo's navbar links to it.
 
 Each section is its own template in
