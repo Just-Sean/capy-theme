@@ -1011,3 +1011,21 @@ what they need.
   will serve the same dict. `{% theme_artifacts as a %}` gives templates the same.
 - **Migration 0011** drops the `app` and `social` settings keys so themes saved
   with them stay valid under the schema.
+
+## 6.2 Visitor theme picker (#47)
+
+Recommended (made while building autonomously).
+
+- **"Operator setting" is a field on each theme** (`offered_to_visitors`, "Offer to
+  visitors" in the admin), so the operator manages it without code; the project
+  can turn the feature off with `CAPY_THEME_VISITOR_THEMES`. It isn't part of the
+  theme's look, so changing it doesn't need publishing.
+- **Only offered, published themes** can be chosen; the cookie holds the slug and
+  anything else in it is ignored.
+- **Links, not JavaScript:** a different theme needs a different stylesheet, so
+  the page reloads anyway. `/theme/choose/<slug>/` sets an HttpOnly cookie and goes
+  back (only to this site).
+- **Cached with the site's theme:** the offered themes are stored in the same cache
+  entry, cleared by the same signals.
+- **`get_active_theme(request)`** returns the visitor's choice; without a request
+  it's the site's theme (used by the admin's "Active" column).

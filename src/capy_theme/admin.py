@@ -90,7 +90,7 @@ class ThemeForm(forms.ModelForm):
 
     class Meta:
         model = Theme
-        fields = ["name", "slug", "light_base", "dark_base"]
+        fields = ["name", "slug", "light_base", "dark_base", "offered_to_visitors"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -532,6 +532,7 @@ class ThemeAdmin(admin.ModelAdmin):
         "light_base",
         "dark_base",
         "is_active",
+        "offered_to_visitors",
         "live_revision_number",
         "unpublished_changes",
         "base_changed_in_daisyui",
@@ -603,6 +604,14 @@ class ThemeAdmin(admin.ModelAdmin):
             {"fields": [f"shape_{name}" for name in SHAPE_NAMES], "classes": ["collapse"]},
         ),
         ("Mode", {"fields": ["default_mode", "visitors_can_switch"]}),
+        (
+            "Visitors",
+            {
+                "fields": ["offered_to_visitors"],
+                "description": "Themes offered to visitors appear in {% theme_picker %} once "
+                "they're published. Visitors can only pick offered themes.",
+            },
+        ),
         (
             "Backgrounds",
             {

@@ -19,6 +19,12 @@
     </div>
     <nav class="flex-none flex items-center gap-2">
       {% theme_mode_toggle %}
+      {% theme_picker as picker %}{% if picker %}
+        <details class="dropdown dropdown-end">
+          <summary class="btn btn-ghost btn-sm">Theme</summary>
+          <div class="dropdown-content z-10 mt-2 w-48 shadow">{{ picker }}</div>
+        </details>
+      {% endif %}
       <a href="{% url 'capy_theme:showcase' %}" class="btn btn-ghost btn-sm">Showcase</a>
       <a href="{% url 'admin:index' %}" class="btn btn-ghost btn-sm">Admin</a>
     </nav>

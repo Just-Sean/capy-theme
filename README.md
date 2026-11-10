@@ -175,6 +175,7 @@ Optional settings a project can add to its `settings.py`:
 | `CAPY_THEME_CACHE_SECONDS` | `300` | How long the active theme is cached, in seconds. Publishing or activating clears the cache straight away; this limit makes every server process catch up when the project's cache isn't shared between processes (e.g. Django's default in-memory cache). |
 | `CAPY_THEME_SHOWCASE` | `"staff"` | Who can see the theme showcase at `/theme/showcase/`: `"staff"` (logged-in staff; others are sent to the admin login), `"public"` (anyone) or `"off"` (nobody: 404). |
 | `CAPY_THEME_BASE_TEMPLATE` | not set | A project template for the showcase to extend, e.g. `"base.html"`. It needs a `content` block (and a `title` block for the page title) and should include `{% theme_head %}`. Not set: the showcase uses its own standalone page. |
+| `CAPY_THEME_VISITOR_THEMES` | `True` | Let visitors choose among the themes offered to them with `{% theme_picker %}`. `False` turns the picker off and ignores visitors' choices. |
 | `CAPY_THEME_EDITOR_BUTTON` | `True` | Show the live editor's **Edit theme** button in the corner of every page, for staff who can edit. `False` hides it (the editor still opens from the showcase or with `?edit=<theme id>`). |
 | `CAPY_THEME_FONT_MAX_BYTES` | `5242880` (5 MB) | The largest font file that can be uploaded, in bytes. |
 
@@ -472,10 +473,10 @@ or something that builds a web app manifest or link-preview tags:
 from capy_theme.artifacts import get_artifacts
 
 artifacts = get_artifacts(request)  # None if no theme is published
-artifacts["logos"]["logo_email"]["light"]["url"]   # every logo slot, light and dark
-artifacts["colors_hex"]["light"]["primary"]        # also "colors" (OKLCH)
-artifacts["icons"]["icon-512.png"]                 # every generated icon
-artifacts["sharing_image"]                         # url, width, height, alt
+artifacts["logos"]["logo_email"]["light"]["url"]  # every logo slot, light and dark
+artifacts["colors_hex"]["light"]["primary"]  # also "colors" (OKLCH)
+artifacts["icons"]["icon-512.png"]  # every generated icon
+artifacts["sharing_image"]  # url, width, height, alt
 ```
 
 In templates: `{% theme_artifacts as artifacts %}`, then e.g.
@@ -807,6 +808,22 @@ From code: `from capy_theme.active import get_active_theme` then
 loaded, or `None` if no theme is active. It's cached (see
 `CAPY_THEME_CACHE_SECONDS`), so a normal page load doesn't query the database.
 
+
+### Visitor theme picker
+
+Visitors can choose among themes the operator offers:
+
+1. In the admin, tick **Offer to visitors** on each theme to offer, and publish it.
+2. Put `{% theme_picker %}` where visitors should choose (the demo has it in a
+   **Theme** dropdown in the navbar). It lists **Site default** and the offered
+   themes, and outputs nothing if none are offered.
+
+Each option is a link to `/theme/choose/<slug>/` (or `/theme/choose/default/`),
+which stores the choice in the `capy_theme_choice` cookie and goes back to the
+page. Only offered, published themes are used; any other value in the cookie is
+ignored, so visitors can't force a theme. `CAPY_THEME_VISITOR_THEMES = False`
+turns the whole feature off. Pages then depend on that cookie, so a project that
+caches whole pages must vary its cache on it.
 ### The theme stylesheet
 
 Each published revision has its own stylesheet at `/theme/<version>.css`, where
@@ -923,7 +940,7 @@ straight to `main`:
 | `src/capy_theme/stylesheet.py` | Writes a published revision out as CSS variables, and makes its version hash |
 | `src/capy_theme/views.py` | The stylesheet view (`/theme/<version>.css`), the showcase (`/theme/showcase/`), the mode switch (`/theme/mode/<mode>/`) and the live editor's JSON views |
 | `src/capy_theme/urls.py` | The module's URLs, included by projects under `/theme/` |
-| `src/capy_theme/templatetags/capy_theme.py` | The `{% theme_head %}`, `{% theme_html_attrs %}`, `{% theme_logo %}`, `{% theme_mode_toggle %}` and `{% theme_artifacts %}` template tags |
+| `src/capy_theme/templatetags/capy_theme.py` | The `{% theme_head %}`, `{% theme_html_attrs %}`, `{% theme_logo %}`, `{% theme_mode_toggle %}`, `{% theme_picker %}` and `{% theme_artifacts %}` template tags |
 | `src/capy_theme/branding.py` | Reads a revision's published site name, tagline and logo |
 | `src/capy_theme/context_processors.py` | Gives every template `theme`: the active theme's published values (or `None`) |
 | `src/capy_theme/templates/capy_theme/showcase/` | The showcase page, its standalone base page, and one template per section |
@@ -953,6 +970,7 @@ straight to `main`:
 | `src/capy_theme/svg.py` | Cleaning uploaded SVGs with an allow-list of elements and attributes |
 | `src/capy_theme/typography.py` | The type scale settings and their CSS |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
+| `src/capy_theme/templates/capy_theme/theme_picker.html` | The theme list for `{% theme_picker %}` |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |
 | `src/capy_theme/signals.py` | Clears the active-theme cache whenever themes, revisions or assignments change |

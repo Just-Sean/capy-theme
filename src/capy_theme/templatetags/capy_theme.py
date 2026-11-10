@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
-from ..active import get_active_theme
+from ..active import CHOICE_COOKIE, get_active_theme, offered_themes, visitor_themes_allowed
 from ..artifacts import get_artifacts
 from ..branding import branding
 from ..colors import SCHEMES, effective_values, to_hex
@@ -81,6 +81,31 @@ def theme_color_meta(revision, mode):
         "",
         '<meta name="theme-color" media="(prefers-color-scheme: {})" content="{}">\n',
         ((scheme, colors[scheme]) for scheme in SCHEMES),
+    )
+
+
+@register.simple_tag(takes_context=True)
+def theme_picker(context):
+    """Output a list of the themes visitors may choose, plus "Site default".
+
+    Each is a link that sets the choice and reloads the page, so it works without
+    JavaScript. Outputs nothing if no theme is offered or the project turns visitor
+    themes off (CAPY_THEME_VISITOR_THEMES = False).
+    """
+    request = context.get("request")
+    offered = offered_themes()
+    if not offered or not visitor_themes_allowed():
+        return ""
+    chosen = request.COOKIES.get(CHOICE_COOKIE, "") if request is not None else ""
+    if chosen not in {theme.slug for theme in offered}:
+        chosen = "default"
+    return render_to_string(
+        "capy_theme/theme_picker.html",
+        {
+            "options": [("default", "Site default")] + [(t.slug, t.name) for t in offered],
+            "current": chosen,
+            "next": request.get_full_path() if request is not None else "/",
+        },
     )
 
 

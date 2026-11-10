@@ -46,6 +46,10 @@ class Theme(models.Model):
         validators=[validate_settings],
         help_text="Every override on top of the base themes.",
     )
+    offered_to_visitors = models.BooleanField(
+        default=False,
+        help_text="Visitors can choose this theme with {% theme_picker %} (once it's published).",
+    )
     live_revision = models.ForeignKey(
         "ThemeRevision",
         on_delete=models.SET_NULL,
