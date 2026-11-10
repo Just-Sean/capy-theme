@@ -250,6 +250,22 @@ Every command in one place. Details are in the linked pages.
 | [docs/development.md](docs/development.md) | The demo site and updating daisyUI |
 | [docs/PLAN.md](docs/PLAN.md), [docs/DECISIONS.md](docs/DECISIONS.md) | The build plan, and why things are the way they are |
 
+## Upgrading
+
+Run `uv run python manage.py migrate` after every update. Version notes:
+
+- **From 0.5:** migration `0011_remove_app_and_social_settings` removes the web
+  app manifest and link-preview settings (the manifest view and the tags are
+  gone; the icons and sharing image stay, available through the artifacts and
+  the API).
+- **From 0.4:** migration `0010_logo_slots` moves each theme's old logo into its
+  main slot (light). Make its smaller copies with
+  `uv run python manage.py theme_rebuild_images`. Revisions published before 0.5
+  keep showing their old logo until the theme is published again.
+- **From 0.6:** the showcase page and its settings (`CAPY_THEME_SHOWCASE`,
+  `CAPY_THEME_BASE_TEMPLATE`) are gone; remove them from your settings. The
+  editor's **Show all components** replaces it.
+
 ## Build the package
 
 To build the installable package (a wheel and an sdist, written to `dist/`) and
