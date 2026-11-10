@@ -1,23 +1,26 @@
 # Changelog
 
-## Unreleased
+## 0.6.0
 
-- **Showcase: mode and visitors:** the default mode and the mode toggle, the
-  visitor theme picker, and scheduled themes with their dates.
-- **Device accessibility settings:** the theme stylesheet reduces every animation
-  and transition when visitors ask for reduced motion, and removes noise and depth
-  and thickens borders and focus outlines when they ask for more contrast.
-- **Scheduling:** a **Theme schedule** in the admin: themes that are live between
-  two dates and win over the default while running; the default returns
-  afterwards. The cache expires at the next start or end. Migration 0013.
-- **Visitor theme picker:** tick **Offer to visitors** on published themes;
-  `{% theme_picker %}` lets visitors choose one (stored in a cookie, only offered
-  themes count). `CAPY_THEME_VISITOR_THEMES` turns it off. Migration 0012.
+Visitors and scheduling, and a clearer scope: capy-theme owns the theme and
+makes its artifacts available; other modules apply them.
+
 - **Scope: capy-theme exposes theme artifacts, other modules apply them.**
   `capy_theme.artifacts.get_artifacts()` and `{% theme_artifacts %}` give every
   published colour (OKLCH and hex), font, logo slot (with fallbacks and smaller
   copies), icon, sharing image and background as plain data, with absolute URLs
   when given a request.
+- **Visitor theme picker:** tick **Offer to visitors** on published themes;
+  `{% theme_picker %}` lets visitors choose one (stored in a cookie, only offered
+  themes count). `CAPY_THEME_VISITOR_THEMES` turns it off. Migration 0012.
+- **Scheduling:** a **Theme schedule** in the admin: themes that are live between
+  two dates and win over the default while running; the default returns
+  afterwards. The cache expires at the next start or end. Migration 0013.
+- **Device accessibility settings:** the theme stylesheet reduces every animation
+  and transition when visitors ask for reduced motion, and removes noise and depth
+  and thickens borders and focus outlines when they ask for more contrast.
+- **Showcase: mode and visitors:** the default mode and the mode toggle, the
+  visitor theme picker, and scheduled themes with their dates.
 - **Removed** (added in 0.5.0, out of scope): the web app manifest view and its
   link, the Web app settings, the Open Graph/Twitter tags in `{% theme_head %}`,
   `{% theme_social_tags %}` and the sharing description. Migration
