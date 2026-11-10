@@ -1,0 +1,26 @@
+{% load static %}<!doctype html>
+{% comment %}
+  The live editor's Components view: every daisyUI component, in light and dark.
+  Shown in an iframe next to the editor panel, so its daisyUI stylesheet can't
+  change the page being edited. The editor puts the draft theme's CSS into this
+  page (editor/controls/components.js), so every change shows here straight away.
+{% endcomment %}
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Theme components</title>
+  <link rel="stylesheet" href="{% static 'capy_theme/editor/components.css' %}">
+</head>
+<body class="bg-base-200 p-4" id="components">
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+    {% for mode in modes %}
+      <section data-theme="capy-{{ mode }}" aria-label="{{ mode|capfirst }} mode"
+               class="rounded-box border border-base-300 bg-base-100 p-6 text-base-content space-y-8">
+        <h2 class="text-2xl font-bold">{{ mode|capfirst }} mode</h2>
+        {% for name in sections %}{% include "capy_theme/editor/components/"|add:name|add:".html" %}{% endfor %}
+      </section>
+    {% endfor %}
+  </div>
+</body>
+</html>

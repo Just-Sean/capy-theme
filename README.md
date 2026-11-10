@@ -11,8 +11,8 @@ stand-in project in `tests/`, and `demo/` is a small site for trying it out.
 Whoever runs the site controls its look from the Django admin, with no code
 changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
 
-- **Live theme editor:** staff edit a theme right on the page (the showcase or any
-  page using `{% theme_head %}`), with colour pickers, shape controls, contrast
+- **Live theme editor:** staff edit a theme right on the page (any page using
+  `{% theme_head %}`), with colour pickers, shape controls, contrast
   ratings and palette suggestions (from the primary colour or the logo). Every
   change shows instantly, for that user only, until they **Save draft** or
   **Publish**. The admin form stays as a plain fallback.
@@ -56,9 +56,8 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   (`{% theme_picker %}`); themes can be scheduled between two dates (e.g. a
   holiday theme) and the default returns afterwards; visitors' "reduce motion"
   and "more contrast" device settings are respected.
-- **Theme showcase** at `/theme/showcase/`: every daisyUI component, colour swatch
-  and shape setting in the active theme, with light and dark side by side (staff
-  only by default).
+- **Components view** in the editor: every daisyUI component in the draft theme,
+  light and dark side by side, updating as you edit.
 - **Permissions:** only users with `publish_theme` can publish or activate.
 
 Next: portability and the JSON API (v0.7), then custom CSS, multiple sites and
@@ -177,10 +176,8 @@ Optional settings a project can add to its `settings.py`:
 | --- | --- | --- |
 | `CAPY_THEME_BUILTIN_THEMES` | all 35 | Which built-in daisyUI themes can be used as a theme's light or dark base, e.g. `["light", "dark"]`. Listing an unknown theme raises an error that names it. |
 | `CAPY_THEME_CACHE_SECONDS` | `300` | How long the active theme is cached, in seconds. Publishing or activating clears the cache straight away; this limit makes every server process catch up when the project's cache isn't shared between processes (e.g. Django's default in-memory cache). |
-| `CAPY_THEME_SHOWCASE` | `"staff"` | Who can see the theme showcase at `/theme/showcase/`: `"staff"` (logged-in staff; others are sent to the admin login), `"public"` (anyone) or `"off"` (nobody: 404). |
-| `CAPY_THEME_BASE_TEMPLATE` | not set | A project template for the showcase to extend, e.g. `"base.html"`. It needs a `content` block (and a `title` block for the page title) and should include `{% theme_head %}`. Not set: the showcase uses its own standalone page. |
 | `CAPY_THEME_VISITOR_THEMES` | `True` | Let visitors choose among the themes offered to them with `{% theme_picker %}`. `False` turns the picker off and ignores visitors' choices. |
-| `CAPY_THEME_EDITOR_BUTTON` | `True` | Show the live editor's **Edit theme** button in the corner of every page, for staff who can edit. `False` hides it (the editor still opens from the showcase or with `?edit=<theme id>`). |
+| `CAPY_THEME_EDITOR_BUTTON` | `True` | Show the live editor's **Edit theme** button in the corner of every page, for staff who can edit. `False` hides it (the editor still opens with `?edit=<theme id>`, e.g. from **Edit live** in the admin). |
 | `CAPY_THEME_FONT_MAX_BYTES` | `5242880` (5 MB) | The largest font file that can be uploaded, in bytes. |
 
 ## Develop it
@@ -229,7 +226,8 @@ Every command in one place. Details are in the linked pages.
 | `uv run python manage.py capy_theme_add_fonts` | Add the 30 bundled fonts to a project's font library ([fonts](docs/fonts.md)) |
 | `uv run python scripts/fetch_curated_fonts.py` | Re-download the bundled fonts from Fontsource ([fonts](docs/fonts.md)) |
 | `uv run python scripts/generate_builtin_themes.py` | Regenerate daisyUI's built-in themes after a daisyUI update ([development](docs/development.md)) |
-| `uv run python scripts/build_showcase_css.py` | Rebuild the showcase's stylesheet ([editor](docs/editor.md)) |
+| `uv run python scripts/build_components_css.py` | Rebuild the Components view's stylesheet ([editor](docs/editor.md)) |
+| `gh release download v5.7.50 --repo saadeghi/daisyui -p daisyui.mjs -p daisyui-theme.mjs` | Download daisyUI's plugin files for the demo when updating daisyUI ([development](docs/development.md)) |
 | `uv build` | Build the package ([below](#build-the-package)) |
 | `git tag vX.Y.Z && git push origin vX.Y.Z` | Tag a release ([below](#release-a-version)) |
 
@@ -241,7 +239,7 @@ Every command in one place. Details are in the linked pages.
 | [docs/colors-and-css.md](docs/colors-and-css.md) | Colours and contrast, address-bar/focus/email colours, type scale, shape, accessibility settings, the theme stylesheet |
 | [docs/fonts.md](docs/fonts.md) | The font library: system stacks, bundled fonts, uploads, Google Fonts, external stylesheets |
 | [docs/images.md](docs/images.md) | Uploads and SVG cleaning, logo slots, icons, the sharing image, backgrounds |
-| [docs/editor.md](docs/editor.md) | The live editor and the showcase |
+| [docs/editor.md](docs/editor.md) | The live editor and its Components view |
 | [docs/artifacts.md](docs/artifacts.md) | What other apps get: `get_artifacts()` and `{% theme_artifacts %}` |
 | [docs/development.md](docs/development.md) | The demo site and updating daisyUI |
 | [docs/PLAN.md](docs/PLAN.md), [docs/DECISIONS.md](docs/DECISIONS.md) | The build plan, and why things are the way they are |
@@ -299,10 +297,9 @@ job and stays under 200 lines.
 | `css/` | Writing the theme stylesheet: `stylesheet.py` plus shape, type scale, backgrounds, accessibility; and the view that serves it |
 | `fonts/` | `Font` and `FontFile` models, the library (roles, stacks, `@font-face`), uploads, Google Fonts import, `curated.json` |
 | `images/` | `ThemeAsset` and `ThemeAssetVariant` models, image slots, upload checks, SVG cleaning, logo slots, logo copies, the `{% theme_logo %}` HTML, icons, the sharing image |
-| `editor/` | The live editor: who can use it, its state and controls, preview, saving, adding it to pages, and its JSON views |
+| `editor/` | The live editor: who can use it, its state and controls, preview, saving, adding it to pages, its JSON views and the Components view |
 | `artifacts/` | `get_artifacts()`: everything other apps get |
 | `admin/` | The theme form (one file per area: colours, type, shape, images), the theme admin page and its fieldsets, the Publish/Revisions/Restore pages, inlines, fonts, the theme schedule |
-| `showcase/` | The showcase page and its data (to be replaced by the editor's Components view) |
 | `templatetags/capy_theme.py` | The template tags; each calls its section |
 | `models.py`, `urls.py`, `apps.py`, `context_processors.py` | Django's entry points |
 | `templates/capy_theme/`, `static/capy_theme/` | Templates and static files (the editor's JavaScript is one file per section in `static/capy_theme/editor/controls/`) |
@@ -310,4 +307,4 @@ job and stays under 200 lines.
 
 Outside the package: `tests/` (in the same sections), `demo/` (development only,
 never shipped), `scripts/` (generate daisyUI's themes, fetch the bundled fonts,
-build the showcase CSS), `docs/`.
+build the Components view's CSS), `docs/`.

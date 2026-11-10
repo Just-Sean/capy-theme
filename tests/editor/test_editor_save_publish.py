@@ -125,6 +125,6 @@ def test_publish_button_only_for_publishers(client, django_user_model, theme):
 
 def test_mount_passes_save_and_publish_urls(client, django_user_model, theme):
     login(client, django_user_model, "change_theme")
-    content = client.get(f"/theme/showcase/?edit={theme.pk}").content.decode()
+    content = client.get(f"/page/?edit={theme.pk}").content.decode()
     assert f'data-save-url="{reverse("capy_theme:editor_save", args=[theme.pk])}"' in content
     assert f'data-publish-url="{reverse("capy_theme:editor_publish", args=[theme.pk])}"' in content

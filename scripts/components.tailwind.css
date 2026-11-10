@@ -1,0 +1,16 @@
+/* Tailwind source for the live editor's Components view stylesheet,
+   src/capy_theme/static/capy_theme/editor/components.css. Build it with:
+
+       uv run python scripts/build_components_css.py
+
+   Only the Components view's templates are scanned, so the output holds just the
+   classes they use. daisyUI comes from the same plugin file as the demo site.
+   The stylesheet is only loaded inside the Components view's iframe, so it never
+   touches the page being edited. */
+
+@import "tailwindcss" source(none);
+
+@source "../src/capy_theme/templates/capy_theme/editor/components.html";
+@source "../src/capy_theme/templates/capy_theme/editor/components";
+
+@plugin "../demo/tailwind/daisyui.mjs";

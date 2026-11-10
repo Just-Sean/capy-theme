@@ -17,9 +17,9 @@ uv run python demo/manage.py runserver      # then open http://localhost:8000/ad
 
 Stop the server with **Ctrl+C** in the terminal it's running in.
 
-The demo's navbar links to the theme showcase (`/theme/showcase/`). The demo sets
-`CAPY_THEME_BASE_TEMPLATE = "base.html"`, so the showcase appears inside the
-demo's page with its navbar.
+Log in at `/admin/`, then the **Edit theme** button in the corner of any demo
+page opens the live editor; **Show all components** in it shows every daisyUI
+component in the draft theme.
 
 It uses SQLite (`demo/db.sqlite3`) by default. To use Postgres instead, set
 `DATABASE_URL` on each command (the database must already exist):
@@ -57,7 +57,7 @@ files (`daisyui.mjs`, `daisyui-theme.mjs`) kept next to it. To update them, see
 
 ## Updating daisyUI
 
-The module, the demo and the showcase all use daisyUI 5.7.50. Keep them on the same version:
+The module, the demo and the editor's Components view all use daisyUI 5.7.50. Keep them on the same version:
 
 1. **The module's theme catalogue.** `src/capy_theme/themes/builtin_themes.json` lists
    daisyUI's built-in themes and their values. Don't edit it by hand: it's
@@ -73,10 +73,10 @@ The module, the demo and the showcase all use daisyUI 5.7.50. Keep them on the s
    [daisyUI releases](https://github.com/saadeghi/daisyui/releases)
    (e.g. `gh release download v5.7.50 --repo saadeghi/daisyui -p daisyui.mjs -p daisyui-theme.mjs`).
 
-3. **The showcase's bundled stylesheet.** After replacing the demo's plugin files, rebuild it:
+3. **The Components view's bundled stylesheet.** After replacing the demo's plugin files, rebuild it:
 
    ```bash
-   uv run python scripts/build_showcase_css.py
+   uv run python scripts/build_components_css.py
    ```
 
 The script warns if the demo's `daisyui.mjs` is a different version from the

@@ -35,7 +35,7 @@ bottom:
 9. Advanced (folded: stored settings, ID and dates)
 
 At the top right: **Edit live** opens the theme in the live editor (on the
-showcase, or the home page if the showcase is off), next to **Revisions**,
+site's home page), next to **Revisions**,
 **Publish** and Django's **History**.
 
 ## Branding

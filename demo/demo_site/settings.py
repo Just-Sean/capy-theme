@@ -75,7 +75,3 @@ TAILWIND_CLI_SRC_CSS = "tailwind/source.css"  # relative to demo/
 TAILWIND_CLI_DIST_CSS = "css/tailwind.css"  # relative to demo/static/
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
-
-# capy-theme: show the theme showcase (/theme/showcase/) inside the demo's own
-# page, with its navbar, instead of the module's standalone page.
-CAPY_THEME_BASE_TEMPLATE = "base.html"

@@ -1,0 +1,16 @@
+<div class="space-y-3">
+  <h3 class="text-xl font-semibold">Modal</h3>
+  {# A checkbox-driven modal, so it works without JavaScript. #}
+  <label for="components-modal-{{ mode }}" class="btn btn-primary">Open modal</label>
+  <input type="checkbox" id="components-modal-{{ mode }}" class="modal-toggle">
+  <div class="modal" role="dialog" data-theme="capy-{{ mode }}">
+    <div class="modal-box">
+      <h4 class="text-lg font-bold">Lorem ipsum</h4>
+      <p class="py-4">Dolor sit amet, consectetur adipiscing elit. This is the {{ mode }} mode modal.</p>
+      <div class="modal-action">
+        <label for="components-modal-{{ mode }}" class="btn">Close</label>
+      </div>
+    </div>
+    <label class="modal-backdrop" for="components-modal-{{ mode }}">Close</label>
+  </div>
+</div>

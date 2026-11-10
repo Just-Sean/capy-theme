@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Components view in the live editor** replaces the showcase page: **Show all
+  components** opens every daisyUI component in the draft theme, light and dark,
+  updating as you edit. It runs in an iframe, so its stylesheet never touches the
+  page being edited.
+- **Removed:** the showcase page (`/theme/showcase/`) and its settings
+  `CAPY_THEME_SHOWCASE` and `CAPY_THEME_BASE_TEMPLATE`. **Edit live** in the
+  admin now opens the editor on the site's home page.
 - **Data moved out of Python into JSON files**, next to the code that reads them:
   system font stacks, character sets, shape and type settings, image slots,
   the SVG allow-list, icon files and colour groups. Same values (checked one by

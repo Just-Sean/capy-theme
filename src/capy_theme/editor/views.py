@@ -4,8 +4,9 @@ import json
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
+from django.http import HttpResponseForbidden, JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_POST
 
 from ..images.uploads import add_asset, asset_data
@@ -150,4 +151,35 @@ def editor_upload(request, pk):
         return JsonResponse({"errors": error.messages}, status=400)
     return JsonResponse(
         {"uploaded": asset_data(asset), "assets": [asset_data(a) for a in theme.assets.all()]}
+    )
+
+
+# The Components view's samples, in order (templates/capy_theme/editor/components/).
+COMPONENTS = [
+    "text",
+    "buttons",
+    "badges",
+    "alerts",
+    "cards",
+    "tabs",
+    "table",
+    "forms",
+    "progress",
+    "modal",
+]
+
+
+@xframe_options_sameorigin
+def editor_components(request):
+    """Every daisyUI component in light and dark, for the editor's Components view.
+
+    Shown in an iframe beside the editor (so only same-site framing is allowed).
+    Staff who can edit themes only.
+    """
+    if not can_edit(request.user):
+        return HttpResponseForbidden("You can't edit themes.")
+    return render(
+        request,
+        "capy_theme/editor/components.html",
+        {"modes": ["light", "dark"], "sections": COMPONENTS},
     )

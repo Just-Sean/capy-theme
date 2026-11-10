@@ -75,24 +75,6 @@ def test_demo_home_page_renders():
     assert result.stdout.split() == ["200", "True"], result.stdout
 
 
-def test_demo_showcase_keeps_the_demo_navbar():
-    # The demo sets CAPY_THEME_BASE_TEMPLATE = "base.html" (issue #90).
-    code = (
-        "from django.core.management import call_command; "
-        "call_command('migrate', verbosity=0); "
-        "from django.contrib.auth.models import User; "
-        "from django.test import Client; "
-        "c = Client(); "
-        "c.force_login(User.objects.create_user('s', password='pw', is_staff=True)); "
-        "html = c.get('/theme/showcase/', SERVER_NAME='localhost').content.decode(); "
-        "print('Theme showcase' in html, 'Capy Theme demo' in html, "
-        "'href=\"/admin/\"' in html, 'href=\"/\"' in html)"
-    )
-    result = run_manage("shell", "--no-imports", "-c", code)
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.split() == ["True", "True", "True", "True"], result.stdout
-
-
 def test_demo_navbar_has_the_mode_toggle():
     # The demo shows {% theme_mode_toggle %} in its navbar (issue #46).
     code = (

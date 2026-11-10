@@ -8,15 +8,14 @@ from django.urls import path
 
 from .css import views as css_views
 from .editor import views as editor_views
-from .showcase import views as showcase_views
 from .themes import views as theme_views
 
 app_name = "capy_theme"
 
 urlpatterns = [
-    path("showcase/", showcase_views.showcase, name="showcase"),
     path("mode/<slug:mode>/", theme_views.set_mode, name="set_mode"),
     path("choose/<slug:slug>/", theme_views.choose_theme, name="choose_theme"),
+    path("editor/components/", editor_views.editor_components, name="editor_components"),
     path("editor/<int:pk>/state/", editor_views.editor_state, name="editor_state"),
     path("editor/<int:pk>/preview/", editor_views.editor_preview, name="editor_preview"),
     path(

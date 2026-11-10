@@ -148,6 +148,6 @@ def test_apply_changes_leaves_the_theme_alone(theme):
 
 
 def test_mount_passes_the_preview_url_and_csrf_token(editor_client, theme):
-    content = editor_client.get(f"/theme/showcase/?edit={theme.pk}").content.decode()
+    content = editor_client.get(f"/page/?edit={theme.pk}").content.decode()
     assert f'data-preview-url="{reverse("capy_theme:editor_preview", args=[theme.pk])}"' in content
     assert 'data-csrf-token="' in content
