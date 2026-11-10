@@ -394,6 +394,33 @@ slot with no image uses the main logo.
 Alt text comes from the image's alt text, then the theme's logo alt text, then
 the site name.
 
+### Icon and favicons
+
+Every browser and home-screen icon is made from one square image (at least
+512 × 512 px is best; SVG isn't accepted here). To set it:
+
+1. Upload it in the **icon** slot (live editor: **Images**; admin: the
+   **Images** list), optionally with a dark version.
+2. Choose it (live editor: **Images → Logos and icon**; admin: **Icon**), and set
+   the **Icon background** (a hex colour; blank is transparent) and **Icon
+   padding** (0–25% on each side) if you want.
+3. Save and publish. The icons are made when you publish.
+
+The files are saved in `MEDIA_ROOT/capy_theme/icons/<id>/`, where the id comes
+from the icon image and its settings, so each revision keeps its icons:
+
+| File | Used for |
+| --- | --- |
+| `favicon.ico` | Browser tab (16, 32 and 48 px in one file) |
+| `favicon.svg` | Browser tab; switches to the dark icon in dark mode |
+| `apple-touch-icon.png` | iPhone and iPad home screen (180 px, never transparent: white if no background is set) |
+| `icon-192.png`, `icon-512.png` | Android home screen and app icons |
+| `icon-maskable-512.png` | Android adaptive icons: the icon sits in the middle 80%, on a solid background |
+| `icon-monochrome-512.png` | Single-colour icons: white in the icon's shape |
+
+`{% theme_head %}` links the ICO, SVG, 192 px and Apple icons. The 512 px,
+maskable and monochrome icons are for the web app manifest.
+
 Upgrading from 0.4: migration `0010_logo_slots` moves each theme's old logo into
 its main slot (light). It has no smaller copies; upload it again to get them.
 Revisions published before 0.5 keep showing their old logo.
@@ -832,6 +859,7 @@ straight to `main`:
 | `src/capy_theme/font_files.py` | Checks uploaded font files, converts them to WOFF2 and trims them to a character subset |
 | `src/capy_theme/google_fonts.py` | Imports a Google font into the library (downloaded once, served locally) |
 | `src/capy_theme/images.py` | Image slots and their limits, and checking and cleaning uploaded images |
+| `src/capy_theme/icons.py` | Makes the favicons and app icons from the icon image, and their `<link>` tags |
 | `src/capy_theme/logos.py` | Logo slots: fallbacks, smaller copies, the `<picture>` HTML and the header height CSS |
 | `src/capy_theme/svg.py` | Cleaning uploaded SVGs with an allow-list of elements and attributes |
 | `src/capy_theme/typography.py` | The type scale settings and their CSS |

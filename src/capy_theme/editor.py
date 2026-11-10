@@ -24,6 +24,7 @@ from .colors import (
     to_oklch,
 )
 from .fonts import ROLES, external_stylesheets, preview_stack
+from .icons import SETTINGS as ICON_SETTINGS
 from .images import NO_SVG, SLOTS, asset_data
 from .logos import FALLBACK, HEIGHTS, LOGO_SLOTS
 from .models import Font, Theme
@@ -122,7 +123,11 @@ def controls():
                 "label": SLOTS[slot][0],
                 "fallback": "Use the main logo" if slot in FALLBACK else "None",
             }
-            for slot in LOGO_SLOTS
+            for slot in (*LOGO_SLOTS, "icon")
+        ],
+        "icon_settings": [
+            {"name": name, "label": lab, "help": text}
+            for name, (lab, text) in ICON_SETTINGS.items()
         ],
         "logo_heights": [
             {"name": name, "label": lab, "default": default}
@@ -147,7 +152,7 @@ def controls():
 
 # The settings the editor manages. Anything else in a theme's settings (site
 # name, mode and so on) is kept as it is.
-EDITOR_SETTINGS = ("colors", "shape", "fonts", "type", "images", "logo")
+EDITOR_SETTINGS = ("colors", "shape", "fonts", "type", "images", "logo", "icon")
 
 
 def apply_changes(theme, data):

@@ -30,6 +30,7 @@ from .google_fonts import WEIGHTS as GOOGLE_WEIGHTS
 from .google_fonts import import_family
 from .history import compare as compare_revisions
 from .history import restore as restore_revision
+from .icons import SETTINGS as ICON_SETTINGS
 from .images import SLOTS, prepare_image
 from .logos import HEIGHTS, LOGO_SLOTS
 from .models import Font, FontFile, Theme, ThemeAsset, ThemeRevision
@@ -138,7 +139,7 @@ class ThemeForm(forms.ModelForm):
         """A choice of this theme's uploaded images for each logo slot and mode."""
         chosen = self.instance.settings.get("images", {})
         assets = list(self.instance.assets.all()) if self.instance.pk else []
-        for slot in LOGO_SLOTS:
+        for slot in CHOOSABLE:
             for mode in ("light", "dark"):
                 choices = [("", "None (use the fallback)")] + [
                     (str(a.pk), f"{a.original.name.rsplit('/', 1)[-1]} ({a.width} × {a.height})")
@@ -151,6 +152,9 @@ class ThemeForm(forms.ModelForm):
         heights = self.instance.settings.get("logo", {})
         for name in HEIGHTS:
             self.fields[f"logo_{name}"].initial = heights.get(name)
+        icon = self.instance.settings.get("icon", {})
+        for name in ICON_SETTINGS:
+            self.fields[f"icon_{name}"].initial = icon.get(name)
 
     def _add_contrast_ratings(self):
         """Show each colour's WCAG contrast rating (from the saved draft) in its help text."""
@@ -231,11 +235,11 @@ class ThemeForm(forms.ModelForm):
                 for mode in ("light", "dark")
                 if cleaned.get(image_field_name(slot, mode))
             }
-            for slot in LOGO_SLOTS
+            for slot in CHOOSABLE
         }
-        # Other slots (icon, backgrounds...) are kept until they get admin fields.
+        # Other slots (backgrounds...) are kept until they get admin fields.
         images = {
-            **{k: v for k, v in settings.get("images", {}).items() if k not in LOGO_SLOTS},
+            **{k: v for k, v in settings.get("images", {}).items() if k not in CHOOSABLE},
             **{k: v for k, v in images.items() if v},
         }
         if images:
@@ -251,6 +255,15 @@ class ThemeForm(forms.ModelForm):
             settings["logo"] = heights
         else:
             settings.pop("logo", None)
+        icon = {}
+        if cleaned.get("icon_background"):
+            icon["background"] = cleaned["icon_background"].lower()
+        if cleaned.get("icon_padding") is not None:
+            icon["padding"] = float(cleaned["icon_padding"])
+        if icon:
+            settings["icon"] = icon
+        else:
+            settings.pop("icon", None)
         self.instance.settings = settings
         return cleaned
 
@@ -259,7 +272,8 @@ def image_field_name(slot, mode):
     return f"image_{slot}_{mode}"
 
 
-for _slot in LOGO_SLOTS:
+CHOOSABLE = (*LOGO_SLOTS, "icon")
+for _slot in CHOOSABLE:
     for _mode in ("light", "dark"):
         _field = image_field_name(_slot, _mode)
         ThemeForm.base_fields[_field] = ThemeForm.declared_fields[_field] = forms.ChoiceField(
@@ -278,6 +292,26 @@ for _name, (_label, _default) in HEIGHTS.items():
             help_text=f"Blank for {_default} px.",
         )
     )
+
+
+ThemeForm.base_fields["icon_background"] = ThemeForm.declared_fields["icon_background"] = (
+    forms.RegexField(
+        regex=r"^#[0-9a-fA-F]{6}$",
+        required=False,
+        label=ICON_SETTINGS["background"][0],
+        help_text=ICON_SETTINGS["background"][1],
+        error_messages={"invalid": "Use a hex colour like #ffffff."},
+    )
+)
+ThemeForm.base_fields["icon_padding"] = ThemeForm.declared_fields["icon_padding"] = (
+    forms.FloatField(
+        required=False,
+        min_value=0,
+        max_value=25,
+        label=ICON_SETTINGS["padding"][0],
+        help_text=ICON_SETTINGS["padding"][1],
+    )
+)
 
 
 def _pair(entry):
@@ -527,6 +561,19 @@ class ThemeAdmin(admin.ModelAdmin):
             },
         ),
         ("Branding", {"fields": ["site_name", "tagline", "logo_alt"]}),
+        (
+            "Icon",
+            {
+                "fields": [
+                    "image_icon_light",
+                    "image_icon_dark",
+                    "icon_background",
+                    "icon_padding",
+                ],
+                "description": "One square image (at least 512 × 512 px is best): the browser "
+                "tab icon, home screen and app icons are all made from it when you publish.",
+            },
+        ),
         (
             "Logos",
             {

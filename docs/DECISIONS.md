@@ -867,3 +867,33 @@ Recommended (made while building autonomously).
   the logo HTML is rendered by the server from the published revision.
 - **The demo header** now uses `{% theme_logo %}` without size classes, so the
   theme's header height applies.
+
+## 5.4 Icons and favicons (#35)
+
+Recommended (made while building autonomously).
+
+- **Made when publishing, not on upload:** the icons depend on the background and
+  padding settings as well as the image, and those go through draft and Publish.
+  `publish()` makes them before the revision is created, so a failure publishes
+  nothing.
+- **Folder named by a hash** of the icon image file names and icon settings (and a
+  version number for the way icons are made). The revision needs no extra data:
+  pages work out the folder from the snapshot. Each revision keeps its icons, and
+  publishing without changing the icon reuses the same files.
+- **`favicon.svg`** wraps a 64 px PNG of the icon. Its point is the dark version:
+  with a dark icon, the SVG switches by itself with the device's dark mode
+  (checked in Chrome: the centre pixel changed from the light to the dark icon).
+- **Home-screen icons are never transparent:** the Apple icon and maskable icon
+  use white when no background is set, because iOS and Android fill transparency
+  with black.
+- **Maskable:** the icon is shrunk into the middle 80% (the part every mask
+  shows), plus the theme's padding inside that.
+- **Monochrome:** white with the icon's transparency as the shape; fully opaque
+  icons use their darkness instead, so a dark mark on a light square still works.
+- **Settings:** `settings["icon"]` has `background` (hex, or missing for
+  transparent) and `padding` (0–25%). In the editor they're with the logo
+  choices; in the admin, in the Icon section.
+- **Not checked here:** adding the site to a real phone's home screen. Headless
+  Chrome can't show a tab or home screen, so the check was that every linked icon
+  loads as an image of the right size. The manifest (5.5) makes Android
+  installation testable in DevTools.
