@@ -832,3 +832,38 @@ Recommended (made while building autonomously).
   the slots where SVG can't go refuse it and ask for a PNG or JPEG: the email logo,
   the social image and the icon (`images.NO_SVG`). People upload the format each
   place needs; nothing is converted.
+
+## 5.3 Logo slots and responsive images (#34)
+
+Recommended (made while building autonomously).
+
+- **Choices are settings:** `settings["images"]` maps each slot and mode to an
+  uploaded image's id, so choosing a logo goes through Save draft and Publish like
+  everything else. The revision copies the chosen images' file names, sizes and
+  copies, so pages never read the draft. A theme can only choose its own images
+  uploaded for that slot.
+- **The old `Theme.logo` field is gone.** Migration 0010 moves each theme's logo
+  into the main slot, so there's one way to set a logo. Revisions published before
+  keep their `logo` file name and still show it.
+- **Fallbacks:** dark → the slot's light image; any slot → the main logo.
+- **Copies on upload** (header slots only): AVIF, WebP and PNG (or JPEG for JPEG
+  originals), at widths about 25% apart from 64 to 1280 px plus the original's
+  width (max 2560). The first ladder (80, 120, 160…) gave phones and desktops the
+  same file in Chrome (128 px and 160 px both picked 160); the finer one gives them
+  different files. Made with Pillow, which already has AVIF and WebP: no new
+  dependency. `sizes` comes from the header heights, so the browser picks the
+  smallest copy that is sharp at the screen's pixel density ("2x" included).
+- **Light/dark switching with CSS**, not `<picture media="(prefers-color-scheme)">`:
+  the media query can't follow the site's own toggle. Both pictures are output and
+  the stylesheet hides one; both are `loading="lazy"`, so Chrome downloads only the
+  visible one (checked: switching mode then loads the other).
+- **Header heights** (40 px, 32 px on phones up to 640 px wide) are theme
+  settings, written into the stylesheet in `@layer base` with `:root` so they beat
+  Tailwind's reset but lose to utility classes.
+- **Email and print slots** output a plain `<img>`: email programs don't support
+  `<picture>`, `srcset` or the CSS.
+- **Editor:** logo choices and heights are in the Images section. The header
+  height previews immediately; a different logo shows after publishing, because
+  the logo HTML is rendered by the server from the published revision.
+- **The demo header** now uses `{% theme_logo %}` without size classes, so the
+  theme's header height applies.

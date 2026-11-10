@@ -276,6 +276,57 @@
         }
       },
       "additionalProperties": false
+    },
+    "images": {
+      "description": "The uploaded image (ThemeAsset id) used in each slot, for light and dark mode. Dark falls back to light; most logo slots fall back to the main logo.",
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "logo_main",
+          "logo_stacked",
+          "logo_mark",
+          "logo_wordmark",
+          "logo_email",
+          "logo_print",
+          "icon",
+          "social",
+          "background_login",
+          "background_pattern"
+        ]
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "light": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "dark": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "logo": {
+      "description": "Header logo heights in pixels.",
+      "type": "object",
+      "properties": {
+        "header_height": {
+          "description": "Header logo height (px).",
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 200
+        },
+        "header_height_mobile": {
+          "description": "Header logo height on phones (px).",
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 200
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,

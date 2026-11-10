@@ -7,6 +7,7 @@ page's <html> tag and `{% theme_head %}` inside <head>. `{% theme_logo %}` and
 
 from django import template
 from django.middleware.csp import get_nonce
+from django.template import TemplateSyntaxError
 from django.template.loader import render_to_string
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
@@ -16,6 +17,7 @@ from ..branding import branding
 from ..colors import SCHEMES, effective_values, to_hex
 from ..editor import mount as editor_mount
 from ..fonts import external_stylesheets, preload_urls
+from ..logos import LOGO_SLOTS, logo_html
 from ..mode import MODE_LABELS, MODES, current_mode, head_script, html_theme_value, mode_settings
 from ..stylesheet import stylesheet_url
 
@@ -116,19 +118,28 @@ def theme_mode_toggle(context):
 
 
 @register.simple_tag(takes_context=True)
-def theme_logo(context, **attrs):
-    """Output the active theme's logo, or its site name if there's no logo.
+def theme_logo(context, slot="main", **attrs):
+    """Output the active theme's logo for a slot, or its site name if there's no logo.
 
-    Extra attributes are added to the element, e.g. `{% theme_logo class="h-8" %}`.
-    Outputs nothing if no theme is active, or it has neither a logo nor a site name.
+    `slot` is main, stacked, mark, wordmark, email or print; a slot without an
+    image uses the main logo. The logo is a <picture> with smaller copies for
+    small screens, and swaps with light and dark mode. Extra attributes go on the
+    <img>, e.g. `{% theme_logo slot="mark" class="h-8" %}`. Outputs nothing if
+    no theme is active, or it has neither a logo nor a site name.
     """
     theme = get_active_theme(context.get("request"))
     if theme is None or theme.live_revision is None:
         return ""
+    slot = slot if slot.startswith("logo_") else f"logo_{slot}"
+    if slot not in LOGO_SLOTS:
+        raise TemplateSyntaxError(
+            f"theme_logo: unknown slot {slot!r}; use main, stacked, mark, wordmark, email or print."
+        )
     brand = branding(theme.live_revision)
+    html = logo_html(theme.live_revision.snapshot, slot, brand["logo_alt"], attrs)
+    if html:
+        return html
     extra = format_html_join("", ' {}="{}"', sorted(attrs.items()))
-    if brand["logo_url"]:
-        return format_html('<img src="{}" alt="{}"{}>', brand["logo_url"], brand["logo_alt"], extra)
     if brand["site_name"]:
         return format_html("<span{}>{}</span>", extra, brand["site_name"])
     return ""

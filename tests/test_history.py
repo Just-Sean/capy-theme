@@ -83,21 +83,53 @@ def test_restore_brings_back_the_old_logo(settings, tmp_path):
     from django.core.files.uploadedfile import SimpleUploadedFile
 
     settings.MEDIA_ROOT = tmp_path
-    png = (
-        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00"
-        b"\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xf8\xcf\xc0\xf0\x1f\x00\x05\x00"
-        b"\x01\xff\xa5\xf6\x0b\x1d\x00\x00\x00\x00IEND\xaeB`\x82"
-    )
+    png = _png_bytes()
+    from capy_theme.images import add_asset
+
     theme = Theme.objects.create(name="Logo", slug="logo")
-    theme.logo = SimpleUploadedFile("one.png", png, content_type="image/png")
+    one = add_asset(theme, "logo_main", "light", SimpleUploadedFile("one.png", png))
+    theme.settings = {"images": {"logo_main": {"light": one.pk}}}
     theme.save()
     first = publish(theme)
-    theme.logo = SimpleUploadedFile("two.png", png, content_type="image/png")
+    two = add_asset(theme, "logo_main", "light", SimpleUploadedFile("two.png", png))
+    theme.settings = {"images": {"logo_main": {"light": two.pk}}}
     theme.save()
     publish(theme)
     restore(theme, first)
     theme.refresh_from_db()
-    assert theme.logo.name == first.snapshot["logo"]
+    assert theme.settings["images"] == {"logo_main": {"light": one.pk}}
+    assert theme.live_revision.snapshot["images"] == first.snapshot["images"]
+
+
+def test_restore_skips_images_deleted_since(settings, tmp_path):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    from capy_theme.images import add_asset
+
+    settings.MEDIA_ROOT = tmp_path
+    theme = Theme.objects.create(name="Logo", slug="logo")
+    upload = SimpleUploadedFile("one.png", _png_bytes())
+    one = add_asset(theme, "logo_main", "light", upload)
+    theme.settings = {"site_name": "A", "images": {"logo_main": {"light": one.pk}}}
+    theme.save()
+    first = publish(theme)
+    theme.settings = {"site_name": "B"}
+    theme.save()
+    publish(theme)
+    one.delete()
+    restore(theme, first)
+    theme.refresh_from_db()
+    assert theme.settings == {"site_name": "A"}
+
+
+def _png_bytes():
+    import io
+
+    from PIL import Image
+
+    buffer = io.BytesIO()
+    Image.new("RGB", (4, 4), "red").save(buffer, "PNG")
+    return buffer.getvalue()
 
 
 # The admin pages

@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from .colors import effective_values, focus_color
 from .fonts import font_css
+from .logos import logo_css
 from .typography import type_css
 
 
@@ -71,6 +72,7 @@ def snapshot_css(snapshot, comment):
         "}",
         *font_css(snapshot.get("fonts", {})),
         *type_css(snapshot.get("settings", {})),
+        logo_css(snapshot),
     ]
     return "\n".join(lines) + "\n"
 

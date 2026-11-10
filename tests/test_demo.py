@@ -31,8 +31,8 @@ def test_demo_site_passes_django_checks():
     assert result.returncode == 0, result.stderr
 
 
-def test_demo_header_logo_has_a_fixed_height():
-    # The logo is limited with a plain style as well as Tailwind classes (issue #91).
+def test_demo_header_logo_uses_the_themes_header_height():
+    # A huge logo is shown at the theme's header height (issue #91, then #34).
     code = (
         "import io; from PIL import Image; "
         "from django.core.files.base import ContentFile; "
@@ -44,15 +44,20 @@ def test_demo_header_logo_has_a_fixed_height():
         "from capy_theme.publishing import publish; "
         "from capy_theme.active import activate; "
         "b = io.BytesIO(); Image.new('RGB', (2000, 1000), 'red').save(b, 'PNG'); "
+        "from django.core.files.uploadedfile import SimpleUploadedFile; "
+        "from capy_theme.images import add_asset; "
         "t = Theme.objects.create(name='Big', slug='big'); "
-        "t.logo.save('big.png', ContentFile(b.getvalue())); publish(t); activate(t); "
+        "a = add_asset(t, 'logo_main', 'light', SimpleUploadedFile('big.png', b.getvalue())); "
+        "t.settings = {'images': {'logo_main': {'light': a.pk}}}; t.save(); "
+        "r = publish(t); activate(t); "
+        "from capy_theme.stylesheet import render_css; "
         "from django.test import Client; "
         "html = Client().get('/', SERVER_NAME='localhost').content.decode(); "
-        "print('style=\"height: 2rem; width: auto;\"' in html)"
+        "print('class=\"capy-logo\"' in html, 'img.capy-logo { height: 40px' in render_css(r))"
     )
     result = run_manage("shell", "--no-imports", "-c", code)
     assert result.returncode == 0, result.stderr
-    assert result.stdout.split() == ["True"], result.stdout
+    assert result.stdout.split() == ["True", "True"], result.stdout
 
 
 def test_demo_home_page_renders():

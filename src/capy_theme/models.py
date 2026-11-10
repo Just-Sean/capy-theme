@@ -17,6 +17,7 @@ from django.utils import timezone
 from .catalogue import builtin_values
 from .fonts import snapshot_fonts
 from .images import MODES, SLOT_CHOICES
+from .logos import snapshot_images
 from .validation import validate_base, validate_settings
 
 
@@ -44,11 +45,6 @@ class Theme(models.Model):
         blank=True,
         validators=[validate_settings],
         help_text="Every override on top of the base themes.",
-    )
-    logo = models.ImageField(
-        upload_to="capy_theme/logos/",
-        blank=True,
-        help_text="The main logo (PNG, JPEG, GIF or WebP). Shown at the size it's uploaded.",
     )
     live_revision = models.ForeignKey(
         "ThemeRevision",
@@ -100,6 +96,9 @@ class Theme(models.Model):
         )
         if missing:
             errors["settings"] = [f"Font {pk} isn't in the font library." for pk in sorted(missing)]
+        image_errors = self._image_errors()
+        if image_errors:
+            errors["settings"] = errors.get("settings", []) + image_errors
         for field, scheme in (("light_base", "light"), ("dark_base", "dark")):
             try:
                 validate_base(getattr(self, field), scheme)
@@ -107,6 +106,24 @@ class Theme(models.Model):
                 errors[field] = error.messages
         if errors:
             raise ValidationError(errors)
+
+    def _image_errors(self):
+        """Chosen images must be this theme's, uploaded for that slot."""
+        chosen = self.settings.get("images", {})
+        wanted = {(slot, pk) for slot, modes in chosen.items() for pk in modes.values()}
+        if not wanted:
+            return []
+        found = set()
+        if self.pk is not None:
+            found = set(
+                ThemeAsset.objects.filter(theme=self, pk__in={pk for _, pk in wanted}).values_list(
+                    "slot", "pk"
+                )
+            )
+        return [
+            f"Image {pk} isn't one of this theme's {slot} images."
+            for slot, pk in sorted(wanted - found)
+        ]
 
     def snapshot(self):
         """Return the draft's look: everything a revision copies when published.
@@ -122,11 +139,13 @@ class Theme(models.Model):
             # longer exists (such a draft can't be published).
             "light_values": builtin_values(self.light_base),
             "dark_values": builtin_values(self.dark_base),
-            # The stored file's name. Replacing the logo stores a new file and
-            # never overwrites the old one, so older revisions keep theirs.
-            "logo": self.logo.name or "",
             "settings": copy.deepcopy(self.settings),
         }
+        # The chosen logos and images: their files, sizes and smaller copies.
+        # Images are never changed after upload, so older revisions keep theirs.
+        images = snapshot_images(self, self.settings)
+        if images:
+            snapshot["images"] = images
         # Chosen fonts are copied in (family, fallbacks, file URLs), so later
         # changes to the font library can't change a published theme. Only
         # added when fonts are chosen, so older revisions still compare equal.
@@ -167,7 +186,10 @@ class Theme(models.Model):
         """True if the draft's look differs from the live revision (or was never published)."""
         if self.live_revision is None:
             return True
-        return self.snapshot() != self.live_revision.snapshot
+        live = dict(self.live_revision.snapshot)
+        if not live.get("logo"):
+            live.pop("logo", None)  # revisions from before logo slots had "logo": ""
+        return self.snapshot() != live
 
 
 class ThemeRevision(models.Model):

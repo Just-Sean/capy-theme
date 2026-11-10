@@ -30,7 +30,8 @@ from .google_fonts import WEIGHTS as GOOGLE_WEIGHTS
 from .google_fonts import import_family
 from .history import compare as compare_revisions
 from .history import restore as restore_revision
-from .images import prepare_image
+from .images import SLOTS, prepare_image
+from .logos import HEIGHTS, LOGO_SLOTS
 from .models import Font, FontFile, Theme, ThemeAsset, ThemeRevision
 from .publishing import NothingToPublish, publish
 from .shape import EFFECTS, SHAPE_NAMES, SIZES
@@ -88,7 +89,7 @@ class ThemeForm(forms.ModelForm):
 
     class Meta:
         model = Theme
-        fields = ["name", "slug", "light_base", "dark_base", "logo"]
+        fields = ["name", "slug", "light_base", "dark_base"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -125,12 +126,31 @@ class ThemeForm(forms.ModelForm):
         for name in EFFECTS:
             if name in shape:
                 self.fields[f"shape_{name}"].initial = "on" if shape[name] else "off"
+        self._add_logo_fields()
         if self.instance.pk:
             self._add_contrast_ratings()
         self.fields["default_mode"].initial = self.instance.settings.get("default_mode", "auto")
         self.fields["visitors_can_switch"].initial = self.instance.settings.get(
             "visitors_can_switch", True
         )
+
+    def _add_logo_fields(self):
+        """A choice of this theme's uploaded images for each logo slot and mode."""
+        chosen = self.instance.settings.get("images", {})
+        assets = list(self.instance.assets.all()) if self.instance.pk else []
+        for slot in LOGO_SLOTS:
+            for mode in ("light", "dark"):
+                choices = [("", "None (use the fallback)")] + [
+                    (str(a.pk), f"{a.original.name.rsplit('/', 1)[-1]} ({a.width} × {a.height})")
+                    for a in assets
+                    if a.slot == slot
+                ]
+                field = self.fields[image_field_name(slot, mode)]
+                field.choices = choices
+                field.initial = str(chosen.get(slot, {}).get(mode, ""))
+        heights = self.instance.settings.get("logo", {})
+        for name in HEIGHTS:
+            self.fields[f"logo_{name}"].initial = heights.get(name)
 
     def _add_contrast_ratings(self):
         """Show each colour's WCAG contrast rating (from the saved draft) in its help text."""
@@ -205,8 +225,59 @@ class ThemeForm(forms.ModelForm):
             settings["shape"] = shape
         else:
             settings.pop("shape", None)
+        images = {
+            slot: {
+                mode: int(cleaned[image_field_name(slot, mode)])
+                for mode in ("light", "dark")
+                if cleaned.get(image_field_name(slot, mode))
+            }
+            for slot in LOGO_SLOTS
+        }
+        # Other slots (icon, backgrounds...) are kept until they get admin fields.
+        images = {
+            **{k: v for k, v in settings.get("images", {}).items() if k not in LOGO_SLOTS},
+            **{k: v for k, v in images.items() if v},
+        }
+        if images:
+            settings["images"] = images
+        else:
+            settings.pop("images", None)
+        heights = {
+            name: cleaned[f"logo_{name}"]
+            for name in HEIGHTS
+            if cleaned.get(f"logo_{name}") is not None
+        }
+        if heights:
+            settings["logo"] = heights
+        else:
+            settings.pop("logo", None)
         self.instance.settings = settings
         return cleaned
+
+
+def image_field_name(slot, mode):
+    return f"image_{slot}_{mode}"
+
+
+for _slot in LOGO_SLOTS:
+    for _mode in ("light", "dark"):
+        _field = image_field_name(_slot, _mode)
+        ThemeForm.base_fields[_field] = ThemeForm.declared_fields[_field] = forms.ChoiceField(
+            required=False,
+            label=f"{SLOTS[_slot][0]} ({_mode})",
+            help_text=SLOTS[_slot][3]
+            + (" Leave dark empty to use the light one." if _mode == "dark" else ""),
+        )
+for _name, (_label, _default) in HEIGHTS.items():
+    ThemeForm.base_fields[f"logo_{_name}"] = ThemeForm.declared_fields[f"logo_{_name}"] = (
+        forms.IntegerField(
+            required=False,
+            min_value=16,
+            max_value=200,
+            label=_label,
+            help_text=f"Blank for {_default} px.",
+        )
+    )
 
 
 def _pair(entry):
@@ -455,7 +526,19 @@ class ThemeAdmin(admin.ModelAdmin):
                 "Anything you don't change below comes from them.",
             },
         ),
-        ("Branding", {"fields": ["site_name", "tagline", "logo", "logo_alt"]}),
+        ("Branding", {"fields": ["site_name", "tagline", "logo_alt"]}),
+        (
+            "Logos",
+            {
+                "fields": [
+                    *[image_field_name(s, m) for s in LOGO_SLOTS for m in ("light", "dark")],
+                    *[f"logo_{name}" for name in HEIGHTS],
+                ],
+                "description": "Upload images in the Images list at the bottom of this page "
+                "(or in the live editor), save, then choose them here. Slots left empty use "
+                "the main logo.",
+            },
+        ),
         ("Fonts", {"fields": [f"font_{role}" for role in ROLES]}),
         ("Type scale", {"fields": [f"type_{name}" for name in TYPE_SETTINGS]}),
         *color_fieldsets(),
