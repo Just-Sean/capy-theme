@@ -150,6 +150,22 @@ After pulling changes that add migrations, apply them to the demo database:
 uv run python demo/manage.py migrate
 ```
 
+### Drafts and publishing
+
+Editing a theme in the admin changes only its **draft**. Pages will use the
+theme's **live revision**, which changes only when someone publishes:
+
+- On a theme's edit page, click **Publish**. A confirmation page shows what's
+  live now and has an optional note box. Publishing copies the draft's look
+  (light base, dark base and `settings`) into a new numbered `ThemeRevision`,
+  recording who published it and when, and makes it the live revision.
+- If the draft matches the live revision, publishing is refused ("Nothing to publish").
+- The name and slug aren't part of a revision, so renaming takes effect without publishing.
+- Revisions can't be edited or deleted. They're listed on the theme's edit page,
+  and removed only if the theme itself is deleted.
+
+From code: `from capy_theme.publishing import publish` then `publish(theme, user=request.user, note="…")`.
+
 ## Build the package
 
 To build the installable package (a wheel and an sdist, written to `dist/`) and
@@ -195,8 +211,10 @@ straight to `main`:
 | --- | --- |
 | `src/capy_theme/` | The Django app that projects install |
 | `src/capy_theme/apps.py` | The app's name, label and admin title |
-| `src/capy_theme/models.py` | Database models: `Theme` (name, slug, light and dark base, `settings` overrides) |
-| `src/capy_theme/admin.py` | The admin pages for themes |
+| `src/capy_theme/models.py` | Database models: `Theme` (the draft: name, slug, light and dark base, `settings` overrides, and its live revision) and `ThemeRevision` (a published copy of a theme's look) |
+| `src/capy_theme/publishing.py` | `publish()`: turns a theme's draft into its new live revision |
+| `src/capy_theme/admin.py` | The admin pages for themes, including the Publish page and the list of published revisions |
+| `src/capy_theme/templates/capy_theme/admin/` | Templates for the theme edit page (adds the Publish button) and the Publish page |
 | `src/capy_theme/settings.schema.json` | JSON Schema that every theme's `settings` must match |
 | `src/capy_theme/validation.py` | Checks `settings` against the schema, and that bases are valid themes |
 | `src/capy_theme/migrations/` | Database migrations (create with the `makemigrations` command above) |
