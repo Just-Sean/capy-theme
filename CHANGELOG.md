@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **JSON API** at `/theme/api.json`: the same data as `get_artifacts()` (now also
+  with font files, shape values and type settings), public, with ETag and 304.
+  In projects with Django REST Framework it's a DRF view that drf-spectacular
+  documents automatically; `CAPY_THEME_API` (`auto`, `drf`, `django`) chooses.
 - **See it as a visitor** in the live editor: shows the published theme visitors
   get (optionally in light or dark, with an offered theme, or on a chosen date to
   check schedules), with a summary of what's set up for visitors.

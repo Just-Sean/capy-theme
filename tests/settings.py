@@ -24,7 +24,17 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "capy_theme",
+    # Django REST Framework and drf-spectacular, so the API can be tested in DRF
+    # mode and in the generated API docs. Projects don't need them.
+    "rest_framework",
+    "drf_spectacular",
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # Stricter than DRF's own default, to prove the theme API stays public.
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

@@ -1172,3 +1172,26 @@ summary of what's set up for them, plus the images panel in the Components view.
 - **Images panel** shows the saved draft (uploads and choices are saved data);
   the icons come from the published revision because they're made when
   publishing. The Components view reloads after Save draft or Publish.
+
+## 7.1 JSON API (#52)
+
+Agreed with Sean: hybrid. capy-theme never requires DRF.
+
+- **Chosen when the URLs load** (`artifacts.api.api_view`), not per request:
+  drf-spectacular documents the views it finds in the URL patterns, so the URL
+  itself must point at the DRF view in DRF mode.
+- **Same data, same ETag:** both views use `api.payload()`; the ETag is a hash of
+  the data (sorted keys), not of the bytes, since DRF and Django format JSON
+  slightly differently. Tests compare both modes.
+- **The DRF view sets its own authentication, permissions, throttling and
+  renderer**, so a project's defaults can't make the public API need a login. The
+  test project deliberately requires login by default to prove it.
+- **Serializers only describe the response** for the docs; the view returns
+  `get_artifacts()` unchanged.
+- **Cache-Control 60 seconds** plus ETag: the address doesn't change when a theme
+  is published, so long caching would show an old theme.
+- **`get_artifacts()` gained** font files and external stylesheet, shape values per
+  mode, and the type settings, because the issue asked the API for them and the
+  API serves the same data.
+- **Test-only dependencies:** djangorestframework and drf-spectacular (Sean
+  approved), in the dev group.

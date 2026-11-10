@@ -281,11 +281,11 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 - [x] **6.6 Release v0.6.0** (#51)
 - [x] **Reorganise into small sections** (#150) and **data tables to JSON** (#152)
 - [x] **6.7 Components view in the editor** (#155): Replace the showcase page with every daisyUI component inside the live editor.
-- [ ] **6.8 See it as a visitor** (#158): Admins see what visitors see (published theme, by mode, offered theme or date), a visitors summary, and the images and icons in the Components view.
+- [x] **6.8 See it as a visitor** (#158): Admins see what visitors see (published theme, by mode, offered theme or date), a visitors summary, and the images and icons in the Components view.
 
 ### Phase 7: Portability and API (v0.7.0)
 
-- [ ] **7.1 JSON API** (#52): Front ends, mobile apps and other modules get the branding (the same data as `get_artifacts()`). A plain Django view, or a DRF view that drf-spectacular documents automatically when the project uses DRF (`CAPY_THEME_API` = auto / drf / django).
+- [x] **7.1 JSON API** (#52): Front ends, mobile apps and other modules get the branding (the same data as `get_artifacts()`). A plain Django view, or a DRF view that drf-spectacular documents automatically when the project uses DRF (`CAPY_THEME_API` = auto / drf / django).
 - [ ] **7.2 Design tokens export** (#53): Theme values for design tools and native app builds.
 - [ ] **7.3 Theme export and import** (#54): Move a theme between sites.
 - [ ] **7.4 daisyUI theme block export** (#55): For projects that want the theme compiled into their stylesheet.

@@ -22,6 +22,7 @@ from ..colors.maths import to_hex
 from ..colors.names import COLOR_NAMES, SCHEMES
 from ..colors.values import effective_values
 from ..css.backgrounds import VARIABLES as BACKGROUND_SLOTS
+from ..css.shape import EFFECTS, SIZES
 from ..css.stylesheet import stylesheet_url
 from ..fonts.library import ROLES, stack
 from ..images.icons import icon_urls
@@ -41,7 +42,12 @@ def get_artifacts(request=None):
     - "branding": {"site_name", "tagline", "logo_alt"}
     - "colors": {"light"|"dark": {"primary": "oklch(…)", "base-100": …}} (all 20)
     - "colors_hex": the same as #rrggbb (for emails and other non-CSS uses)
-    - "fonts": {role: {"family", "stack", "source"}} for the roles the theme sets
+    - "fonts": {role: {"family", "stack", "source", "stylesheet", "files"}} for the
+      roles the theme sets; "files" are [{"url", "weight", "style", "unicode_range"}]
+      ("stylesheet" is the external stylesheet URL for external fonts, else "")
+    - "shape": {"light"|"dark": {setting: CSS value}}: radii, sizes, border, depth
+      and noise (e.g. "radius_box": "0.5rem")
+    - "type": the type scale settings the theme sets (e.g. {"base_size": 18})
     - "logos": {slot: {"light"|"dark": image or None}} for the six logo slots,
       after fallbacks (an empty slot gives the main logo; dark gives light)
     - "icons": {file name: URL} (favicon.ico, favicon.svg, apple-touch-icon.png,
@@ -84,10 +90,33 @@ def get_artifacts(request=None):
             for scheme in SCHEMES
         },
         "fonts": {
-            role: {"family": font["family"], "stack": stack(role, font), "source": font["source"]}
+            role: {
+                "family": font["family"],
+                "stack": stack(role, font),
+                "source": font["source"],
+                "stylesheet": font.get("stylesheet") or "",
+                "files": [
+                    {
+                        "url": url(f["url"]),
+                        "weight": f["weight"],
+                        "style": f["style"],
+                        "unicode_range": f["unicode_range"],
+                    }
+                    for f in font.get("files", [])
+                ],
+            }
             for role, font in snapshot.get("fonts", {}).items()
             if role in ROLES
         },
+        "shape": {
+            scheme: {
+                name: values[scheme][spec[0]]
+                for name, spec in (SIZES | EFFECTS).items()
+                if spec[0] in values[scheme]
+            }
+            for scheme in SCHEMES
+        },
+        "type": dict(snapshot.get("settings", {}).get("type", {})),
         "logos": {
             slot: {
                 scheme: _image(resolve(snapshot, slot, scheme), slot, url, brand["logo_alt"])
