@@ -122,7 +122,9 @@ def font_css(fonts):
     seen = set()
     for font in fonts.values():
         for f in font["files"]:
-            key = (font["family"], f["url"])
+            # The same file can serve several weights (variable fonts), so each
+            # weight and style still gets its own rule; only exact repeats are skipped.
+            key = (font["family"], f["url"], f["weight"], f["style"], f["unicode_range"])
             if key in seen:
                 continue
             seen.add(key)

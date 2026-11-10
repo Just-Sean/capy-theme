@@ -177,3 +177,13 @@ def test_admin_import_shows_errors(client, django_user_model, monkeypatch):
     )
     assert response.status_code == 200
     assert "Google Fonts has no" in response.content.decode()
+
+
+def test_every_weight_gets_a_rule_even_when_files_are_shared():
+    # Variable fonts use one file for several weights; each weight needs its own
+    # @font-face, or browsers fake the bold.
+    font = import_family("Lora", download=FakeGoogle())
+    theme = Theme.objects.create(name="Main", slug="main", settings={"fonts": {"body": font.pk}})
+    css = render_css(publish(theme))
+    assert css.count("@font-face") == 3
+    assert "font-weight: 700;" in css

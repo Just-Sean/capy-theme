@@ -703,3 +703,9 @@ Recommended (made while building autonomously).
   allowed from the two Google Fonts addresses over https; each file is checked by
   fontTools (as uploads are).
 - **Default:** regular, bold and italic in Latin, changeable in the form.
+
+## Every weight gets its own @font-face (#126)
+
+- **Bug found in Chrome while checking 4.5:** `font_css()` skipped repeated file
+  URLs, so a variable font's shared file lost its bold rule. Now only exact
+  repeats (same file, weight, style and unicode-range) are skipped.
