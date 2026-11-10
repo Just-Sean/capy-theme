@@ -5,6 +5,8 @@ settings["colors"]["light"]["primary"] = "oklch(62% 0.19 260)". Anything not
 overridden comes from the base theme.
 """
 
+from coloraide import Color
+
 # The 20 colours, grouped as the admin shows them. Each name is the CSS
 # variable without its "--color-" prefix.
 COLOR_GROUPS = {
@@ -55,3 +57,34 @@ def effective_values(snapshot, scheme):
     for name, value in overrides(snapshot.get("settings", {}), scheme).items():
         values[f"--color-{name}"] = value
     return values
+
+
+def to_oklch(value):
+    """Return a colour written any common way as daisyUI-style OKLCH text.
+
+    Accepts hex (#3b82f6), rgb(), hsl(), oklch() and colour names. Raises
+    ValueError if it isn't a colour. Example: "#3b82f6" -> "oklch(62.31% 0.188 259.81)".
+    """
+    try:
+        color = Color(value.strip()).convert("oklch")
+    except (ValueError, TypeError, AttributeError) as error:
+        raise ValueError(f"{value!r} isn't a colour") from error
+    lightness, chroma, hue = color.coords(nans=False)
+    alpha = color.alpha(nans=False)
+    text = f"oklch({_number(lightness * 100, 2)}% {_number(chroma, 4)} {_number(hue, 2)}"
+    return text + (f" / {_number(alpha, 3)})" if alpha < 1 else ")")
+
+
+def to_hex(value, alpha=None):
+    """Return an OKLCH (or any CSS) colour as #rrggbb, fitted into sRGB.
+
+    Transparency is added (#rrggbbaa) only when the colour has some. With
+    alpha=False it's always dropped (the browser's colour input needs that).
+    """
+    return Color(value).convert("srgb").to_string(hex=True, fit=True, alpha=alpha)
+
+
+def _number(value, places):
+    """Round and drop trailing zeros: 62.300 -> "62.3", 260.0 -> "260"."""
+    text = f"{round(value, places):.{places}f}".rstrip("0").rstrip(".")
+    return text if text not in ("-0", "") else "0"

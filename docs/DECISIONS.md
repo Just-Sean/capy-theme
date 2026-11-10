@@ -355,3 +355,18 @@ Recommended (made while building autonomously).
 - **OKLCH only for now:** fields accept `oklch(...)` values (daisyUI's own
   format). 2.2 adds hex, RGB and HSL input, converted to OKLCH.
 - **Empty fields show the base colour as a greyed-out hint.**
+
+## 2.2 Colour input (#15)
+
+Recommended (made while building autonomously).
+
+- **ColorAide** (`coloraide>=8,<9`) reads hex, rgb(), hsl(), oklch() and colour
+  names, and converts to OKLCH, as the issue specified.
+- **Stored text:** daisyUI-style `oklch(L% C H)`, rounded (2 decimals for L and H,
+  4 for C) with trailing zeros dropped, and `/ alpha` only when transparent. So
+  `oklch(62% 0.19 260)` comes back unchanged, and `#3b82f6` becomes
+  `oklch(62.31% 0.188 259.81)`.
+- **Admin picker:** the browser's own `<input type="color">` beside the text box,
+  linked by a small static script (not inline, so it works under a strict CSP).
+  It works in hex, so picking writes hex into the box, which is converted to OKLCH
+  on save. The full picker is the editor's (3.3).
