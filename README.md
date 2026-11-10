@@ -6,7 +6,7 @@ A self-contained Django app (`capy_theme`) that any Django 6.1+ project
 can install. It has no project of its own: its tests run against a tiny
 stand-in project in `tests/`, and `demo/` is a small site for trying it out.
 
-## What it does (v0.6)
+## What it does (v0.7)
 
 Whoever runs the site controls its look from the Django admin, with no code
 changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
@@ -36,10 +36,16 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   - every favicon and app icon made from one square icon;
   - a 1200 × 630 sharing image for link previews;
   - optional login and page background images.
-- **Theme artifacts for other modules:** `get_artifacts()` (and
+- **Theme artifacts for other apps:** `get_artifacts()` (and
   `{% theme_artifacts %}`) give every colour, font, logo, icon and image as plain
   data, so an email module, app shell or PWA module can use the theme. capy-theme
   doesn't apply them outside the page's own look.
+- **JSON API and downloads** for front ends, apps and design tools:
+  `/theme/api.json` (with ETag; a DRF view documented by drf-spectacular when the
+  project uses DRF), W3C design tokens and daisyUI theme blocks. See
+  [docs/developers.md](docs/developers.md).
+- **Export and import** a theme between sites (admin buttons or management
+  commands), arriving as a draft.
 - **Drafts and publishing:** editing a theme changes only its draft. Publishing
   saves a numbered revision, recording who published it and when, and the site
   shows that. Every revision is kept; any two can be compared, and an old one
@@ -56,12 +62,13 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   (`{% theme_picker %}`); themes can be scheduled between two dates (e.g. a
   holiday theme) and the default returns afterwards; visitors' "reduce motion"
   and "more contrast" device settings are respected.
-- **Components view** in the editor: every daisyUI component in the draft theme,
-  light and dark side by side, updating as you edit.
+- **Components view** in the editor: every daisyUI component and the theme's
+  images and icons in the draft theme, light and dark side by side, updating as
+  you edit. **See it as a visitor** shows the published theme instead, by mode,
+  offered theme or date.
 - **Permissions:** only users with `publish_theme` can publish or activate.
 
-Next: portability and the JSON API (v0.7), then custom CSS, multiple sites and
-1.0 (see `docs/PLAN.md`).
+Next: custom CSS, multiple sites, project settings and 1.0 (see `docs/PLAN.md`).
 
 ## Add it to a project
 

@@ -1,38 +1,37 @@
 # Changelog
 
-## Unreleased
+## 0.7.0
 
-- **Developer docs page** (`docs/developers.md`): every CSS variable, the API with an
-  example, and the downloads; tests keep it matching the code.
-- **Management commands:** `theme_export`, `theme_import` (`--publish`,
-  `--activate`), `theme_publish` (`--note`, `--activate`) and `theme_rebuild_images`.
+Portability and the API: other apps and sites can use the theme, and the
+live editor shows every component and what visitors see.
+
+- **JSON API** at `/theme/api.json`: the same data as `get_artifacts()` (now also
+  with font files, shape values and type settings), public, with ETag and 304.
+  In projects with Django REST Framework it's a DRF view that drf-spectacular
+  documents automatically; `CAPY_THEME_API` (`auto`, `drf`, `django`) chooses.
+- **Design tokens download** at `/theme/tokens.json`: the published theme in the
+  W3C Design Tokens format (2025.10), validated against the official schema in tests.
 - **daisyUI theme blocks** at `/theme/daisyui-theme.css`: the published theme as
   `@plugin "daisyui/theme"` blocks (light and dark) to compile into a project's own CSS.
 - **Theme export and import:** **Export** on a theme's admin page downloads a zip
   (settings, images, fonts); **Import theme** brings it in as an unpublished draft,
   checked like uploads (needs `import_theme`).
-- **Design tokens download** at `/theme/tokens.json`: the published theme in the
-  W3C Design Tokens format (2025.10), validated against the official schema in tests.
-- **JSON API** at `/theme/api.json`: the same data as `get_artifacts()` (now also
-  with font files, shape values and type settings), public, with ETag and 304.
-  In projects with Django REST Framework it's a DRF view that drf-spectacular
-  documents automatically; `CAPY_THEME_API` (`auto`, `drf`, `django`) chooses.
+- **Management commands:** `theme_export`, `theme_import` (`--publish`,
+  `--activate`), `theme_publish` (`--note`, `--activate`) and `theme_rebuild_images`.
+- **Developer docs page** (`docs/developers.md`): every CSS variable, the API with an
+  example, and the downloads; tests keep it matching the code.
 - **See it as a visitor** in the live editor: shows the published theme visitors
   get (optionally in light or dark, with an offered theme, or on a chosen date to
   check schedules), with a summary of what's set up for visitors.
-- **Images and icons in the Components view:** every logo slot and its fallback,
-  the generated icons, the sharing image and the backgrounds.
 - **Components view in the live editor** replaces the showcase page: **Show all
   components** opens every daisyUI component in the draft theme, light and dark,
   updating as you edit. It runs in an iframe, so its stylesheet never touches the
   page being edited.
+- **Images and icons in the Components view:** every logo slot and its fallback,
+  the generated icons, the sharing image and the backgrounds.
 - **Removed:** the showcase page (`/theme/showcase/`) and its settings
   `CAPY_THEME_SHOWCASE` and `CAPY_THEME_BASE_TEMPLATE`. **Edit live** in the
   admin now opens the editor on the site's home page.
-- **Data moved out of Python into JSON files**, next to the code that reads them:
-  system font stacks, character sets, shape and type settings, image slots,
-  the SVG allow-list, icon files and colour groups. Same values (checked one by
-  one); no behaviour change.
 - **Reorganised into sections** (no behaviour change): `themes/`, `colors/`,
   `css/`, `fonts/`, `images/`, `editor/`, `artifacts/`, `admin/` and `showcase/`,
   each made of small files (every Python file under 200 lines). daisyUI's
@@ -40,6 +39,10 @@
   changed; `capy_theme.artifacts.get_artifacts`, `capy_theme.models`, the template
   tags, URLs and the context processor are unchanged. The README is shorter, with
   one page per section in `docs/`.
+- **Data moved out of Python into JSON files**, next to the code that reads them:
+  system font stacks, character sets, shape and type settings, image slots,
+  the SVG allow-list, icon files and colour groups. Same values (checked one by
+  one); no behaviour change.
 
 ## 0.6.0
 
