@@ -327,6 +327,24 @@
         }
       },
       "additionalProperties": false
+    },
+    "icon": {
+      "description": "How the site icons are made from the icon image.",
+      "type": "object",
+      "properties": {
+        "background": {
+          "description": "Icon background: a hex colour behind the icon. Missing means transparent.",
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "padding": {
+          "description": "Icon padding (%): space around the icon on each side.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 25
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,

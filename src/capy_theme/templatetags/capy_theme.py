@@ -17,6 +17,7 @@ from ..branding import branding
 from ..colors import SCHEMES, effective_values, to_hex
 from ..editor import mount as editor_mount
 from ..fonts import external_stylesheets, preload_urls
+from ..icons import head_links as icon_links
 from ..logos import LOGO_SLOTS, logo_html
 from ..mode import MODE_LABELS, MODES, current_mode, head_script, html_theme_value, mode_settings
 from ..stylesheet import stylesheet_url
@@ -43,7 +44,7 @@ def theme_head(context):
     nonce_attr = format_html(' nonce="{}"', nonce) if nonce else ""
     fonts = revision.snapshot.get("fonts")
     return format_html(
-        '{}{}<link rel="stylesheet" href="{}">\n{}<script{}>{}</script>{}',
+        '{}{}<link rel="stylesheet" href="{}">\n{}{}<script{}>{}</script>{}',
         format_html_join(
             "",
             '<link rel="preload" href="{}" as="font" type="font/woff2" crossorigin>\n',
@@ -56,6 +57,7 @@ def theme_head(context):
         ),
         stylesheet_url(revision),
         theme_color_meta(revision, current_mode(request, revision)),
+        icon_links(revision.snapshot),
         nonce_attr,
         mark_safe(head_script(revision)),  # noqa: S308 (built from fixed text and JSON values)
         editor,

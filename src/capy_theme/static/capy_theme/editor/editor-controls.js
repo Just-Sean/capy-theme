@@ -243,7 +243,7 @@
   // Which uploaded image each logo slot uses, in light and dark mode, and the
   // header logo heights. Saved with Save draft like everything else.
   function logoChoices(assets) {
-    var box = el("div", { class: "capy-editor-logos" }, [el("h4", { text: "Logos" })]);
+    var box = el("div", { class: "capy-editor-logos" }, [el("h4", { text: "Logos and icon" })]);
     var images = (changes.settings.images = changes.settings.images || {});
     spec.logo_slots.forEach(function (slot) {
       ["light", "dark"].forEach(function (mode) {
@@ -275,7 +275,23 @@
       });
       box.appendChild(el("label", { class: "capy-editor-field" }, [el("span", { text: item.label }), input]));
     });
-    box.appendChild(el("p", { class: "capy-editor-note", text: "Logos show on the page after you publish; the header height previews straight away." }));
+    spec.icon_settings.forEach(function (item) {
+      var input = item.name === "padding"
+        ? el("input", { type: "number", min: "0", max: "25", step: "1", placeholder: "0" })
+        : el("input", { type: "text", maxlength: "7", placeholder: "Transparent, or e.g. #ffffff" });
+      input.setAttribute("data-capy-icon", item.name);
+      input.setAttribute("aria-label", item.label);
+      input.title = item.help;
+      input.value = (changes.settings.icon || {})[item.name] === undefined ? "" : changes.settings.icon[item.name];
+      input.addEventListener("input", function () {
+        var icon = (changes.settings.icon = changes.settings.icon || {});
+        if (input.value === "") delete icon[item.name];
+        else icon[item.name] = item.name === "padding" ? Number(input.value) : input.value.trim();
+        update();
+      });
+      box.appendChild(el("label", { class: "capy-editor-field" }, [el("span", { text: item.label }), input]));
+    });
+    box.appendChild(el("p", { class: "capy-editor-note", text: "Logos and icons show on the page after you publish (icons are made then); the header height previews straight away." }));
     return box;
   }
 
@@ -539,6 +555,7 @@
         type: JSON.parse(JSON.stringify(state.settings.type || {})),
         images: JSON.parse(JSON.stringify(state.settings.images || {})),
         logo: JSON.parse(JSON.stringify(state.settings.logo || {})),
+        icon: JSON.parse(JSON.stringify(state.settings.icon || {})),
       },
     };
     editor.changes = normalized();

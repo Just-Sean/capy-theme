@@ -3,6 +3,7 @@
 from django.db import transaction
 from django.db.models import Max
 
+from .icons import make_icons
 from .models import ThemeRevision
 from .stylesheet import css_version
 from .validation import validate_settings
@@ -28,10 +29,11 @@ def publish(theme, user=None, note=""):
 
     validate_settings(theme.settings)
     theme.clean()
-
+    snapshot = theme.snapshot()
+    # The favicons and app icons are made now, so pages only link to files.
+    make_icons(snapshot)
     with transaction.atomic():
         number = (theme.revisions.aggregate(last=Max("number"))["last"] or 0) + 1
-        snapshot = theme.snapshot()
         revision = ThemeRevision.objects.create(
             theme=theme,
             number=number,
