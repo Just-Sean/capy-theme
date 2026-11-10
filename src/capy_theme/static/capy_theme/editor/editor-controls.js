@@ -268,18 +268,31 @@
       spec.fonts.forEach(function (font) {
         select.appendChild(el("option", { value: String(font.id), text: font.family + " (" + font.source + ")" }));
       });
+      var sample = el("div", { class: "capy-editor-font-sample", "data-capy-font-sample": role.name, text: "The quick brown fox jumps over the lazy dog" });
       select.addEventListener("change", function () {
         var fonts = (changes.settings.fonts = changes.settings.fonts || {});
         if (select.value === "") delete fonts[role.name];
         else fonts[role.name] = Number(select.value);
+        showSample(role.name);
         update();
       });
-      return el("label", { class: "capy-editor-field" }, [el("span", { text: role.label }), select]);
+      return el("div", {}, [el("label", { class: "capy-editor-field" }, [el("span", { text: role.label }), select]), sample]);
     });
     var note = spec.fonts.length
       ? null
       : el("p", { class: "capy-editor-note", text: "The font library is empty. Add fonts in the admin under Capy Theme → Fonts." });
     return el("section", { class: "capy-editor-section" }, [el("h3", { text: "Fonts" }), note].concat(rows));
+  }
+
+  // A sample line under each font dropdown, in the chosen font (the preview's
+  // CSS loads its files). Set through the CSSOM, so a strict CSP allows it.
+  function showSample(role) {
+    var sample = editor.panel.querySelector('[data-capy-font-sample="' + role + '"]');
+    if (!sample) return;
+    var id = (changes.settings.fonts || {})[role];
+    var font = spec.fonts.find(function (f) { return f.id === id; });
+    sample.style.fontFamily = font ? font.stack : "";
+    sample.hidden = !font;
   }
 
   // Shape
@@ -357,6 +370,7 @@
     panel.querySelectorAll("[data-capy-font]").forEach(function (select) {
       var role = select.getAttribute("data-capy-font");
       select.value = role in fonts ? String(fonts[role]) : "";
+      showSample(role);
     });
     panel.querySelectorAll("[data-capy-effect]").forEach(function (select) {
       var name = select.getAttribute("data-capy-effect");

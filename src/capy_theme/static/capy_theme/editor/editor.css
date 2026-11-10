@@ -128,3 +128,7 @@
   color: #78350f;
   cursor: pointer;
 }
+
+/* Font samples */
+.capy-editor-font-sample { margin: 0 0 0.5rem; padding: 0.25rem 0.4rem; font-size: 1rem; background: #f9fafb; border-radius: 0.25rem; }
+.capy-editor-font-sample[hidden] { display: none; }

@@ -131,7 +131,13 @@ def test_editor_offers_fonts_and_previews_them():
     font = make_font()
     spec = controls()
     assert [r["name"] for r in spec["font_roles"]] == ["body", "heading", "mono", "display"]
-    assert {"id": font.pk, "family": "Lora", "source": "Uploaded"} in spec["fonts"]
+    lora = next(f for f in spec["fonts"] if f["id"] == font.pk)
+    assert lora == {
+        "id": font.pk,
+        "family": "Lora",
+        "source": "Uploaded",
+        "stack": '"Lora", Georgia, serif',
+    }
     theme = Theme.objects.create(name="Main", slug="main")
     result = preview(theme, {"settings": {"fonts": {"heading": font.pk}}})
     assert '--capy-font-heading: "Lora"' in result["css"]
