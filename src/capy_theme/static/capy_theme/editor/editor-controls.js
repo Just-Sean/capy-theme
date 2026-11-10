@@ -243,7 +243,7 @@
   // Which uploaded image each logo slot uses, in light and dark mode, and the
   // header logo heights. Saved with Save draft like everything else.
   function logoChoices(assets) {
-    var box = el("div", { class: "capy-editor-logos" }, [el("h4", { text: "Logos, icon and sharing image" })]);
+    var box = el("div", { class: "capy-editor-logos" }, [el("h4", { text: "Where images are used" })]);
     var images = (changes.settings.images = changes.settings.images || {});
     spec.logo_slots.forEach(function (slot) {
       slot.modes.forEach(function (mode) {
@@ -291,7 +291,7 @@
       });
       box.appendChild(el("label", { class: "capy-editor-field" }, [el("span", { text: item.label }), input]));
     });
-    box.appendChild(el("p", { class: "capy-editor-note", text: "Logos and icons show on the page after you publish (icons are made then); the header height previews straight away." }));
+    box.appendChild(el("p", { class: "capy-editor-note", text: "Logos and icons show on the page after you publish (icons are made then); backgrounds and the header height preview straight away." }));
     return box;
   }
 

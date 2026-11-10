@@ -6,6 +6,8 @@ from importlib.metadata import version
 
 from django.urls import reverse
 
+from .backgrounds import css_variables as background_variables
+from .backgrounds import helper_css as background_css
 from .colors import effective_values, focus_color
 from .fonts import font_css
 from .logos import logo_css
@@ -46,8 +48,9 @@ def snapshot_css(snapshot, comment):
     Used for published revisions and, in the editor, for unsaved drafts, so the
     two always match.
     """
-    light = effective_values(snapshot, "light")
-    dark = effective_values(snapshot, "dark")
+    # Colours, plus the background image variables (none if not chosen).
+    light = effective_values(snapshot, "light") | background_variables(snapshot, "light")
+    dark = effective_values(snapshot, "dark") | background_variables(snapshot, "dark")
     lines = [
         f"/* {comment} */",
         ":root {",
@@ -73,6 +76,7 @@ def snapshot_css(snapshot, comment):
         *font_css(snapshot.get("fonts", {})),
         *type_css(snapshot.get("settings", {})),
         logo_css(snapshot),
+        background_css(),
     ]
     return "\n".join(lines) + "\n"
 

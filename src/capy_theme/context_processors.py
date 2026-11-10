@@ -5,6 +5,7 @@ TEMPLATES["OPTIONS"]["context_processors"].
 """
 
 from .active import get_active_theme
+from .backgrounds import template_values as background_urls
 from .branding import branding
 from .colors import effective_values, hex_colors
 from .mode import current_mode, mode_settings
@@ -30,6 +31,8 @@ def theme(request):
             "dark_base": live.snapshot["dark_base"],
             "stylesheet_url": stylesheet_url(live),
             **branding(live),  # site_name, tagline, logo_url, logo_alt
+            # background_login_url and background_pattern_url ("" if not set)
+            **background_urls(live.snapshot),
             "default_mode": mode_settings(live)[0],
             "visitors_can_switch": mode_settings(live)[1],
             "mode": current_mode(request, live),  # what this visitor sees

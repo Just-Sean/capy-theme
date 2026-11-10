@@ -300,6 +300,8 @@ CHOOSABLE = {
     **{slot: ("light", "dark") for slot in LOGO_SLOTS},
     "icon": ("light", "dark"),
     "social": ("light",),
+    "background_login": ("light", "dark"),
+    "background_pattern": ("light", "dark"),
 }
 for _slot, _modes in CHOOSABLE.items():
     for _mode in _modes:
@@ -647,6 +649,20 @@ class ThemeAdmin(admin.ModelAdmin):
             {"fields": [f"shape_{name}" for name in SHAPE_NAMES], "classes": ["collapse"]},
         ),
         ("Mode", {"fields": ["default_mode", "visitors_can_switch"]}),
+        (
+            "Backgrounds",
+            {
+                "fields": [
+                    image_field_name(slot, mode)
+                    for slot in ("background_login", "background_pattern")
+                    for mode in ("light", "dark")
+                ],
+                "classes": ["collapse"],
+                "description": "Optional. They show where the project's templates use them: "
+                'class="capy-bg-login" or "capy-bg-pattern", or the CSS variables '
+                "--capy-bg-login and --capy-bg-pattern.",
+            },
+        ),
         (
             "Link previews",
             {

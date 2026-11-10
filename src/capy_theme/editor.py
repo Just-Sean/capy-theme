@@ -126,7 +126,7 @@ def controls():
                 "fallback": "Use the main logo" if slot in FALLBACK else "None",
                 "modes": ["light"] if slot == "social" else ["light", "dark"],
             }
-            for slot in (*LOGO_SLOTS, "icon", "social")
+            for slot in (*LOGO_SLOTS, "icon", "social", "background_login", "background_pattern")
         ],
         "app_settings": [
             {
