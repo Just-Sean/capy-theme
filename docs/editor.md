@@ -89,6 +89,24 @@ theme, since they're made when publishing); the sharing image; and the
 backgrounds. It shows the saved draft and reloads after **Save draft** or
 **Publish**.
 
+Every editor setting shows there: colours, shape, fonts, the type scale (all six
+heading levels and the display font) and base themes through the draft CSS;
+logo, icon, sharing-image and background choices, logo heights and the icon's
+background and padding through the page itself, including **unsaved** choices
+(the page gets them in its address and reloads when they change; nothing is
+saved). The icon is previewed with the draft's background and padding (made on
+the fly; the real icon files are made when publishing), and the dark icon too.
+A line at the top says which domain the view is for and which theme visitors on
+that domain see. Custom CSS: people who may edit it get the draft's custom CSS
+applied, with the selectors it styles listed; others get the published custom
+CSS.
+
+**Accessibility:** the view's own page passes Chrome's checks in light and dark
+(every control and image has a name, language and title set, unique ids, a main
+landmark). The component samples show the theme's own colours, so a colour pair
+with too little contrast shows there too; the editor's contrast badges flag the
+same pairs. Lighthouse itself isn't run (it's not a dependency).
+
 It's a page of its own (`/theme/editor/<id>/components/`, staff who can edit
 themes only) shown in an iframe, so its daisyUI stylesheet can never change the page
 being edited. The editor puts the draft theme's CSS into it each time the preview
@@ -96,7 +114,7 @@ changes. The page may only be framed by the same site.
 
 Each sample is a template in
 `src/capy_theme/templates/capy_theme/editor/components/`, listed in `COMPONENTS`
-in `src/capy_theme/editor/views.py`. It's included once per mode, with `mode` set
+in `src/capy_theme/editor/components_view.py`. It's included once per mode, with `mode` set
 to `"light"` or `"dark"`, so use `{{ mode }}` in any `id` or `name` that must be
 unique.
 

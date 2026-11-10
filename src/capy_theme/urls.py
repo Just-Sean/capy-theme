@@ -9,6 +9,7 @@ from django.urls import path
 from .artifacts import downloads
 from .artifacts.api import api_view
 from .css import views as css_views
+from .editor import components_view, custom_css_view
 from .editor import views as editor_views
 from .themes import views as theme_views
 
@@ -17,7 +18,15 @@ app_name = "capy_theme"
 urlpatterns = [
     path("mode/<slug:mode>/", theme_views.set_mode, name="set_mode"),
     path("choose/<slug:slug>/", theme_views.choose_theme, name="choose_theme"),
-    path("editor/<int:pk>/components/", editor_views.editor_components, name="editor_components"),
+    path(
+        "editor/<int:pk>/components/", components_view.editor_components, name="editor_components"
+    ),
+    path(
+        "editor/<int:pk>/icon-preview.png",
+        components_view.editor_icon_preview,
+        name="editor_icon_preview",
+    ),
+    path("editor/<int:pk>/custom.css", custom_css_view.editor_custom_css, name="editor_custom_css"),
     path("editor/visitor-view/", editor_views.editor_visitor_view, name="editor_visitor_view"),
     path("editor/<int:pk>/state/", editor_views.editor_state, name="editor_state"),
     path("editor/<int:pk>/preview/", editor_views.editor_preview, name="editor_preview"),

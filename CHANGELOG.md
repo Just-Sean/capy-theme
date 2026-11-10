@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Components view, final pass:** every editor setting shows there (unsaved image
+  choices, an icon preview with the draft's background and padding, all heading
+  levels and the display font), plus which domain's theme it shows and the custom
+  CSS (with the selectors it styles). Accessibility fixes for its samples.
 - **Project settings:** all in `capy_theme/conf.py`, each tested and listed in the
   README. New: `CAPY_THEME_CUSTOM_CSS`, `CAPY_THEME_IMAGE_MAX_BYTES`,
   `CAPY_THEME_IMPORT_MAX_BYTES`.

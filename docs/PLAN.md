@@ -298,6 +298,6 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 - [x] **8.1 Custom CSS** (#59): An escape hatch for anything the settings don't cover.
 - [x] **8.2 Multiple sites** (#60): One install serving several domains, each with its own theme.
 - [x] **8.3 Project settings** (#61): Projects can set limits.
-- [ ] **8.4 Editor Components view: final pass** (#62): Every editor setting changes something visible in the Components view; accessibility check in both modes.
+- [x] **8.4 Editor Components view: final pass** (#62): Every editor setting changes something visible in the Components view; accessibility check in both modes.
 - [ ] **8.5 Prove it works in a real project** (#63): Confirm the module is truly pluggable.
 - [ ] **8.6 Release v1.0.0** (#64): The first stable version.

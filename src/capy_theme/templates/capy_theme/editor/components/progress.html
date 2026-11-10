@@ -1,12 +1,12 @@
 <div class="space-y-3">
   <h3 class="text-xl font-semibold">Progress</h3>
-  <progress class="progress w-full" value="25" max="100"></progress>
-  <progress class="progress progress-primary w-full" value="50" max="100"></progress>
-  <progress class="progress progress-secondary w-full" value="65" max="100"></progress>
-  <progress class="progress progress-accent w-full" value="80" max="100"></progress>
-  <progress class="progress progress-success w-full" value="90" max="100"></progress>
+  <progress class="progress w-full" value="25" max="100" aria-label="Default progress"></progress>
+  <progress class="progress progress-primary w-full" value="50" max="100" aria-label="Primary progress"></progress>
+  <progress class="progress progress-secondary w-full" value="65" max="100" aria-label="Secondary progress"></progress>
+  <progress class="progress progress-accent w-full" value="80" max="100" aria-label="Accent progress"></progress>
+  <progress class="progress progress-success w-full" value="90" max="100" aria-label="Success progress"></progress>
   <div class="flex items-center gap-4">
-    <span class="loading loading-spinner loading-md text-primary"></span>
-    <div class="radial-progress text-primary" style="--value:70;" role="progressbar" aria-valuenow="70">70%</div>
+    <span class="loading loading-spinner loading-md text-primary" role="status" aria-label="Loading"></span>
+    <div class="radial-progress text-primary" style="--value:70;" role="progressbar" aria-valuenow="70" aria-label="Radial progress">70%</div>
   </div>
 </div>
