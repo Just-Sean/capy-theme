@@ -63,6 +63,11 @@ class Theme(models.Model):
 
     class Meta:
         ordering = ["name"]
+        permissions = [
+            ("publish_theme", "Can publish, activate and restore themes"),
+            ("edit_custom_css", "Can edit a theme's custom CSS"),
+            ("import_theme", "Can import themes"),
+        ]
 
     def __str__(self):
         return self.name

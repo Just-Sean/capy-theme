@@ -245,3 +245,21 @@ Recommended (made while building without a stop for every decision).
   upgrading capy-theme, which changes the package version, so the new version in
   the URL makes browsers fetch it again. Nothing has to be remembered by hand.
   Found while building the showcase (1.8), which changed the CSS output.
+
+## 1.9 Permissions (#12)
+
+Recommended (made while building without a stop for every decision).
+
+### `publish_theme` alone allows publishing and activating
+- **Chosen:** publishing and activating check only `publish_theme`, not also the
+  change permission.
+- **Why:** publishing doesn't edit the draft; it makes the existing draft live.
+  A user still needs view permission to reach the theme's page.
+
+### How things are hidden
+- The Publish button is hidden on the theme page without `publish_theme`, and the
+  publish page returns 403 ("forbidden").
+- The Activate action uses Django's action permissions, so it's left out of the
+  actions menu, and Django ignores it if requested directly.
+- Restore doesn't exist yet. It will check the same permission when it arrives
+  in 5.4.

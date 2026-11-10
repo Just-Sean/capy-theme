@@ -152,11 +152,23 @@ class ThemeAdmin(admin.ModelAdmin):
         active = get_active_theme()
         return active is not None and active.pk == theme.pk
 
-    @admin.action(description="Activate the selected theme (make it the site's theme)")
+    def has_publish_permission(self, request, obj=None):
+        """Publishing, activating and (later) restoring need the publish_theme permission."""
+        return request.user.has_perm("capy_theme.publish_theme")
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        extra_context = {
+            **(extra_context or {}),
+            "can_publish": self.has_publish_permission(request),
+        }
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    # Shown in the actions menu only to users with the publish_theme permission.
+    @admin.action(
+        description="Activate the selected theme (make it the site's theme)",
+        permissions=["publish"],
+    )
     def activate_theme(self, request, queryset):
-        # Anyone who can edit themes can activate for now; 1.9 adds a separate permission.
-        if not self.has_change_permission(request):
-            raise PermissionDenied
         if queryset.count() != 1:
             messages.error(request, "Select exactly one theme to activate.")
             return
@@ -219,8 +231,7 @@ class ThemeAdmin(admin.ModelAdmin):
 
     def publish_view(self, request, object_id):
         theme = get_object_or_404(Theme.objects.select_related("live_revision"), pk=object_id)
-        # Anyone who can edit themes can publish for now; 1.9 adds a separate permission.
-        if not self.has_change_permission(request, theme):
+        if not self.has_publish_permission(request, theme):
             raise PermissionDenied
         change_url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
 

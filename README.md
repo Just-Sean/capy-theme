@@ -242,12 +242,28 @@ revisions keep their logo.
 The "Overrides" section shows the theme's stored `settings` as read-only JSON.
 They're edited through the fields above, not typed by hand.
 
+### Permissions
+
+Editing themes uses Django's normal model permissions (view, add, change, delete
+theme). capy-theme adds three more, given to users or groups in the admin under
+**Authentication and Authorization**:
+
+| Permission | Allows |
+| --- | --- |
+| `capy_theme.publish_theme` | Publishing a theme, activating it, and (from 5.4) restoring old revisions. Without it, the Publish button and the Activate action are hidden, and direct requests are refused. |
+| `capy_theme.edit_custom_css` | Editing a theme's custom CSS (from 8.1). |
+| `capy_theme.import_theme` | Importing themes (from 7.3). |
+
+For example, a "Designer" group with view, add and change can edit drafts, while
+only an "Editor" group with `publish_theme` as well can make changes live.
+Superusers have every permission.
+
 ### Drafts and publishing
 
 Editing a theme in the admin changes only its **draft**. Pages will use the
 theme's **live revision**, which changes only when someone publishes:
 
-- On a theme's edit page, click **Publish**. A confirmation page shows what's
+- On a theme's edit page, click **Publish** (needs the `publish_theme` permission). A confirmation page shows what's
   live now and has an optional note box. Publishing copies the draft's look
   (light base, dark base and `settings`) into a new numbered `ThemeRevision`,
   recording who published it and when, and makes it the live revision.
@@ -261,7 +277,7 @@ From code: `from capy_theme.publishing import publish` then `publish(theme, user
 ### The active theme
 
 One theme is the site's **active** theme. To choose it, tick it in the admin's
-theme list and run the **Activate** action. The list's "Active" column shows
+theme list and run the **Activate** action (needs the `publish_theme` permission). The list's "Active" column shows
 which one it is. A theme must be published before it can be activated.
 
 From code: `from capy_theme.active import get_active_theme` then
