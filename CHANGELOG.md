@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Data moved out of Python into JSON files**, next to the code that reads them:
+  system font stacks, character sets, shape and type settings, image slots,
+  the SVG allow-list, icon files and colour groups. Same values (checked one by
+  one); no behaviour change.
 - **Reorganised into sections** (no behaviour change): `themes/`, `colors/`,
   `css/`, `fonts/`, `images/`, `editor/`, `artifacts/`, `admin/` and `showcase/`,
   each made of small files (every Python file under 200 lines). daisyUI's

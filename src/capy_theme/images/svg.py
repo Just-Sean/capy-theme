@@ -2,12 +2,14 @@
 
 An SVG is XML that browsers run like a small web page: it can contain scripts,
 event handlers (onload=...), links to other sites and embedded HTML. clean_svg()
-keeps only drawing elements and attributes on the lists below and drops
+keeps only the drawing elements and attributes listed in svg_allowlist.json and drops
 everything else, so what's stored can only draw shapes, text and gradients.
 """
 
+import json
 import re
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 from django.core.exceptions import ValidationError
 
@@ -19,44 +21,26 @@ ET.register_namespace("xlink", XLINK)
 
 MAX_ELEMENTS = 20000
 
+# What SVGs may keep, from svg_allowlist.json ("xlink:" and "xml:" are namespaces).
+_ALLOW = json.loads(Path(__file__).with_name("svg_allowlist.json").read_text(encoding="utf-8"))
+_NAMESPACES = {"xlink:": f"{{{XLINK}}}", "xml:": f"{{{XML}}}"}
+
+
+def _expand(name):
+    for prefix, namespace in _NAMESPACES.items():
+        if name.startswith(prefix):
+            return namespace + name.removeprefix(prefix)
+    return name
+
+
 # Drawing elements. Anything else (script, foreignObject, iframe, animation,
 # elements from other namespaces) is removed with everything inside it.
-ELEMENTS = {
-    "svg", "g", "defs", "symbol", "use", "title", "desc", "style",
-    "path", "rect", "circle", "ellipse", "line", "polyline", "polygon", "image",
-    "text", "tspan", "textPath",
-    "linearGradient", "radialGradient", "stop", "pattern", "clipPath", "mask", "marker",
-    "filter", "feBlend", "feColorMatrix", "feComponentTransfer", "feComposite",
-    "feDropShadow", "feFlood", "feFuncA", "feFuncB", "feFuncG", "feFuncR",
-    "feGaussianBlur", "feMerge", "feMergeNode", "feMorphology", "feOffset",
-}  # fmt: skip
+ELEMENTS = set(_ALLOW["elements"])
 
 # Links (<a>) are removed but what they contain is kept.
-UNWRAP = {"a"}
+UNWRAP = set(_ALLOW["unwrap"])
 
-ATTRIBUTES = {
-    "id", "class", "style", "transform", "viewBox", "preserveAspectRatio", "version",
-    "width", "height", "x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry",
-    "fx", "fy", "fr", "d", "points", "pathLength",
-    "fill", "fill-opacity", "fill-rule", "stroke", "stroke-width", "stroke-opacity",
-    "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-dasharray",
-    "stroke-dashoffset", "opacity", "color", "paint-order", "vector-effect",
-    "clip-path", "clip-rule", "mask", "filter", "display", "visibility", "overflow",
-    "shape-rendering", "image-rendering", "color-interpolation-filters",
-    "gradientUnits", "gradientTransform", "spreadMethod", "offset", "stop-color",
-    "stop-opacity", "patternUnits", "patternContentUnits", "patternTransform",
-    "maskUnits", "maskContentUnits", "clipPathUnits", "filterUnits", "primitiveUnits",
-    "in", "in2", "result", "stdDeviation", "dx", "dy", "mode", "operator",
-    "k1", "k2", "k3", "k4", "values", "type", "tableValues", "slope", "intercept",
-    "amplitude", "exponent", "radius", "flood-color", "flood-opacity",
-    "markerWidth", "markerHeight", "markerUnits", "refX", "refY", "orient",
-    "marker-start", "marker-mid", "marker-end",
-    "font-family", "font-size", "font-weight", "font-style", "text-anchor",
-    "dominant-baseline", "letter-spacing", "word-spacing", "text-decoration",
-    "textLength", "lengthAdjust", "startOffset",
-    "role", "aria-label", "aria-hidden", "focusable",
-    "href", f"{{{XLINK}}}href", f"{{{XML}}}space",
-}  # fmt: skip
+ATTRIBUTES = {_expand(name) for name in _ALLOW["attributes"]}
 
 HREF = {"href", f"{{{XLINK}}}href"}
 # <image> may only embed raster images inside the file, never load one.

@@ -1,0 +1,70 @@
+{
+  "_about": "The image slots: label, size limit (MB), largest width or height (px) and help. no_svg lists the slots that can't take SVG, and why.",
+  "slots": {
+    "logo_main": {
+      "label": "Main logo",
+      "max_mb": 2,
+      "max_pixels": 4000,
+      "help": "The logo in the site header."
+    },
+    "logo_stacked": {
+      "label": "Stacked logo",
+      "max_mb": 2,
+      "max_pixels": 4000,
+      "help": "Mark above the name, for narrow spaces."
+    },
+    "logo_mark": {
+      "label": "Logo mark",
+      "max_mb": 2,
+      "max_pixels": 4000,
+      "help": "The symbol on its own."
+    },
+    "logo_wordmark": {
+      "label": "Wordmark",
+      "max_mb": 2,
+      "max_pixels": 4000,
+      "help": "The name on its own."
+    },
+    "logo_email": {
+      "label": "Email logo",
+      "max_mb": 1,
+      "max_pixels": 2000,
+      "help": "For HTML emails (PNG is safest)."
+    },
+    "logo_print": {
+      "label": "Print logo",
+      "max_mb": 5,
+      "max_pixels": 6000,
+      "help": "High resolution, for print."
+    },
+    "icon": {
+      "label": "Icon",
+      "max_mb": 2,
+      "max_pixels": 4000,
+      "help": "One square image: favicons and app icons are made from it."
+    },
+    "social": {
+      "label": "Social sharing image",
+      "max_mb": 5,
+      "max_pixels": 6000,
+      "help": "Shown in link previews (cropped to 1200 × 630)."
+    },
+    "background_login": {
+      "label": "Login background",
+      "max_mb": 5,
+      "max_pixels": 6000,
+      "help": "Behind the login page."
+    },
+    "background_pattern": {
+      "label": "Page background pattern",
+      "max_mb": 2,
+      "max_pixels": 4000,
+      "help": "A tiling pattern behind pages."
+    }
+  },
+  "no_svg": {
+    "logo_email": "Email programs don't show SVG",
+    "social": "Social sites don't accept SVG for link previews",
+    "icon": "Favicons and app icons are made from it as PNGs"
+  }
+}

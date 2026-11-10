@@ -1,0 +1,47 @@
+{
+  "_about": "daisyUI's 20 colours: how they're grouped in the editor and admin, the labels that differ from the name, and which have a text ('-content') colour.",
+  "groups": {
+    "Basic": [
+      "primary",
+      "secondary",
+      "accent",
+      "neutral",
+      "base-100",
+      "base-content"
+    ],
+    "Advanced": [
+      "info",
+      "success",
+      "warning",
+      "error",
+      "base-200",
+      "base-300"
+    ],
+    "Expert": [
+      "primary-content",
+      "secondary-content",
+      "accent-content",
+      "neutral-content",
+      "info-content",
+      "success-content",
+      "warning-content",
+      "error-content"
+    ]
+  },
+  "labels": {
+    "base-100": "Background",
+    "base-200": "Background, darker",
+    "base-300": "Background, darkest",
+    "base-content": "Text on background"
+  },
+  "with_content": [
+    "primary",
+    "secondary",
+    "accent",
+    "neutral",
+    "info",
+    "success",
+    "warning",
+    "error"
+  ]
+}

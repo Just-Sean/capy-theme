@@ -1,0 +1,65 @@
+{
+  "_about": "The shape and effect settings: each one's CSS variable, unit, limits, label and help.",
+  "sizes": {
+    "radius_selector": {
+      "variable": "--radius-selector",
+      "unit": "rem",
+      "min": 0,
+      "max": 2,
+      "label": "Small corner radius",
+      "help": "Checkboxes, toggles and badges. 0 is square."
+    },
+    "radius_field": {
+      "variable": "--radius-field",
+      "unit": "rem",
+      "min": 0,
+      "max": 2,
+      "label": "Field corner radius",
+      "help": "Buttons, inputs, selects and tabs. 0 is square."
+    },
+    "radius_box": {
+      "variable": "--radius-box",
+      "unit": "rem",
+      "min": 0,
+      "max": 3,
+      "label": "Box corner radius",
+      "help": "Cards, alerts, modals and other boxes. 0 is square."
+    },
+    "size_selector": {
+      "variable": "--size-selector",
+      "unit": "rem",
+      "min": 0.125,
+      "max": 0.5,
+      "label": "Small control size",
+      "help": "Base size of checkboxes, toggles and badges (daisyUI uses 0.1875–0.3125)."
+    },
+    "size_field": {
+      "variable": "--size-field",
+      "unit": "rem",
+      "min": 0.125,
+      "max": 0.5,
+      "label": "Field size",
+      "help": "Base size of buttons and inputs (daisyUI uses 0.1875–0.3125)."
+    },
+    "border": {
+      "variable": "--border",
+      "unit": "px",
+      "min": 0,
+      "max": 4,
+      "label": "Border width",
+      "help": "Width of borders, in pixels."
+    }
+  },
+  "effects": {
+    "depth": {
+      "variable": "--depth",
+      "label": "Depth",
+      "help": "A subtle 3D shadow on buttons and other controls."
+    },
+    "noise": {
+      "variable": "--noise",
+      "label": "Noise",
+      "help": "A subtle grain texture on controls."
+    }
+  }
+}

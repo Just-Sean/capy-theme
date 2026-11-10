@@ -3,42 +3,15 @@
 Stored in Theme.settings["type"]. Unset values leave the project's own styles alone.
 """
 
-# name: (label, unit, minimum, maximum, step, help)
+import json
+from pathlib import Path
+
+# From type_settings.json. name: (label, unit, min, max, step, help)
 TYPE_SETTINGS = {
-    "base_size": (
-        "Base text size",
-        "px",
-        14,
-        24,
-        0.5,
-        "The size of body text. Everything sized in rem scales with it. At least 14px, "
-        "so text stays readable.",
-    ),
-    "scale": (
-        "Heading scale",
-        "×",
-        1.05,
-        1.6,
-        0.01,
-        "How much bigger each heading level is than the next (h6 is the base size). "
-        "1.25 is a common choice.",
-    ),
-    "line_height": (
-        "Line height",
-        "×",
-        1.1,
-        2.2,
-        0.05,
-        "Space between lines of body text, e.g. 1.5.",
-    ),
-    "heading_weight": (
-        "Heading weight",
-        "",
-        100,
-        900,
-        100,
-        "400 is regular, 700 bold.",
-    ),
+    name: (s["label"], s["unit"], s["min"], s["max"], s["step"], s["help"])
+    for name, s in json.loads(
+        Path(__file__).with_name("type_settings.json").read_text(encoding="utf-8")
+    )["settings"].items()
 }
 MINIMUM_BASE_SIZE = TYPE_SETTINGS["base_size"][2]
 

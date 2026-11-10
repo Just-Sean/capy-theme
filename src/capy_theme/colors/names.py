@@ -1,21 +1,12 @@
 """The 20 daisyUI colours: names, groups and labels, and a theme's overrides."""
 
-# The 20 colours, grouped as the admin shows them. Each name is the CSS
-# variable without its "--color-" prefix.
-COLOR_GROUPS = {
-    "Basic": ["primary", "secondary", "accent", "neutral", "base-100", "base-content"],
-    "Advanced": ["info", "success", "warning", "error", "base-200", "base-300"],
-    "Expert": [
-        "primary-content",
-        "secondary-content",
-        "accent-content",
-        "neutral-content",
-        "info-content",
-        "success-content",
-        "warning-content",
-        "error-content",
-    ],
-}
+import json
+from pathlib import Path
+
+_DATA = json.loads(Path(__file__).with_name("colors.json").read_text(encoding="utf-8"))
+
+# From colors.json: the editor's and admin's groups of the 20 colours.
+COLOR_GROUPS = _DATA["groups"]
 
 
 COLOR_NAMES = [name for names in COLOR_GROUPS.values() for name in names]
@@ -24,12 +15,8 @@ COLOR_NAMES = [name for names in COLOR_GROUPS.values() for name in names]
 SCHEMES = ("light", "dark")
 
 
-COLOR_LABELS = {
-    "base-100": "Background",
-    "base-200": "Background, darker",
-    "base-300": "Background, darkest",
-    "base-content": "Text on background",
-}
+# Labels that differ from the colour's name.
+COLOR_LABELS = _DATA["labels"]
 
 
 def label(name):
@@ -46,14 +33,5 @@ def overrides(settings, scheme):
     return dict(settings.get("colors", {}).get(scheme, {}))
 
 
-# Colours that have a matching "-content" (text) colour.
-WITH_CONTENT = [
-    "primary",
-    "secondary",
-    "accent",
-    "neutral",
-    "info",
-    "success",
-    "warning",
-    "error",
-]
+# Colours with a text ("-content") colour.
+WITH_CONTENT = _DATA["with_content"]

@@ -12,6 +12,7 @@ import base64
 import hashlib
 import io
 import json
+from pathlib import Path
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -19,20 +20,12 @@ from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 from PIL import Image, ImageOps
 
-# name: (size in px, what it is)
-FILES = {
-    "favicon.ico": (48, "Browser tab icon (16, 32 and 48 px in one file)"),
-    "favicon.svg": (64, "Browser tab icon that follows light and dark mode"),
-    "apple-touch-icon.png": (180, "iPhone and iPad home screen"),
-    "icon-192.png": (192, "Android home screen and app icon"),
-    "icon-512.png": (512, "App icon and splash screen"),
-    "icon-maskable-512.png": (512, "Android adaptive icon (cropped to a circle or squircle)"),
-    "icon-monochrome-512.png": (512, "Single-colour icon (e.g. Android themed icons)"),
-}
-SETTINGS = {
-    "background": ("Icon background", "A hex colour behind it, e.g. #ffffff. Blank: transparent."),
-    "padding": ("Icon padding (%)", "Space around the icon on each side, 0–25% of its size."),
-}  # fmt: skip
+_DATA = json.loads(Path(__file__).with_name("icons.json").read_text(encoding="utf-8"))
+
+# From icons.json. name: (size in px, what it is)
+FILES = {name: (f["size"], f["label"]) for name, f in _DATA["files"].items()}
+# name: (label, help)
+SETTINGS = {name: (s["label"], s["help"]) for name, s in _DATA["settings"].items()}
 # Home-screen icons can't be transparent; this is used if no background is set.
 OPAQUE_FALLBACK = "#ffffff"
 VERSION = "1"  # change when the way icons are made changes, so they're remade

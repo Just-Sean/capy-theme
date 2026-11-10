@@ -12,13 +12,13 @@ with alt text. For every upload:
 - The type is worked out from the file's content, not its name. Only PNG, JPEG,
   WebP, GIF and SVG are accepted, so a text file renamed `.png` is rejected.
 - Each slot has a size limit and a maximum width and height (in
-  `src/capy_theme/images/slots.py`, `SLOTS`): 1 MB for the email logo, 2 MB for the
+  `src/capy_theme/images/slots.json`): 1 MB for the email logo, 2 MB for the
   other logos, the icon and the background pattern, and 5 MB for the print logo,
   social image and login background.
 - The image is saved again without EXIF, text chunks and comments, so camera
   details and GPS locations are removed. Photos are turned upright first.
   Colour profiles are kept.
-- SVGs are cleaned with a strict allow-list (`src/capy_theme/images/svg.py`): only
+- SVGs are cleaned with a strict allow-list (`src/capy_theme/images/svg_allowlist.json`, used by `images/svg.py`): only
   drawing elements and attributes are kept. Scripts, event handlers (`onload`
   and so on), embedded HTML, animation, links to other files or sites, and CSS
   `@import` or external `url()` are removed. SVGs must be UTF-8, and SVGs with a
@@ -26,7 +26,7 @@ with alt text. For every upload:
 - SVGs aren't converted to PNG. The slots where SVG can't be used take a PNG,
   JPEG, WebP or GIF instead: the email logo (email programs don't show SVG), the
   social sharing image (social sites don't accept it) and the icon (favicons are
-  made from it). They're listed in `NO_SVG` in `src/capy_theme/images/slots.py`.
+  made from it). They're listed under `no_svg` in `src/capy_theme/images/slots.json`.
 
 Files are stored under `MEDIA_ROOT/capy_theme/assets/<slot>/`. An image is never
 changed after upload: a new image is a new asset, so older revisions keep theirs.
