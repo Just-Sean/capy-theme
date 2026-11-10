@@ -1063,3 +1063,13 @@ Recommended (made while building autonomously).
   shown for every pair.
 - **Checked in Chrome** by emulating each setting: button transitions went from
   0.2 s to effectively 0; borders 1 px → 2 px; noise and depth 1 → 0.
+
+## 6.5 Showcase: mode and visitor choices (#50)
+
+- **A panel in the showcase header**, not a per-mode section: these are site-wide
+  choices, not part of the light or dark look.
+- **The real toggle and picker** (`{% theme_mode_toggle %}`, `{% theme_picker %}`),
+  so trying them on the showcase sets the same cookies as anywhere else (checked in
+  Chrome: after Dark on the showcase, the home page is served with
+  `data-theme="capy-dark"`). Their templates are added to the showcase CSS build.
+- **Schedule list** shows running and upcoming schedules; finished ones are left out.

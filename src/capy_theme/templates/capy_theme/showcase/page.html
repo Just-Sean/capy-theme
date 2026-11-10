@@ -1,5 +1,5 @@
 {% extends base_template %}
-{% load static %}
+{% load static capy_theme %}
 {% comment %}
   The theme showcase: every section, once in light mode and once in dark mode.
   Each section is its own template in sections/, so later phases add theirs
@@ -30,6 +30,7 @@
           Publish a theme and activate it in the admin to see it here.</span>
       </div>
     {% endif %}
+    {% include "capy_theme/showcase/visitors.html" %}
   </header>
 
   <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">

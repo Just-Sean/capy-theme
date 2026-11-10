@@ -1,0 +1,47 @@
+{% load capy_theme %}
+{# The showcase's "Mode and visitors" panel: what visitors can choose, and the schedule. #}
+<section class="rounded-box border border-base-300 bg-base-100 p-4 space-y-3" aria-label="Mode and visitors" data-capy-showcase-visitors>
+  <h2 class="text-lg font-semibold">Mode and visitors</h2>
+  <div class="flex flex-wrap items-start gap-6">
+    <div class="space-y-2">
+      <p class="text-sm">
+        Default mode: <strong>{{ visitors.default_mode }}</strong>.
+        Visitors {% if visitors.can_switch %}can{% else %}can't{% endif %} switch.
+        You're seeing: <strong>{{ visitors.current_mode }}</strong>.
+      </p>
+      {% if visitors.can_switch %}
+        {% theme_mode_toggle %}
+        <p class="text-xs opacity-70">Your choice is saved in a cookie, so it applies on every page of the site.</p>
+      {% endif %}
+    </div>
+    <div class="space-y-2">
+      <p class="text-sm">
+        Visitor themes:
+        {% if not visitors.picker_on %}<strong>turned off</strong> by <code>CAPY_THEME_VISITOR_THEMES</code>.
+        {% elif visitors.offered %}{{ visitors.offered|length }} offered.
+        {% else %}none offered (tick “Offer to visitors” on a theme).{% endif %}
+      </p>
+      {% theme_picker %}
+    </div>
+    <div class="space-y-2">
+      <p class="text-sm">Scheduled themes:</p>
+      {% if visitors.schedule %}
+        <table class="table table-sm">
+          <thead><tr><th>Theme</th><th>Starts</th><th>Ends</th><th></th></tr></thead>
+          <tbody>
+            {% for item in visitors.schedule %}
+              <tr data-capy-schedule>
+                <td>{{ item.theme }}</td>
+                <td>{{ item.starts_at|date:"Y-m-d H:i"|default:"–" }}</td>
+                <td>{{ item.ends_at|date:"Y-m-d H:i"|default:"–" }}</td>
+                <td>{% if item.running %}<span class="badge badge-success badge-sm">Running</span>{% else %}<span class="badge badge-ghost badge-sm">Upcoming</span>{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-xs opacity-70">None. Add one in the admin under Theme schedule.</p>
+      {% endif %}
+    </div>
+  </div>
+</section>

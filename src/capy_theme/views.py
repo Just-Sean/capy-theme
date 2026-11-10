@@ -7,10 +7,17 @@ from django.db import IntegrityError
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from .active import CHOICE_COOKIE, get_active_theme, offered_themes, visitor_themes_allowed
+from .active import (
+    CHOICE_COOKIE,
+    get_active_theme,
+    offered_themes,
+    scheduled_assignments,
+    visitor_themes_allowed,
+)
 from .branding import branding
 from .editor import (
     can_edit,
@@ -22,7 +29,7 @@ from .editor import (
     suggestions,
 )
 from .images import add_asset, asset_data
-from .mode import COOKIE_MAX_AGE, COOKIE_NAME, MODES, mode_settings
+from .mode import COOKIE_MAX_AGE, COOKIE_NAME, MODE_LABELS, MODES, current_mode, mode_settings
 from .models import Theme, ThemeRevision
 from .publishing import NothingToPublish, publish
 from .showcase import images as showcase_images
@@ -90,9 +97,33 @@ def showcase(request):
         "shape_samples": shape_samples(revision),
         "type_samples": typography(revision),
         "image_samples": showcase_images(revision),
+        "visitors": _visitor_context(request, revision),
         "editor": _editor_context(request),
     }
     return render(request, "capy_theme/showcase/page.html", context)
+
+
+def _visitor_context(request, revision):
+    """The showcase's "Mode and visitors" panel: settings, offered and scheduled themes."""
+    default_mode, can_switch = mode_settings(revision) if revision else ("auto", True)
+    now = timezone.now()
+    return {
+        "default_mode": MODE_LABELS[default_mode],
+        "can_switch": can_switch,
+        "current_mode": MODE_LABELS[current_mode(request, revision)] if revision else "Auto",
+        "picker_on": visitor_themes_allowed(),
+        "offered": offered_themes(),
+        "schedule": [
+            {
+                "theme": a.theme.name,
+                "starts_at": a.starts_at,
+                "ends_at": a.ends_at,
+                "running": a.is_running(now),
+            }
+            for a in scheduled_assignments()
+            if a.ends_at is None or a.ends_at > now
+        ],
+    }
 
 
 def set_mode(request, mode):
