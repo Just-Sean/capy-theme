@@ -86,3 +86,21 @@ def test_demo_showcase_keeps_the_demo_navbar():
     result = run_manage("shell", "--no-imports", "-c", code)
     assert result.returncode == 0, result.stderr
     assert result.stdout.split() == ["True", "True", "True", "True"], result.stdout
+
+
+def test_demo_navbar_has_the_mode_toggle():
+    # The demo shows {% theme_mode_toggle %} in its navbar (issue #46).
+    code = (
+        "from django.core.management import call_command; "
+        "call_command('migrate', verbosity=0); "
+        "from capy_theme.models import Theme; "
+        "from capy_theme.publishing import publish; "
+        "from capy_theme.active import activate; "
+        "t = Theme.objects.create(name='M', slug='m'); publish(t); activate(t); "
+        "from django.test import Client; "
+        "html = Client().get('/', SERVER_NAME='localhost').content.decode(); "
+        "print(html.count('data-capy-mode='))"
+    )
+    result = run_manage("shell", "--no-imports", "-c", code)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.split() == ["3"], result.stdout

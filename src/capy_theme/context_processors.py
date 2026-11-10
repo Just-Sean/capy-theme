@@ -6,6 +6,7 @@ TEMPLATES["OPTIONS"]["context_processors"].
 
 from .active import get_active_theme
 from .branding import branding
+from .mode import current_mode, mode_settings
 from .stylesheet import stylesheet_url
 
 
@@ -28,5 +29,8 @@ def theme(request):
             "dark_base": live.snapshot["dark_base"],
             "stylesheet_url": stylesheet_url(live),
             **branding(live),  # site_name, tagline, logo_url, logo_alt
+            "default_mode": mode_settings(live)[0],
+            "visitors_can_switch": mode_settings(live)[1],
+            "mode": current_mode(request, live),  # what this visitor sees
         }
     }

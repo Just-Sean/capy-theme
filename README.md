@@ -20,8 +20,10 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
 - **One active theme:** pick it with the admin's Activate action. It's cached, so
   pages don't query the database for it.
 - **On every page:** `{% theme_head %}` links the theme's stylesheet (light and dark
-  values, following the visitor's device setting), `{% theme_logo %}` shows the
-  logo or site name, and every template gets a `theme` variable.
+  values), `{% theme_logo %}` shows the logo or site name, and every template
+  gets a `theme` variable.
+- **Light and dark mode:** follow the device or force one, and visitors can switch
+  with `{% theme_mode_toggle %}`, with no flash on page load.
 - **Theme showcase** at `/theme/showcase/`: every daisyUI component in the
   active theme, with light and dark side by side (staff only by default).
 - **Permissions:** only users with `publish_theme` can publish or activate.
@@ -76,8 +78,10 @@ an API and more come in later versions (see `docs/PLAN.md`).
    ```
 
 5. Add the template tags to the project's base template. `{% theme_head %}` links
-   the active theme's stylesheet. `{% theme_html_attrs %}` outputs nothing yet;
-   it's there so the light/dark toggle can use it later without template changes.
+   the active theme's stylesheet and adds a tiny script that applies light or dark
+   mode before the page draws. `{% theme_html_attrs %}` puts the forced mode
+   (`data-theme="capy-light"` or `"capy-dark"`) on `<html>`. `{% theme_mode_toggle %}`
+   shows Light / Dark / Auto buttons for visitors, wherever you put it.
 
    ```html
    {% load capy_theme %}<!doctype html>
@@ -87,7 +91,14 @@ an API and more come in later versions (see `docs/PLAN.md`).
      <link rel="stylesheet" href="...">   <!-- the project's Tailwind/daisyUI CSS -->
      {% theme_head %}
    </head>
+   <body>
+     <nav>... {% theme_logo class="h-8" %} ... {% theme_mode_toggle %} ...</nav>
    ```
+
+   The toggle uses daisyUI's `join` and `btn` classes. Tailwind only includes
+   classes it finds in scanned files, so add the module's templates to the
+   project's Tailwind source with an `@source` line pointing at the installed
+   `capy_theme/templates` folder.
 
 6. Make sure the project stores and serves uploaded files, for theme logos.
    Set `MEDIA_ROOT` and `MEDIA_URL` in `settings.py`. While developing, serve them
@@ -114,7 +125,8 @@ To show the theme's logo (or its site name if it has no logo), use
 `{% theme_logo %}`. Extra attributes are passed through, e.g.
 `{% theme_logo class="h-8" %}`. Every template also gets a `theme` variable
 holding the published `site_name`, `tagline`, `logo_url`, `logo_alt`, `name`,
-`slug`, `revision`, `light_base`, `dark_base` and `stylesheet_url`, or `None`
+`slug`, `revision`, `light_base`, `dark_base`, `stylesheet_url`, `default_mode`,
+`visitors_can_switch` and `mode` (what this visitor sees), or `None`
 if no theme is active.
 
 Pages then show the **active** theme's **published** colours. Until a theme is
@@ -282,6 +294,26 @@ revisions keep their logo.
 The "Overrides" section shows the theme's stored `settings` as read-only JSON.
 They're edited through the fields above, not typed by hand.
 
+### Light and dark mode
+
+On a theme's admin page, the **Mode** section has:
+
+- **Default mode:** *Auto* (follow the visitor's device setting), *Light* or *Dark*.
+- **Visitors can switch** (on by default): shows `{% theme_mode_toggle %}`, three
+  buttons (Light, Dark, Auto). A visitor's choice is kept in the `capy_theme_mode`
+  cookie for a year.
+
+Like everything else, these take effect when the theme is published.
+
+How it works: the server puts `data-theme="capy-light"` or `"capy-dark"` on
+`<html>` (`{% theme_html_attrs %}`) when a mode is forced, so pages arrive in the
+right mode with no flash. For "auto" it adds nothing, and the stylesheet follows
+the device. The script from `{% theme_head %}` does the same before the page
+draws (so cached pages are right too) and makes the buttons switch instantly.
+Without JavaScript, each button is a link to `/theme/mode/<light|dark|auto>/`,
+which sets the cookie and comes back to the page. The script carries Django's
+CSP nonce when the project uses Django's CSP middleware.
+
 ### Permissions
 
 Editing themes uses Django's normal model permissions (view, add, change, delete
@@ -427,14 +459,16 @@ straight to `main`:
 | `src/capy_theme/apps.py` | The app's name, label and admin title |
 | `src/capy_theme/models.py` | Database models: `Theme` (the draft: name, slug, light and dark base, `settings` overrides, and its live revision) `ThemeRevision` (a published copy of a theme's look) and `ThemeAssignment` (which theme is active) |
 | `src/capy_theme/stylesheet.py` | Writes a published revision out as CSS variables, and makes its version hash |
-| `src/capy_theme/views.py` | The stylesheet view (`/theme/<version>.css`) and the showcase (`/theme/showcase/`) |
+| `src/capy_theme/views.py` | The stylesheet view (`/theme/<version>.css`), the showcase (`/theme/showcase/`) and the mode switch (`/theme/mode/<mode>/`) |
 | `src/capy_theme/urls.py` | The module's URLs, included by projects under `/theme/` |
-| `src/capy_theme/templatetags/capy_theme.py` | The `{% theme_head %}`, `{% theme_html_attrs %}` and `{% theme_logo %}` template tags |
+| `src/capy_theme/templatetags/capy_theme.py` | The `{% theme_head %}`, `{% theme_html_attrs %}`, `{% theme_logo %}` and `{% theme_mode_toggle %}` template tags |
 | `src/capy_theme/branding.py` | Reads a revision's published site name, tagline and logo |
 | `src/capy_theme/context_processors.py` | Gives every template `theme`: the active theme's published values (or `None`) |
 | `src/capy_theme/templates/capy_theme/showcase/` | The showcase page, its standalone base page, and one template per section |
 | `src/capy_theme/static/capy_theme/showcase.css` | The showcase's bundled stylesheet (built; don't edit) |
 | `scripts/build_showcase_css.py`, `scripts/showcase.tailwind.css` | Build `showcase.css` with Tailwind and daisyUI |
+| `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
+| `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |
 | `src/capy_theme/signals.py` | Clears the active-theme cache whenever themes, revisions or assignments change |
 | `src/capy_theme/publishing.py` | `publish()`: turns a theme's draft into its new live revision |

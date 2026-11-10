@@ -19,6 +19,19 @@
       "description": "Alt text for the main logo. Falls back to the site name.",
       "type": "string",
       "maxLength": 200
+    },
+    "default_mode": {
+      "description": "The colour mode pages use: \"auto\" follows the visitor's device, \"light\" or \"dark\" forces one. Default \"auto\".",
+      "type": "string",
+      "enum": [
+        "auto",
+        "light",
+        "dark"
+      ]
+    },
+    "visitors_can_switch": {
+      "description": "Whether visitors can choose light, dark or auto with {% theme_mode_toggle %}. Default true.",
+      "type": "boolean"
     }
   },
   "additionalProperties": false

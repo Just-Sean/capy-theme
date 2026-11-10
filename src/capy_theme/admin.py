@@ -45,6 +45,22 @@ class ThemeForm(forms.ModelForm):
         help_text="Describes the logo for screen readers. Leave blank to use the site name.",
     )
 
+    default_mode = forms.ChoiceField(
+        choices=[
+            ("auto", "Auto: follow the visitor's device"),
+            ("light", "Light"),
+            ("dark", "Dark"),
+        ],
+        initial="auto",
+        required=False,  # missing means "auto"
+        help_text="The colour mode pages use until a visitor picks one.",
+    )
+    visitors_can_switch = forms.BooleanField(
+        required=False,
+        initial=True,
+        help_text="Lets visitors choose light, dark or auto with {% theme_mode_toggle %}.",
+    )
+
     # Form fields stored as keys in Theme.settings.
     SETTINGS_FIELDS = ["site_name", "tagline", "logo_alt"]
 
@@ -61,6 +77,10 @@ class ThemeForm(forms.ModelForm):
             self.fields[field].initial = Theme._meta.get_field(field).default
         for field in self.SETTINGS_FIELDS:
             self.fields[field].initial = self.instance.settings.get(field, "")
+        self.fields["default_mode"].initial = self.instance.settings.get("default_mode", "auto")
+        self.fields["visitors_can_switch"].initial = self.instance.settings.get(
+            "visitors_can_switch", True
+        )
 
     def clean(self):
         cleaned = super().clean()
@@ -71,6 +91,16 @@ class ThemeForm(forms.ModelForm):
                 settings[field] = value
             else:
                 settings.pop(field, None)
+        # Mode settings are stored only when they differ from the defaults
+        # ("auto" and visitors can switch), like the other optional settings.
+        if cleaned.get("default_mode") in ("light", "dark"):
+            settings["default_mode"] = cleaned["default_mode"]
+        else:
+            settings.pop("default_mode", None)
+        if cleaned.get("visitors_can_switch", True):
+            settings.pop("visitors_can_switch", None)
+        else:
+            settings["visitors_can_switch"] = False
         self.instance.settings = settings
         return cleaned
 
@@ -134,6 +164,7 @@ class ThemeAdmin(admin.ModelAdmin):
         ("Publishing", {"fields": ["publish_status"]}),
         ("Branding", {"fields": ["site_name", "tagline", "logo", "logo_alt"]}),
         ("Base themes", {"fields": ["light_base", "dark_base"]}),
+        ("Mode", {"fields": ["default_mode", "visitors_can_switch"]}),
         ("Overrides", {"fields": ["settings_json"]}),
         ("Details", {"fields": ["public_id", "created_at", "updated_at"]}),
     ]
