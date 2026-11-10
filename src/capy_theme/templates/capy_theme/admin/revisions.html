@@ -1,0 +1,59 @@
+{% extends "admin/base_site.html" %}
+{% comment %}A theme's published revisions: compare any two, restore an old one.{% endcomment %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Home</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{% url 'admin:capy_theme_theme_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+  &rsaquo; <a href="{{ change_url }}">{{ theme }}</a>
+  &rsaquo; Revisions
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  {% if not revisions %}
+    <p>This theme hasn't been published yet, so it has no revisions.</p>
+  {% else %}
+    <h2>Compare two revisions</h2>
+    <form method="get">
+      <label>Older <select name="a">{% for r in revisions %}<option value="{{ r.number }}"{% if r.number == older %} selected{% endif %}>Revision {{ r.number }}</option>{% endfor %}</select></label>
+      <label>Newer <select name="b">{% for r in revisions %}<option value="{{ r.number }}"{% if r.number == newer %} selected{% endif %}>Revision {{ r.number }}</option>{% endfor %}</select></label>
+      <input type="submit" value="Compare">
+    </form>
+    {% if differences is not None %}
+      {% if differences %}
+        <table>
+          <thead><tr><th>Setting</th><th>Revision {{ older }}</th><th>Revision {{ newer }}</th></tr></thead>
+          <tbody>
+            {% for row in differences %}
+              <tr><td>{{ row.name }}</td><td>{% if row.older is None %}<em>base theme / not set</em>{% else %}<code>{{ row.older }}</code>{% endif %}</td><td>{% if row.newer is None %}<em>base theme / not set</em>{% else %}<code>{{ row.newer }}</code>{% endif %}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <p>{{ differences|length }} value{{ differences|length|pluralize }} changed.</p>
+      {% else %}
+        <p>No differences: revisions {{ older }} and {{ newer }} are the same.</p>
+      {% endif %}
+    {% endif %}
+
+    <h2>All revisions</h2>
+    <table>
+      <thead><tr><th>Revision</th><th>Published</th><th>By</th><th>Note</th><th></th></tr></thead>
+      <tbody>
+        {% for r in revisions %}
+          <tr>
+            <td>{{ r.number }}{% if theme.live_revision_id == r.pk %} <strong>(live)</strong>{% endif %}</td>
+            <td>{{ r.published_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ r.published_by|default:"unknown" }}</td>
+            <td>{{ r.note }}</td>
+            <td>{% if can_restore and theme.live_revision_id != r.pk %}<a class="button" href="{% url 'admin:capy_theme_theme_restore' theme.pk r.number %}">Restore</a>{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+  <p><a href="{{ change_url }}">Back to the theme</a></p>
+</div>
+{% endblock %}

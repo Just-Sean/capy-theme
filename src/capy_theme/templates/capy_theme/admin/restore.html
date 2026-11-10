@@ -1,0 +1,30 @@
+{% extends "admin/base_site.html" %}
+{% comment %}Confirmation page for restoring an old revision.{% endcomment %}
+
+{% block content %}
+<div id="content-main">
+  <p>Restoring copies revision {{ revision.number }} (published {{ revision.published_at|date:"Y-m-d H:i" }}
+    by {{ revision.published_by|default:"unknown" }}) into the theme's draft and <strong>publishes it as a new
+    revision</strong>. Nothing in the history is deleted. Any unpublished draft changes are replaced.</p>
+  {% if differences %}
+    <p>Compared with what's live now, this changes:</p>
+    <table>
+      <thead><tr><th>Setting</th><th>Live now</th><th>Revision {{ revision.number }}</th></tr></thead>
+      <tbody>
+        {% for row in differences %}
+          <tr><td>{{ row.name }}</td><td>{% if row.older is None %}<em>base theme / not set</em>{% else %}<code>{{ row.older }}</code>{% endif %}</td><td>{% if row.newer is None %}<em>base theme / not set</em>{% else %}<code>{{ row.newer }}</code>{% endif %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% elif differences is not None %}
+    <p>It's the same as what's live now.</p>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="submit-row">
+      <input type="submit" class="default" value="Restore and publish">
+      <a href="{{ revisions_url }}" class="button cancel-link">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

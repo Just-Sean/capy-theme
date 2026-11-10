@@ -571,3 +571,21 @@ Recommended (made while building autonomously).
 - **`?edit=<id>` works on any page,** even when no theme is active.
 - **No crash without auth:** requests without a user (no auth middleware) simply
   don't get the editor.
+
+## 3.7 History: compare and restore (#44)
+
+Recommended (made while building autonomously).
+
+- **A Revisions page in the admin** (next to History and Publish on the theme
+  page): the compare form, the result, and every revision with a Restore button.
+- **Compare** lists only what differs, by readable name (e.g. "Light colour:
+  Primary", "Shape: Box corner radius"). "Base theme / not set" means the value
+  came from the base theme. Defaults to the last two revisions.
+- **Restore never rewrites history:** it copies the revision's bases, logo and
+  settings into the draft and publishes a new revision noted "Restored revision
+  N". Restoring what's already live says so. It replaces unpublished draft
+  changes, and the confirmation page says so and shows what will change.
+- **Base values on restore:** as with any publish, the base themes' values come
+  from the catalogue the module ships now. If daisyUI changed a base since the old
+  revision, the restored look uses today's base, and the #78 notice explains it.
+  (Keeping the old values exactly would need a second publishing path.)
