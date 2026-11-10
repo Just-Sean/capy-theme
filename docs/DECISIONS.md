@@ -665,3 +665,22 @@ Recommended (made while building autonomously).
   shows a sample line under each font choice.
 - **Tested in Chrome:** all 30 fonts loaded from the copied files, with none
   failing.
+
+## 4.4 Font uploads (#26)
+
+Recommended (made while building autonomously).
+
+- **fontTools with WOFF support** (`fonttools[woff]`, which brings Brotli and
+  Zopfli), as the issue specified.
+- **Every upload is parsed by fontTools**: anything that isn't a font is refused.
+  Size limit: 5 MB per file (`CAPY_THEME_FONT_MAX_BYTES`).
+- **Converted to WOFF2** whatever the input (WOFF2, WOFF, TTF, OTF).
+- **Trimmed to Latin by default,** since most sites need only that and it shrinks
+  files a lot (a 692 KB DejaVu Sans Bold became 24 KB). Other subsets use Google
+  Fonts' standard ranges, the file gets the matching `unicode-range`, and "All
+  characters" keeps everything.
+- **Weight and style are read from the font** (OS/2 weight class, italic flags)
+  when left blank. The family name read from the font is available for the
+  Google Fonts import (4.5).
+- **fontTools' notes about dropped tables are silenced** while trimming, to keep
+  project logs clean.
