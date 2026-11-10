@@ -63,12 +63,7 @@ def _state():
     if cached is not None and (cached["valid_until"] is None or now < cached["valid_until"]):
         return cached
     assignments = ThemeAssignment.objects.filter(site="").select_related("theme__live_revision")
-    running = [a for a in assignments if a.is_scheduled and a.is_running(now)]
-    if running:
-        # The most recently started schedule wins (e.g. a one-day sale inside a season).
-        current = max(running, key=lambda a: (a.starts_at or a.created_at, a.created_at))
-    else:
-        current = next((a for a in assignments if not a.is_scheduled), None)
+    current = _current(assignments, now)
     boundaries = [
         moment
         for a in assignments
@@ -90,6 +85,24 @@ def _state():
     # Stored in a dict so "no active theme" (None) is cached too.
     cache.set(CACHE_KEY, state, timeout)
     return state
+
+
+def _current(assignments, when):
+    """The assignment that's live at `when`: a running schedule, else the default.
+
+    The most recently started schedule wins (e.g. a one-day sale inside a season).
+    """
+    running = [a for a in assignments if a.is_scheduled and a.is_running(when)]
+    if running:
+        return max(running, key=lambda a: (a.starts_at or a.created_at, a.created_at))
+    return next((a for a in assignments if not a.is_scheduled), None)
+
+
+def theme_at(when):
+    """The site's theme at a given moment (not cached; for previews)."""
+    assignments = ThemeAssignment.objects.filter(site="").select_related("theme__live_revision")
+    current = _current(assignments, when)
+    return current.theme if current else None
 
 
 def scheduled_assignments():

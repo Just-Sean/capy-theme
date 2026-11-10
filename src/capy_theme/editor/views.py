@@ -7,15 +7,17 @@ from django.db import IntegrityError
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from ..images.uploads import add_asset, asset_data
 from ..models import Theme
 from ..themes.publishing import NothingToPublish, publish
 from .access import can_edit, can_publish
+from .images_panel import images as images_panel
 from .preview import preview
 from .saving import save_draft, suggestions
 from .state import draft_state
+from .visitors import visitor_summary, visitor_view
 
 
 def editor_state(request, pk):
@@ -166,20 +168,42 @@ COMPONENTS = [
     "forms",
     "progress",
     "modal",
+    "images",
 ]
 
 
 @xframe_options_sameorigin
-def editor_components(request):
-    """Every daisyUI component in light and dark, for the editor's Components view.
+def editor_components(request, pk):
+    """Every daisyUI component in light and dark, plus the theme's images, for the
+    editor's Components view.
 
     Shown in an iframe beside the editor (so only same-site framing is allowed).
-    Staff who can edit themes only.
+    The images come from the saved draft. Staff who can edit themes only.
     """
     if not can_edit(request.user):
         return HttpResponseForbidden("You can't edit themes.")
-    return render(
-        request,
-        "capy_theme/editor/components.html",
-        {"modes": ["light", "dark"], "sections": COMPONENTS},
-    )
+    theme = get_object_or_404(Theme.objects.select_related("live_revision"), pk=pk)
+    context = {
+        "modes": ["light", "dark"],
+        "sections": COMPONENTS,
+        "images_panel": images_panel(theme),
+        "site_name": theme.settings.get("site_name", ""),
+    }
+    return render(request, "capy_theme/editor/components.html", context)
+
+
+@require_GET
+def editor_visitor_view(request):
+    """What visitors see (JSON): the summary, and the published CSS for the view.
+
+    ?theme=<offered slug> or ?date=YYYY-MM-DD pick what to show. Writes nothing.
+    """
+    if not can_edit(request.user):
+        return JsonResponse({"error": "You can't edit themes."}, status=403)
+    try:
+        view = visitor_view(request.GET.get("theme", ""), request.GET.get("date", ""))
+    except ValidationError as error:
+        return JsonResponse({"errors": error.messages}, status=400)
+    response = JsonResponse({**view, "summary": visitor_summary()})
+    response["Cache-Control"] = "no-store"
+    return response

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **See it as a visitor** in the live editor: shows the published theme visitors
+  get (optionally in light or dark, with an offered theme, or on a chosen date to
+  check schedules), with a summary of what's set up for visitors.
+- **Images and icons in the Components view:** every logo slot and its fallback,
+  the generated icons, the sharing image and the backgrounds.
 - **Components view in the live editor** replaces the showcase page: **Show all
   components** opens every daisyUI component in the draft theme, light and dark,
   updating as you edit. It runs in an iframe, so its stylesheet never touches the

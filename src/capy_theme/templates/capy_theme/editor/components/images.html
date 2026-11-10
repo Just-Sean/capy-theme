@@ -1,0 +1,98 @@
+{% load capy_theme %}
+<div class="space-y-6" data-capy-components-images>
+  <h3 class="text-xl font-semibold">Images and icons</h3>
+  {% with data=images_panel|capy_get:mode %}
+
+  <div class="space-y-3">
+    <h4 class="font-semibold">Logos</h4>
+    <p class="text-sm opacity-70">From the saved draft, at the theme's header height. Empty slots show what they fall back to.</p>
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead><tr><th>Slot</th><th>Shown</th><th>Where it comes from</th><th>Sizes and formats</th></tr></thead>
+        <tbody>
+          {% for logo in data.logos %}
+            <tr data-capy-logo-slot="{{ logo.slot }}">
+              <td class="font-medium whitespace-nowrap">{{ logo.label }}</td>
+              <td>
+                {% if logo.url %}
+                  <img src="{{ logo.url }}" alt="{{ logo.alt }}"{% if logo.width %} width="{{ logo.width }}" height="{{ logo.height }}"{% endif %}
+                       class="{% if logo.header %}capy-logo{% else %}h-10 w-auto{% endif %}">
+                {% else %}
+                  <span class="font-bold">{{ site_name|default:"(no site name)" }}</span>
+                {% endif %}
+              </td>
+              <td class="text-sm">{{ logo.source }}</td>
+              <td class="text-xs opacity-70">
+                {% if logo.widths %}{{ logo.formats|join:", " }} at {{ logo.widths|join:", " }} px{% elif logo.url %}The file as uploaded{% else %}–{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="space-y-3">
+    <h4 class="font-semibold">Icons</h4>
+    {% if images_panel.icons %}
+      <div class="flex flex-wrap items-end gap-6 overflow-x-auto">
+        {% for icon in images_panel.icons %}
+          <figure class="space-y-1" data-capy-icon="{{ icon.name }}">
+            {% if icon.name == "favicon.ico" %}
+              <div class="flex items-end gap-2">
+                <img src="{{ icon.url }}" alt="" width="16" height="16">
+                <img src="{{ icon.url }}" alt="" width="32" height="32">
+                <img src="{{ icon.url }}" alt="Favicon" width="48" height="48">
+              </div>
+            {% elif icon.name == "favicon.svg" %}
+              <img src="{{ icon.url }}" alt="SVG favicon" width="32" height="32">
+            {% elif icon.name == "icon-maskable-512.png" %}
+              <div class="flex gap-3">
+                <img src="{{ icon.url }}" alt="Maskable icon in a circle" width="128" height="128" class="rounded-full ring-1 ring-base-300">
+                <img src="{{ icon.url }}" alt="Maskable icon in a squircle" width="128" height="128" class="rounded-[22%] ring-1 ring-base-300">
+              </div>
+            {% elif icon.name == "icon-monochrome-512.png" %}
+              <div class="inline-block rounded-box bg-neutral p-2">
+                <img src="{{ icon.url }}" alt="Monochrome icon" width="128" height="128">
+              </div>
+            {% else %}
+              <img src="{{ icon.url }}" alt="{{ icon.label }}" width="{{ icon.size }}" height="{{ icon.size }}" class="max-w-none">
+            {% endif %}
+            <figcaption class="text-xs opacity-70">
+              <code>{{ icon.name }}</code><br>{{ icon.label }}
+              {% if icon.name == "icon-maskable-512.png" or icon.name == "icon-monochrome-512.png" %}(shown at 128 px){% endif %}
+            </figcaption>
+          </figure>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-sm opacity-70">No icons yet: they're made from the icon image when the theme is published.</p>
+    {% endif %}
+  </div>
+
+  <div class="space-y-3">
+    <h4 class="font-semibold">Sharing image</h4>
+    {% if images_panel.sharing.image %}
+      <img src="{{ images_panel.sharing.image }}" alt="{{ images_panel.sharing.alt }}" width="{{ images_panel.sharing.size.0 }}" height="{{ images_panel.sharing.size.1 }}"
+           class="h-auto w-full max-w-md rounded-box border border-base-300" data-capy-sharing-image>
+      <p class="text-xs opacity-70">1200 × 630, for link previews. Other apps get it from <code>get_artifacts()</code> and the API.</p>
+    {% else %}
+      <p class="text-sm opacity-70">No sharing image chosen.</p>
+    {% endif %}
+  </div>
+
+  <div class="space-y-3">
+    <h4 class="font-semibold">Backgrounds</h4>
+    <div class="grid grid-cols-2 gap-3">
+      {% for background in data.backgrounds %}
+        <div class="space-y-1">
+          <div class="{{ background.class }} h-24 rounded-box border border-base-300" data-capy-background="{{ background.class }}"></div>
+          <div class="text-xs opacity-70">{{ background.label }}: {% if background.set %}<code>.{{ background.class }}</code>{% else %}not set{% endif %}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% endwith %}
+  
+</div>

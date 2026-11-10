@@ -53,16 +53,44 @@ Every change shows on the page straight away (in your browser only).
   with change permission only, and **never write anything**. The preview needs
   Django's CSRF token, which the page passes to the script.
 
+## See it as a visitor
+
+**See it as a visitor** at the top of the editor panel shows the page as visitors
+see it right now: the **published** theme, not your draft. The draft controls
+are hidden while it's on; turning it off brings the draft back. Nothing is saved
+or changed. Options:
+
+- **Mode:** as now, light, dark, or the device setting.
+- **Theme:** the site's theme, or one of the themes offered to visitors (as a
+  visitor's own choice would show it).
+- **On date:** the site's theme at noon on that day, including scheduled themes,
+  to check a schedule before it starts.
+
+Below the options, a summary lists what's set up for visitors: the live theme,
+its default mode and whether visitors can switch, the offered themes, and
+running and upcoming schedules with their dates. The Components view follows the
+same view while it's on. The data comes from `/theme/editor/visitor-view/`
+(staff who can edit only; `?theme=<slug>` or `?date=YYYY-MM-DD`), using the same
+rules as the live site.
+
 ## The Components view
 
 **Show all components** at the top of the editor panel opens every daisyUI
 component (buttons, badges, alerts, cards, tabs, a table, form fields, progress
-bars, a modal, headings and text) in the **draft** theme, light and dark side by
+bars, a modal, headings and text) and the theme's **images and icons** in the
+**draft** theme, light and dark side by
 side, beside the panel. Every change in the editor shows on them straight away.
 **Close components** or Escape closes it.
 
-It's a page of its own (`/theme/editor/components/`, staff who can edit themes
-only) shown in an iframe, so its daisyUI stylesheet can never change the page
+The images section shows every logo slot in light and dark, saying whether it's
+its own image, the light one, or what an empty slot falls back to, with its
+generated sizes; the generated icons at their real size (from the published
+theme, since they're made when publishing); the sharing image; and the
+backgrounds. It shows the saved draft and reloads after **Save draft** or
+**Publish**.
+
+It's a page of its own (`/theme/editor/<id>/components/`, staff who can edit
+themes only) shown in an iframe, so its daisyUI stylesheet can never change the page
 being edited. The editor puts the draft theme's CSS into it each time the preview
 changes. The page may only be framed by the same site.
 

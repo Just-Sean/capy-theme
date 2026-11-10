@@ -280,7 +280,8 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 - [x] **6.5 Showcase: mode and visitor choices** (#50): Try the visitor-facing controls on the showcase.
 - [x] **6.6 Release v0.6.0** (#51)
 - [x] **Reorganise into small sections** (#150) and **data tables to JSON** (#152)
-- [ ] **6.7 Components view in the editor** (#155): Replace the showcase page with every daisyUI component inside the live editor.
+- [x] **6.7 Components view in the editor** (#155): Replace the showcase page with every daisyUI component inside the live editor.
+- [ ] **6.8 See it as a visitor** (#158): Admins see what visitors see (published theme, by mode, offered theme or date), a visitors summary, and the images and icons in the Components view.
 
 ### Phase 7: Portability and API (v0.7.0)
 
