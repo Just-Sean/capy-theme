@@ -1,0 +1,43 @@
+{
+  "_about": "The icon files made from the theme's icon (size in px and what each is for), and the icon settings' labels and help.",
+  "files": {
+    "favicon.ico": {
+      "size": 48,
+      "label": "Browser tab icon (16, 32 and 48 px in one file)"
+    },
+    "favicon.svg": {
+      "size": 64,
+      "label": "Browser tab icon that follows light and dark mode"
+    },
+    "apple-touch-icon.png": {
+      "size": 180,
+      "label": "iPhone and iPad home screen"
+    },
+    "icon-192.png": {
+      "size": 192,
+      "label": "Android home screen and app icon"
+    },
+    "icon-512.png": {
+      "size": 512,
+      "label": "App icon and splash screen"
+    },
+    "icon-maskable-512.png": {
+      "size": 512,
+      "label": "Android adaptive icon (cropped to a circle or squircle)"
+    },
+    "icon-monochrome-512.png": {
+      "size": 512,
+      "label": "Single-colour icon (e.g. Android themed icons)"
+    }
+  },
+  "settings": {
+    "background": {
+      "label": "Icon background",
+      "help": "A hex colour behind it, e.g. #ffffff. Blank: transparent."
+    },
+    "padding": {
+      "label": "Icon padding (%)",
+      "help": "Space around the icon on each side, 0–25% of its size."
+    }
+  }
+}

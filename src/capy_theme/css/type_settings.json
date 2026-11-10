@@ -1,0 +1,37 @@
+{
+  "_about": "The type scale settings: each one's label, unit, limits, step and help.",
+  "settings": {
+    "base_size": {
+      "label": "Base text size",
+      "unit": "px",
+      "min": 14,
+      "max": 24,
+      "step": 0.5,
+      "help": "The size of body text. Everything sized in rem scales with it. At least 14px, so text stays readable."
+    },
+    "scale": {
+      "label": "Heading scale",
+      "unit": "×",
+      "min": 1.05,
+      "max": 1.6,
+      "step": 0.01,
+      "help": "How much bigger each heading level is than the next (h6 is the base size). 1.25 is a common choice."
+    },
+    "line_height": {
+      "label": "Line height",
+      "unit": "×",
+      "min": 1.1,
+      "max": 2.2,
+      "step": 0.05,
+      "help": "Space between lines of body text, e.g. 1.5."
+    },
+    "heading_weight": {
+      "label": "Heading weight",
+      "unit": "",
+      "min": 100,
+      "max": 900,
+      "step": 100,
+      "help": "400 is regular, 700 bold."
+    }
+  }
+}

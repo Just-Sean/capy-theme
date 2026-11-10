@@ -4,55 +4,18 @@ Stored in Theme.settings["shape"], e.g. {"radius_box": 0, "border": 2, "depth": 
 Anything not set comes from the base theme.
 """
 
-# name: (CSS variable, unit, minimum, maximum, label, help)
+import json
+from pathlib import Path
+
+_DATA = json.loads(Path(__file__).with_name("shape.json").read_text(encoding="utf-8"))
+
+# From shape.json. name: (CSS variable, unit, min, max, label, help)
 SIZES = {
-    "radius_selector": (
-        "--radius-selector",
-        "rem",
-        0,
-        2,
-        "Small corner radius",
-        "Checkboxes, toggles and badges. 0 is square.",
-    ),
-    "radius_field": (
-        "--radius-field",
-        "rem",
-        0,
-        2,
-        "Field corner radius",
-        "Buttons, inputs, selects and tabs. 0 is square.",
-    ),
-    "radius_box": (
-        "--radius-box",
-        "rem",
-        0,
-        3,
-        "Box corner radius",
-        "Cards, alerts, modals and other boxes. 0 is square.",
-    ),
-    "size_selector": (
-        "--size-selector",
-        "rem",
-        0.125,
-        0.5,
-        "Small control size",
-        "Base size of checkboxes, toggles and badges (daisyUI uses 0.1875–0.3125).",
-    ),
-    "size_field": (
-        "--size-field",
-        "rem",
-        0.125,
-        0.5,
-        "Field size",
-        "Base size of buttons and inputs (daisyUI uses 0.1875–0.3125).",
-    ),
-    "border": ("--border", "px", 0, 4, "Border width", "Width of borders, in pixels."),
+    name: (s["variable"], s["unit"], s["min"], s["max"], s["label"], s["help"])
+    for name, s in _DATA["sizes"].items()
 }
 # name: (CSS variable, label, help)
-EFFECTS = {
-    "depth": ("--depth", "Depth", "A subtle 3D shadow on buttons and other controls."),
-    "noise": ("--noise", "Noise", "A subtle grain texture on controls."),
-}
+EFFECTS = {name: (e["variable"], e["label"], e["help"]) for name, e in _DATA["effects"].items()}
 SHAPE_NAMES = [*SIZES, *EFFECTS]
 
 

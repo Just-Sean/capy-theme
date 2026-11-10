@@ -1108,3 +1108,22 @@ change; the same 574 tests pass on SQLite and Postgres.
 - **Docs:** the README keeps everything needed to install and use the module and
   every command; details moved to one page per section in `docs/`.
 - **Tests** follow the sections (`tests/themes/`, `tests/images/`, …).
+
+## Data in JSON, not Python (#152)
+
+Sean's rule: Python files do things; data lives in data files. (Scripts that
+generate data files, like `generate_builtin_themes.py`, are fine.)
+
+- Moved to JSON, next to the code that reads them: `fonts/system_stacks.json`,
+  `fonts/subsets.json`, `css/shape.json`, `css/type_settings.json`,
+  `images/slots.json` (with `no_svg`), `images/svg_allowlist.json`,
+  `images/icons.json`, `colors/colors.json`.
+- **Readable entries:** each entry has named fields (`label`, `min`, `help`…),
+  plus an `_about` line saying what the file is. A short loader turns them back
+  into the shapes the code already used, so no other code changed. Every value was
+  compared before and after (all 21 identical, including order and types).
+- **Kept in Python:** layout and code structure (admin fieldsets, URL patterns,
+  exception lists), and migration 0008's frozen copy of the font stacks, because a
+  migration must give the same result forever.
+- Not moved: the showcase's sample characters, since the showcase page is being
+  replaced.
