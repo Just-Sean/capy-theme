@@ -35,11 +35,45 @@ stand-in project in `tests/`.
    ]
    ```
 
-4. Create its database tables:
+4. Add its context processor to `TEMPLATES` in `settings.py`, so every template
+   gets a `theme` variable:
+
+   ```python
+   TEMPLATES = [
+       {
+           ...,
+           "OPTIONS": {
+               "context_processors": [
+                   ...,
+                   "capy_theme.context_processors.theme",
+               ],
+           },
+       },
+   ]
+   ```
+
+5. Add the template tags to the project's base template. `{% theme_head %}` links
+   the active theme's stylesheet. `{% theme_html_attrs %}` outputs nothing yet;
+   it's there so the light/dark toggle can use it later without template changes.
+
+   ```html
+   {% load capy_theme %}<!doctype html>
+   <html lang="en" {% theme_html_attrs %}>
+   <head>
+     ...
+     <link rel="stylesheet" href="...">   <!-- the project's Tailwind/daisyUI CSS -->
+     {% theme_head %}
+   </head>
+   ```
+
+6. Create its database tables:
 
    ```bash
    uv run python manage.py migrate
    ```
+
+Pages then show the **active** theme's **published** colours. Until a theme is
+published and activated in the admin, they show daisyUI's defaults.
 
 The module's tables go into whatever database the project uses.
 
@@ -211,7 +245,7 @@ aren't in a CSS layer, so they override daisyUI's own theme rules.
   changed or removed. The site keeps using the saved version until someone publishes.
 
 On a theme's admin page, "View its stylesheet" opens the live revision's
-stylesheet. Linking it into pages comes with `{% theme_head %}`.
+stylesheet. Pages link it with `{% theme_head %}` (see [Add it to a project](#add-it-to-a-project)).
 
 ## Build the package
 
@@ -262,6 +296,8 @@ straight to `main`:
 | `src/capy_theme/stylesheet.py` | Writes a published revision out as CSS variables, and makes its version hash |
 | `src/capy_theme/views.py` | The stylesheet view, `/theme/<version>.css` |
 | `src/capy_theme/urls.py` | The module's URLs, included by projects under `/theme/` |
+| `src/capy_theme/templatetags/capy_theme.py` | The `{% theme_head %}` and `{% theme_html_attrs %}` template tags |
+| `src/capy_theme/context_processors.py` | Gives every template `theme`: the active theme's name, slug, revision, bases and stylesheet URL (or `None`) |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |
 | `src/capy_theme/signals.py` | Clears the active-theme cache whenever themes, revisions or assignments change |
 | `src/capy_theme/publishing.py` | `publish()`: turns a theme's draft into its new live revision |
