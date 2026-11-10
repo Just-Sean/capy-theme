@@ -67,4 +67,6 @@ def test_edit_live_uses_the_home_page_when_the_showcase_is_off(client, django_us
 def test_no_edit_live_for_view_only_staff(client, django_user_model):
     login(client, django_user_model, "view_theme")
     theme = Theme.objects.create(name="Main", slug="main")
-    assert "Edit live" not in page(client, theme)
+    assert ">Edit live</a>" not in page(
+        client, theme
+    )  # the tip text mentions it; the link isn't shown
