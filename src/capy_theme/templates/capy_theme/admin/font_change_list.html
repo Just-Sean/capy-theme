@@ -1,0 +1,9 @@
+{% extends "admin/change_list.html" %}
+{% comment %}The font library, with an Import from Google Fonts button.{% endcomment %}
+
+{% block object-tools-items %}
+  {% if has_add_permission %}
+    <li><a href="{% url 'admin:capy_theme_font_import_google' %}">Import from Google Fonts</a></li>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

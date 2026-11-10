@@ -25,6 +25,9 @@ from .editor import can_edit
 from .font_files import SUBSET_CHOICES, prepare
 from .fonts import ROLES, preview_faces, preview_stack
 from .forms import ColorField
+from .google_fonts import SUBSETS as GOOGLE_SUBSETS
+from .google_fonts import WEIGHTS as GOOGLE_WEIGHTS
+from .google_fonts import import_family
 from .history import compare as compare_revisions
 from .history import restore as restore_revision
 from .models import Font, FontFile, Theme, ThemeRevision
@@ -670,9 +673,71 @@ class FontFileInline(admin.TabularInline):
     readonly_fields = ["unicode_range"]
 
 
+class GoogleFontForm(forms.Form):
+    family = forms.CharField(
+        max_length=100, help_text="As written on fonts.google.com, e.g. Lora or Open Sans."
+    )
+    weights = forms.TypedMultipleChoiceField(
+        coerce=int,
+        choices=[(w, str(w)) for w in GOOGLE_WEIGHTS],
+        initial=[400, 700],
+        widget=forms.CheckboxSelectMultiple,
+        help_text="Weights the family doesn't have are skipped.",
+    )
+    italic = forms.BooleanField(required=False, initial=True, label="Italics too")
+    subsets = forms.MultipleChoiceField(
+        choices=[(s, s) for s in GOOGLE_SUBSETS],
+        initial=["latin"],
+        widget=forms.CheckboxSelectMultiple,
+        label="Character sets",
+    )
+
+
 @admin.register(Font)
 class FontAdmin(admin.ModelAdmin):
     """The shared font library. Any theme can use these fonts."""
+
+    change_list_template = "capy_theme/admin/font_change_list.html"
+
+    def get_urls(self):
+        return [
+            path(
+                "import-google/",
+                self.admin_site.admin_view(self.import_google_view),
+                name="capy_theme_font_import_google",
+            ),
+            *super().get_urls(),
+        ]
+
+    def import_google_view(self, request):
+        """Download a Google font once and add it to the library."""
+        if not self.has_add_permission(request):
+            raise PermissionDenied
+        form = GoogleFontForm(request.POST or None)
+        if request.method == "POST" and form.is_valid():
+            try:
+                font = import_family(
+                    form.cleaned_data["family"],
+                    weights=form.cleaned_data["weights"],
+                    italic=form.cleaned_data["italic"],
+                    subsets=form.cleaned_data["subsets"],
+                )
+            except ValidationError as error:
+                form.add_error("family", error)
+            else:
+                messages.success(
+                    request,
+                    f"Imported “{font}” ({font.files.count()} files). Pages load it from "
+                    "this site, never from Google.",
+                )
+                return redirect(reverse("admin:capy_theme_font_change", args=[font.pk]))
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Import a font from Google Fonts",
+            "opts": self.opts,
+            "form": form,
+        }
+        return TemplateResponse(request, "capy_theme/admin/import_google_font.html", context)
 
     list_display = ["family", "preview", "source", "file_count", "created_at"]
     list_filter = ["source"]
