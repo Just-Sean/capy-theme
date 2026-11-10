@@ -6,11 +6,16 @@ A self-contained Django app (`capy_theme`) that any Django 6.1+ project
 can install. It has no project of its own: its tests run against a tiny
 stand-in project in `tests/`, and `demo/` is a small site for trying it out.
 
-## What it does (v0.2)
+## What it does (v0.3)
 
 Whoever runs the site controls its look from the Django admin, with no code
 changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
 
+- **Live theme editor:** staff edit a theme right on the page (the showcase or any
+  page using `{% theme_head %}`), with colour pickers, shape controls, contrast
+  ratings and palette suggestions (from the primary colour or the logo). Every
+  change shows instantly, for that user only, until they **Save draft** or
+  **Publish**. The admin form stays as a plain fallback.
 - **Themes** are based on any of daisyUI's 35 built-in themes: one light base and
   one dark base. A project can limit which are offered.
 - **Colours:** override any of the 20 colours, separately for light and dark, in
@@ -21,7 +26,8 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
 - **Branding:** each theme has a site name, tagline and main logo (with alt text).
 - **Drafts and publishing:** editing a theme changes only its draft. Publishing
   saves a numbered revision, recording who published it and when, and the site
-  shows that. Every revision is kept.
+  shows that. Every revision is kept; any two can be compared, and an old one
+  restored (as a new revision).
 - **One active theme:** pick it with the admin's Activate action. It's cached, so
   pages don't query the database for it.
 - **On every page:** `{% theme_head %}` links the theme's stylesheet (with the
@@ -35,8 +41,8 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   only by default).
 - **Permissions:** only users with `publish_theme` can publish or activate.
 
-Next: a live theme editor that lets you edit on the page itself (v0.3), then
-fonts, images and icons, scheduling, an API and more (see `docs/PLAN.md`).
+Next: fonts (v0.4), then images and icons, scheduling, an API and more (see
+`docs/PLAN.md`).
 
 ## Add it to a project
 
