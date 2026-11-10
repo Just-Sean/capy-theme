@@ -10,6 +10,7 @@ from .active import get_active_theme
 from .branding import branding
 from .mode import COOKIE_MAX_AGE, COOKIE_NAME, MODES, mode_settings
 from .models import ThemeRevision
+from .showcase import shape_samples, swatches
 from .stylesheet import render_css
 
 ONE_YEAR = 60 * 60 * 24 * 365
@@ -28,6 +29,8 @@ def theme_css(request, version):
 # their sections by adding a template and a name here.
 SHOWCASE_SECTIONS = [
     "branding",
+    "colors",
+    "shape",
     "typography",
     "buttons",
     "badges",
@@ -65,6 +68,8 @@ def showcase(request):
         "brand": branding(revision) if revision else {},
         "modes": ["light", "dark"],
         "sections": [f"capy_theme/showcase/sections/{name}.html" for name in SHOWCASE_SECTIONS],
+        "swatches": swatches(revision),
+        "shape_samples": shape_samples(revision),
     }
     return render(request, "capy_theme/showcase/page.html", context)
 

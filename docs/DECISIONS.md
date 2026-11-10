@@ -432,3 +432,18 @@ Recommended (made while building autonomously).
 - **Email colours** are the light-mode colours (emails have no dark mode to rely
   on) as `#rrggbb`, keyed with underscores (`base_100`) so templates can use dot
   lookups.
+
+## 2.8 Showcase: colours and shape (#21)
+
+Recommended (made while building autonomously).
+
+- **Swatches use the live CSS variables** (`var(--color-primary)`) inside each
+  mode's column, so they show exactly what pages get. The values and ratings
+  shown next to them come from the same `effective_values()` as the stylesheet.
+- **Where a colour comes from** is labelled "overridden", "worked out" (automatic
+  text colours and background shades from 2.3) or "base theme".
+- **Contrast** uses the same ratings and "⚠ fails AA" wording as the admin.
+- **Shape samples** draw boxes with each radius, real controls for sizes and
+  border, and every effect shown both off and on (by setting `--depth` / `--noise`
+  on the sample), plus a table of the current values.
+- A small `capy_get` template filter looks up each mode's data by name.

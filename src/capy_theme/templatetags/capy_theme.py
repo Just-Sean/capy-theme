@@ -116,3 +116,9 @@ def theme_logo(context, **attrs):
     if brand["site_name"]:
         return format_html("<span{}>{}</span>", extra, brand["site_name"])
     return ""
+
+
+@register.filter
+def capy_get(mapping, key):
+    """Look up a dict value by a variable key: {{ swatches|capy_get:mode }}."""
+    return mapping.get(key) if hasattr(mapping, "get") else None
