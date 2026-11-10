@@ -124,6 +124,7 @@ def resolve(snapshot, slot, mode):
     image uses its fallback slot (e.g. the stacked logo falls back to the main one).
     """
     images = snapshot.get("images", {})
+    is_logo = slot in LOGO_SLOTS
     while slot:
         entry = images.get(slot, {})
         for choice in (mode, "light") if mode == "dark" else ("light",):
@@ -131,7 +132,7 @@ def resolve(snapshot, slot, mode):
                 return entry[choice]
         slot = FALLBACK.get(slot)
     legacy = snapshot.get("logo")  # revisions published before logo slots
-    if legacy:
+    if legacy and is_logo:
         return {"file": legacy, "width": 0, "height": 0, "content_type": "", "alt": ""}
     return None
 

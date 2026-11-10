@@ -146,7 +146,8 @@ To show the theme's logo (or its site name if it has no logo), use
 `{% theme_logo class="me-2" %}`. Every template also gets a `theme` variable
 holding the published `site_name`, `tagline`, `logo_url`, `logo_alt`, `name`,
 `slug`, `revision`, `light_base`, `dark_base`, `stylesheet_url`, `default_mode`,
-`visitors_can_switch`, `mode` (what this visitor sees) and `email_colors` (hex), or `None`
+`visitors_can_switch`, `mode` (what this visitor sees), `email_colors` (hex),
+`background_login_url` and `background_pattern_url`, or `None`
 if no theme is active.
 
 Pages then show the **active** theme's **published** colours. Until a theme is
@@ -469,6 +470,24 @@ with `{% theme_social_tags %}` in a block that pages can override:
 ```
 
 Any argument left out uses the theme's default.
+
+### Background images
+
+Two optional decorative images, each with a light and dark version: a **login
+background** and a **page background pattern** (SVG allowed). Choose them in
+the live editor (**Images**; they preview straight away) or the admin
+(**Backgrounds**), then publish. They show only where the project's templates
+use them:
+
+- **Classes**: `class="capy-bg-login"` (covers the element, centred) or
+  `class="capy-bg-pattern"` (repeats). The demo's `<body>` uses `capy-bg-pattern`.
+- **CSS variables**: `--capy-bg-login` and `--capy-bg-pattern` (each a `url(...)`,
+  switching with light and dark mode), e.g.
+  `background-image: var(--capy-bg-login);` in the project's CSS.
+- **Template values**: `{{ theme.background_login_url }}` and
+  `{{ theme.background_pattern_url }}` (the light versions; `""` if not set).
+
+Dark mode uses the light image if there's no dark one.
 
 Upgrading from 0.4: migration `0010_logo_slots` moves each theme's old logo into
 its main slot (light). It has no smaller copies; upload it again to get them.
@@ -908,6 +927,7 @@ straight to `main`:
 | `src/capy_theme/font_files.py` | Checks uploaded font files, converts them to WOFF2 and trims them to a character subset |
 | `src/capy_theme/google_fonts.py` | Imports a Google font into the library (downloaded once, served locally) |
 | `src/capy_theme/images.py` | Image slots and their limits, and checking and cleaning uploaded images |
+| `src/capy_theme/backgrounds.py` | The background image CSS variables, helper classes and template values |
 | `src/capy_theme/social.py` | The 1200 × 630 sharing image and the Open Graph / Twitter card tags |
 | `src/capy_theme/manifest.py` | Builds the web app manifest from the published theme |
 | `src/capy_theme/icons.py` | Makes the favicons and app icons from the icon image, and their `<link>` tags |

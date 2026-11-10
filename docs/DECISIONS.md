@@ -940,3 +940,23 @@ Recommended (made while building autonomously).
 - **Checked** by fetching the demo page with a link-preview bot's user agent,
   reading the tags and fetching the image (1200 × 630 JPEG). Online preview
   checkers can't reach `localhost`, so this local check stands in for them.
+
+## 5.7 Background images (#38)
+
+Recommended (made while building autonomously).
+
+- **CSS variables in the colour blocks:** `--capy-bg-login` and `--capy-bg-pattern`
+  are written next to the colours in the light and dark blocks, so they follow the
+  mode (device setting and toggle) with no extra rules, and the editor's preview
+  shows them straight away.
+- **Helper classes** `capy-bg-login` (cover, centred) and `capy-bg-pattern`
+  (repeat), in `@layer base` so utilities win. Always present; with no image they
+  draw nothing.
+- **Nothing is applied by the module:** the images only show where a project uses
+  the classes, variables or template values. The demo's body uses the pattern.
+- **Template values** are the light versions' URLs (templates don't know the mode).
+- **Found while building:** `resolve()` fell back to a pre-0.5 revision's single
+  logo for any slot; it now does that for logo slots only, so an old logo can't
+  become a background.
+- **Checked in Chrome:** a pattern chosen through the admin form showed as the demo
+  body's background, and switching to dark mode swapped in the dark one.
