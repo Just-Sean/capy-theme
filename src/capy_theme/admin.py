@@ -13,6 +13,7 @@ from .active import NotPublished, activate, get_active_theme
 from .catalogue import get_builtin_themes
 from .models import Theme, ThemeRevision
 from .publishing import NothingToPublish, publish
+from .stylesheet import stylesheet_url
 
 
 def _base_choices(scheme):
@@ -198,7 +199,7 @@ class ThemeAdmin(admin.ModelAdmin):
             live.published_at.strftime("%Y-%m-%d %H:%M"),
             live.published_by or "unknown",
             changes,
-            reverse("capy_theme:theme_css", args=[live.css_version]),
+            stylesheet_url(live),
         )
         for note in theme.base_changes():
             status += format_html('<p class="errornote">{}</p>', note)

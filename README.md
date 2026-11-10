@@ -280,6 +280,10 @@ aren't in a CSS layer, so they override daisyUI's own theme rules.
 - Browsers cache each stylesheet for a year. Publishing creates a new version,
   so pages link to a new URL and visitors get the change straight away.
 - An old URL keeps returning the revision it was made for.
+- Pages link it with `?v=<capy-theme version>` on the end (e.g.
+  `/theme/52e3f01881d2.css?v=0.1.0`). When an upgrade changes how the module
+  writes its CSS, the new version in the link makes browsers fetch it again
+  instead of using a copy cached for a year. The view ignores `?v=`.
 - The values come from the revision itself, not from today's daisyUI catalogue.
   Each publish saves both base themes' full values, so a later daisyUI update
   can't change or break a published theme. To pick up daisyUI's changes,

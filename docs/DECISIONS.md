@@ -229,3 +229,19 @@ All recommended (made while building without a stop for every decision).
 - The showcase's stylesheet link sits inside the `content` block, so it loads
   whether the showcase uses its standalone page or the project's base template.
 - The demo's navbar gets a "Showcase" link.
+
+## Stylesheet URL includes the package version (#86)
+
+Recommended (made while building without a stop for every decision).
+
+- **Chosen:** pages link the stylesheet as `/theme/<version>.css?v=<capy-theme version>`
+  (`stylesheet.stylesheet_url()`, used by `{% theme_head %}`, the `theme` context
+  and the admin link).
+- **Alternatives:** a format number bumped by hand whenever `render_css()`
+  changes; or naming the URL by a hash of the rendered CSS (needs rendering on
+  every page).
+- **Why:** browsers cache each stylesheet URL for a year, and the theme's
+  version only changes on publish. A project only gets new CSS output by
+  upgrading capy-theme, which changes the package version, so the new version in
+  the URL makes browsers fetch it again. Nothing has to be remembered by hand.
+  Found while building the showcase (1.8), which changed the CSS output.
