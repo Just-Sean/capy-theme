@@ -6,7 +6,7 @@ A self-contained Django app (`capy_theme`) that any Django 6.1+ project
 can install. It has no project of its own: its tests run against a tiny
 stand-in project in `tests/`, and `demo/` is a small site for trying it out.
 
-## What it does (v0.4)
+## What it does (v0.5)
 
 Whoever runs the site controls its look from the Django admin, with no code
 changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
@@ -29,7 +29,14 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   own site), or external stylesheets like Adobe Fonts. Plus a type scale (base
   size, heading scale, line height, heading weight) and font preloading.
 - **Shape and effects:** corner radii, control sizes, border width, depth and noise.
-- **Branding:** each theme has a site name, tagline and main logo (with alt text).
+- **Branding and images:** a site name and tagline, and uploaded images (checked
+  by content, GPS and camera details removed, SVGs cleaned of scripts):
+  - six logo slots (main, stacked, mark, wordmark, email, print) with dark
+    versions and fallbacks, served as responsive AVIF/WebP/PNG at the header height;
+  - every favicon and app icon made from one square icon;
+  - a web app manifest, so the site can be installed as an app;
+  - a link-preview image and Open Graph / Twitter tags;
+  - optional login and page background images.
 - **Drafts and publishing:** editing a theme changes only its draft. Publishing
   saves a numbered revision, recording who published it and when, and the site
   shows that. Every revision is kept; any two can be compared, and an old one
@@ -47,7 +54,7 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   only by default).
 - **Permissions:** only users with `publish_theme` can publish or activate.
 
-Next: images and icons (v0.5), then visitor choices and scheduling, an API and
+Next: visitor choices and scheduling (v0.6), then import/export and an API, and
 more (see `docs/PLAN.md`).
 
 ## Add it to a project

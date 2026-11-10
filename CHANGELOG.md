@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.5.0
+
+Images and icons: logos, icons, link previews and backgrounds, all made from
+uploads and chosen in the live editor or the admin.
+
+- **Safe image uploads:** `ThemeAsset` and `ThemeAssetVariant` models, ten image
+  slots with size limits. Files are checked by content (PNG, JPEG, WebP, GIF, SVG)
+  and saved again without EXIF, so GPS locations and camera details are removed.
+- **SVG cleaning:** a strict allow-list keeps only drawing elements; scripts,
+  event handlers, embedded HTML and external references are removed. The email
+  logo, icon and sharing image take PNG or JPEG instead of SVG (nothing is
+  converted).
+- **Logo slots:** main, stacked, mark, wordmark, email and print, each with an
+  optional dark version and fallbacks. `{% theme_logo slot="…" %}` outputs a
+  `<picture>` with AVIF, WebP and PNG/JPEG copies, `srcset`/`sizes` from the header
+  heights (40 px, 32 px on phones), and light/dark switching. **The old single
+  logo field is replaced:** migration `0010_logo_slots` moves it into the main slot.
+- **Icons and favicons:** from one square icon, on publish: `favicon.ico`,
+  `favicon.svg` (with a dark version), the Apple icon, 192/512 px, maskable and
+  monochrome icons, with background and padding settings. Linked by
+  `{% theme_head %}`.
+- **Web app manifest** at `/theme/manifest.webmanifest`: names, description, start
+  URL, display, orientation, colours and icons. Chrome reports it installable.
+- **Link previews:** a sharing image cropped to 1200 × 630 and Open Graph / Twitter
+  card tags in `{% theme_head %}`, overridable per page with
+  `{% theme_social_tags %}` in a block.
+- **Background images:** an optional login background and page pattern, as CSS
+  variables, helper classes and template values.
+- **Showcase:** every logo slot and fallback, every icon at its real size, a mock
+  link preview, the backgrounds and the manifest.
+- **No new dependencies:** Pillow does the image work, including AVIF.
+
 ## 0.4.0
 
 Fonts: fonts for every role from every source, all self-hosted (except external
