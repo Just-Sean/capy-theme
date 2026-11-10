@@ -1,12 +1,14 @@
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import ImproperlyConfigured
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from .active import get_active_theme
 from .branding import branding
+from .mode import COOKIE_MAX_AGE, COOKIE_NAME, MODES, mode_settings
 from .models import ThemeRevision
 from .stylesheet import render_css
 
@@ -65,3 +67,26 @@ def showcase(request):
         "sections": [f"capy_theme/showcase/sections/{name}.html" for name in SHOWCASE_SECTIONS],
     }
     return render(request, "capy_theme/showcase/page.html", context)
+
+
+def set_mode(request, mode):
+    """Remember a visitor's light/dark/auto choice in a cookie, then go back.
+
+    Used by {% theme_mode_toggle %} when JavaScript is off (with JavaScript the
+    script sets the cookie itself). Ignored if the theme doesn't allow switching.
+    """
+    if mode not in MODES:
+        raise Http404("Unknown mode.")
+    target = request.GET.get("next", "/")
+    if not url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        target = "/"
+    response = HttpResponseRedirect(target)
+    theme = get_active_theme(request)
+    if theme is not None and theme.live_revision is not None:
+        if mode_settings(theme.live_revision)[1]:
+            response.set_cookie(
+                COOKIE_NAME, mode, max_age=COOKIE_MAX_AGE, samesite="Lax", httponly=False
+            )
+    return response

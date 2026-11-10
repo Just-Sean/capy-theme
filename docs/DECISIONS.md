@@ -273,3 +273,44 @@ Recommended (made while building without a stop for every decision).
   for future releases.
 - **Tagging:** follows the README's release steps. The release PR is merged first,
   then `v0.1.0` is tagged on the merged `main` and only the tag is pushed.
+
+## 6.1 Mode settings and toggle (#46), brought into v0.1.0
+
+- **Chosen by Sean:** built now, before v0.1.0, after testing showed no way to
+  switch between light and dark.
+
+Recommended (made while building):
+
+### Where the settings live
+- **Chosen:** "Default mode" (auto, light, dark) and "Visitors can switch" are
+  theme settings in a new **Mode** section of the admin, published like
+  everything else. They're stored only when they differ from the defaults
+  (auto, can switch).
+- **Alternative:** project settings in `settings.py`.
+- **Why:** they're part of a site's look, which operators control from the admin.
+
+### No flash: server first, script as well
+- **Chosen:** `{% theme_html_attrs %}` renders the forced mode on `<html>` from the
+  cookie, so the page arrives in the right mode. The head script repeats it
+  before the page draws (for cached pages) and makes the toggle instant.
+- **Alternative:** only the script.
+- **Why:** the server-side attribute works even without JavaScript.
+
+### The toggle works without JavaScript
+- **Chosen:** each button is a link to `/theme/mode/<mode>/?next=…`, which sets the
+  cookie and redirects back (only to this site). With JavaScript, the click is
+  handled in place.
+
+### Cookie
+- `capy_theme_mode`, one year, `SameSite=Lax`, readable by JavaScript (it holds
+  only the mode). Ignored when the theme doesn't allow switching.
+
+### CSP nonce
+- The script gets Django 6.1's built-in CSP nonce
+  (`django.middleware.csp.get_nonce`) when the CSP middleware is on, and none
+  otherwise.
+
+### Checking the script
+- There's no Node.js here, so the generated script was checked by parsing it with
+  `esprima` (run in a throwaway environment, not added to the project) for both
+  settings combinations, and by the end-to-end check on the demo server.

@@ -19,10 +19,14 @@ history and permissions work.
 - **Theme stylesheet:** `/theme/<version>.css`, cached by browsers for a year.
   Light values by default, dark in dark mode, plus `capy-light`/`capy-dark` rules
   to force a mode. Links carry `?v=<capy-theme version>`.
-- **Template tags and context:** `{% theme_head %}`, `{% theme_html_attrs %}`
-  (empty until the light/dark toggle), `{% theme_logo %}`, and a `theme`
-  context variable with the published values.
+- **Template tags and context:** `{% theme_head %}`, `{% theme_html_attrs %}`,
+  `{% theme_logo %}`, `{% theme_mode_toggle %}`, and a `theme` context variable
+  with the published values.
 - **Branding:** site name, tagline, and a main logo upload with alt text.
+- **Light and dark mode** (brought forward from 6.1): a theme's default mode
+  (auto, light or dark) and whether visitors can switch. `{% theme_mode_toggle %}`
+  shows Light / Dark / Auto buttons; the choice is kept in a cookie for a year.
+  The server and a tiny script (with the CSP nonce) apply it with no flash.
 - **Theme showcase:** `/theme/showcase/`, every component in light and dark side
   by side. `CAPY_THEME_SHOWCASE` (`staff`, `public`, `off`) and
   `CAPY_THEME_BASE_TEMPLATE`.

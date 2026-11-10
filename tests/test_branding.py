@@ -35,7 +35,13 @@ def png(name="logo.png", colour="red"):
 
 
 def form_data(**kwargs):
-    data = {"name": "Main", "slug": "main", "light_base": "light", "dark_base": "dark"}
+    data = {
+        "name": "Main",
+        "slug": "main",
+        "light_base": "light",
+        "dark_base": "dark",
+        "visitors_can_switch": "on",  # ticked by default in the real form
+    }
     return data | kwargs
 
 

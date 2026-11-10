@@ -37,7 +37,8 @@ def test_theme_head_links_the_active_stylesheet(active_theme, rf):
     html = render("{% theme_head %}", rf.get("/"))
     version = active_theme.live_revision.css_version
     package = importlib.metadata.version("capy-theme")
-    assert html == f'<link rel="stylesheet" href="/theme/{version}.css?v={package}">'
+    assert html.startswith(f'<link rel="stylesheet" href="/theme/{version}.css?v={package}">')
+    assert "<script>" in html  # the light/dark mode script (issue #46)
 
 
 def test_theme_head_follows_publishing(active_theme, rf):

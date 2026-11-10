@@ -1,14 +1,19 @@
 """Template tags for putting the active theme on a page.
 
 Load them with `{% load capy_theme %}`. Put `{% theme_html_attrs %}` inside the
-page's <html> tag and `{% theme_head %}` inside <head>. The README shows a full example.
+page's <html> tag and `{% theme_head %}` inside <head>. `{% theme_logo %}` and
+`{% theme_mode_toggle %}` go wherever they should appear. The README shows a full example.
 """
 
 from django import template
+from django.middleware.csp import get_nonce
+from django.template.loader import render_to_string
 from django.utils.html import format_html, format_html_join
+from django.utils.safestring import mark_safe
 
 from ..active import get_active_theme
 from ..branding import branding
+from ..mode import MODE_LABELS, MODES, current_mode, head_script, html_theme_value, mode_settings
 from ..stylesheet import stylesheet_url
 
 register = template.Library()
@@ -16,23 +21,60 @@ register = template.Library()
 
 @register.simple_tag(takes_context=True)
 def theme_head(context):
-    """Output the <link> to the active theme's stylesheet, or nothing if no theme is active."""
-    theme = get_active_theme(context.get("request"))
+    """Output the active theme's stylesheet link and its light/dark mode script.
+
+    Outputs nothing if no theme is active. The script carries the CSP nonce when
+    Django's CSP middleware is on.
+    """
+    request = context.get("request")
+    theme = get_active_theme(request)
     if theme is None or theme.live_revision is None:
         return ""
-    url = stylesheet_url(theme.live_revision)
-    return format_html('<link rel="stylesheet" href="{}">', url)
+    revision = theme.live_revision
+    nonce = get_nonce(request) if request is not None else None
+    nonce_attr = format_html(' nonce="{}"', nonce) if nonce else ""
+    return format_html(
+        '<link rel="stylesheet" href="{}">\n<script{}>{}</script>',
+        stylesheet_url(revision),
+        nonce_attr,
+        mark_safe(head_script(revision)),  # noqa: S308 (built from fixed text and JSON values)
+    )
 
 
 @register.simple_tag(takes_context=True)
 def theme_html_attrs(context):
     """Output attributes for the page's <html> tag.
 
-    Nothing yet: the stylesheet sets the colours and follows the visitor's
-    light/dark device setting. The light/dark toggle (6.1) will use this to
-    force a mode. Put it in templates now so they don't need changing later.
+    When the page should be forced into light or dark (the theme's default, or
+    the visitor's choice from {% theme_mode_toggle %}), outputs
+    data-theme="capy-light" or "capy-dark". For "auto" it outputs nothing, and
+    the stylesheet follows the visitor's device setting.
     """
-    return ""
+    request = context.get("request")
+    theme = get_active_theme(request)
+    if theme is None or theme.live_revision is None:
+        return ""
+    value = html_theme_value(current_mode(request, theme.live_revision))
+    return format_html('data-theme="{}"', value) if value else ""
+
+
+@register.simple_tag(takes_context=True)
+def theme_mode_toggle(context):
+    """Output Light / Dark / Auto buttons for visitors, if the theme allows switching."""
+    request = context.get("request")
+    theme = get_active_theme(request)
+    if theme is None or theme.live_revision is None:
+        return ""
+    if not mode_settings(theme.live_revision)[1]:
+        return ""
+    return render_to_string(
+        "capy_theme/mode_toggle.html",
+        {
+            "options": [(mode, MODE_LABELS[mode]) for mode in MODES],
+            "current": current_mode(request, theme.live_revision),
+            "next": request.get_full_path() if request is not None else "/",
+        },
+    )
 
 
 @register.simple_tag(takes_context=True)
