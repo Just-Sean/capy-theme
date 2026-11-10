@@ -291,7 +291,7 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 - [x] **7.4 daisyUI theme block export** (#55): For projects that want the theme compiled into their stylesheet.
 - [x] **7.5 Management commands** (#56): Scripted installs and maintenance.
 - [x] **7.6 Developer docs page** (#57): `docs/developers.md`: every CSS variable, the API and how to read it, the downloads, the API-mode and CORS notes.
-- [ ] **7.7 Release v0.7.0** (#58)
+- [x] **7.7 Release v0.7.0** (#58)
 
 ### Phase 8: Advanced and 1.0 (v1.0.0)
 

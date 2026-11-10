@@ -1263,3 +1263,10 @@ Recommended (made while building autonomously).
 - **Tests hold it to the code:** the variable table must list exactly the variables
   a fully-featured theme stylesheet defines, and every download address in it must
   answer 200. So adding a variable without documenting it fails the tests.
+
+## 7.7 Release v0.7.0 (#58)
+
+- Released with tests on SQLite and PostgreSQL 17, the package checked (new
+  modules, JSON data files and templates included, `demo/` and the tests' copy of
+  the Design Tokens schema excluded), and the demo site checked. The changelog
+  lists the showcase's removal and its two settings, which affect upgrades.
