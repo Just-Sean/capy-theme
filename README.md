@@ -313,6 +313,13 @@ picker beside each field. They're converted to and stored as OKLCH (daisyUI's
 format), so after saving the field shows e.g. `oklch(62.31% 0.188 259.81)`.
 Like everything else, they show on the site after publishing.
 
+**Readable text is worked out for you.** When you set a colour (say primary) but
+not its text colour (primary text), the text colour is chosen automatically: a
+very light or very dark tint of the same hue, whichever reads better, falling
+back to pure white or black if a tint wouldn't meet WCAG AA (4.5:1). When you set
+the background but not its darker shades or its text, those are worked out from
+it as well. Anything you set yourself is always kept.
+
 ### Light and dark mode
 
 On a theme's admin page, the **Mode** section has:

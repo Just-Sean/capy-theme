@@ -66,14 +66,16 @@ def theme_with(colors):
 
 
 def test_overrides_are_merged_over_the_base():
-    revision = theme_with({"light": {"primary": PINK}})
+    revision = theme_with({"light": {"primary": PINK, "primary-content": TEAL}})
     light = effective_values(revision.snapshot, "light")
     dark = effective_values(revision.snapshot, "dark")
     assert light["--color-primary"] == PINK
+    assert light["--color-primary-content"] == TEAL
     # Everything else comes from the base themes.
     base_light = THEMES["light"]["values"]
-    assert {k: v for k, v in light.items() if k != "--color-primary"} == {
-        k: v for k, v in base_light.items() if k != "--color-primary"
+    changed = {"--color-primary", "--color-primary-content"}
+    assert {k: v for k, v in light.items() if k not in changed} == {
+        k: v for k, v in base_light.items() if k not in changed
     }
     assert dark == THEMES["dark"]["values"]
 
@@ -87,12 +89,14 @@ def test_light_and_dark_are_separate():
 def test_stylesheet_uses_the_override_and_nothing_else_changes():
     plain = render_css(theme_with({}))
     Theme.objects.all().delete()
-    overridden = render_css(theme_with({"light": {"primary": PINK}}))
+    overridden = render_css(theme_with({"light": {"primary": PINK, "primary-content": TEAL}}))
     changed = [
         (a, b) for a, b in zip(plain.splitlines(), overridden.splitlines(), strict=True) if a != b
     ]
-    # The light :root block and the forced capy-light block change; nothing else.
-    assert [b.strip() for _, b in changed] == [f"--color-primary: {PINK};"] * 2
+    # Only primary and its text colour change, in the light :root and capy-light blocks.
+    assert sorted(b.strip() for _, b in changed) == sorted(
+        [f"--color-primary: {PINK};", f"--color-primary-content: {TEAL};"] * 2
+    )
 
 
 def test_changing_a_colour_is_an_unpublished_change():
