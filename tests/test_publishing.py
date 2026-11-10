@@ -2,6 +2,7 @@
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.urls import reverse
 
 from capy_theme.models import Theme, ThemeRevision
@@ -209,6 +210,26 @@ def test_list_shows_live_revision_and_unpublished_changes(admin, theme, user):
     assert response.status_code == 200
     assert b"Live revision" in response.content
     assert b"Unpublished changes" in response.content
+
+
+def test_two_publishes_cant_get_the_same_number(theme, user):
+    publish(theme, user=user)
+    with pytest.raises(IntegrityError), transaction.atomic():
+        ThemeRevision.objects.create(theme=theme, number=1, snapshot=theme.snapshot())
+    assert theme.revisions.count() == 1
+
+
+def test_publish_page_explains_a_simultaneous_publish(admin, theme, monkeypatch):
+    # Simulates someone else publishing at the same moment: the database
+    # refuses the duplicate revision number.
+    def collide(*args, **kwargs):
+        raise IntegrityError("duplicate revision number")
+
+    monkeypatch.setattr("capy_theme.admin.publish", collide)
+    response = admin.post(publish_url(theme), {"note": ""}, follow=True)
+    assert response.status_code == 200
+    assert b"Someone else just published this theme" in response.content
+    assert not ThemeRevision.objects.exists()
 
 
 def test_staff_without_change_permission_cant_publish(client, theme, django_user_model):

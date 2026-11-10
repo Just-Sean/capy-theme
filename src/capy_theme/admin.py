@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
@@ -152,6 +153,14 @@ class ThemeAdmin(admin.ModelAdmin):
                 messages.warning(request, str(error))
             except ValidationError as error:
                 messages.error(request, "Can't publish: " + " ".join(error.messages))
+            except IntegrityError:
+                # Someone else published this theme at the same moment and took
+                # the next revision number. Nothing was saved for this request.
+                messages.warning(
+                    request,
+                    "Someone else just published this theme, so yours wasn't saved. "
+                    "Check the live revision below, then publish again if needed.",
+                )
             else:
                 messages.success(request, f"Published “{theme}” as revision {revision.number}.")
             return redirect(change_url)
