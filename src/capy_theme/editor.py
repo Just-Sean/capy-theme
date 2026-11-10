@@ -24,7 +24,7 @@ from .colors import (
     to_oklch,
 )
 from .fonts import ROLES, external_stylesheets, preview_stack
-from .images import SLOTS, asset_data
+from .images import NO_SVG, SLOTS, asset_data
 from .models import Font, Theme
 from .palette import from_logo, from_primary
 from .shape import EFFECTS, SIZES
@@ -105,7 +105,14 @@ def controls():
             {"name": name, "variable": v, "label": lab} for name, (v, lab, _help) in EFFECTS.items()
         ],
         "image_slots": [
-            {"name": name, "label": lab, "max_bytes": max_bytes, "max_pixels": px, "help": text}
+            {
+                "name": name,
+                "label": lab,
+                "max_bytes": max_bytes,
+                "max_pixels": px,
+                "help": text,
+                "svg": name not in NO_SVG,
+            }
             for name, (lab, max_bytes, px, text) in SLOTS.items()
         ],
         "font_roles": [{"name": name, "label": lab} for name, lab in ROLES.items()],

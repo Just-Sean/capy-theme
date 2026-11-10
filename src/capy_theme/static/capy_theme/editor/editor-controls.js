@@ -335,14 +335,14 @@
   function imageSection(state) {
     var slot = el("select", { "data-capy-image-slot": "", "aria-label": "Where the image goes" });
     spec.image_slots.forEach(function (item) {
-      slot.appendChild(el("option", { value: item.name, text: item.label + " (up to " + Math.round(item.max_bytes / 1048576) + " MB)" }));
+      slot.appendChild(el("option", { value: item.name, text: item.label + " (up to " + Math.round(item.max_bytes / 1048576) + " MB" + (item.svg ? "" : ", no SVG") + ")" }));
     });
     var mode = el("select", { "data-capy-image-mode": "", "aria-label": "Light or dark mode" });
     [["light", "Light mode"], ["dark", "Dark mode"]].forEach(function (pair) {
       mode.appendChild(el("option", { value: pair[0], text: pair[1] }));
     });
     var alt = el("input", { type: "text", maxlength: "200", "data-capy-image-alt": "", placeholder: "Describe the image (alt text)" });
-    var file = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp,image/gif", "data-capy-image-file": "" });
+    var file = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp,image/gif,image/svg+xml", "data-capy-image-file": "" });
     var button = el("button", { type: "button", text: "Upload" });
     var list = imageList(state.assets || []);
     button.addEventListener("click", function () {

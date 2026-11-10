@@ -339,7 +339,7 @@ the theme's admin page. Each upload goes in a slot, for light or dark mode,
 with alt text. For every upload:
 
 - The type is worked out from the file's content, not its name. Only PNG, JPEG,
-  WebP and GIF are accepted, so a text file renamed `.png` is rejected.
+  WebP, GIF and SVG are accepted, so a text file renamed `.png` is rejected.
 - Each slot has a size limit and a maximum width and height (in
   `src/capy_theme/images.py`, `SLOTS`): 1 MB for the email logo, 2 MB for the
   other logos, the icon and the background pattern, and 5 MB for the print logo,
@@ -347,6 +347,15 @@ with alt text. For every upload:
 - The image is saved again without EXIF, text chunks and comments, so camera
   details and GPS locations are removed. Photos are turned upright first.
   Colour profiles are kept.
+- SVGs are cleaned with a strict allow-list (`src/capy_theme/svg.py`): only
+  drawing elements and attributes are kept. Scripts, event handlers (`onload`
+  and so on), embedded HTML, animation, links to other files or sites, and CSS
+  `@import` or external `url()` are removed. SVGs must be UTF-8, and SVGs with a
+  DOCTYPE or entities are rejected.
+- SVGs aren't converted to PNG. The slots where SVG can't be used take a PNG,
+  JPEG, WebP or GIF instead: the email logo (email programs don't show SVG), the
+  social sharing image (social sites don't accept it) and the icon (favicons are
+  made from it). They're listed in `NO_SVG` in `src/capy_theme/images.py`.
 
 Files are stored under `MEDIA_ROOT/capy_theme/assets/<slot>/`. An image is never
 changed after upload: a new image is a new asset, so older revisions keep theirs.
@@ -786,6 +795,7 @@ straight to `main`:
 | `src/capy_theme/font_files.py` | Checks uploaded font files, converts them to WOFF2 and trims them to a character subset |
 | `src/capy_theme/google_fonts.py` | Imports a Google font into the library (downloaded once, served locally) |
 | `src/capy_theme/images.py` | Image slots and their limits, and checking and cleaning uploaded images |
+| `src/capy_theme/svg.py` | Cleaning uploaded SVGs with an allow-list of elements and attributes |
 | `src/capy_theme/typography.py` | The type scale settings and their CSS |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |

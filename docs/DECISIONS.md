@@ -805,3 +805,30 @@ Recommended (made while building autonomously).
   draft and Publish as usual.
 - **`ThemeAssetVariant`** is created now (size, format, purpose, file) so 5.3 and 5.4
   can fill it in.
+
+## 5.2 SVG cleaning (#33)
+
+- **Allow-list, no new dependency:** py-svg-hush was evaluated but can't be
+  installed here without approval, so SVGs are cleaned with the issue's fallback:
+  a strict allow-list in `svg.py` using the standard library's XML parser.
+  - Kept: drawing elements (shapes, paths, text, gradients, patterns, masks,
+    clip paths, markers, filters) and their presentation attributes.
+  - Removed with their contents: everything else (`script`, `foreignObject`,
+    animation, elements from other namespaces such as Inkscape's).
+  - `<a>` links are removed but what's inside them is kept.
+  - `href` may only point inside the file (`#id`). `<image>` may also embed
+    PNG, JPEG, GIF or WebP as a `data:` URL.
+  - `url()` in attributes and CSS may only be `url(#id)`; `@import`,
+    `javascript:` and `data:` are removed.
+- **No DOCTYPE or entities:** rejected outright (entity expansion and external
+  entities are the XML attacks defusedxml protects against). Files must be UTF-8,
+  so a UTF-16 file can't hide a DOCTYPE from the check.
+- **Detected by content:** an upload that starts with `<` is treated as SVG and must
+  have an `<svg>` root; anything else goes through Pillow as before.
+- **Size** is read from the `viewBox` (or `width` and `height`).
+- **No PNG copy (Sean's decision):** the issue asked for a PNG copy of each SVG.
+  That needs an SVG renderer, which means a new dependency: resvg-py (MIT, but
+  one main maintainer) or CairoSVG (LGPL, needs the Cairo system library). Instead,
+  the slots where SVG can't go refuse it and ask for a PNG or JPEG: the email logo,
+  the social image and the icon (`images.NO_SVG`). People upload the format each
+  place needs; nothing is converted.
