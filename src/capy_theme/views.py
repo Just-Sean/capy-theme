@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from .active import get_active_theme
+from .active import CHOICE_COOKIE, get_active_theme, offered_themes, visitor_themes_allowed
 from .branding import branding
 from .editor import (
     can_edit,
@@ -115,6 +115,28 @@ def set_mode(request, mode):
             response.set_cookie(
                 COOKIE_NAME, mode, max_age=COOKIE_MAX_AGE, samesite="Lax", httponly=False
             )
+    return response
+
+
+def choose_theme(request, slug):
+    """Remember a visitor's theme choice in a cookie, then go back.
+
+    `slug` is an offered theme's slug, or "default" for the site's own theme.
+    Themes that aren't offered to visitors are ignored, so they can't be forced.
+    """
+    target = request.GET.get("next", "/")
+    if not url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        target = "/"
+    response = HttpResponseRedirect(target)
+    offered = {theme.slug for theme in offered_themes()}
+    if slug == "default":
+        response.delete_cookie(CHOICE_COOKIE, samesite="Lax")
+    elif visitor_themes_allowed() and slug in offered:
+        response.set_cookie(
+            CHOICE_COOKIE, slug, max_age=COOKIE_MAX_AGE, samesite="Lax", httponly=True
+        )
     return response
 
 

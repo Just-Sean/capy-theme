@@ -1,0 +1,8 @@
+{% comment %}
+  {% theme_picker %}: the themes visitors may choose (daisyUI menu). Each is a
+  link to the view that sets the cookie and comes back, so it works without
+  JavaScript.
+{% endcomment %}
+<ul class="menu menu-sm rounded-box bg-base-200" aria-label="Theme">
+  {% for value, label in options %}<li><a href="{% url 'capy_theme:choose_theme' value %}?next={{ next|urlencode }}" data-capy-theme-choice="{{ value }}" class="{% if value == current %}menu-active{% endif %}" aria-current="{% if value == current %}true{% else %}false{% endif %}" rel="nofollow">{{ label }}</a></li>{% endfor %}
+</ul>

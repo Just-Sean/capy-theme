@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Visitor theme picker:** tick **Offer to visitors** on published themes;
+  `{% theme_picker %}` lets visitors choose one (stored in a cookie, only offered
+  themes count). `CAPY_THEME_VISITOR_THEMES` turns it off. Migration 0012.
 - **Scope: capy-theme exposes theme artifacts, other modules apply them.**
   `capy_theme.artifacts.get_artifacts()` and `{% theme_artifacts %}` give every
   published colour (OKLCH and hex), font, logo slot (with fallbacks and smaller

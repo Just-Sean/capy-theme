@@ -13,6 +13,7 @@ app_name = "capy_theme"
 urlpatterns = [
     path("showcase/", views.showcase, name="showcase"),
     path("mode/<slug:mode>/", views.set_mode, name="set_mode"),
+    path("choose/<slug:slug>/", views.choose_theme, name="choose_theme"),
     path("editor/<int:pk>/state/", views.editor_state, name="editor_state"),
     path("editor/<int:pk>/preview/", views.editor_preview, name="editor_preview"),
     path("editor/<int:pk>/suggestions/", views.editor_suggestions, name="editor_suggestions"),
