@@ -243,10 +243,10 @@
   // Which uploaded image each logo slot uses, in light and dark mode, and the
   // header logo heights. Saved with Save draft like everything else.
   function logoChoices(assets) {
-    var box = el("div", { class: "capy-editor-logos" }, [el("h4", { text: "Logos and icon" })]);
+    var box = el("div", { class: "capy-editor-logos" }, [el("h4", { text: "Logos, icon and sharing image" })]);
     var images = (changes.settings.images = changes.settings.images || {});
     spec.logo_slots.forEach(function (slot) {
-      ["light", "dark"].forEach(function (mode) {
+      slot.modes.forEach(function (mode) {
         var select = el("select", { "data-capy-logo": slot.name + ":" + mode, "aria-label": slot.label + " (" + mode + ")" });
         select.appendChild(el("option", { value: "", text: mode === "dark" ? "Same as light" : slot.fallback }));
         assets.forEach(function (asset) {
@@ -481,9 +481,22 @@
       });
       return el("label", { class: "capy-editor-field" }, [el("span", { text: item.label }), input]);
     });
+    var social = (changes.settings.social = changes.settings.social || {});
+    spec.social_settings.forEach(function (item) {
+      var input = el("textarea", { rows: "2", maxlength: "300", "data-capy-social": item.name, "aria-label": item.label });
+      input.title = item.help;
+      input.value = social[item.name] || "";
+      input.addEventListener("input", function () {
+        var value = input.value.trim();
+        if (value === "") delete social[item.name];
+        else social[item.name] = value;
+        update();
+      });
+      rows.push(el("label", { class: "capy-editor-field" }, [el("span", { text: item.label }), input]));
+    });
     return el("section", { class: "capy-editor-section" }, [
-      el("details", {}, [el("summary", { text: "Web app" }),
-        el("p", { class: "capy-editor-note", text: "How the site installs as an app. Used after you publish; the icons come from Images → icon." })].concat(rows)),
+      el("details", {}, [el("summary", { text: "Web app and link previews" }),
+        el("p", { class: "capy-editor-note", text: "How the site installs as an app, and what shows when a link to it is shared. Used after you publish; the icon and sharing image are chosen under Images." })].concat(rows)),
     ]);
   }
 
@@ -589,6 +602,7 @@
         logo: JSON.parse(JSON.stringify(state.settings.logo || {})),
         icon: JSON.parse(JSON.stringify(state.settings.icon || {})),
         app: JSON.parse(JSON.stringify(state.settings.app || {})),
+        social: JSON.parse(JSON.stringify(state.settings.social || {})),
       },
     };
     editor.changes = normalized();

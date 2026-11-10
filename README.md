@@ -440,6 +440,36 @@ revision:
 To check it: open the site in Chrome, then DevTools → **Application** →
 **Manifest**. Installing needs HTTPS (or `localhost`).
 
+### Link previews (sharing image and tags)
+
+When a link to the site is shared, chat apps and social sites show a preview
+from the page's Open Graph and Twitter card tags. `{% theme_head %}` outputs
+them with the theme's defaults:
+
+- **Title**: the site name.
+- **Description**: the **Sharing description**, or else the tagline.
+- **Image**: the **social** slot's image (PNG or JPEG, not SVG), cropped from its
+  centre to 1200 × 630 when uploaded (transparent parts become white), with its
+  alt text. Without an image, the tags ask for a small card.
+- **URL**: the current page. Image and page URLs are made absolute.
+
+Set them in the live editor (**Images** for the image, **Web app and link
+previews** for the description) or the admin (**Link previews**), then publish.
+
+To change them per page, turn them off in `{% theme_head %}` and output them
+with `{% theme_social_tags %}` in a block that pages can override:
+
+```html
+{# base.html #}
+{% theme_head social=False %}
+{% block social %}{% theme_social_tags %}{% endblock %}
+
+{# about.html #}
+{% block social %}{% theme_social_tags title="About us" description="Who we are" image="/static/about.png" image_alt="Our team" %}{% endblock %}
+```
+
+Any argument left out uses the theme's default.
+
 Upgrading from 0.4: migration `0010_logo_slots` moves each theme's old logo into
 its main slot (light). It has no smaller copies; upload it again to get them.
 Revisions published before 0.5 keep showing their old logo.
@@ -856,7 +886,7 @@ straight to `main`:
 | `src/capy_theme/stylesheet.py` | Writes a published revision out as CSS variables, and makes its version hash |
 | `src/capy_theme/views.py` | The stylesheet view (`/theme/<version>.css`), the showcase (`/theme/showcase/`), the mode switch (`/theme/mode/<mode>/`), the web app manifest (`/theme/manifest.webmanifest`) and the live editor's JSON views |
 | `src/capy_theme/urls.py` | The module's URLs, included by projects under `/theme/` |
-| `src/capy_theme/templatetags/capy_theme.py` | The `{% theme_head %}`, `{% theme_html_attrs %}`, `{% theme_logo %}` and `{% theme_mode_toggle %}` template tags |
+| `src/capy_theme/templatetags/capy_theme.py` | The `{% theme_head %}`, `{% theme_html_attrs %}`, `{% theme_logo %}`, `{% theme_mode_toggle %}` and `{% theme_social_tags %}` template tags |
 | `src/capy_theme/branding.py` | Reads a revision's published site name, tagline and logo |
 | `src/capy_theme/context_processors.py` | Gives every template `theme`: the active theme's published values (or `None`) |
 | `src/capy_theme/templates/capy_theme/showcase/` | The showcase page, its standalone base page, and one template per section |
@@ -878,6 +908,7 @@ straight to `main`:
 | `src/capy_theme/font_files.py` | Checks uploaded font files, converts them to WOFF2 and trims them to a character subset |
 | `src/capy_theme/google_fonts.py` | Imports a Google font into the library (downloaded once, served locally) |
 | `src/capy_theme/images.py` | Image slots and their limits, and checking and cleaning uploaded images |
+| `src/capy_theme/social.py` | The 1200 × 630 sharing image and the Open Graph / Twitter card tags |
 | `src/capy_theme/manifest.py` | Builds the web app manifest from the published theme |
 | `src/capy_theme/icons.py` | Makes the favicons and app icons from the icon image, and their `<link>` tags |
 | `src/capy_theme/logos.py` | Logo slots: fallbacks, smaller copies, the `<picture>` HTML and the header height CSS |
