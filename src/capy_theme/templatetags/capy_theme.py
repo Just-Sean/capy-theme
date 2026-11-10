@@ -5,11 +5,11 @@ page's <html> tag and `{% theme_head %}` inside <head>. The README shows a full 
 """
 
 from django import template
-from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 
 from ..active import get_active_theme
 from ..branding import branding
+from ..stylesheet import stylesheet_url
 
 register = template.Library()
 
@@ -20,7 +20,7 @@ def theme_head(context):
     theme = get_active_theme(context.get("request"))
     if theme is None or theme.live_revision is None:
         return ""
-    url = reverse("capy_theme:theme_css", args=[theme.live_revision.css_version])
+    url = stylesheet_url(theme.live_revision)
     return format_html('<link rel="stylesheet" href="{}">', url)
 
 

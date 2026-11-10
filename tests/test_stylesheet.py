@@ -1,6 +1,7 @@
 """Tests for the theme stylesheet (issue #8)."""
 
 import importlib
+import importlib.metadata
 
 import pytest
 from django.urls import reverse
@@ -113,3 +114,33 @@ def test_migration_version_matches_the_module():
     )
     snapshot = {"light_base": "light", "dark_base": "dark", "settings": {}}
     assert migration.css_version(1, 2, snapshot) == css_version(1, 2, snapshot)
+
+
+# The package version in stylesheet URLs (issue #86)
+
+
+def test_stylesheet_url_includes_the_package_version(theme):
+    from capy_theme.stylesheet import stylesheet_url
+
+    revision = publish(theme)
+    version = importlib.metadata.version("capy-theme")
+    assert stylesheet_url(revision) == f"/theme/{revision.css_version}.css?v={version}"
+
+
+def test_package_version_changes_the_url(theme, monkeypatch):
+    from capy_theme import stylesheet
+
+    revision = publish(theme)
+    before = stylesheet.stylesheet_url(revision)
+    monkeypatch.setattr(stylesheet, "version", lambda name: "9.9.9")
+    after = stylesheet.stylesheet_url(revision)
+    assert before != after
+    assert after.endswith("?v=9.9.9")
+
+
+def test_stylesheet_is_served_with_or_without_v(client, theme):
+    revision = publish(theme)
+    plain = client.get(css_url(revision))
+    versioned = client.get(css_url(revision) + "?v=0.1.0")
+    assert plain.status_code == versioned.status_code == 200
+    assert plain.content == versioned.content

@@ -1,5 +1,7 @@
 """Tests for {% theme_head %}, {% theme_html_attrs %} and the theme context (issue #9)."""
 
+import importlib.metadata
+
 import pytest
 from django.core.cache import cache
 from django.template import Context, Template
@@ -34,7 +36,8 @@ def render(source, request=None):
 def test_theme_head_links_the_active_stylesheet(active_theme, rf):
     html = render("{% theme_head %}", rf.get("/"))
     version = active_theme.live_revision.css_version
-    assert html == f'<link rel="stylesheet" href="/theme/{version}.css">'
+    package = importlib.metadata.version("capy-theme")
+    assert html == f'<link rel="stylesheet" href="/theme/{version}.css?v={package}">'
 
 
 def test_theme_head_follows_publishing(active_theme, rf):
@@ -65,7 +68,7 @@ def test_context_has_the_live_values(active_theme, rf):
     assert theme["revision"] == 1
     assert theme["light_base"] == "cupcake"  # the published value, not the draft
     assert theme["dark_base"] == "dark"
-    assert theme["stylesheet_url"].endswith(".css")
+    assert theme["stylesheet_url"].endswith(f".css?v={importlib.metadata.version('capy-theme')}")
 
 
 def test_context_is_none_without_an_active_theme(rf):

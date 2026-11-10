@@ -4,10 +4,9 @@ Add "capy_theme.context_processors.theme" to the project's
 TEMPLATES["OPTIONS"]["context_processors"].
 """
 
-from django.urls import reverse
-
 from .active import get_active_theme
 from .branding import branding
+from .stylesheet import stylesheet_url
 
 
 def theme(request):
@@ -27,7 +26,7 @@ def theme(request):
             "revision": live.number,
             "light_base": live.snapshot["light_base"],
             "dark_base": live.snapshot["dark_base"],
-            "stylesheet_url": reverse("capy_theme:theme_css", args=[live.css_version]),
+            "stylesheet_url": stylesheet_url(live),
             **branding(live),  # site_name, tagline, logo_url, logo_alt
         }
     }

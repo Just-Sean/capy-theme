@@ -2,6 +2,9 @@
 
 import hashlib
 import json
+from importlib.metadata import version
+
+from django.urls import reverse
 
 
 def css_version(theme_id, number, snapshot):
@@ -40,3 +43,14 @@ def _block(scheme, values, indent):
     yield f"{indent}color-scheme: {scheme};"
     for name, value in values.items():
         yield f"{indent}{name}: {value};"
+
+
+def stylesheet_url(revision):
+    """Return the URL pages use for a revision's stylesheet.
+
+    It ends with ?v=<capy-theme version>. Browsers cache each stylesheet for a
+    year, so when an upgrade changes how render_css() writes the CSS, the new
+    version in the URL makes them fetch it again. The view ignores ?v=.
+    """
+    url = reverse("capy_theme:theme_css", args=[revision.css_version])
+    return f"{url}?v={version('capy-theme')}"
