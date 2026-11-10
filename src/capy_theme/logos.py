@@ -105,7 +105,12 @@ def snapshot_images(theme, settings):
                 "content_type": asset.content_type,
                 "alt": asset.alt_text,
                 "variants": [
-                    {"file": v.file.name, "width": v.width, "format": v.format}
+                    {
+                        "file": v.file.name,
+                        "width": v.width,
+                        "format": v.format,
+                        **({"purpose": v.purpose} if v.purpose else {}),
+                    }
                     for v in asset.variants.all()
                 ],
             }

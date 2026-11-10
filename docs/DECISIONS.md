@@ -917,3 +917,26 @@ Recommended (made while building autonomously).
 - **Checked in Chrome** with `Page.getAppManifest` and
   `Page.getInstallabilityErrors` (what DevTools' Manifest panel shows): no errors,
   and installable.
+
+## 5.6 Social sharing image and tags (#37)
+
+Recommended (made while building autonomously).
+
+- **Cropped on upload** (a `ThemeAssetVariant` with purpose `social`), from the
+  centre, to fill 1200 × 630: it depends only on the image, so it's made once.
+  Transparent parts become white, because some sites show them black. JPEG stays
+  JPEG; everything else becomes PNG.
+- **Light only:** link previews have no dark mode, so the slot has one choice.
+- **Per-page overrides with a block:** a tag can't contain a block, so
+  `{% theme_head social=False %}` turns the tags off and `{% theme_social_tags %}`
+  (with optional `title`, `description`, `image`, `image_alt`) outputs them inside
+  a block that pages override. With no arguments it gives the same tags as
+  `{% theme_head %}`.
+- **Absolute URLs** from the request, since previewers fetch the image from
+  outside the page. The width and height are only given for the theme's own
+  image (a page's own image has unknown size).
+- **Title** is the site name: the module doesn't know a page's title; pages set it
+  with `{% theme_social_tags title=... %}`.
+- **Checked** by fetching the demo page with a link-preview bot's user agent,
+  reading the tags and fetching the image (1200 × 630 JPEG). Online preview
+  checkers can't reach `localhost`, so this local check stands in for them.

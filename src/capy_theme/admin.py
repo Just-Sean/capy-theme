@@ -37,6 +37,7 @@ from .manifest import APP_SETTINGS
 from .models import Font, FontFile, Theme, ThemeAsset, ThemeRevision
 from .publishing import NothingToPublish, publish
 from .shape import EFFECTS, SHAPE_NAMES, SIZES
+from .social import SETTINGS as SOCIAL_SETTINGS
 from .stylesheet import stylesheet_url
 from .typography import TYPE_SETTINGS
 
@@ -140,8 +141,8 @@ class ThemeForm(forms.ModelForm):
         """A choice of this theme's uploaded images for each logo slot and mode."""
         chosen = self.instance.settings.get("images", {})
         assets = list(self.instance.assets.all()) if self.instance.pk else []
-        for slot in CHOOSABLE:
-            for mode in ("light", "dark"):
+        for slot, modes in CHOOSABLE.items():
+            for mode in modes:
                 choices = [("", "None (use the fallback)")] + [
                     (str(a.pk), f"{a.original.name.rsplit('/', 1)[-1]} ({a.width} × {a.height})")
                     for a in assets
@@ -156,6 +157,9 @@ class ThemeForm(forms.ModelForm):
         app = self.instance.settings.get("app", {})
         for name in APP_SETTINGS:
             self.fields[f"app_{name}"].initial = app.get(name, "")
+        self.fields["social_description"].initial = self.instance.settings.get("social", {}).get(
+            "description", ""
+        )
         icon = self.instance.settings.get("icon", {})
         for name in ICON_SETTINGS:
             self.fields[f"icon_{name}"].initial = icon.get(name)
@@ -236,10 +240,10 @@ class ThemeForm(forms.ModelForm):
         images = {
             slot: {
                 mode: int(cleaned[image_field_name(slot, mode)])
-                for mode in ("light", "dark")
+                for mode in modes
                 if cleaned.get(image_field_name(slot, mode))
             }
-            for slot in CHOOSABLE
+            for slot, modes in CHOOSABLE.items()
         }
         # Other slots (backgrounds...) are kept until they get admin fields.
         images = {
@@ -268,6 +272,11 @@ class ThemeForm(forms.ModelForm):
             settings["app"] = app
         else:
             settings.pop("app", None)
+        description = (cleaned.get("social_description") or "").strip()
+        if description:
+            settings["social"] = {"description": description}
+        else:
+            settings.pop("social", None)
         icon = {}
         if cleaned.get("icon_background"):
             icon["background"] = cleaned["icon_background"].lower()
@@ -285,13 +294,19 @@ def image_field_name(slot, mode):
     return f"image_{slot}_{mode}"
 
 
-CHOOSABLE = (*LOGO_SLOTS, "icon")
-for _slot in CHOOSABLE:
-    for _mode in ("light", "dark"):
+# The image slots with a choice in the form, and their modes. The sharing image
+# has no dark version: link previews have no dark mode.
+CHOOSABLE = {
+    **{slot: ("light", "dark") for slot in LOGO_SLOTS},
+    "icon": ("light", "dark"),
+    "social": ("light",),
+}
+for _slot, _modes in CHOOSABLE.items():
+    for _mode in _modes:
         _field = image_field_name(_slot, _mode)
         ThemeForm.base_fields[_field] = ThemeForm.declared_fields[_field] = forms.ChoiceField(
             required=False,
-            label=f"{SLOTS[_slot][0]} ({_mode})",
+            label=SLOTS[_slot][0] if len(_modes) == 1 else f"{SLOTS[_slot][0]} ({_mode})",
             help_text=SLOTS[_slot][3]
             + (" Leave dark empty to use the light one." if _mode == "dark" else ""),
         )
@@ -322,6 +337,15 @@ for _name, (_label, _help, _choices) in APP_SETTINGS.items():
     _field.label, _field.help_text = _label, _help
     ThemeForm.base_fields[f"app_{_name}"] = ThemeForm.declared_fields[f"app_{_name}"] = _field
 
+ThemeForm.base_fields["social_description"] = ThemeForm.declared_fields["social_description"] = (
+    forms.CharField(
+        required=False,
+        max_length=300,
+        widget=forms.Textarea(attrs={"rows": 2}),
+        label=SOCIAL_SETTINGS["description"][0],
+        help_text=SOCIAL_SETTINGS["description"][1],
+    )
+)
 ThemeForm.base_fields["icon_background"] = ThemeForm.declared_fields["icon_background"] = (
     forms.RegexField(
         regex=r"^#[0-9a-fA-F]{6}$",
@@ -623,6 +647,15 @@ class ThemeAdmin(admin.ModelAdmin):
             {"fields": [f"shape_{name}" for name in SHAPE_NAMES], "classes": ["collapse"]},
         ),
         ("Mode", {"fields": ["default_mode", "visitors_can_switch"]}),
+        (
+            "Link previews",
+            {
+                "fields": ["image_social_light", "social_description"],
+                "classes": ["collapse"],
+                "description": "What shows when a link to the site is shared. The image is "
+                "cropped to 1200 × 630 from its centre.",
+            },
+        ),
         (
             "Web app",
             {

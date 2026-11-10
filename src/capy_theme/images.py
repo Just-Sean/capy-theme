@@ -159,6 +159,7 @@ def add_asset(theme, slot, mode, upload, alt_text=""):
     """
     from .logos import make_variants
     from .models import ThemeAsset
+    from .social import make_sharing_image
 
     if slot not in SLOTS:
         raise ValidationError("Choose where the image goes.")
@@ -184,6 +185,8 @@ def add_asset(theme, slot, mode, upload, alt_text=""):
     asset.original.save(clean["file"].name, clean["file"], save=False)
     asset.save()
     make_variants(asset)
+    if slot == "social":
+        make_sharing_image(asset)
     return asset
 
 

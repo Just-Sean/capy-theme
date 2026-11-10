@@ -81,7 +81,7 @@ def test_jpeg_logos_fall_back_to_jpeg(theme):
     assert {v.format for v in asset.variants.all()} == {"avif", "webp", "jpeg"}
 
 
-@pytest.mark.parametrize("slot", ["logo_email", "logo_print", "social"])
+@pytest.mark.parametrize("slot", ["logo_email", "logo_print", "background_login"])
 def test_other_slots_get_no_copies(theme, slot):
     asset = add_asset(theme, slot, "light", image())
     assert not asset.variants.exists()

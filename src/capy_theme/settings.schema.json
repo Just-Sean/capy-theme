@@ -385,6 +385,17 @@
         }
       },
       "additionalProperties": false
+    },
+    "social": {
+      "description": "Link previews (Open Graph and Twitter cards).",
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "maxLength": 300
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,

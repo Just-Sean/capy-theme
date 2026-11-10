@@ -31,6 +31,7 @@ from .manifest import APP_SETTINGS
 from .models import Font, Theme
 from .palette import from_logo, from_primary
 from .shape import EFFECTS, SIZES
+from .social import SETTINGS as SOCIAL_SETTINGS
 from .stylesheet import snapshot_css
 from .typography import TYPE_SETTINGS
 from .validation import validate_base, validate_settings
@@ -123,8 +124,9 @@ def controls():
                 "name": slot,
                 "label": SLOTS[slot][0],
                 "fallback": "Use the main logo" if slot in FALLBACK else "None",
+                "modes": ["light"] if slot == "social" else ["light", "dark"],
             }
-            for slot in (*LOGO_SLOTS, "icon")
+            for slot in (*LOGO_SLOTS, "icon", "social")
         ],
         "app_settings": [
             {
@@ -134,6 +136,10 @@ def controls():
                 "choices": [{"value": v, "label": cl} for v, cl in choices] if choices else None,
             }
             for name, (lab, text, choices) in APP_SETTINGS.items()
+        ],
+        "social_settings": [
+            {"name": name, "label": lab, "help": text}
+            for name, (lab, text) in SOCIAL_SETTINGS.items()
         ],
         "icon_settings": [
             {"name": name, "label": lab, "help": text}
@@ -162,7 +168,17 @@ def controls():
 
 # The settings the editor manages. Anything else in a theme's settings (site
 # name, mode and so on) is kept as it is.
-EDITOR_SETTINGS = ("colors", "shape", "fonts", "type", "images", "logo", "icon", "app")
+EDITOR_SETTINGS = (
+    "colors",
+    "shape",
+    "fonts",
+    "type",
+    "images",
+    "logo",
+    "icon",
+    "app",
+    "social",
+)
 
 
 def apply_changes(theme, data):
