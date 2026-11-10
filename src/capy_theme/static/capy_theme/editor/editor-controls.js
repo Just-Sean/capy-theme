@@ -39,6 +39,10 @@
       if (!Object.keys(c[mode]).length) delete c[mode];
     });
     if (!Object.keys(c).length) copy.settings.colors = {};
+    var images = copy.settings.images || {};
+    Object.keys(images).forEach(function (slot) {
+      if (!Object.keys(images[slot]).length) delete images[slot];
+    });
     return copy;
   }
 
@@ -236,6 +240,45 @@
     ]);
   }
 
+  // Which uploaded image each logo slot uses, in light and dark mode, and the
+  // header logo heights. Saved with Save draft like everything else.
+  function logoChoices(assets) {
+    var box = el("div", { class: "capy-editor-logos" }, [el("h4", { text: "Logos" })]);
+    var images = (changes.settings.images = changes.settings.images || {});
+    spec.logo_slots.forEach(function (slot) {
+      ["light", "dark"].forEach(function (mode) {
+        var select = el("select", { "data-capy-logo": slot.name + ":" + mode, "aria-label": slot.label + " (" + mode + ")" });
+        select.appendChild(el("option", { value: "", text: mode === "dark" ? "Same as light" : slot.fallback }));
+        assets.forEach(function (asset) {
+          if (asset.slot !== slot.name) return;
+          var name = asset.url.split("/").pop();
+          select.appendChild(el("option", { value: String(asset.id), text: name + " (" + asset.width + " × " + asset.height + ")" }));
+        });
+        select.value = String((images[slot.name] || {})[mode] || "");
+        select.addEventListener("change", function () {
+          var chosen = (images[slot.name] = images[slot.name] || {});
+          if (select.value === "") delete chosen[mode];
+          else chosen[mode] = Number(select.value);
+          update();
+        });
+        box.appendChild(el("label", { class: "capy-editor-field" }, [el("span", { text: slot.label + (mode === "dark" ? " (dark)" : "") }), select]));
+      });
+    });
+    spec.logo_heights.forEach(function (item) {
+      var input = el("input", { type: "number", min: "16", max: "200", step: "1", placeholder: String(item.default), "data-capy-logo-height": item.name, "aria-label": item.label });
+      input.value = (changes.settings.logo || {})[item.name] || "";
+      input.addEventListener("input", function () {
+        var logo = (changes.settings.logo = changes.settings.logo || {});
+        if (input.value === "") delete logo[item.name];
+        else logo[item.name] = Number(input.value);
+        update();
+      });
+      box.appendChild(el("label", { class: "capy-editor-field" }, [el("span", { text: item.label }), input]));
+    });
+    box.appendChild(el("p", { class: "capy-editor-note", text: "Logos show on the page after you publish; the header height previews straight away." }));
+    return box;
+  }
+
   function suggestionButton(suggestion) {
     var swatches = el("span", { class: "capy-editor-swatches" });
     Object.keys(suggestion.colors).forEach(function (name) {
@@ -345,6 +388,7 @@
     var file = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp,image/gif,image/svg+xml", "data-capy-image-file": "" });
     var button = el("button", { type: "button", text: "Upload" });
     var list = imageList(state.assets || []);
+    var logos = logoChoices(state.assets || []);
     button.addEventListener("click", function () {
       if (!file.files.length) {
         editor.status("Choose an image to upload.", true);
@@ -372,6 +416,9 @@
           var fresh = imageList(body.assets);
           list.replaceWith(fresh);
           list = fresh;
+          var freshLogos = logoChoices(body.assets);
+          logos.replaceWith(freshLogos);
+          logos = freshLogos;
           file.value = "";
           alt.value = "";
           editor.status("Uploaded. Location and camera details were removed.");
@@ -388,6 +435,7 @@
       el("label", { class: "capy-editor-field" }, [el("span", { text: "File" }), file]),
       button,
       list,
+      logos,
     ]);
   }
 
@@ -489,6 +537,8 @@
         shape: JSON.parse(JSON.stringify(state.settings.shape || {})),
         fonts: JSON.parse(JSON.stringify(state.settings.fonts || {})),
         type: JSON.parse(JSON.stringify(state.settings.type || {})),
+        images: JSON.parse(JSON.stringify(state.settings.images || {})),
+        logo: JSON.parse(JSON.stringify(state.settings.logo || {})),
       },
     };
     editor.changes = normalized();

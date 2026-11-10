@@ -83,8 +83,12 @@ def post(client, theme, data):
 
 def test_endpoint_gives_logo_and_primary_suggestions(editor_client, settings, tmp_path):
     settings.MEDIA_ROOT = tmp_path
+    from capy_theme.images import add_asset
+
     theme = Theme.objects.create(name="Main", slug="main")
-    theme.logo = SimpleUploadedFile("logo.png", logo_bytes(), content_type="image/png")
+    upload = SimpleUploadedFile("logo.png", logo_bytes(), content_type="image/png")
+    asset = add_asset(theme, "logo_main", "light", upload)
+    theme.settings = {"images": {"logo_main": {"light": asset.pk}}}
     theme.save()
     response = post(editor_client, theme, {"primary": "#3b82f6"})
     assert response.status_code == 200

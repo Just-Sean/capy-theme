@@ -111,7 +111,7 @@ more (see `docs/PLAN.md`).
      {% theme_head %}
    </head>
    <body>
-     <nav>... {% theme_logo class="h-8" %} ... {% theme_mode_toggle %} ...</nav>
+     <nav>... {% theme_logo %} ... {% theme_mode_toggle %} ...</nav>
    ```
 
    The toggle uses daisyUI's `join` and `btn` classes. Tailwind only includes
@@ -141,8 +141,9 @@ more (see `docs/PLAN.md`).
    ```
 
 To show the theme's logo (or its site name if it has no logo), use
-`{% theme_logo %}`. Extra attributes are passed through, e.g.
-`{% theme_logo class="h-8" %}`. Every template also gets a `theme` variable
+`{% theme_logo %}`, or `{% theme_logo slot="mark" %}` for another logo slot (see
+[Logos](#logos)). Extra attributes go on the `<img>`, e.g.
+`{% theme_logo class="me-2" %}`. Every template also gets a `theme` variable
 holding the published `site_name`, `tagline`, `logo_url`, `logo_alt`, `name`,
 `slug`, `revision`, `light_base`, `dark_base`, `stylesheet_url`, `default_mode`,
 `visitors_can_switch`, `mode` (what this visitor sees) and `email_colors` (hex), or `None`
@@ -321,15 +322,11 @@ showcase, or the home page if the showcase is off), next to **Revisions**,
 
 ### Branding
 
-On a theme's admin page, the **Branding** section has the site name, tagline,
-logo and logo alt text. The site name, tagline and alt text are stored in the
-theme's `settings`. The logo is an image upload (PNG, JPEG, GIF or WebP, checked
-with Pillow) saved under `MEDIA_ROOT/capy_theme/logos/`, at the size it's
-uploaded. Resized and SVG logos come in Phase 5.
+On a theme's admin page, the **Branding** section has the site name, tagline
+and logo alt text, stored in the theme's `settings`. Logos are chosen in the
+**Logos** section (see [Logos](#logos)).
 
 Like everything else, branding changes show on the site only after publishing.
-Replacing a logo stores a new file and never overwrites the old one, so older
-revisions keep their logo.
 
 ### Images
 
@@ -359,7 +356,47 @@ with alt text. For every upload:
 
 Files are stored under `MEDIA_ROOT/capy_theme/assets/<slot>/`. An image is never
 changed after upload: a new image is a new asset, so older revisions keep theirs.
-Uploading doesn't change what visitors see; the slots are used from 5.3 on.
+Uploading doesn't change what visitors see: an image is only used once it's
+chosen for its slot and the theme is published.
+
+### Logos
+
+There are six logo slots: **main**, **stacked**, **mark**, **wordmark**,
+**email** and **print**. Each can have a light and a dark image. To set one:
+
+1. Upload the image for that slot (live editor: **Images**; admin: the
+   **Images** list, then save).
+2. Choose it for the slot (live editor: **Images → Logos**; admin: **Logos**).
+3. Save the draft and publish.
+
+Fallbacks: dark mode uses the slot's light image if there's no dark one, and a
+slot with no image uses the main logo.
+
+`{% theme_logo slot="main" %}` (the default) outputs the logo for that slot:
+
+- **Header slots** (main, stacked, mark, wordmark) give a `<picture>` with AVIF
+  and WebP sources and a PNG or JPEG fallback. On upload, smaller copies are made
+  at widths from 64 to 1280 px (and the image's own width, up to 2560), stored
+  under `MEDIA_ROOT/capy_theme/assets/<slot>/variants/`. The `sizes` attribute
+  comes from the header heights, so phones download a smaller file. SVG logos
+  are used as they are.
+- **Header heights**: the **Header logo height** (default 40 px) and **on
+  phones** (default 32 px, for windows up to 640 px wide) are set in the same
+  Logos section. The theme's stylesheet sizes `img.capy-logo` with them; a
+  utility class on the tag (e.g. `class="h-12"`) still wins.
+- **Light and dark**: if the slot has a dark image, both are output and the
+  theme's stylesheet shows the one for the current mode (it follows the toggle
+  and the device setting). Both are `loading="lazy"`, so only the one shown is
+  downloaded.
+- **Email and print** slots give a plain `<img>` of the light image (email
+  programs don't handle `<picture>` or the light/dark CSS).
+
+Alt text comes from the image's alt text, then the theme's logo alt text, then
+the site name.
+
+Upgrading from 0.4: migration `0010_logo_slots` moves each theme's old logo into
+its main slot (light). It has no smaller copies; upload it again to get them.
+Revisions published before 0.5 keep showing their old logo.
 
 The "Overrides" section shows the theme's stored `settings` as read-only JSON.
 They're edited through the fields above, not typed by hand.
@@ -795,6 +832,7 @@ straight to `main`:
 | `src/capy_theme/font_files.py` | Checks uploaded font files, converts them to WOFF2 and trims them to a character subset |
 | `src/capy_theme/google_fonts.py` | Imports a Google font into the library (downloaded once, served locally) |
 | `src/capy_theme/images.py` | Image slots and their limits, and checking and cleaning uploaded images |
+| `src/capy_theme/logos.py` | Logo slots: fallbacks, smaller copies, the `<picture>` HTML and the header height CSS |
 | `src/capy_theme/svg.py` | Cleaning uploaded SVGs with an allow-list of elements and attributes |
 | `src/capy_theme/typography.py` | The type scale settings and their CSS |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |

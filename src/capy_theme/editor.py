@@ -25,6 +25,7 @@ from .colors import (
 )
 from .fonts import ROLES, external_stylesheets, preview_stack
 from .images import NO_SVG, SLOTS, asset_data
+from .logos import FALLBACK, HEIGHTS, LOGO_SLOTS
 from .models import Font, Theme
 from .palette import from_logo, from_primary
 from .shape import EFFECTS, SIZES
@@ -115,6 +116,18 @@ def controls():
             }
             for name, (lab, max_bytes, px, text) in SLOTS.items()
         ],
+        "logo_slots": [
+            {
+                "name": slot,
+                "label": SLOTS[slot][0],
+                "fallback": "Use the main logo" if slot in FALLBACK else "None",
+            }
+            for slot in LOGO_SLOTS
+        ],
+        "logo_heights": [
+            {"name": name, "label": lab, "default": default}
+            for name, (lab, default) in HEIGHTS.items()
+        ],
         "font_roles": [{"name": name, "label": lab} for name, lab in ROLES.items()],
         "type": [
             {"name": name, "label": lab, "unit": unit, "min": low, "max": high, "step": step}
@@ -134,7 +147,7 @@ def controls():
 
 # The settings the editor manages. Anything else in a theme's settings (site
 # name, mode and so on) is kept as it is.
-EDITOR_SETTINGS = ("colors", "shape", "fonts", "type")
+EDITOR_SETTINGS = ("colors", "shape", "fonts", "type", "images", "logo")
 
 
 def apply_changes(theme, data):
@@ -219,14 +232,22 @@ def preview(theme, data):
     }
 
 
+def main_logo_asset(theme):
+    """The draft's main logo (light), if it's a raster image; else None."""
+    pk = theme.settings.get("images", {}).get("logo_main", {}).get("light")
+    asset = theme.assets.filter(pk=pk).first() if pk else None
+    return asset if asset and asset.content_type != "image/svg+xml" else None
+
+
 def suggestions(theme, primary):
     """Palette suggestions for the editor: from `primary`, and from the theme's logo."""
     result = []
-    if theme.logo:
-        with theme.logo.open("rb") as file:
-            logo = from_logo(file)
-        if logo:
-            result.append(logo)
+    logo = main_logo_asset(theme)
+    if logo:
+        with logo.original.open("rb") as file:
+            suggestion = from_logo(file)
+        if suggestion:
+            result.append(suggestion)
     if primary:
         result.extend(from_primary(primary))
     return result

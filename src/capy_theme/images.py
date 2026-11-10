@@ -157,6 +157,7 @@ def add_asset(theme, slot, mode, upload, alt_text=""):
     `upload` is a Django UploadedFile. Raises ValidationError if the slot, mode
     or file isn't acceptable. Existing assets are never changed.
     """
+    from .logos import make_variants
     from .models import ThemeAsset
 
     if slot not in SLOTS:
@@ -182,6 +183,7 @@ def add_asset(theme, slot, mode, upload, alt_text=""):
     )
     asset.original.save(clean["file"].name, clean["file"], save=False)
     asset.save()
+    make_variants(asset)
     return asset
 
 

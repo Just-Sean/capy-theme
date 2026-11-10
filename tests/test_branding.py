@@ -4,6 +4,7 @@ import io
 
 import pytest
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template import Context, Template
@@ -13,6 +14,7 @@ from PIL import Image
 from capy_theme.active import activate
 from capy_theme.admin import ThemeForm
 from capy_theme.context_processors import theme as theme_context
+from capy_theme.images import add_asset
 from capy_theme.models import Theme
 from capy_theme.publishing import publish
 
@@ -74,33 +76,55 @@ def test_form_shows_current_values_and_blank_removes_them():
     assert form.save().settings == {}
 
 
-def test_form_accepts_a_logo_image():
-    form = ThemeForm(data=form_data(), files={"logo": png()})
+def with_logo(theme, name="logo.png", colour="red"):
+    """Upload a main logo for the theme and choose it (in the draft)."""
+    asset = add_asset(theme, "logo_main", "light", png(name, colour))
+    theme.settings = {**theme.settings, "images": {"logo_main": {"light": asset.pk}}}
+    theme.save()
+    return asset
+
+
+def test_form_chooses_the_main_logo():
+    theme = Theme.objects.create(name="Main", slug="main")
+    asset = add_asset(theme, "logo_main", "light", png())
+    form = ThemeForm(data=form_data(image_logo_main_light=str(asset.pk)), instance=theme)
     assert form.is_valid(), form.errors
-    theme = form.save()
-    assert theme.logo.name.startswith("capy_theme/logos/")
-    assert default_storage.exists(theme.logo.name)
+    assert form.save().settings == {"images": {"logo_main": {"light": asset.pk}}}
 
 
-def test_form_rejects_a_file_that_isnt_an_image():
-    fake = SimpleUploadedFile("logo.png", b"not an image", content_type="image/png")
-    form = ThemeForm(data=form_data(), files={"logo": fake})
-    assert not form.is_valid()
-    assert "logo" in form.errors
+def test_form_only_offers_this_themes_images_for_the_slot():
+    theme = Theme.objects.create(name="Main", slug="main")
+    other = Theme.objects.create(name="Other", slug="other")
+    mine = add_asset(theme, "logo_main", "light", png())
+    add_asset(theme, "logo_mark", "light", png())
+    add_asset(other, "logo_main", "light", png())
+    choices = ThemeForm(instance=theme).fields["image_logo_main_light"].choices
+    assert [value for value, _ in choices] == ["", str(mine.pk)]
 
 
 # Publishing
 
 
 def test_revision_keeps_its_logo_after_the_logo_is_replaced():
-    theme = Theme.objects.create(name="Main", slug="main", logo=png("first.png"))
+    theme = Theme.objects.create(name="Main", slug="main")
+    with_logo(theme, "first.png")
     first = publish(theme)
-    theme.logo = png("second.png", "blue")
-    theme.save()
+    with_logo(theme, "second.png", "blue")
     second = publish(theme)
-    assert first.snapshot["logo"] != second.snapshot["logo"]
-    assert default_storage.exists(first.snapshot["logo"])  # old file not overwritten
-    assert default_storage.exists(second.snapshot["logo"])
+    old = first.snapshot["images"]["logo_main"]["light"]["file"]
+    new = second.snapshot["images"]["logo_main"]["light"]["file"]
+    assert old != new
+    assert default_storage.exists(old)  # old file not overwritten
+    assert default_storage.exists(new)
+
+
+def test_a_theme_cant_choose_another_themes_image():
+    other = Theme.objects.create(name="Other", slug="other")
+    asset = add_asset(other, "logo_main", "light", png())
+    theme = Theme.objects.create(name="Main", slug="main")
+    theme.settings = {"images": {"logo_main": {"light": asset.pk}}}
+    with pytest.raises(ValidationError, match="isn't one of this theme's"):
+        theme.save()
 
 
 def test_changing_branding_is_an_unpublished_change():
@@ -115,17 +139,17 @@ def test_changing_branding_is_an_unpublished_change():
 
 def test_logo_tag_outputs_the_logo_with_alt_text():
     theme = live_theme(site_name="Capy Co", logo_alt="The Capy logo")
-    theme.logo = png()
-    theme.save()
+    asset = with_logo(theme)
     publish(theme)
     html = render('{% theme_logo class="h-8" %}')
-    assert html == (f'<img src="/media/{theme.logo.name}" alt="The Capy logo" class="h-8">')
+    assert f'src="/media/{asset.original.name}"' in html
+    assert 'alt="The Capy logo"' in html
+    assert 'class="capy-logo h-8"' in html
 
 
 def test_logo_alt_text_falls_back_to_the_site_name():
     theme = live_theme(site_name="Capy Co")
-    theme.logo = png()
-    theme.save()
+    with_logo(theme)
     publish(theme)
     assert 'alt="Capy Co"' in render("{% theme_logo %}")
 
@@ -158,13 +182,12 @@ def test_logo_tag_uses_published_values_not_the_draft():
 
 def test_context_has_branding(rf):
     theme = live_theme(site_name="Capy Co", tagline="Hello")
-    theme.logo = png()
-    theme.save()
+    asset = with_logo(theme)
     publish(theme)
     values = theme_context(rf.get("/"))["theme"]
     assert values["site_name"] == "Capy Co"
     assert values["tagline"] == "Hello"
-    assert values["logo_url"] == f"/media/{theme.logo.name}"
+    assert values["logo_url"] == f"/media/{asset.original.name}"
     assert values["logo_alt"] == "Capy Co"
 
 
@@ -174,6 +197,6 @@ def test_admin_shows_branding_fields_and_read_only_settings(client, django_user_
     theme = Theme.objects.create(name="Main", slug="main", settings={"site_name": "Capy Co"})
     content = client.get(reverse("admin:capy_theme_theme_change", args=[theme.pk])).content
     assert b'name="site_name"' in content
-    assert b'name="logo"' in content
+    assert b'name="image_logo_main_light"' in content
     assert b'name="settings"' not in content  # no raw JSON box
     assert b"Stored settings" in content

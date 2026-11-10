@@ -1,6 +1,7 @@
 """Revision history: comparing two revisions and restoring an old one."""
 
 from .colors import COLOR_NAMES, label
+from .images import SLOTS
 from .publishing import publish
 from .shape import EFFECTS, SIZES
 
@@ -23,8 +24,12 @@ def describe(snapshot):
     rows = {
         "Light base": snapshot.get("light_base"),
         "Dark base": snapshot.get("dark_base"),
-        "Logo": snapshot.get("logo") or None,
     }
+    for slot, modes in snapshot.get("images", {}).items():
+        for mode, image in modes.items():
+            rows[f"Image: {SLOTS.get(slot, (slot,))[0]} ({mode})"] = image["file"]
+    if snapshot.get("logo"):
+        rows["Image: Main logo (light)"] = snapshot["logo"]  # before logo slots
     for key, title in SETTING_LABELS.items():
         rows[title] = settings.get(key)
     for scheme in ("light", "dark"):
@@ -36,7 +41,7 @@ def describe(snapshot):
         rows[f"Shape: {spec[4]}"] = shape.get(name)
     for name, spec in EFFECTS.items():
         rows[f"Shape: {spec[1]}"] = shape.get(name)
-    known = set(SETTING_LABELS) | {"colors", "shape"}
+    known = set(SETTING_LABELS) | {"colors", "shape", "images"}
     for key, value in settings.items():
         if key not in known:
             rows[key] = value  # settings added by later versions
@@ -68,6 +73,21 @@ def restore(theme, revision, user=None):
     theme.light_base = snapshot["light_base"]
     theme.dark_base = snapshot["dark_base"]
     theme.settings = dict(snapshot.get("settings", {}))
-    theme.logo.name = snapshot.get("logo") or ""
+    _drop_deleted_images(theme)
     theme.save()
     return publish(theme, user=user, note=f"Restored revision {revision.number}")
+
+
+def _drop_deleted_images(theme):
+    """Forget chosen images that have since been deleted, so the restore still works."""
+    chosen = theme.settings.get("images", {})
+    existing = set(theme.assets.values_list("pk", flat=True))
+    kept = {}
+    for slot, modes in chosen.items():
+        modes = {mode: pk for mode, pk in modes.items() if pk in existing}
+        if modes:
+            kept[slot] = modes
+    if kept:
+        theme.settings["images"] = kept
+    else:
+        theme.settings.pop("images", None)
