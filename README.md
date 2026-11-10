@@ -237,7 +237,7 @@ Every command in one place. Details are in the linked pages.
 
 | Page | About |
 | --- | --- |
-| [docs/themes.md](docs/themes.md) | Theme settings, the admin page, branding, drafts and publishing, the live theme, scheduling, the visitor theme picker, light and dark mode, permissions |
+| [docs/themes.md](docs/themes.md) | Theme settings, the admin page, branding, drafts and publishing, the live theme, scheduling, the visitor theme picker, light and dark mode, permissions, export and import |
 | [docs/colors-and-css.md](docs/colors-and-css.md) | Colours and contrast, address-bar/focus/email colours, type scale, shape, accessibility settings, the theme stylesheet |
 | [docs/fonts.md](docs/fonts.md) | The font library: system stacks, bundled fonts, uploads, Google Fonts, external stylesheets |
 | [docs/images.md](docs/images.md) | Uploads and SVG cleaning, logo slots, icons, the sharing image, backgrounds |
@@ -294,6 +294,7 @@ job and stays under 200 lines.
 
 | Folder (in `src/capy_theme/`) | What's in it |
 | --- | --- |
+| `portability/` | Exporting a theme to a zip and importing it as a draft (with the export file's schema) |
 | `themes/` | The `Theme`, `ThemeRevision` and assignment models (`models/`), settings validation (+ `settings.schema.json`), daisyUI's built-in themes (`catalogue.py`, `builtin_themes.json`, generated), which theme is live and the cache (`active.py`), publishing, history (compare and restore), light/dark mode, branding, signals, and the mode and theme-choice views |
 | `colors/` | Colour names and groups, colour maths (OKLCH, contrast, readable text, shades), a theme's colour values, palette suggestions, the colour form field |
 | `css/` | Writing the theme stylesheet: `stylesheet.py` plus shape, type scale, backgrounds, accessibility; and the view that serves it |

@@ -1,0 +1,9 @@
+{% extends "admin/change_list.html" %}
+{% comment %}The theme list, with an Import theme button for users who may import.{% endcomment %}
+
+{% block object-tools-items %}
+  {% if can_import %}
+    <li><a href="{% url 'admin:capy_theme_theme_import' %}">Import theme</a></li>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

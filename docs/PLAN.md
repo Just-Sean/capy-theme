@@ -287,7 +287,7 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 
 - [x] **7.1 JSON API** (#52): Front ends, mobile apps and other modules get the branding (the same data as `get_artifacts()`). A plain Django view, or a DRF view that drf-spectacular documents automatically when the project uses DRF (`CAPY_THEME_API` = auto / drf / django).
 - [x] **7.2 Design tokens export** (#53): Theme values for design tools and native app builds.
-- [ ] **7.3 Theme export and import** (#54): Move a theme between sites.
+- [x] **7.3 Theme export and import** (#54): Move a theme between sites.
 - [ ] **7.4 daisyUI theme block export** (#55): For projects that want the theme compiled into their stylesheet.
 - [ ] **7.5 Management commands** (#56): Scripted installs and maintenance.
 - [ ] **7.6 Developer docs page** (#57): `docs/developers.md`: every CSS variable, the API and how to read it, the downloads, the API-mode and CORS notes.

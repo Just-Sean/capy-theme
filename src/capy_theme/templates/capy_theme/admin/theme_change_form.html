@@ -10,6 +10,7 @@
   {% endif %}
   {% if original.pk %}
     <li><a href="{% url 'admin:capy_theme_theme_revisions' original.pk %}">Revisions</a></li>
+    <li><a href="{% url 'admin:capy_theme_theme_export' original.pk %}">Export</a></li>
   {% endif %}
   {{ block.super }}
 {% endblock %}

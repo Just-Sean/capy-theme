@@ -144,3 +144,27 @@ theme). capy-theme adds three more, given to users or groups in the admin under
 For example, a "Designer" group with view, add and change can edit drafts, while
 only an "Editor" group with `publish_theme` as well can make changes live.
 Superusers have every permission.
+
+## Export and import
+
+Move a theme between sites (for example from staging to production):
+
+1. On the theme's admin page, **Export** downloads `<slug>.capy-theme.zip`:
+   `theme.json` (the draft: bases and settings) plus the images and font files it
+   uses. Generated files (logo copies, icons) aren't included; they're made again.
+2. On the other site, **Import theme** (on the theme list) uploads the zip. It
+   needs the `import_theme` permission.
+
+The import arrives as a new, **unpublished draft**; publish and activate it when
+it looks right. Everything is checked first: the zip's size (50 MB unpacked at
+most) and file names, `theme.json` against
+`src/capy_theme/portability/theme_file.schema.json`, the base themes and settings
+like any theme, images through the same checks as uploads, and font files like
+font uploads. Fonts already in the library (same family name) are reused. If a
+theme with the same name or slug exists, " (imported)" / "-imported" is added. If
+anything fails, nothing is kept.
+
+From code: `capy_theme.portability.export.export_theme(theme)` returns the zip's
+bytes, and `capy_theme.portability.importing.import_theme(file)` returns the new
+theme.
+

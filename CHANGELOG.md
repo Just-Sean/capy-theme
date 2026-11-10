@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Theme export and import:** **Export** on a theme's admin page downloads a zip
+  (settings, images, fonts); **Import theme** brings it in as an unpublished draft,
+  checked like uploads (needs `import_theme`).
 - **Design tokens download** at `/theme/tokens.json`: the published theme in the
   W3C Design Tokens format (2025.10), validated against the official schema in tests.
 - **JSON API** at `/theme/api.json`: the same data as `get_artifacts()` (now also
