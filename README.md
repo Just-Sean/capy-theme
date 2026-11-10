@@ -444,7 +444,7 @@ theme). capy-theme adds three more, given to users or groups in the admin under
 
 | Permission | Allows |
 | --- | --- |
-| `capy_theme.publish_theme` | Publishing a theme, activating it, and (from 3.7) restoring old revisions. Without it, the Publish button and the Activate action are hidden, and direct requests are refused. |
+| `capy_theme.publish_theme` | Publishing a theme, activating it, and restoring old revisions. Without it, the Publish button and the Activate action are hidden, and direct requests are refused. |
 | `capy_theme.edit_custom_css` | Editing a theme's custom CSS (from 8.1). |
 | `capy_theme.import_theme` | Importing themes (from 7.3). |
 
@@ -465,6 +465,12 @@ theme's **live revision**, which changes only when someone publishes:
 - The name and slug aren't part of a revision, so renaming takes effect without publishing.
 - Revisions can't be edited or deleted. They're listed on the theme's edit page,
   and removed only if the theme itself is deleted.
+- **Revisions** (button on the theme's edit page) lists every revision and
+  **compares** any two, showing exactly which values changed (bases, logo,
+  branding, mode, each colour and each shape setting).
+- **Restore** (needs `publish_theme`) copies an old revision into the draft and
+  publishes it **as a new revision**, noted "Restored revision N". Nothing in the
+  history is deleted, and the site shows it straight away.
 
 From code: `from capy_theme.publishing import publish` then `publish(theme, user=request.user, note="…")`.
 
@@ -600,6 +606,7 @@ straight to `main`:
 | `src/capy_theme/static/capy_theme/editor/` | The editor panel: `editor.js` (panel, preview), `editor-controls.js` (bases, colours, shape) and `editor.css` |
 | `src/capy_theme/templates/capy_theme/editor/mount.html` | Loads the editor on a page for staff who can edit |
 | `src/capy_theme/palette.py` | Colour suggestions from a primary colour or from the logo |
+| `src/capy_theme/history.py` | Comparing two revisions and restoring an old one |
 | `src/capy_theme/mode.py` | Light/dark/auto: the theme's mode settings, the visitor's cookie, and the head script |
 | `src/capy_theme/templates/capy_theme/mode_toggle.html` | The Light / Dark / Auto buttons for `{% theme_mode_toggle %}` |
 | `src/capy_theme/active.py` | `get_active_theme()` (cached) and `activate()`: which theme the site uses |

@@ -5,5 +5,8 @@
   {% if original.pk and can_publish %}
     <li><a href="{% url 'admin:capy_theme_theme_publish' original.pk %}">Publish</a></li>
   {% endif %}
+  {% if original.pk %}
+    <li><a href="{% url 'admin:capy_theme_theme_revisions' original.pk %}">Revisions</a></li>
+  {% endif %}
   {{ block.super }}
 {% endblock %}
