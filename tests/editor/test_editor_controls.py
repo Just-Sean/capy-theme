@@ -74,3 +74,16 @@ def test_controls_script_is_bundled():
     script = "".join(path.read_text() for path in sorted((STATIC / "controls").glob("*.js")))
     for marker in ("data-capy-picker", "data-capy-reset", "data-capy-shape", "schedulePreview"):
         assert marker in script
+
+
+def test_the_page_makes_room_for_the_open_editor():
+    # Issue #193: the panel and banner covered the page's own controls (e.g. the
+    # Light / Dark / Auto buttons). Opening the editor marks <html>, and the page
+    # gets room for the banner and, on wide screens, the panel. Checked in a
+    # browser too (see PR #194).
+    script = (STATIC / "editor.js").read_text()
+    assert 'classList.add("capy-editor-open")' in script
+    assert 'classList.remove("capy-editor-open")' in script
+    css = (STATIC / "editor.css").read_text()
+    assert "html.capy-editor-open body { padding-top: var(--capy-editor-banner-height)" in css
+    assert "html.capy-editor-open body { padding-right: var(--capy-editor-width)" in css
