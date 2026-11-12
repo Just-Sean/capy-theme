@@ -485,6 +485,13 @@ straight to `main`:
 
 3. In each project, update the tag in its `uv add` line when you want the new version.
 
+## License
+
+capy-theme is under the MIT License (`LICENSE`). It includes daisyUI's theme
+data, CSS built with daisyUI and Tailwind CSS (both MIT), and 30 fonts under the
+SIL Open Font License; their notices are in `THIRD_PARTY_NOTICES.md` and next to
+each font. Both files ship in the package.
+
 ## Rules that keep it pluggable
 
 - Never import from a project or from another module.
@@ -517,4 +524,5 @@ job and stays under 200 lines.
 
 Outside the package: `tests/` (in the same sections), `demo/` (development only,
 never shipped), `scripts/` (generate daisyUI's themes, fetch the bundled fonts,
-build the Components view's CSS), `docs/`.
+build the Components view's CSS), `docs/`, and `LICENSE` and
+`THIRD_PARTY_NOTICES.md` (both also shipped in the package, see [License](#license)).

@@ -3,6 +3,8 @@ name = "capy-theme"
 version = "0.7.0"
 description = "Theming for Django projects."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 requires-python = ">=3.14"
 dependencies = [
     "coloraide>=8,<9",        # reads colors in any CSS format and converts to OKLCH
