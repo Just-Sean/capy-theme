@@ -187,3 +187,14 @@ def test_restore_through_the_admin(client, django_user_model, theme):
     assert "Restored revision 1. It&#x27;s live as revision 4." in response.content.decode()
     theme.refresh_from_db()
     assert theme.live_revision.number == 4
+
+
+def test_revisions_page_needs_view_or_change_permission(client, django_user_model, theme):
+    # Staff with no theme permissions at all can't see a theme's history (issue #181).
+    login(client, django_user_model)
+    assert client.get(revisions_url(theme)).status_code == 403
+    client.logout()
+    login_view_only = django_user_model.objects.create_user("viewer", password="pw", is_staff=True)
+    login_view_only.user_permissions.set(Permission.objects.filter(codename="view_theme"))
+    client.force_login(login_view_only)
+    assert client.get(revisions_url(theme)).status_code == 200

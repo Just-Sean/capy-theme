@@ -1,6 +1,8 @@
 """Tests for checking and cleaning uploaded images (issue #32)."""
 
 import io
+import struct
+import zlib
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -148,3 +150,46 @@ def test_add_asset_rejects_unknown_slots_and_modes(theme):
     with pytest.raises(ValidationError):
         add_asset(theme, "logo_main", "sepia", upload)
     assert not ThemeAsset.objects.exists()
+
+
+# Corrupt files and GIFs (issue #181).
+
+
+def test_an_image_that_only_breaks_when_decoded_is_rejected():
+    # The chunk checksums are right, so Pillow's quick check passes, but the
+    # pixel data is garbage: decoding it fails, and that's "not an image" too.
+    data = png(mode="RGB")
+    start = data.index(b"IDAT") - 4
+    length = struct.unpack(">I", data[start : start + 4])[0]
+    garbage = b"\x78\x9c" + b"\xff" * 20
+    chunk = (
+        struct.pack(">I", len(garbage))
+        + b"IDAT"
+        + garbage
+        + struct.pack(">I", zlib.crc32(b"IDAT" + garbage))
+    )
+    broken = data[:start] + chunk + data[start + 12 + length :]
+    with pytest.raises(ValidationError, match="isn.t a supported image"):
+        prepare_image(broken, "logo.png", "logo_main")
+
+
+def gif(frames=1, comment=b""):
+    # Clearly different frames: Pillow merges identical ones into one.
+    images = [Image.new("RGB", (10, 10), c) for c in ["red", "green", "blue"][:frames]]
+    buffer = io.BytesIO()
+    images[0].save(
+        buffer, "GIF", save_all=frames > 1, append_images=images[1:], comment=comment, duration=100
+    )
+    return buffer.getvalue()
+
+
+def test_gif_comments_are_removed():
+    clean = prepare_image(gif(comment=b"made by Spy Camera"), "a.gif", "logo_main")
+    assert clean["content_type"] == "image/gif"
+    assert "comment" not in reopen(clean).info
+
+
+def test_animated_gifs_keep_every_frame():
+    clean = prepare_image(gif(frames=3), "a.gif", "logo_main")
+    image = reopen(clean)
+    assert image.is_animated and image.n_frames == 3

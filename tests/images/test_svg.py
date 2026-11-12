@@ -170,3 +170,29 @@ def test_editor_marks_slots_without_svg():
     slots = {s["name"]: s["svg"] for s in controls()["image_slots"]}
     assert slots["logo_main"] and slots["logo_print"]
     assert not slots["logo_email"] and not slots["social"] and not slots["icon"]
+
+
+# Limits and edge cases (issue #181).
+
+
+def test_too_many_elements_are_rejected():
+    # A size guard: huge SVGs could slow every page that shows them.
+    from capy_theme.images.svg import MAX_ELEMENTS
+
+    assert clean_svg(svg("<g/>" * (MAX_ELEMENTS - 1)))  # the <svg> itself is one
+    with pytest.raises(ValidationError, match=f"more than {MAX_ELEMENTS} elements"):
+        clean_svg(svg("<g/>" * MAX_ELEMENTS))
+
+
+def test_text_after_an_empty_link_is_kept():
+    out = cleaned('<text>A<a href="javascript:alert(1)"></a>B</text>')
+    assert "javascript" not in out and ">AB<" in out
+
+
+def test_text_after_a_removed_element_in_the_middle_is_kept():
+    out = cleaned("<text><tspan>A</tspan><script>alert(1)</script>B</text>")
+    assert "script" not in out and "</tspan>B</text>" in out
+
+
+def test_size_falls_back_to_width_and_height_when_the_viewbox_isnt_numbers():
+    assert clean_svg(svg("", 'viewBox="a b c d" width="30" height="12px"'))[1:] == (30, 12)
