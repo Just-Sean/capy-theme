@@ -6,7 +6,7 @@ A self-contained Django app (`capy_theme`) that any Django 6.1+ project
 can install. It has no project of its own: its tests run against a tiny
 stand-in project in `tests/`, and `demo/` is a small site for trying it out.
 
-## What it does (v0.7)
+## What it does
 
 Whoever runs the site controls its look from the Django admin, with no code
 changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
@@ -29,8 +29,8 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   own site), or external stylesheets like Adobe Fonts. Plus a type scale (base
   size, heading scale, line height, heading weight) and font preloading.
 - **Shape and effects:** corner radii, control sizes, border width, depth and noise.
-- **Branding and images:** a site name and tagline, and uploaded images (checked
-  by content, GPS and camera details removed, SVGs cleaned of scripts):
+- **Branding and images:** a site name and tagline, and uploaded images (see
+  Safe uploads below):
   - six logo slots (main, stacked, mark, wordmark, email, print) with dark
     versions and fallbacks, served as responsive AVIF/WebP/PNG at the header height;
   - every favicon and app icon made from one square icon;
@@ -50,8 +50,8 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   saves a numbered revision, recording who published it and when, and the site
   shows that. Every revision is kept; any two can be compared, and an old one
   restored (as a new revision).
-- **One active theme:** pick it with the admin's Activate action. It's cached, so
-  pages don't query the database for it.
+- **One active theme** (or one per domain, see Multiple sites): pick it with the
+  admin's Activate action. It's cached, so pages don't query the database for it.
 - **On every page:** `{% theme_head %}` links the theme's stylesheet (with the
   browser address-bar color and a visible focus outline), `{% theme_logo %}`
   shows the logo or site name, and every template gets a `theme` variable
@@ -66,9 +66,20 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   images and icons in the draft theme, light and dark side by side, updating as
   you edit. **See it as a visitor** shows the published theme instead, by mode,
   offered theme or date.
-- **Permissions:** only users with `publish_theme` can publish or activate.
-
-Next: custom CSS, multiple sites, project settings and 1.0 (see `docs/PLAN.md`).
+- **Custom CSS** for anything the settings don't cover, published with the theme
+  and served as its own file after the theme stylesheet. Only people with the
+  `edit_custom_css` permission see or change it, and a project can turn it off.
+- **Multiple sites:** one install can give each domain its own theme (and its
+  own schedules).
+- **Safe uploads:** images and fonts are checked by their content, not their name.
+  Camera details and GPS locations are removed, SVGs are cleaned of scripts, and
+  size limits (including for animated images) limit how much work one upload can
+  cause.
+- **Project settings** (all optional, with sensible defaults): see
+  [Settings](#settings).
+- **Permissions:** only users with `publish_theme` can publish, activate,
+  restore, schedule or give a domain its own theme; `edit_custom_css` and
+  `import_theme` cover custom CSS and imports.
 
 ## Add it to a project
 
