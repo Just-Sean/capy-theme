@@ -4,7 +4,7 @@ Add "capy_theme.context_processors.theme" to the project's
 TEMPLATES["OPTIONS"]["context_processors"].
 """
 
-from .colors.maths import hex_colors
+from .colors.color_math import hex_colors
 from .colors.values import effective_values
 from .css.backgrounds import template_values as background_urls
 from .css.stylesheet import stylesheet_url
@@ -17,7 +17,7 @@ def theme(request):
     """Return {"theme": ...}: the active theme's published values, or None.
 
     The values come from the live revision, not the draft, so templates show
-    what's published. Later phases add more (colours, fonts and so on).
+    what's published. Later phases add more (colors, fonts and so on).
     """
     active = get_active_theme(request)
     if active is None or active.live_revision is None:
@@ -37,7 +37,7 @@ def theme(request):
             "default_mode": mode_settings(live)[0],
             "visitors_can_switch": mode_settings(live)[1],
             "mode": current_mode(request, live),  # what this visitor sees
-            # Light-mode colours as #rrggbb for HTML emails, e.g. theme.email_colors.primary.
+            # Light-mode colors as #rrggbb for HTML emails, e.g. theme.email_colors.primary.
             "email_colors": hex_colors(effective_values(live.snapshot, "light")),
         }
     }

@@ -36,7 +36,12 @@
           "family": {"type": "string", "minLength": 1, "maxLength": 100},
           "source": {"enum": ["system", "bundled", "upload", "google", "external"]},
           "fallback_stack": {"type": "string", "maxLength": 300},
-          "licence": {"type": "string", "maxLength": 2000},
+          "license": {"type": "string", "maxLength": 2000},
+          "licence": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "The same as license, under its name in exports made before 1.0."
+          },
           "stylesheet_url": {"type": "string", "maxLength": 500},
           "files": {
             "type": "array",

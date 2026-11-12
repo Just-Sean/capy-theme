@@ -1,5 +1,5 @@
 {
-  "_about": "daisyUI's 20 colours: how they're grouped in the editor and admin, the labels that differ from the name, and which have a text ('-content') colour.",
+  "_about": "daisyUI's 20 colors: how they're grouped in the editor and admin, the labels that differ from the name, and which have a text ('-content') color.",
   "groups": {
     "Basic": [
       "primary",

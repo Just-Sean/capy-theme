@@ -11,7 +11,7 @@ from pathlib import Path
 from django.core.exceptions import ValidationError
 from jsonschema import Draft202012Validator
 
-from .catalogue import get_builtin_themes
+from .catalog import get_builtin_themes
 
 SCHEMA_PATH = Path(__file__).with_name("settings.schema.json")
 

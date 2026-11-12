@@ -13,7 +13,7 @@ from ..images.icons import SETTINGS as ICON_SETTINGS
 from ..images.logos import FALLBACK, HEIGHTS, LOGO_SLOTS
 from ..images.slots import NO_SVG, SLOTS
 from ..images.uploads import asset_data, byte_limit
-from ..themes.catalogue import get_builtin_themes
+from ..themes.catalog import get_builtin_themes
 from .access import can_publish
 from .preview import preview
 from .visitors import visitor_summary
@@ -53,7 +53,7 @@ def draft_state(theme, user, request=None):
 
 
 def controls():
-    """What the editor panel offers: bases, colour groups and shape settings."""
+    """What the editor panel offers: bases, color groups and shape settings."""
     return {
         "bases": {
             scheme: [t.name for t in get_builtin_themes() if t.scheme == scheme]

@@ -52,7 +52,7 @@ def test_the_issue_check_validates_against_the_format_schema(client, live):
 
 
 def test_the_schema_does_catch_mistakes():
-    # A bad colour space and a dimension without a unit must fail, so the check above
+    # A bad color space and a dimension without a unit must fail, so the check above
     # really checks something.
     broken = {
         "a": {"$type": "color", "$value": {"colorSpace": "cmyk", "components": [0, 0, 0]}},
@@ -87,7 +87,7 @@ def test_values(client, live):
     assert tokens["type"]["heading-weight"] == {"$type": "fontWeight", "$value": 700}
 
 
-def test_grey_colours_have_no_hue():
+def test_gray_colors_have_no_hue():
     artifacts = {
         "theme": {"name": "T", "revision": 1},
         "colors": {m: {"base-100": "oklch(100% 0 0)"} for m in ("light", "dark")},

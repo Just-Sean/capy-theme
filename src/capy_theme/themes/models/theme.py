@@ -10,7 +10,7 @@ from ...fonts.library import snapshot_fonts
 from ...fonts.models import Font
 from ...images.logos import snapshot_images
 from ...images.models import ThemeAsset
-from ..catalogue import builtin_values
+from ..catalog import builtin_values
 from ..validation import validate_base, validate_settings
 
 
@@ -24,7 +24,7 @@ class Theme(models.Model):
 
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True)
-    # Names of built-in daisyUI themes (see themes/catalogue.py). Not stored as model
+    # Names of built-in daisyUI themes (see themes/catalog.py). Not stored as model
     # `choices`, because the list depends on the CAPY_THEME_BUILTIN_THEMES setting
     # and choices would end up in migrations. Checked in clean() instead.
     light_base = models.CharField(
@@ -155,7 +155,7 @@ class Theme(models.Model):
         """Return notes on daisyUI changes to the live revision's base themes.
 
         The live revision keeps the base values saved when it was published. If
-        the daisyUI catalogue the module now ships has different values for a
+        the daisyUI catalog the module now ships has different values for a
         base, or no longer has it, this explains that the site still uses the
         saved version. Empty if nothing changed or the theme isn't published.
         """

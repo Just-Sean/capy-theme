@@ -2,7 +2,7 @@
 
 Downloads each font's npm package (pinned below) from the npm registry and keeps
 its Latin regular (400), bold (700) and italic (400) WOFF2 files, where the font
-has them, plus its licence. Writes:
+has them, plus its license. Writes:
 
 - src/capy_theme/static/capy_theme/fonts/<id>/  the WOFF2 files and LICENSE
 - src/capy_theme/fonts/curated.json              what the add-fonts command reads
@@ -85,7 +85,7 @@ def main():
             names = set(tar.getnames())
             meta = json.load(tar.extractfile("package/package.json"))
             if meta.get("license") != "OFL-1.1":
-                raise SystemExit(f"{font_id}: unexpected licence {meta.get('license')!r}")
+                raise SystemExit(f"{font_id}: unexpected license {meta.get('license')!r}")
             for weight, style in WANTED:
                 name = f"package/files/{font_id}-latin-{weight}-{style}.woff2"
                 if name not in names:
@@ -101,7 +101,7 @@ def main():
                 "category": category,
                 "fallback": fallback,
                 "version": version,
-                "licence": "SIL Open Font License 1.1",
+                "license": "SIL Open Font License 1.1",
                 "files": files,
             }
         )

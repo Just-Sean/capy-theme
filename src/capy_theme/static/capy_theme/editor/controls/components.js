@@ -15,7 +15,7 @@
   var loadedKey = null;
 
   // The unsaved settings the page itself shows (images, logo heights, icon); the
-  // rest (colours, shape, fonts) only needs the CSS, which pushCss() swaps.
+  // rest (colors, shape, fonts) only needs the CSS, which pushCss() swaps.
   function imageSettings() {
     var settings = (editor.changes || {}).settings || {};
     return JSON.stringify({ settings: { images: settings.images || {}, logo: settings.logo || {}, icon: settings.icon || {} } });

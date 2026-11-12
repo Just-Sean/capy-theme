@@ -25,7 +25,7 @@ class Font(models.Model):
         help_text="Fonts to use while this one loads or if it can't, e.g. "
         "ui-sans-serif, system-ui, sans-serif. Blank uses a sensible default for the role.",
     )
-    licence = models.TextField(blank=True, help_text="The font's licence, or where to find it.")
+    license = models.TextField(blank=True, help_text="The font's license, or where to find it.")
     stylesheet_url = models.URLField(
         blank=True, help_text="For external fonts only: the stylesheet that loads it."
     )

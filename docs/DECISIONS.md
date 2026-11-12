@@ -8,7 +8,7 @@ be revisited: open an issue that names the decision.
 made using Claude's recommendation while building without a stop for every
 decision (from 1.7 onwards), to be reviewed later.
 
-## 1.1 Built-in theme catalogue (#4)
+## 1.1 Built-in theme catalog (#4)
 
 ### Where the theme data comes from
 - **Chosen by Sean:** the generator script downloads the published daisyUI package
@@ -19,7 +19,7 @@ decision (from 1.7 onwards), to be reviewed later.
 
 ### Generated data and function in separate files
 - **Chosen by Sean:** `builtin_themes.py` is generated data only; `get_builtin_themes()`
-  lives in hand-written `catalogue.py`.
+  lives in hand-written `catalog.py`.
 - **Alternative:** the script writes both into `builtin_themes.py`.
 - **Why:** regenerating never touches hand-written code.
 
@@ -113,7 +113,7 @@ decision (from 1.7 onwards), to be reviewed later.
 
 ### Revisions store full base values
 - **Chosen by Sean:** each publish copies both bases' 28 values, not just their names.
-- **Alternative:** store names and look values up in the catalogue.
+- **Alternative:** store names and look values up in the catalog.
 - **Why:** a daisyUI update can't change or break a published theme. To pick up
   daisyUI changes, publish again.
 
@@ -202,14 +202,14 @@ All recommended (made while building without a stop for every decision).
   Tailwind layout classes (grid, flex, gap), which the showcase needs. The
   trimmed file has exactly what the showcase uses. The cost is a rebuild step
   after changing showcase templates or updating daisyUI (in the README).
-- The build adds daisyUI's MIT licence notice back, since minifying drops it.
+- The build adds daisyUI's MIT license notice back, since minifying drops it.
 
 ### Forcing light or dark on part of a page
 - **Chosen:** the theme stylesheet also has `[data-theme="capy-light"]` and
   `[data-theme="capy-dark"]` rules, so any element can be forced into either
   mode. The showcase uses them to show both side by side. The light/dark toggle
   (6.1) can use the same rules on `<html>`.
-- **Why:** before this, the stylesheet only set colours for the whole page from
+- **Why:** before this, the stylesheet only set colors for the whole page from
   the device setting, so both modes couldn't appear at once.
 - **Note:** this changed the CSS that existing stylesheet URLs return. Browsers
   that cached an older copy (for up to a year) won't see the new rules. That only
@@ -322,14 +322,14 @@ All chosen by Sean, after testing v0.1.0 and asking for a live edit mode.
 - **A live editor is the main way to edit a theme's look:** a panel on top of
   the real page, where every change shows instantly. The admin form stays as a
   plain fallback.
-- **It comes straight after colours** (new Phase 3, was Phase 5). Fonts (now 4)
+- **It comes straight after colors** (new Phase 3, was Phase 5). Fonts (now 4)
   and images (now 5) add their controls straight into it, instead of building
   admin widgets the editor would replace.
-- **Phase 2 is the colours "engine":** data, colour maths and contrast on the
-  server, with plain admin fields. The colour picker, contrast badges and palette
+- **Phase 2 is the colors "engine":** data, color math and contrast on the
+  server, with plain admin fields. The color picker, contrast badges and palette
   suggestions (2.5, now 3.4) are in the editor.
 - **The editor starts on the showcase**, then works on any page (3.6).
-- **Data safety:** derived values (text colours, contrast) come from the server
+- **Data safety:** derived values (text colors, contrast) come from the server
   with the same code as publishing (3.2). Nothing is stored until Save draft,
   and nothing reaches visitors until Publish.
 - Issue numbers stayed the same; titles, milestones and labels were updated.
@@ -338,29 +338,29 @@ All chosen by Sean, after testing v0.1.0 and asking for a live edit mode.
 - **For this project only, Sean let Claude run the rest of the build on its own:**
   creating issues, opening and merging PRs, and tagging releases.
 
-## 2.1 Colour overrides (#14)
+## 2.1 Color overrides (#14)
 
 Recommended (made while building autonomously).
 
 - **Stored as** `settings["colors"]["light" | "dark"][name]`, using daisyUI's
   names without `--color-` (e.g. `primary`, `base-100`, `primary-content`). Only
-  the colours set are stored.
+  the colors set are stored.
 - **Merged when the stylesheet is written**, from the revision's saved base
   values plus its overrides (`colors.effective_values`). The same function will
   serve the editor's preview.
 - **Groups:** Basic = primary, secondary, accent, neutral, background (base-100),
   text on background (base-content); Advanced = info, success, warning, error,
-  base-200, base-300; Expert = the eight `-content` colours. Advanced and Expert
+  base-200, base-300; Expert = the eight `-content` colors. Advanced and Expert
   are folded in the admin.
 - **OKLCH only for now:** fields accept `oklch(...)` values (daisyUI's own
   format). 2.2 adds hex, RGB and HSL input, converted to OKLCH.
-- **Empty fields show the base colour as a greyed-out hint.**
+- **Empty fields show the base color as a grayed-out hint.**
 
-## 2.2 Colour input (#15)
+## 2.2 Color input (#15)
 
 Recommended (made while building autonomously).
 
-- **ColorAide** (`coloraide>=8,<9`) reads hex, rgb(), hsl(), oklch() and colour
+- **ColorAide** (`coloraide>=8,<9`) reads hex, rgb(), hsl(), oklch() and color
   names, and converts to OKLCH, as the issue specified.
 - **Stored text:** daisyUI-style `oklch(L% C H)`, rounded (2 decimals for L and H,
   4 for C) with trailing zeros dropped, and `/ alpha` only when transparent. So
@@ -371,15 +371,15 @@ Recommended (made while building autonomously).
   It works in hex, so picking writes hex into the box, which is converted to OKLCH
   on save. The full picker is the editor's (3.3).
 
-## 2.3 Automatic text colours and background shades (#16)
+## 2.3 Automatic text colors and background shades (#16)
 
 Recommended (made while building autonomously).
 
-- **When it applies:** only for colours the theme overrides. A colour's text
-  colour is worked out when the colour is set but its `-content` isn't. base-200,
+- **When it applies:** only for colors the theme overrides. A color's text
+  color is worked out when the color is set but its `-content` isn't. base-200,
   base-300 and base-content are worked out when base-100 is set but they aren't.
-  Untouched colours keep the base theme's values, and anything set by hand wins.
-- **Text colour:** a very light (98%) or very dark (22%) tint of the colour's own
+  Untouched colors keep the base theme's values, and anything set by hand wins.
+- **Text color:** a very light (98%) or very dark (22%) tint of the color's own
   hue, whichever has the higher WCAG contrast. If neither tint reaches AA (4.5:1),
   which happens only on some mid-tones, pure white or black is used instead,
   because nothing reads better on those.
@@ -392,11 +392,11 @@ Recommended (made while building autonomously).
 
 Recommended (made while building autonomously).
 
-- **Pairs rated:** each of the eight colours with its text colour, plus the three
+- **Pairs rated:** each of the eight colors with its text color, plus the three
   backgrounds (base-100/200/300) with the text on them.
 - **Ratings:** WCAG 2 contrast for normal-size text: AAA at 7:1, AA at 4.5:1,
   otherwise "fails AA". Calculated on the server with ColorAide (`wcag21`).
-- **Where:** in each colour field's help text (both colours of a pair show it),
+- **Where:** in each color field's help text (both colors of a pair show it),
   and a full table in a **Contrast** section. Both use the **saved draft**,
   through the same merging as publishing, so they match what would be published.
   Live ratings as you type come with the editor (3.3).
@@ -417,31 +417,31 @@ Recommended (made while building autonomously).
   "not set" is possible (a plain checkbox can't express it).
 - **Hints:** blank fields show the light base's value.
 
-## 2.7 Browser colour, focus colour and email colours (#20)
+## 2.7 Browser color, focus color and email colors (#20)
 
 Recommended (made while building autonomously).
 
 - **theme-color** comes from the page background (base-100), as hex (browsers
   don't all accept OKLCH there). Two tags with `prefers-color-scheme` media
   queries when the mode follows the device; one tag when a mode is forced.
-- **Focus colour** is worked out, not a separate setting: primary if it has at
+- **Focus color** is worked out, not a separate setting: primary if it has at
   least 3:1 contrast with base-100 (WCAG 2's non-text minimum), else base-content.
   It's written as `--capy-focus` in each block, and an unlayered
   `:focus-visible { outline: 2px solid var(--capy-focus) }` rule applies it
   everywhere, overriding daisyUI's own focus outlines.
-- **Email colours** are the light-mode colours (emails have no dark mode to rely
+- **Email colors** are the light-mode colors (emails have no dark mode to rely
   on) as `#rrggbb`, keyed with underscores (`base_100`) so templates can use dot
   lookups.
 
-## 2.8 Showcase: colours and shape (#21)
+## 2.8 Showcase: colors and shape (#21)
 
 Recommended (made while building autonomously).
 
 - **Swatches use the live CSS variables** (`var(--color-primary)`) inside each
   mode's column, so they show exactly what pages get. The values and ratings
   shown next to them come from the same `effective_values()` as the stylesheet.
-- **Where a colour comes from** is labelled "overridden", "worked out" (automatic
-  text colours and background shades from 2.3) or "base theme".
+- **Where a color comes from** is labeled "overridden", "worked out" (automatic
+  text colors and background shades from 2.3) or "base theme".
 - **Contrast** uses the same ratings and "⚠ fails AA" wording as the admin.
 - **Shape samples** draw boxes with each radius, real controls for sizes and
   border, and every effect shown both off and on (by setting `--depth` / `--noise`
@@ -452,7 +452,7 @@ Recommended (made while building autonomously).
 
 - Released with tests passing on SQLite and PostgreSQL 17 (throwaway Docker
   container), and the package checked. No database migrations were needed in
-  Phase 2: colours and shape live in the theme's `settings` JSON.
+  Phase 2: colors and shape live in the theme's `settings` JSON.
 
 ## 3.1 Editor on the showcase (#42)
 
@@ -473,7 +473,7 @@ Recommended (made while building autonomously).
   classes and no framework, so it works on any project page later (3.6).
 - **Tested in a real browser:** headless Chrome, driven over the DevTools
   protocol by a script kept outside the repo. It checked that the panel opens,
-  the page shows the draft colour, Close restores the published one, and
+  the page shows the draft color, Close restores the published one, and
   reopening works.
 
 ## 3.2 Draft preview endpoint (#96)
@@ -489,31 +489,31 @@ Recommended (made while building autonomously).
   `snapshot_css()`, so the preview matches what publishing would produce (tested).
 - **Never writes:** no save on the copy, `no-store` on the response. Other
   settings (site name, mode and so on) are left as they are.
-- **Validation:** colours in any format are converted to OKLCH, bases are
-  checked against the catalogue, and the schema is checked. All problems come back
+- **Validation:** colors in any format are converted to OKLCH, bases are
+  checked against the catalog, and the schema is checked. All problems come back
   as a 400 with a list, which the panel shows.
 - **CSRF:** a normal Django POST. The token is passed to the script with a data
   attribute, because Django's CSRF cookie may be HttpOnly in projects.
 - **Debounced in the browser:** `capyEditor.schedulePreview()` waits 150 ms after
   the last change, so dragging a picker sends one request, not dozens.
 
-## 3.3 Colour and shape controls (#97)
+## 3.3 Color and shape controls (#97)
 
 Recommended (made while building autonomously).
 
 - **Controls come from the server:** the state endpoint lists the allowed bases
-  (following `CAPY_THEME_BUILTIN_THEMES`), the colour groups and labels, and the
+  (following `CAPY_THEME_BUILTIN_THEMES`), the color groups and labels, and the
   shape settings with their limits, so the panel never duplicates that knowledge.
-- **Colour rows:** the browser's colour picker, a text box for any format, Reset
+- **Color rows:** the browser's color picker, a text box for any format, Reset
   and a contrast badge. Picking writes hex, and the server converts it to OKLCH.
   The picker is set from hex values the server provides (`hex` in the preview).
-- **Light and dark tabs** edit each mode's colours separately. Shape is shared.
+- **Light and dark tabs** edit each mode's colors separately. Shape is shared.
 - **Every change is previewed** through the 150 ms debounce. `capyEditor.changes`
   holds the unsaved values for Save (3.5).
 - **A separate script**, `editor-controls.js`, listens to the editor's
   `capy-editor:loaded` and `capy-editor:preview` events, so the panel shell
   stays small.
-- **Tested in headless Chrome** with real input events: picking a colour,
+- **Tested in headless Chrome** with real input events: picking a color,
   switching tabs, reset, changing a base and changing a radius all update the
   page as expected, and nothing is saved.
 
@@ -521,20 +521,20 @@ Recommended (made while building autonomously).
 
 Recommended (made while building autonomously).
 
-- **From the primary colour:** three classic colour schemes in OKLCH, each
+- **From the primary color:** three classic color schemes in OKLCH, each
   keeping the primary's lightness and strength and changing only the hue:
   analogous (±30°), complementary (180° and 150°) and triadic (120° and 240°).
-  Neutral is a dark (27%), nearly grey version of the primary's hue.
-- **From the logo:** Pillow shrinks the logo and reduces it to 12 colours. It
-  ignores transparent, near-white, near-black and grey areas and colours too
+  Neutral is a dark (27%), nearly gray version of the primary's hue.
+- **From the logo:** Pillow shrinks the logo and reduces it to 12 colors. It
+  ignores transparent, near-white, near-black and gray areas and colors too
   close in hue to one already picked, then uses the rest in order of area as
   primary, secondary and accent.
 - **Endpoint:** `POST /theme/editor/<id>/suggestions/` with the current primary.
   It writes nothing.
-- **Applying** a suggestion fills those colours into the current mode's controls
-  and previews them. Suggestions use the primary at the moment "Suggest colours"
+- **Applying** a suggestion fills those colors into the current mode's controls
+  and previews them. Suggestions use the primary at the moment "Suggest colors"
   is clicked; click again after changing the primary for fresh ones.
-- **Swatch colours** are set through the CSSOM (`element.style`), which a strict
+- **Swatch colors** are set through the CSSOM (`element.style`), which a strict
   CSP allows, unlike `style=""` attributes.
 
 ## 3.5 Save draft and publish from the editor (#98)
@@ -542,7 +542,7 @@ Recommended (made while building autonomously).
 Recommended (made while building autonomously).
 
 - **Save draft** (`POST /theme/editor/<id>/save/`) runs the same validation as the
-  preview, then saves only the bases, colours and shape. Other settings are read
+  preview, then saves only the bases, colors and shape. Other settings are read
   fresh from the database and kept, so an editor save doesn't undo branding or
   mode changes made in the admin meanwhile.
 - **Publish** (`POST /theme/editor/<id>/publish/`, needs `publish_theme`)
@@ -578,7 +578,7 @@ Recommended (made while building autonomously).
 
 - **A Revisions page in the admin** (next to History and Publish on the theme
   page): the compare form, the result, and every revision with a Restore button.
-- **Compare** lists only what differs, by readable name (e.g. "Light colour:
+- **Compare** lists only what differs, by readable name (e.g. "Light color:
   Primary", "Shape: Box corner radius"). "Base theme / not set" means the value
   came from the base theme. Defaults to the last two revisions.
 - **Restore never rewrites history:** it copies the revision's bases, logo and
@@ -586,7 +586,7 @@ Recommended (made while building autonomously).
   N". Restoring what's already live says so. It replaces unpublished draft
   changes, and the confirmation page says so and shows what will change.
 - **Base values on restore:** as with any publish, the base themes' values come
-  from the catalogue the module ships now. If daisyUI changed a base since the old
+  from the catalog the module ships now. If daisyUI changed a base since the old
   revision, the restored look uses today's base, and the #78 notice explains it.
   (Keeping the old values exactly would need a second publishing path.)
 
@@ -595,8 +595,8 @@ Recommended (made while building autonomously).
 Recommended (made while building autonomously).
 
 - **Order follows how people work:** name, publishing, base themes, branding,
-  colours, contrast, shape, mode, then Advanced (stored JSON, ID and dates).
-  Contrast, Shape and Advanced are folded, as are the Advanced and Expert colours.
+  colors, contrast, shape, mode, then Advanced (stored JSON, ID and dates).
+  Contrast, Shape and Advanced are folded, as are the Advanced and Expert colors.
 - **Edit live** on the theme page opens the live editor for that theme: on the
   showcase (all components at once), or on the home page if the showcase is turned
   off. Only for staff who can edit.
@@ -613,13 +613,13 @@ Recommended (made while building autonomously).
 
 Recommended (made while building autonomously).
 
-- **Models:** `Font` (family, source, fallback stack, licence, stylesheet URL for
+- **Models:** `Font` (family, source, fallback stack, license, stylesheet URL for
   external fonts) and `FontFile` (weight, style, subset, unicode-range, WOFF2
   file), as the issue described.
 - **Themes pick fonts by id** in `settings["fonts"]` for body, heading, mono and
   display. Unknown ids are refused when saving.
 - **Copied into revisions:** at publish, each chosen font's family, source,
-  fallbacks and file URLs go into the snapshot, the same principle as base colour
+  fallbacks and file URLs go into the snapshot, the same principle as base color
   values. Library changes can't change a published theme. The `fonts` key is only
   added when fonts are chosen, so existing revisions still compare equal.
 - **How fonts apply:** body sets Tailwind's `--font-sans`, so Tailwind/daisyUI
@@ -649,10 +649,10 @@ Recommended (made while building autonomously).
 
 - **30 fonts:** 15 sans, 9 serif, 4 mono and 2 display, chosen as widely used,
   well-made Google Fonts families. All are SIL Open Font License 1.1, which
-  allows bundling as long as the licence goes with them; the script refuses any
-  other licence.
+  allows bundling as long as the license goes with them; the script refuses any
+  other license.
 - **From Fontsource npm packages, pinned by version,** fetched by
-  `scripts/fetch_curated_fonts.py`, the same approach as the daisyUI catalogue.
+  `scripts/fetch_curated_fonts.py`, the same approach as the daisyUI catalog.
   Each package's LICENSE is kept next to its files.
 - **Only Latin regular, bold and italic** (where the font has them): 84 files,
   about 1.9 MB, keeping the package small. Other weights and character sets can
@@ -794,7 +794,7 @@ Recommended (made while building autonomously).
 - **Size checked before decoding:** the byte limit first, then the width and height
   from the header, so a huge image is never unpacked into memory.
 - **Metadata removed by re-saving:** the image is turned upright by its EXIF
-  orientation, then saved again with only the colour profile, transparency and GIF
+  orientation, then saved again with only the color profile, transparency and GIF
   timing kept. No EXIF, PNG text or comments survive. JPEGs are saved at quality 92.
   Animated WebP and PNG keep only their first frame; animated GIFs keep all frames.
 - **Never edited in place:** the admin shows existing images read-only (upload a new
@@ -882,7 +882,7 @@ Recommended (made while building autonomously).
   publishing without changing the icon reuses the same files.
 - **`favicon.svg`** wraps a 64 px PNG of the icon. Its point is the dark version:
   with a dark icon, the SVG switches by itself with the device's dark mode
-  (checked in Chrome: the centre pixel changed from the light to the dark icon).
+  (checked in Chrome: the center pixel changed from the light to the dark icon).
 - **Home-screen icons are never transparent:** the Apple icon and maskable icon
   use white when no background is set, because iOS and Android fill transparency
   with black.
@@ -910,8 +910,8 @@ Recommended (made while building autonomously).
   doesn't change when the theme is republished).
 - **Fallbacks:** name → site name → "Website"; short name → the name cut to 12
   characters; description → tagline; start URL → `/`; display → standalone.
-- **Colours:** `background_color` and `theme_color` are base-100 of the theme's
-  default mode (light for auto), matching the address-bar colour.
+- **Colors:** `background_color` and `theme_color` are base-100 of the theme's
+  default mode (light for auto), matching the address-bar color.
 - **Start URL** must be a path on the site (`/…`, not `//…` or another site), so a
   theme can't send installed apps elsewhere.
 - **Checked in Chrome** with `Page.getAppManifest` and
@@ -923,7 +923,7 @@ Recommended (made while building autonomously).
 Recommended (made while building autonomously).
 
 - **Cropped on upload** (a `ThemeAssetVariant` with purpose `social`), from the
-  centre, to fill 1200 × 630: it depends only on the image, so it's made once.
+  center, to fill 1200 × 630: it depends only on the image, so it's made once.
   Transparent parts become white, because some sites show them black. JPEG stays
   JPEG; everything else becomes PNG.
 - **Light only:** link previews have no dark mode, so the slot has one choice.
@@ -945,11 +945,11 @@ Recommended (made while building autonomously).
 
 Recommended (made while building autonomously).
 
-- **CSS variables in the colour blocks:** `--capy-bg-login` and `--capy-bg-pattern`
-  are written next to the colours in the light and dark blocks, so they follow the
+- **CSS variables in the color blocks:** `--capy-bg-login` and `--capy-bg-pattern`
+  are written next to the colors in the light and dark blocks, so they follow the
   mode (device setting and toggle) with no extra rules, and the editor's preview
   shows them straight away.
-- **Helper classes** `capy-bg-login` (cover, centred) and `capy-bg-pattern`
+- **Helper classes** `capy-bg-login` (cover, centered) and `capy-bg-pattern`
   (repeat), in `@layer base` so utilities win. Always present; with no image they
   draw nothing.
 - **Nothing is applied by the module:** the images only show where a project uses
@@ -972,7 +972,7 @@ Recommended (made while building autonomously).
   with no copies in both modes, like `{% theme_logo %}` (found while checking in
   Chrome: the first version showed the dark main logo there).
 - **Real sizes**: header logos use `capy-logo` (the theme's header height); icons
-  at their pixel size, except the maskable and monochrome icons (128 px, labelled),
+  at their pixel size, except the maskable and monochrome icons (128 px, labeled),
   which are there to show the mask and the shape.
 - **Backgrounds** use the helper classes inside each mode's column, so they show
   the light or dark image as the project would.
@@ -1000,9 +1000,9 @@ what they need.
   description, aren't theme values.
 - **Kept as artifacts:** every logo slot (email and print included), every
   generated icon (512, maskable and monochrome included: what a manifest needs),
-  the 1200 × 630 sharing image, backgrounds, colours (OKLCH and hex), fonts.
+  the 1200 × 630 sharing image, backgrounds, colors (OKLCH and hex), fonts.
 - **Still applied by capy-theme:** the stylesheet, `{% theme_logo %}`, the mode
-  script, the address-bar colour and the tab/home-screen icon links in
+  script, the address-bar color and the tab/home-screen icon links in
   `{% theme_head %}`. They're the page's own look. (Judgment call: favicons are
   branding of the page itself, like the stylesheet.)
 - **`get_artifacts(request=None)`** returns plain data (no model objects) from the
@@ -1058,7 +1058,7 @@ Recommended (made while building autonomously).
   (tooltips, the text rotator and so on); buttons, modals, toggles and spinners
   weren't.
 - **More contrast** changes only daisyUI's effect variables (noise and depth off,
-  2 px borders) and the focus outline. Changing the theme's colours was rejected:
+  2 px borders) and the focus outline. Changing the theme's colors was rejected:
   it would override the operator's choices, and contrast ratings are already
   shown for every pair.
 - **Checked in Chrome** by emulating each setting: button transitions went from
@@ -1081,10 +1081,10 @@ Recommended (made while building autonomously).
   checked. The changelog's first entry is the scope change, because it removes
   0.5.0 features (manifest view, link-preview tags).
 
-## Reorganised into sections (#150)
+## Reorganized into sections (#150)
 
 Sean's decision: the module was too hard to read (files up to 1,100 lines), so it
-was reorganised into sections of small files. No behaviour, setting or database
+was reorganized into sections of small files. No behavior, setting or database
 change; the same 574 tests pass on SQLite and Postgres.
 
 - **One Django app, sections as folders** (`themes/`, `colors/`, `css/`, `fonts/`,
@@ -1093,7 +1093,7 @@ change; the same 574 tests pass on SQLite and Postgres.
   (theme settings point at fonts and images), so separate apps would add
   migrations work and more setup for projects without any independence.
 - **Every Python file under 200 lines.** `admin.py` (1,109 lines) became 11 files;
-  the theme form calls one module per area (colours, type, shape, images), each
+  the theme form calls one module per area (colors, type, shape, images), each
   with `add_fields`, `set_initial` and `clean`. The editor's JavaScript became one
   file per section in `static/capy_theme/editor/controls/`, sharing state on
   `capyEditor.ui`.
@@ -1145,7 +1145,7 @@ runs on the real page; every daisyUI component should be visible while editing.
   default is to forbid framing).
 - **Samples kept:** the component templates that need no server data (buttons,
   badges, alerts, cards, tabs, table, form fields, progress, modal) plus a plain
-  text sample, so the type scale and fonts show. Colour swatches, shape and font
+  text sample, so the type scale and fonts show. Color swatches, shape and font
   samples are already in the editor's controls.
 - **Removed with the showcase:** its settings (`CAPY_THEME_SHOWCASE`,
   `CAPY_THEME_BASE_TEMPLATE`), its mode/visitor panel and image section, and the
@@ -1201,7 +1201,7 @@ Agreed with Sean: hybrid. capy-theme never requires DRF.
 Recommended (made while building autonomously).
 
 - **Format version 2025.10**, the Design Tokens Community Group's first stable
-  version. Colours use its object form (`colorSpace: "oklch"`, `components`,
+  version. Colors use its object form (`colorSpace: "oklch"`, `components`,
   `hex` fallback), since capy-theme stores OKLCH.
 - **Built from `get_artifacts()`**, so it always matches the JSON API.
 - **Every token has its own `$type`:** the official schema doesn't check values of
@@ -1240,7 +1240,7 @@ Recommended (made while building autonomously).
 - **Two blocks, `<slug>-light` (default) and `<slug>-dark` (prefersdark)**, named by
   the theme's slug so they can't clash with daisyUI's built-in names or with
   capy-theme's own `capy-light`/`capy-dark`.
-- **daisyUI variables only:** colours, radii, sizes, border, depth, noise.
+- **daisyUI variables only:** colors, radii, sizes, border, depth, noise.
   daisyUI theme blocks don't take fonts, and capy-theme's extras (type scale,
   logos, backgrounds) aren't daisyUI's.
 - **Checked by building it** with the real Tailwind CLI and the demo's daisyUI
@@ -1335,7 +1335,7 @@ Recommended (made while building autonomously).
   (only visible after publishing).
 - **Unsaved choices in the address:** the view takes the editor's unsaved image,
   logo and icon settings (`?changes=`, applied with the same `apply_changes` as
-  the preview, nothing written) and reloads when they change; colours and shape
+  the preview, nothing written) and reloads when they change; colors and shape
   still update instantly through the pushed CSS.
 - **Icon preview made on the fly** (`/theme/editor/<id>/icon-preview.png`), never
   stored.
@@ -1344,8 +1344,8 @@ Recommended (made while building autonomously).
 - **Accessibility check without Lighthouse:** Lighthouse and axe-core aren't
   installed and adding them needs Sean's approval, so the check used Chrome's own
   tools (computed WCAG contrast of every visible text, the accessibility tree for
-  unnamed controls, page basics) in light and dark. It found unlabelled progress
-  bars (fixed). The remaining contrast results are daisyUI's built-in colours in
+  unnamed controls, page basics) in light and dark. It found unlabeled progress
+  bars (fixed). The remaining contrast results are daisyUI's built-in colors in
   the test theme (e.g. secondary 3.04:1), which the view is meant to show as they
   are and the editor already flags.
 
@@ -1356,8 +1356,8 @@ Recommended (made while building autonomously).
   pinned to the current `main` commit (the v0.7.0 tag predates 8.1–8.4, and
   v1.0.0 will be cut from this commit), then only the README's steps.
 - **Worked without touching the module's code:** migrations on Postgres 18; the
-  admin (create, colour, publish, activate); the themed page; the light/dark
-  toggle; the editor (every section, a colour change on the page and in the
+  admin (create, color, publish, activate); the themed page; the light/dark
+  toggle; the editor (every section, a color change on the page and in the
   Components view, publish from the editor reaching visitors); the API and the
   downloads. Checked with Django's test client and in headless Chrome.
 - **README gaps it found, fixed here:** no recipe for a project without Tailwind

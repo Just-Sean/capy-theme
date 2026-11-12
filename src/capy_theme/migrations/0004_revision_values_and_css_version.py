@@ -29,7 +29,7 @@ def fill_values(snapshot, themes):
 
 
 def forwards(apps, schema_editor):
-    from capy_theme.themes.catalogue import THEMES
+    from capy_theme.themes.catalog import THEMES  # module renamed in #199 (same data)
 
     ThemeRevision = apps.get_model("capy_theme", "ThemeRevision")
     for revision in ThemeRevision.objects.all():

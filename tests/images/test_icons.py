@@ -30,10 +30,10 @@ def media(settings, tmp_path):
     cache.clear()
 
 
-def square(colour=(200, 0, 0, 255), size=600, transparent_border=False):
-    image = Image.new("RGBA", (size, size), (0, 0, 0, 0) if transparent_border else colour)
+def square(color=(200, 0, 0, 255), size=600, transparent_border=False):
+    image = Image.new("RGBA", (size, size), (0, 0, 0, 0) if transparent_border else color)
     if transparent_border:
-        image.paste(Image.new("RGBA", (size // 2, size // 2), colour), (size // 4, size // 4))
+        image.paste(Image.new("RGBA", (size // 2, size // 2), color), (size // 4, size // 4))
     buffer = io.BytesIO()
     image.save(buffer, "PNG")
     return SimpleUploadedFile("icon.png", buffer.getvalue())
@@ -92,7 +92,7 @@ def test_favicon_svg_switches_with_a_dark_icon(theme):
 
 
 def test_background_and_padding(theme):
-    revision = with_icon(theme, {"background": "#00ff00", "padding": 20}, colour=(200, 0, 0, 255))
+    revision = with_icon(theme, {"background": "#00ff00", "padding": 20}, color=(200, 0, 0, 255))
     icon = opened(revision, "icon-512.png").convert("RGBA")
     assert icon.getpixel((10, 10)) == (0, 255, 0, 255)  # padding shows the background
     assert icon.getpixel((256, 256)) == (200, 0, 0, 255)  # the icon in the middle
@@ -150,7 +150,7 @@ def test_each_revision_keeps_its_icons(theme):
     second = publish(theme)
     assert icon_folder(first.snapshot) != icon_folder(second.snapshot)
     assert read(first, "icon-512.png") != read(second, "icon-512.png")
-    # Publishing an unchanged icon (e.g. only colours changed) reuses the files.
+    # Publishing an unchanged icon (e.g. only colors changed) reuses the files.
     theme.settings = {**theme.settings, "site_name": "New"}
     theme.save()
     assert icon_folder(publish(theme).snapshot) == icon_folder(second.snapshot)

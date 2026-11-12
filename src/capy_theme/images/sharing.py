@@ -16,7 +16,7 @@ SIZE = (1200, 630)  # what Facebook, LinkedIn, X and most chat apps show best
 def make_sharing_image(asset):
     """Save the asset cropped to 1200 × 630 as a variant (purpose "social").
 
-    Cropped from the centre to fill the whole size. Transparent parts are made
+    Cropped from the center to fill the whole size. Transparent parts are made
     white, since some sites show transparency as black.
     """
     from .models import ThemeAssetVariant

@@ -3,7 +3,7 @@
 from django import forms
 
 from ..models import Theme
-from ..themes.catalogue import get_builtin_themes
+from ..themes.catalog import get_builtin_themes
 from . import form_colors, form_custom_css, form_images, form_shape, form_type
 
 # Each area of the form: its fields, their current values, and reading them back.
@@ -47,7 +47,7 @@ class ThemeForm(forms.ModelForm):
         ],
         initial="auto",
         required=False,  # missing means "auto"
-        help_text="The colour mode pages use until a visitor picks one.",
+        help_text="The color mode pages use until a visitor picks one.",
     )
     visitors_can_switch = forms.BooleanField(
         required=False,

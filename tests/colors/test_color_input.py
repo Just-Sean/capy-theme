@@ -1,4 +1,4 @@
-"""Tests for entering colours any common way (issue #15)."""
+"""Tests for entering colors any common way (issue #15)."""
 
 from pathlib import Path
 
@@ -6,8 +6,8 @@ import pytest
 from django.urls import reverse
 
 from capy_theme.admin.theme_form import ThemeForm
+from capy_theme.colors.color_math import to_hex, to_oklch
 from capy_theme.colors.fields import ColorField
-from capy_theme.colors.maths import to_hex, to_oklch
 from capy_theme.models import Theme
 
 pytestmark = pytest.mark.django_db
@@ -35,7 +35,7 @@ def test_transparency_is_kept():
 
 
 @pytest.mark.parametrize("bad", ["bright pink", "#12", "rgb(1 2)", "oklch()"])
-def test_non_colours_are_rejected(bad):
+def test_non_colors_are_rejected(bad):
     with pytest.raises(ValueError):
         to_oklch(bad)
 
@@ -75,13 +75,13 @@ def test_the_issue_check_three_formats_save_and_show_as_oklch():
     assert shown.fields["color_light_primary"].initial == "oklch(62.31% 0.188 259.81)"
 
 
-def test_widget_has_a_colour_picker_matching_the_value():
+def test_widget_has_a_color_picker_matching_the_value():
     html = ColorField().widget.render("c", "oklch(62.31% 0.188 259.81)", {"id": "id_c"})
     assert 'type="text"' in html
     assert 'type="color" value="#3b82f6" data-capy-color-for="id_c"' in html
 
 
-def test_empty_picker_shows_the_base_colour():
+def test_empty_picker_shows_the_base_color():
     theme = Theme.objects.create(name="Main", slug="main", light_base="cupcake")
     form = ThemeForm(instance=theme)
     html = str(form["color_light_primary"])

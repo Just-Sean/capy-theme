@@ -4,6 +4,6 @@
   JavaScript; the script from {% theme_head %} switches without reloading.
   The current one has aria-current (aria-pressed isn't allowed on links).
 {% endcomment %}
-<div class="join" role="group" aria-label="Colour mode">
+<div class="join" role="group" aria-label="Color mode">
   {% for value, label in options %}<a href="{% url 'capy_theme:set_mode' value %}?next={{ next|urlencode }}" data-capy-mode="{{ value }}" class="btn btn-sm join-item{% if value == current %} btn-active{% endif %}"{% if value == current %} aria-current="true"{% endif %} rel="nofollow">{{ label }}</a>{% endfor %}
 </div>

@@ -1,4 +1,4 @@
-"""Colour suggestions for the editor: from the primary colour, or from the logo.
+"""Color suggestions for the editor: from the primary color, or from the logo.
 
 Suggestions are only ever shown; nothing is saved until the editor's Save.
 """
@@ -6,7 +6,7 @@ Suggestions are only ever shown; nothing is saved until the editor's Save.
 from coloraide import Color
 from PIL import Image
 
-from .maths import _oklch, to_oklch
+from .color_math import _oklch, to_oklch
 
 # name, description, hue shifts for secondary and accent (degrees)
 SCHEMES = [
@@ -17,10 +17,10 @@ SCHEMES = [
 
 
 def from_primary(primary):
-    """Return suggestions of secondary, accent and neutral for a primary colour.
+    """Return suggestions of secondary, accent and neutral for a primary color.
 
     Secondary and accent keep the primary's lightness and strength and change
-    its hue; neutral is a dark, almost grey version of the primary's hue.
+    its hue; neutral is a dark, almost gray version of the primary's hue.
     """
     lightness, chroma, hue = Color(to_oklch(primary)).convert("oklch").coords(nans=False)
     neutral = _oklch(0.27, min(chroma, 0.03), hue)
@@ -39,12 +39,12 @@ def from_primary(primary):
 
 
 def from_logo(file, count=4):
-    """Return a suggestion built from a logo's main colours, or None.
+    """Return a suggestion built from a logo's main colors, or None.
 
-    The logo is shrunk and reduced to a few colours. Transparent, near-white and
-    near-black pixels are ignored, and the most colourful remaining colours
+    The logo is shrunk and reduced to a few colors. Transparent, near-white and
+    near-black pixels are ignored, and the most colorful remaining colors
     become primary, secondary and accent, in order of how much of the logo they
-    cover. Neutral is a dark grey of the primary's hue.
+    cover. Neutral is a dark gray of the primary's hue.
     """
     try:
         with Image.open(file) as image:
@@ -66,9 +66,9 @@ def from_logo(file, count=4):
             Color("srgb", [r / 255, g / 255, b / 255]).convert("oklch").coords(nans=False)
         )
         if lightness > 0.95 or lightness < 0.12 or chroma < 0.04:
-            continue  # background white, outline black or grey: not a brand colour
+            continue  # background white, outline black or gray: not a brand color
         if any(abs(hue - h) < 20 or abs(hue - h) > 340 for h, _ in found):
-            continue  # too close to a colour already chosen
+            continue  # too close to a color already chosen
         found.append((hue, _oklch(lightness, chroma, hue)))
         if len(found) == count - 1:
             break
@@ -79,6 +79,6 @@ def from_logo(file, count=4):
     colors["neutral"] = _oklch(0.27, 0.02, found[0][0])
     return {
         "name": "From your logo",
-        "description": "The logo's main colours, most used first.",
+        "description": "The logo's main colors, most used first.",
         "colors": colors,
     }

@@ -1,50 +1,50 @@
-# Colours, shape, type and the stylesheet
+# Colors, shape, type and the stylesheet
 
-Code: `src/capy_theme/colors/` (colour maths, values, suggestions) and `src/capy_theme/css/` (everything that writes the theme stylesheet).
+Code: `src/capy_theme/colors/` (color math, values, suggestions) and `src/capy_theme/css/` (everything that writes the theme stylesheet).
 
-## Colours
+## Colors
 
-On a theme's admin page, the colour sections let you override any of daisyUI's
-20 colours, separately for light and dark mode:
+On a theme's admin page, the color sections let you override any of daisyUI's
+20 colors, separately for light and dark mode:
 
 - **Basic** (shown open): primary, secondary, accent, neutral, background and
   text on background.
 - **Advanced** (folded): info, success, warning, error, and the two darker
   background shades.
-- **Expert** (folded): the text colour on each coloured element.
+- **Expert** (folded): the text color on each colored element.
 
-Leave a field blank to use the base theme's colour, which is shown greyed out
-in the empty field. Only the colours you set are stored, in `settings["colors"]`;
-the rest always come from the base. Enter colours any common way, such as `#3b82f6`, `rgb(59 130 246)`,
-`hsl(217 91% 60%)`, `oklch(62% 0.19 260)` or a colour name, or use the colour
+Leave a field blank to use the base theme's color, which is shown grayed out
+in the empty field. Only the colors you set are stored, in `settings["colors"]`;
+the rest always come from the base. Enter colors any common way, such as `#3b82f6`, `rgb(59 130 246)`,
+`hsl(217 91% 60%)`, `oklch(62% 0.19 260)` or a color name, or use the color
 picker beside each field. They're converted to and stored as OKLCH (daisyUI's
 format), so after saving the field shows e.g. `oklch(62.31% 0.188 259.81)`.
 Like everything else, they show on the site after publishing.
 
-**Readable text is worked out for you.** When you set a colour (say primary) but
-not its text colour (primary text), the text colour is chosen automatically: a
+**Readable text is worked out for you.** When you set a color (say primary) but
+not its text color (primary text), the text color is chosen automatically: a
 very light or very dark tint of the same hue, whichever reads better, falling
 back to pure white or black if a tint wouldn't meet WCAG AA (4.5:1). When you set
 the background but not its darker shades or its text, those are worked out from
 it as well. Anything you set yourself is always kept.
 
-**Contrast warnings.** Each colour field shows the WCAG contrast of its pair
+**Contrast warnings.** Each color field shows the WCAG contrast of its pair
 (e.g. *Primary / Primary text: 4.7:1, passes AA*), and the **Contrast** section
 lists every pair for light and dark. AA needs 4.5:1 and AAA 7:1 for normal text.
 Pairs below AA are marked "⚠ fails AA". They're warnings only: saving and
 publishing still work. Ratings are for the saved draft, so save to update them.
 
-## Browser colour, focus outline and email colours
+## Browser color, focus outline and email colors
 
-- **Browser colour:** `{% theme_head %}` adds `<meta name="theme-color">` tags, so
-  phones colour their address bar to match the page background. There's one per
+- **Browser color:** `{% theme_head %}` adds `<meta name="theme-color">` tags, so
+  phones color their address bar to match the page background. There's one per
   mode (chosen by the device), or a single one when a mode is forced.
 - **Focus outline:** the stylesheet gives keyboard focus (`:focus-visible`) a 2 px
-  outline in `--capy-focus`. That's the primary colour when it has at least 3:1
+  outline in `--capy-focus`. That's the primary color when it has at least 3:1
   contrast with the background (WCAG's minimum for non-text), otherwise the text
-  colour, so it's always visible.
-- **Email colours:** HTML emails can't use OKLCH or CSS variables, so templates
-  get every light-mode colour as hex in `theme.email_colors`, e.g.
+  color, so it's always visible.
+- **Email colors:** HTML emails can't use OKLCH or CSS variables, so templates
+  get every light-mode color as hex in `theme.email_colors`, e.g.
   `{{ theme.email_colors.primary }}` or `{{ theme.email_colors.base_100 }}`.
 
 ## Type scale
@@ -83,7 +83,7 @@ light and dark mode:
 | Depth (3D shadow) / Noise (grain) | `--depth` / `--noise` | on or off |
 
 Blank fields (and "From the base theme") use the base theme's value, which is
-shown greyed out. A radius of 0 gives square corners. Stored in
+shown grayed out. A radius of 0 gives square corners. Stored in
 `settings["shape"]`.
 
 ## Visitors' accessibility settings
@@ -95,8 +95,8 @@ to configure:
   transitions finish at once and smooth scrolling is off. daisyUI only does this
   for a few components; this covers all of them.
 - **More contrast** (`prefers-contrast: more`): no noise texture or depth
-  shading, 2 px borders and a 3 px focus outline. The theme's colours stay as
-  they are (every colour pair's contrast is already shown in the editor).
+  shading, 2 px borders and a 3 px focus outline. The theme's colors stay as
+  they are (every color pair's contrast is already shown in the editor).
 
 To try them: Chrome DevTools → **Rendering** → "Emulate CSS media feature".
 
@@ -115,7 +115,7 @@ aren't in a CSS layer, so they override daisyUI's own theme rules.
   `/theme/52e3f01881d2.css?v=0.1.0`). When an upgrade changes how the module
   writes its CSS, the new version in the link makes browsers fetch it again
   instead of using a copy cached for a year. The view ignores `?v=`.
-- The values come from the revision itself, not from today's daisyUI catalogue.
+- The values come from the revision itself, not from today's daisyUI catalog.
   Each publish saves both base themes' full values, so a later daisyUI update
   can't change or break a published theme. To pick up daisyUI's changes,
   publish again.

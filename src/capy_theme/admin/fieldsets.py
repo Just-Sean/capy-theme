@@ -89,7 +89,7 @@ THEME_FIELDSETS = [
             "fields": ["image_social_light"],
             "classes": ["collapse"],
             "description": "An image for link previews, cropped to 1200 × 630 from its "
-            "centre. capy-theme makes it available (see Theme artifacts in the README); "
+            "center. capy-theme makes it available (see Theme artifacts in the README); "
             "the project's own templates or another module add the preview tags.",
         },
     ),

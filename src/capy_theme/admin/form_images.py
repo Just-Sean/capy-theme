@@ -48,7 +48,7 @@ def add_fields(form_class):
             required=False,
             label=ICON_SETTINGS["background"][0],
             help_text=ICON_SETTINGS["background"][1],
-            error_messages={"invalid": "Use a hex colour like #ffffff."},
+            error_messages={"invalid": "Use a hex color like #ffffff."},
         )
     )
     form_class.base_fields["icon_padding"] = form_class.declared_fields["icon_padding"] = (

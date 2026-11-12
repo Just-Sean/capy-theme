@@ -28,7 +28,7 @@ def suggestions(theme, primary):
 def save_draft(theme, data):
     """Store the editor's values in the theme's draft. Visitors see nothing until publish.
 
-    Validated exactly like the preview. Only the bases, colours and shape are
+    Validated exactly like the preview. Only the bases, colors and shape are
     changed; the rest of the theme (name, branding, mode) is left as it is.
     """
     draft = apply_changes(theme, data)

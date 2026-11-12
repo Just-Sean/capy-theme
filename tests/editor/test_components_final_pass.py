@@ -40,9 +40,9 @@ def media(settings, tmp_path):
     cache.clear()
 
 
-def png(size=(300, 100), colour="red", name="x.png"):
+def png(size=(300, 100), color="red", name="x.png"):
     buffer = io.BytesIO()
-    Image.new("RGB", size, colour).save(buffer, "PNG")
+    Image.new("RGB", size, color).save(buffer, "PNG")
     return SimpleUploadedFile(name, buffer.getvalue())
 
 
@@ -75,7 +75,7 @@ def preview_css(client, theme, changes):
 def test_the_issue_check_every_editor_setting_changes_the_components_view(
     client, django_user_model, theme
 ):
-    """Each setting the editor offers changes either the CSS the view gets (colours,
+    """Each setting the editor offers changes either the CSS the view gets (colors,
     shape, fonts, type, bases, logo heights) or the view's page (images, icon)."""
     login(client, django_user_model)
     spec = client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()["controls"]
@@ -102,7 +102,7 @@ def test_the_issue_check_every_editor_setting_changes_the_components_view(
             for mode in ("light", "dark"):
                 changes = {"settings": {"colors": {mode: {color["name"]: "oklch(50% 0.2 90)"}}}}
                 assert css_changes(changes), color["name"]
-                checked.append(f"colour {mode} {color['name']}")
+                checked.append(f"color {mode} {color['name']}")
     for size in spec["sizes"]:
         assert css_changes({"settings": {"shape": {size["name"]: size["max"]}}}), size["name"]
         checked.append(size["name"])

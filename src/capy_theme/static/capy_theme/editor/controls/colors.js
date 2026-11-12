@@ -1,4 +1,4 @@
-// Editor section: the 20 colours, with light and dark tabs and contrast badges.
+// Editor section: the 20 colors, with light and dark tabs and contrast badges.
 (function () {
   "use strict";
 
@@ -11,11 +11,11 @@
     var text = el("input", {
       type: "text",
       "data-capy-color": color.name,
-      "aria-label": color.label + " (any colour format)",
+      "aria-label": color.label + " (any color format)",
       spellcheck: "false",
     });
     var picker = el("input", { type: "color", "data-capy-picker": color.name, "aria-label": "Pick " + color.label });
-    var reset = el("button", { type: "button", "data-capy-reset": color.name, title: "Use the base theme's colour", text: "Reset" });
+    var reset = el("button", { type: "button", "data-capy-reset": color.name, title: "Use the base theme's color", text: "Reset" });
     var badge = el("span", { class: "capy-editor-badge", "data-capy-badge": color.name });
 
     picker.addEventListener("input", function () {
@@ -50,7 +50,7 @@
         role: "tab",
         "data-capy-scheme": mode,
         "aria-selected": mode === ui.scheme ? "true" : "false",
-        text: mode === "light" ? "Light colours" : "Dark colours",
+        text: mode === "light" ? "Light colors" : "Dark colors",
       });
       tab.addEventListener("click", function () {
         ui.scheme = mode;
@@ -73,13 +73,13 @@
       return details;
     });
     return el("section", { class: "capy-editor-section" }, [
-      el("h3", { text: "Colours" }),
+      el("h3", { text: "Colors" }),
       tabs(),
       ui.suggestionBox(),
     ].concat(groups));
   }
 
-  // Each colour's value (typed or worked out), its picker and its contrast badge.
+  // Each color's value (typed or worked out), its picker and its contrast badge.
   function fill() {
     var panel = editor.panel;
     var scheme = ui.scheme;

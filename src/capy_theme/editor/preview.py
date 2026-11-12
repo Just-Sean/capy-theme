@@ -4,7 +4,7 @@ import copy
 
 from django.core.exceptions import ValidationError
 
-from ..colors.maths import to_hex, to_oklch
+from ..colors.color_math import to_hex, to_oklch
 from ..colors.names import SCHEMES
 from ..colors.values import contrast_report, effective_values
 from ..css.custom import without_custom_css
@@ -29,7 +29,7 @@ def apply_changes(theme, data):
     """Return an unsaved copy of `theme` with the editor's values applied.
 
     `data` may have "light_base", "dark_base" and "settings" (with "colors" and
-    "shape"). Colours can be in any CSS format; they're converted to OKLCH.
+    "shape"). Colors can be in any CSS format; they're converted to OKLCH.
     Raises ValidationError (with every problem) if anything is invalid.
     The theme itself and the database are never changed.
     """
@@ -59,7 +59,7 @@ def apply_changes(theme, data):
             try:
                 colors[name] = to_oklch(str(value))
             except ValueError:
-                errors.append(f"{scheme} {name}: {value!r} isn't a colour.")
+                errors.append(f"{scheme} {name}: {value!r} isn't a color.")
     if not errors:
         try:
             validate_settings(settings)
@@ -89,7 +89,7 @@ def preview(theme, data):
     return {
         "css": snapshot_css(snapshot, f"capy-theme editor: preview of {theme.name}"),
         "values": values,
-        # Hex for the browser's colour pickers, keyed like "primary" or "base-100".
+        # Hex for the browser's color pickers, keyed like "primary" or "base-100".
         "hex": {
             scheme: {
                 key.removeprefix("--color-"): to_hex(value, alpha=False)

@@ -1,12 +1,12 @@
-"""Tests for automatic text colours and background shades (issue #16)."""
+"""Tests for automatic text colors and background shades (issue #16)."""
 
 import pytest
 from coloraide import Color
 
-from capy_theme.colors.maths import contrast, readable_text, shade
+from capy_theme.colors.color_math import contrast, readable_text, shade
 from capy_theme.colors.names import WITH_CONTENT
 from capy_theme.colors.values import effective_values
-from capy_theme.themes.catalogue import THEMES
+from capy_theme.themes.catalog import THEMES
 
 
 def snapshot(light=None, base="light"):
@@ -35,7 +35,7 @@ def test_the_issue_check_dark_primary_gets_light_text_and_vice_versa():
 
 
 @pytest.mark.parametrize("name", WITH_CONTENT)
-def test_every_coloured_element_gets_readable_text(name):
+def test_every_colored_element_gets_readable_text(name):
     values = effective_values(snapshot({name: DARK_BLUE}), "light")
     assert contrast(values[f"--color-{name}-content"], DARK_BLUE) >= 7
 
@@ -49,21 +49,21 @@ def test_every_coloured_element_gets_readable_text(name):
         for hue in (30, 140, 260)
     ],
 )
-def test_text_is_readable_on_any_colour(background):
+def test_text_is_readable_on_any_color(background):
     # WCAG AA for normal text needs 4.5:1. It's reached wherever white or black
     # can reach it; on the hardest mid-tones nothing does better than they do.
     best_possible = max(contrast("#fff", background), contrast("#000", background))
     assert contrast(readable_text(background), background) >= min(4.5, best_possible)
 
 
-def test_a_text_colour_set_by_hand_is_kept():
+def test_a_text_color_set_by_hand_is_kept():
     values = effective_values(
         snapshot({"primary": DARK_BLUE, "primary-content": "oklch(50% 0.2 30)"}), "light"
     )
     assert values["--color-primary-content"] == "oklch(50% 0.2 30)"
 
 
-def test_text_colours_of_colours_not_overridden_come_from_the_base():
+def test_text_colors_of_colors_not_overridden_come_from_the_base():
     values = effective_values(snapshot({"primary": DARK_BLUE}), "light")
     base = THEMES["light"]["values"]
     assert values["--color-secondary-content"] == base["--color-secondary-content"]

@@ -5,7 +5,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -30,7 +30,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -55,7 +55,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -80,7 +80,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -105,7 +105,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -130,7 +130,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.1",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -155,7 +155,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -180,7 +180,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -205,7 +205,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -230,7 +230,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -255,7 +255,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -280,7 +280,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -305,7 +305,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -330,7 +330,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -350,7 +350,7 @@
     "category": "sans",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -370,7 +370,7 @@
     "category": "serif",
     "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -395,7 +395,7 @@
     "category": "serif",
     "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -420,7 +420,7 @@
     "category": "serif",
     "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -445,7 +445,7 @@
     "category": "serif",
     "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
     "version": "5.3.1",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -470,7 +470,7 @@
     "category": "serif",
     "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -495,7 +495,7 @@
     "category": "serif",
     "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -520,7 +520,7 @@
     "category": "serif",
     "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -545,7 +545,7 @@
     "category": "serif",
     "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -570,7 +570,7 @@
     "category": "serif",
     "fallback": "ui-serif, Georgia, Cambria, \"Times New Roman\", serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -595,7 +595,7 @@
     "category": "mono",
     "fallback": "ui-monospace, SFMono-Regular, Menlo, Consolas, \"Liberation Mono\", monospace",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -620,7 +620,7 @@
     "category": "mono",
     "fallback": "ui-monospace, SFMono-Regular, Menlo, Consolas, \"Liberation Mono\", monospace",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -640,7 +640,7 @@
     "category": "mono",
     "fallback": "ui-monospace, SFMono-Regular, Menlo, Consolas, \"Liberation Mono\", monospace",
     "version": "5.3.1",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -665,7 +665,7 @@
     "category": "mono",
     "fallback": "ui-monospace, SFMono-Regular, Menlo, Consolas, \"Liberation Mono\", monospace",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -690,7 +690,7 @@
     "category": "display",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,
@@ -710,7 +710,7 @@
     "category": "display",
     "fallback": "ui-sans-serif, system-ui, sans-serif",
     "version": "5.3.0",
-    "licence": "SIL Open Font License 1.1",
+    "license": "SIL Open Font License 1.1",
     "files": [
       {
         "weight": 400,

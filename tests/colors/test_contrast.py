@@ -4,15 +4,15 @@ import pytest
 from django.urls import reverse
 
 from capy_theme.admin.theme_form import ThemeForm
-from capy_theme.colors.maths import contrast, rating
+from capy_theme.colors.color_math import contrast, rating
 from capy_theme.colors.values import CONTRAST_PAIRS, contrast_report, draft_values
 from capy_theme.models import Theme
-from capy_theme.themes.catalogue import THEMES
+from capy_theme.themes.catalog import THEMES
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
 
-LIGHT_GREY = "oklch(85% 0 0)"
+LIGHT_GRAY = "oklch(85% 0 0)"
 WHITE = "oklch(100% 0 0)"
 
 
@@ -29,22 +29,22 @@ def test_report_covers_every_pair():
     assert {"background", "text", "ratio", "rating"} <= set(report[0])
 
 
-def grey_on_white():
+def gray_on_white():
     return Theme.objects.create(
         name="Main",
         slug="main",
-        settings={"colors": {"light": {"base-100": WHITE, "base-content": LIGHT_GREY}}},
+        settings={"colors": {"light": {"base-100": WHITE, "base-content": LIGHT_GRAY}}},
     )
 
 
-def test_the_issue_check_light_grey_on_white_fails_aa():
-    report = contrast_report(draft_values(grey_on_white(), "light"))
+def test_the_issue_check_light_gray_on_white_fails_aa():
+    report = contrast_report(draft_values(gray_on_white(), "light"))
     entry = next(e for e in report if (e["background"], e["text"]) == ("base-100", "base-content"))
     assert entry["rating"] == "fail"
 
 
-def test_rating_shows_next_to_each_colour_in_the_form():
-    form = ThemeForm(instance=grey_on_white())
+def test_rating_shows_next_to_each_color_in_the_form():
+    form = ThemeForm(instance=gray_on_white())
     help_text = form.fields["color_light_base_content"].help_text
     assert "fails AA" in help_text
     assert "Contrast Background / Text on background:" in help_text
@@ -52,7 +52,7 @@ def test_rating_shows_next_to_each_colour_in_the_form():
 
 
 def test_warnings_dont_stop_saving_or_publishing():
-    theme = grey_on_white()
+    theme = gray_on_white()
     form = ThemeForm(
         data={
             "name": "Main",
@@ -61,7 +61,7 @@ def test_warnings_dont_stop_saving_or_publishing():
             "dark_base": "dark",
             "visitors_can_switch": "on",
             "color_light_base_100": WHITE,
-            "color_light_base_content": LIGHT_GREY,
+            "color_light_base_content": LIGHT_GRAY,
         },
         instance=theme,
     )
@@ -72,7 +72,7 @@ def test_warnings_dont_stop_saving_or_publishing():
 
 def test_admin_shows_the_contrast_table(client, django_user_model):
     client.force_login(django_user_model.objects.create_superuser("s", "s@example.com", "pw"))
-    theme = grey_on_white()
+    theme = gray_on_white()
     content = client.get(reverse("admin:capy_theme_theme_change", args=[theme.pk])).content.decode()
     assert "WCAG contrast (saved draft)" in content
     assert "⚠ fails AA" in content

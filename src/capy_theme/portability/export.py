@@ -69,7 +69,7 @@ def _fonts(archive, ids):
             "family": font.family,
             "source": font.source,
             "fallback_stack": font.fallback_stack,
-            "licence": font.licence,
+            "license": font.license,
             "stylesheet_url": font.stylesheet_url,
             "files": files,
         }

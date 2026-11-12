@@ -41,7 +41,7 @@ def main():
         cwd=REPO_ROOT,
         check=True,
     )
-    # Minifying drops daisyUI's licence comment, so add the notice back.
+    # Minifying drops daisyUI's license comment, so add the notice back.
     version = re.search(r'var version = "([^"]+)"', DAISYUI_PLUGIN.read_text(encoding="utf-8"))
     number = version.group(1) if version else ""
     banner = f"/*! daisyUI {number} | MIT License | https://daisyui.com */\n"

@@ -19,21 +19,21 @@ example, to put your own link to `?edit=<id>` somewhere), set
 The panel has:
 
 - **Base themes:** the light and dark base.
-- **Colours:** Light and Dark tabs, with Basic open and Advanced and Expert
-  folded. Each colour has the browser's colour picker, a text box (any format),
-  **Reset** (back to the base colour) and its contrast rating, e.g. "AA 5.19" or
-  "⚠ fail 2.1". Overridden colours are shown in bold with a dot.
+- **Colors:** Light and Dark tabs, with Basic open and Advanced and Expert
+  folded. Each color has the browser's color picker, a text box (any format),
+  **Reset** (back to the base color) and its contrast rating, e.g. "AA 5.19" or
+  "⚠ fail 2.1". Overridden colors are shown in bold with a dot.
 - **Shape and effects:** the radii, sizes and border width, plus depth and noise.
-- **Suggestions** (in the Colours section): click **Suggest colours** for colours
+- **Suggestions** (in the Colors section): click **Suggest colors** for colors
   that go with the current primary (analogous, complementary, triadic) and, if the
-  theme has a logo, the logo's main colours. Clicking a suggestion fills in those
-  colours for the current mode.
+  theme has a logo, the logo's main colors. Clicking a suggestion fills in those
+  colors for the current mode.
 
 Every change shows on the page straight away (in your browser only).
 
 - **Save draft** stores the panel's values in the theme's draft (needs the
   change permission). Visitors don't see it until it's published. Only the bases,
-  colours and shape are changed; the name, branding and mode stay as they are.
+  colors and shape are changed; the name, branding and mode stay as they are.
 - **Publish** (needs `publish_theme`) saves any unsaved changes first, then
   publishes, with an optional note, through the same revisions as the admin's
   Publish page.
@@ -53,7 +53,7 @@ Every change shows on the page straight away (in your browser only).
   strict Content Security Policy.
 - It reads the draft from `/theme/editor/<id>/state/`, and previews unsaved
   values by POSTing them as JSON to `/theme/editor/<id>/preview/`, which returns
-  the CSS, every colour's value and the contrast ratings. Both use the same code
+  the CSS, every color's value and the contrast ratings. Both use the same code
   as publishing (so the preview matches what would be published), are for staff
   with change permission only, and **never write anything**. The preview needs
   Django's CSRF token, which the page passes to the script.
@@ -94,7 +94,7 @@ theme, since they're made when publishing); the sharing image; and the
 backgrounds. It shows the saved draft and reloads after **Save draft** or
 **Publish**.
 
-Every editor setting shows there: colours, shape, fonts, the type scale (all six
+Every editor setting shows there: colors, shape, fonts, the type scale (all six
 heading levels and the display font) and base themes through the draft CSS;
 logo, icon, sharing-image and background choices, logo heights and the icon's
 background and padding through the page itself, including **unsaved** choices
@@ -108,7 +108,7 @@ CSS.
 
 **Accessibility:** the view's own page passes Chrome's checks in light and dark
 (every control and image has a name, language and title set, unique ids, a main
-landmark). The component samples show the theme's own colours, so a colour pair
+landmark). The component samples show the theme's own colors, so a color pair
 with too little contrast shows there too; the editor's contrast badges flag the
 same pairs. Lighthouse itself isn't run (it's not a dependency).
 

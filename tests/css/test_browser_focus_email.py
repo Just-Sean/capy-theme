@@ -1,15 +1,15 @@
-"""Tests for browser colour, focus colour and email colours (issue #20)."""
+"""Tests for browser color, focus color and email colors (issue #20)."""
 
 import pytest
 from django.core.cache import cache
 from django.template import Context, Template
 
-from capy_theme.colors.maths import contrast, focus_color, hex_colors, to_hex
+from capy_theme.colors.color_math import contrast, focus_color, hex_colors, to_hex
 from capy_theme.context_processors import theme as theme_context
 from capy_theme.css.stylesheet import render_css
 from capy_theme.models import Theme
 from capy_theme.themes.active import activate
-from capy_theme.themes.catalogue import THEMES
+from capy_theme.themes.catalog import THEMES
 from capy_theme.themes.mode import COOKIE_NAME
 from capy_theme.themes.publishing import publish
 
@@ -83,14 +83,14 @@ def test_focus_uses_primary_when_it_stands_out():
     assert focus_color(values) == values["--color-primary"]
 
 
-def test_focus_falls_back_to_text_colour_when_primary_is_too_faint():
+def test_focus_falls_back_to_text_color_when_primary_is_too_faint():
     values = dict(THEMES["light"]["values"])
     values["--color-primary"] = "oklch(97% 0.01 90)"  # almost the same as the white background
     assert focus_color(values) == values["--color-base-content"]
     assert contrast(focus_color(values), values["--color-base-100"]) >= 3
 
 
-# Email colours
+# Email colors
 
 
 def test_hex_colors_for_emails():
@@ -100,7 +100,7 @@ def test_hex_colors_for_emails():
     assert all(value.startswith("#") and len(value) == 7 for value in colors.values())
 
 
-def test_context_has_email_colours(rf):
+def test_context_has_email_colors(rf):
     live(colors={"light": {"primary": "oklch(62.31% 0.188 259.81)"}})
     colors = theme_context(rf.get("/"))["theme"]["email_colors"]
     assert colors["primary"] == "#3b82f6"

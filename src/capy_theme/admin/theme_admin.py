@@ -74,7 +74,7 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, admin.ModelAdmin):
 
     @admin.display(description="WCAG contrast (saved draft)")
     def contrast_table(self, theme):
-        """Every colour pair's contrast rating, for light and dark. Warnings only."""
+        """Every color pair's contrast rating, for light and dark. Warnings only."""
         if theme.pk is None:
             return "Save the theme to see its contrast ratings."
         rows = []
@@ -104,7 +104,7 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, admin.ModelAdmin):
     def settings_json(self, theme):
         """The draft's `settings` as JSON, read-only. Edited through the fields above.
 
-        Custom CSS is only summarised: its content is in its own (permission-only) field.
+        Custom CSS is only summarized: its content is in its own (permission-only) field.
         """
         settings = without_custom_css(theme.settings)
         if "custom_css" in theme.settings:

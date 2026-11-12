@@ -1,13 +1,13 @@
-"""The theme form's colour fields: 20 colours per mode, with contrast notes."""
+"""The theme form's color fields: 20 colors per mode, with contrast notes."""
 
 from ..colors.fields import ColorField
 from ..colors.names import COLOR_GROUPS, COLOR_NAMES, SCHEMES, label
 from ..colors.values import contrast_report, draft_values
-from ..themes.catalogue import builtin_values
+from ..themes.catalog import builtin_values
 
 
 def color_field_name(scheme, name):
-    """The form field for one colour override, e.g. color_light_base_100."""
+    """The form field for one color override, e.g. color_light_base_100."""
     return f"color_{scheme}_{name.replace('-', '_')}"
 
 
@@ -21,8 +21,8 @@ def add_fields(form_class):
             ] = ColorField(
                 required=False,
                 label=label(name),
-                help_text="Any colour format (hex, rgb, hsl, oklch); saved as OKLCH. "
-                "Leave blank to use the base theme's colour (shown greyed out).",
+                help_text="Any color format (hex, rgb, hsl, oklch); saved as OKLCH. "
+                "Leave blank to use the base theme's color (shown grayed out).",
             )
 
 
@@ -39,7 +39,7 @@ def set_initial(form):
 
 
 def _add_contrast_ratings(form):
-    """Show each colour's WCAG contrast rating (from the saved draft) in its help text."""
+    """Show each color's WCAG contrast rating (from the saved draft) in its help text."""
     for scheme in SCHEMES:
         values = draft_values(form.instance, scheme)
         if not values:
@@ -77,14 +77,14 @@ def _rating_note(entry):
 
 
 def color_fieldsets():
-    """Admin fieldsets for the colour overrides: Basic, Advanced, Expert, per mode."""
+    """Admin fieldsets for the color overrides: Basic, Advanced, Expert, per mode."""
     sets = []
     for scheme in SCHEMES:
         for group, names in COLOR_GROUPS.items():
             classes = [] if group == "Basic" else ["collapse"]
             sets.append(
                 (
-                    f"{scheme.capitalize()} colours: {group}",
+                    f"{scheme.capitalize()} colors: {group}",
                     {
                         "fields": [color_field_name(scheme, n) for n in names],
                         "classes": classes,

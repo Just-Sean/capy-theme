@@ -1,4 +1,4 @@
-"""Tests for colour overrides (issue #14)."""
+"""Tests for color overrides (issue #14)."""
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -11,7 +11,7 @@ from capy_theme.colors.names import COLOR_GROUPS, COLOR_NAMES, label
 from capy_theme.colors.values import effective_values
 from capy_theme.css.stylesheet import render_css
 from capy_theme.models import Theme
-from capy_theme.themes.catalogue import THEMES
+from capy_theme.themes.catalog import THEMES
 from capy_theme.themes.publishing import publish
 from capy_theme.themes.validation import validate_settings
 
@@ -21,10 +21,10 @@ PINK = "oklch(65% 0.24 350)"
 TEAL = "oklch(70% 0.12 190)"
 
 
-def test_there_are_20_colours_in_three_groups():
+def test_there_are_20_colors_in_three_groups():
     assert len(COLOR_NAMES) == 20 == len(set(COLOR_NAMES))
     assert list(COLOR_GROUPS) == ["Basic", "Advanced", "Expert"]
-    # Every daisyUI colour variable is covered.
+    # Every daisyUI color variable is covered.
     daisy = {
         k.removeprefix("--color-") for k in THEMES["light"]["values"] if k.startswith("--color-")
     }
@@ -40,14 +40,14 @@ def test_labels():
 # Settings schema
 
 
-def test_schema_accepts_colour_overrides():
+def test_schema_accepts_color_overrides():
     validate_settings({"colors": {"light": {"primary": PINK}, "dark": {"base-100": TEAL}}})
 
 
 @pytest.mark.parametrize(
     "bad",
     [
-        {"colors": {"light": {"not-a-colour": PINK}}},
+        {"colors": {"light": {"not-a-color": PINK}}},
         {"colors": {"light": {"primary": "pink"}}},
         {"colors": {"sepia": {"primary": PINK}}},
         {"colors": {"light": {"primary": 5}}},
@@ -96,15 +96,15 @@ def test_stylesheet_uses_the_override_and_nothing_else_changes():
     changed = [
         (a, b)
         for a, b in zip(plain.splitlines(), overridden.splitlines(), strict=True)
-        if a != b and "--capy-focus" not in b  # the focus colour may follow primary (2.7)
+        if a != b and "--capy-focus" not in b  # the focus color may follow primary (2.7)
     ]
-    # Only primary and its text colour change, in the light :root and capy-light blocks.
+    # Only primary and its text color change, in the light :root and capy-light blocks.
     assert sorted(b.strip() for _, b in changed) == sorted(
         [f"--color-primary: {PINK};", f"--color-primary-content: {TEAL};"] * 2
     )
 
 
-def test_changing_a_colour_is_an_unpublished_change():
+def test_changing_a_color_is_an_unpublished_change():
     revision = theme_with({})
     theme = revision.theme
     theme.settings = {"colors": {"light": {"primary": PINK}}}
@@ -126,14 +126,14 @@ def form_data(**kwargs):
     return data | kwargs
 
 
-def test_form_has_a_field_for_every_colour_in_both_modes():
+def test_form_has_a_field_for_every_color_in_both_modes():
     form = ThemeForm()
     for scheme in ("light", "dark"):
         for name in COLOR_NAMES:
             assert color_field_name(scheme, name) in form.fields
 
 
-def test_form_stores_only_the_colours_set():
+def test_form_stores_only_the_colors_set():
     form = ThemeForm(data=form_data(color_light_primary=PINK, color_dark_base_100=TEAL))
     assert form.is_valid(), form.errors
     assert form.save().settings == {
@@ -141,7 +141,7 @@ def test_form_stores_only_the_colours_set():
     }
 
 
-def test_clearing_every_colour_removes_them():
+def test_clearing_every_color_removes_them():
     theme = Theme.objects.create(
         name="Main", slug="main", settings={"colors": {"light": {"primary": PINK}}}
     )
@@ -151,34 +151,34 @@ def test_clearing_every_colour_removes_them():
     assert form.save().settings == {}
 
 
-def test_form_rejects_a_bad_colour():
+def test_form_rejects_a_bad_color():
     form = ThemeForm(data=form_data(color_light_primary="bright pink"))
     assert not form.is_valid()
     assert "color_light_primary" in form.errors
 
 
-def test_blank_fields_show_the_base_colour_as_a_hint():
+def test_blank_fields_show_the_base_color_as_a_hint():
     theme = Theme.objects.create(name="Main", slug="main", light_base="cupcake")
     field = ThemeForm(instance=theme).fields["color_light_primary"]
     assert field.widget.attrs["placeholder"] == THEMES["cupcake"]["values"]["--color-primary"]
 
 
-def test_admin_groups_colours_basic_advanced_expert():
+def test_admin_groups_colors_basic_advanced_expert():
     names = [name for name, _ in ThemeAdmin.fieldsets]
     for scheme in ("Light", "Dark"):
         for group in ("Basic", "Advanced", "Expert"):
-            assert f"{scheme} colours: {group}" in names
+            assert f"{scheme} colors: {group}" in names
     options = dict(ThemeAdmin.fieldsets)
-    assert options["Light colours: Basic"]["classes"] == []
-    assert options["Light colours: Expert"]["classes"] == ["collapse"]
+    assert options["Light colors: Basic"]["classes"] == []
+    assert options["Light colors: Expert"]["classes"] == ["collapse"]
 
 
-def test_admin_page_shows_and_saves_colours(client, django_user_model):
+def test_admin_page_shows_and_saves_colors(client, django_user_model):
     user = django_user_model.objects.create_superuser("sean", "s@example.com", "pw")
     client.force_login(user)
     theme = Theme.objects.create(name="Main", slug="main")
     url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
-    assert b"Light colours: Basic" in client.get(url).content
+    assert b"Light colors: Basic" in client.get(url).content
     data = form_data(color_light_primary=PINK) | {
         "assets-TOTAL_FORMS": "0",
         "assets-INITIAL_FORMS": "0",

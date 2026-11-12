@@ -46,7 +46,7 @@ def build_tokens(artifacts):
 
 
 def _color(value, hex_value):
-    # normalize(): a colour without chroma has no hue (NaN), written as "none".
+    # normalize(): a color without chroma has no hue (NaN), written as "none".
     lightness, chroma, hue = Color(value).convert("oklch").normalize().coords()
     components = [_round(lightness), _round(chroma), "none" if math.isnan(hue) else _round(hue)]
     alpha = Color(value).alpha()

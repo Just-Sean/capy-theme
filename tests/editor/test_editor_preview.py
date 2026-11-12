@@ -69,7 +69,7 @@ def test_derived_values_match_what_publishing_would_produce(editor_client, theme
     assert data["css"].splitlines()[1:] == render_css(revision).splitlines()[1:]
 
 
-def test_any_colour_format_is_accepted(editor_client, theme):
+def test_any_color_format_is_accepted(editor_client, theme):
     data = post(
         editor_client, theme, {"settings": {"colors": {"light": {"primary": "#3b82f6"}}}}
     ).json()
@@ -100,7 +100,7 @@ def test_preview_writes_nothing(editor_client, theme):
 @pytest.mark.parametrize(
     ("data", "message"),
     [
-        ({"settings": {"colors": {"light": {"primary": "bright pink"}}}}, "isn't a colour"),
+        ({"settings": {"colors": {"light": {"primary": "bright pink"}}}}, "isn't a color"),
         ({"light_base": "synthwave"}, "light daisyUI theme"),
         ({"settings": {"shape": {"radius_box": 99}}}, "99"),
         ({"settings": {"colors": {"light": {"sparkle": PINK}}}}, "sparkle"),

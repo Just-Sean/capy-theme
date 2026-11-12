@@ -44,15 +44,15 @@ def rev(theme, number):
 def test_describe_names_every_value(theme):
     rows = describe(rev(theme, 3).snapshot)
     assert rows["Light base"] == "cupcake"
-    assert rows["Light colour: Primary"] == PINK
-    assert rows["Dark colour: Primary"] is None
+    assert rows["Light color: Primary"] == PINK
+    assert rows["Dark color: Primary"] is None
     assert rows["Shape: Box corner radius"] == 0
     assert rows["Site name"] == "Capy"
 
 
 def test_compare_shows_exactly_what_changed(theme):
     assert compare(rev(theme, 1), rev(theme, 2)) == [
-        {"name": "Light colour: Primary", "older": None, "newer": PINK}
+        {"name": "Light color: Primary", "older": None, "newer": PINK}
     ]
     names = [row["name"] for row in compare(rev(theme, 2), rev(theme, 3))]
     assert names == ["Light base", "Shape: Box corner radius"]
@@ -154,7 +154,7 @@ def restore_url(theme, number):
 def test_revisions_page_lists_and_compares(client, django_user_model, theme):
     login(client, django_user_model, "view_theme", "change_theme")
     content = client.get(revisions_url(theme) + "?a=1&b=2").content.decode()
-    assert "Light colour: Primary" in content
+    assert "Light color: Primary" in content
     assert PINK in content
     assert "1 value changed." in content
     assert "(live)" in content

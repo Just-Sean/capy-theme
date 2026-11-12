@@ -1,5 +1,5 @@
 // The editor panel's controls: shared state and helpers, and building the panel.
-// Each section (bases, colours, fonts, images, shape, save) is its own file that
+// Each section (bases, colors, fonts, images, shape, save) is its own file that
 // adds itself to ui.sections with build() and, if it shows values, fill().
 // Every change is previewed straight away through capyEditor.schedulePreview();
 // nothing is saved until Save draft. Loaded after editor.js by editor/mount.html.
@@ -13,7 +13,7 @@
     changes: null, // the unsaved values: what the preview and Save receive
     baseline: "", // the values as last loaded or saved, to tell if anything changed
     spec: null, // what the panel offers (from the server)
-    scheme: "light", // the colour tab being edited
+    scheme: "light", // the color tab being edited
     latest: null, // the latest values, CSS and contrast from the server
     sections: [], // {order, build(state) -> element, fill()} from each section file
   });
@@ -30,7 +30,7 @@
     return node;
   };
 
-  // The colour overrides for one mode, created if missing.
+  // The color overrides for one mode, created if missing.
   ui.colors = function (mode) {
     var settings = ui.changes.settings;
     settings.colors = settings.colors || {};

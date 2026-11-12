@@ -1,9 +1,9 @@
-"""Tests for the built-in daisyUI theme catalogue (issue #4)."""
+"""Tests for the built-in daisyUI theme catalog (issue #4)."""
 
 import pytest
 from django.core.exceptions import ImproperlyConfigured
 
-from capy_theme.themes.catalogue import DAISYUI_VERSION, get_builtin_themes
+from capy_theme.themes.catalog import DAISYUI_VERSION, get_builtin_themes
 from scripts.generate_builtin_themes import build_themes, parse_js_export
 
 # The 28 values every daisyUI 5 theme defines.
@@ -39,7 +39,7 @@ EXPECTED_VALUES = {
 }
 
 
-def test_catalogue_has_35_themes_each_with_all_28_values():
+def test_catalog_has_35_themes_each_with_all_28_values():
     themes = get_builtin_themes()
     assert len(themes) == 35
     assert len(EXPECTED_VALUES) == 28
@@ -61,11 +61,11 @@ def test_themes_are_in_daisyui_order():
     assert names[:3] == ["light", "dark", "cupcake"]
 
 
-def test_catalogue_records_its_daisyui_version():
+def test_catalog_records_its_daisyui_version():
     assert DAISYUI_VERSION.startswith("5.")
 
 
-def test_themes_cannot_be_changed_through_the_catalogue():
+def test_themes_cannot_be_changed_through_the_catalog():
     theme = get_builtin_themes()[0]
     with pytest.raises(TypeError):
         theme.values["--color-primary"] = "red"

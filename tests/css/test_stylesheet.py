@@ -7,7 +7,7 @@ import pytest
 from django.urls import reverse
 
 from capy_theme.models import Theme
-from capy_theme.themes.catalogue import THEMES
+from capy_theme.themes.catalog import THEMES
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db

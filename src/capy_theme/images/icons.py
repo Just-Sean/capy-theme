@@ -1,7 +1,7 @@
 """Site icons: every favicon and app icon, made from the theme's one square icon.
 
 The icon image is chosen like a logo (`settings["images"]["icon"]`, light and
-optionally dark). `settings["icon"]` has the background colour and padding.
+optionally dark). `settings["icon"]` has the background color and padding.
 
 The files are made when the theme is published, in a folder named after the
 icon image and those settings, so each published revision keeps its own icons
@@ -108,7 +108,7 @@ def _open(image):
 
 
 def _square(image, size, padding, background):
-    """The image centred on a square canvas, with padding (a fraction of the size)."""
+    """The image centered on a square canvas, with padding (a fraction of the size)."""
     canvas = Image.new("RGBA", (size, size), background or (0, 0, 0, 0))
     inner = max(1, round(size * (1 - 2 * padding)))
     fitted = ImageOps.contain(image, (inner, inner), Image.Resampling.LANCZOS)
@@ -166,7 +166,7 @@ def _svg(light, dark, padding, background):
 def square_preview(asset, size, padding, background):
     """PNG bytes of an icon image as an icon, for previews (nothing is stored).
 
-    `background` is used only if it's a #rrggbb colour; otherwise transparent.
+    `background` is used only if it's a #rrggbb color; otherwise transparent.
     """
-    colour = background if re.fullmatch(r"#[0-9a-fA-F]{6}", background or "") else None
-    return _png(_square(_open({"file": asset.original.name}), size, padding, colour))
+    color = background if re.fullmatch(r"#[0-9a-fA-F]{6}", background or "") else None
+    return _png(_square(_open({"file": asset.original.name}), size, padding, color))

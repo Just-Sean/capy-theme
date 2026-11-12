@@ -5,7 +5,7 @@ Code: `src/capy_theme/fonts/` (library and stacks, uploads, Google Fonts import,
 ## Fonts
 
 Fonts live in a shared **font library** (admin → Capy Theme → **Fonts**): each
-font has a family name, a source, a fallback stack and a licence note, and its
+font has a family name, a source, a fallback stack and a license note, and its
 WOFF2 files (one per weight and style, optionally per character subset). Any
 theme can use any font.
 
@@ -67,7 +67,7 @@ SECURE_CSP = {
 (Self-hosted fonts, which means uploaded, imported, bundled and system ones,
 need no extra CSP entries.)
 
-**A curated collection of 30 open-licence fonts** is bundled with the module
+**A curated collection of 30 open-license fonts** is bundled with the module
 (Inter, Roboto, Open Sans, Lato, Montserrat, Source Sans 3, Nunito, Poppins, Work
 Sans, IBM Plex Sans, DM Sans, Raleway, Figtree, Manrope, Outfit, Merriweather,
 Lora, Playfair Display, Source Serif 4, Libre Baskerville, EB Garamond, Crimson
@@ -83,7 +83,7 @@ them) into the project's media storage and adds them to the library. Fonts alrea
 there are skipped, so it's safe to run again. The font list in the admin shows a
 preview of each font, and the editor shows a sample under each font choice.
 
-All 30 are under the SIL Open Font License 1.1. Their licence files are in
+All 30 are under the SIL Open Font License 1.1. Their license files are in
 `src/capy_theme/static/capy_theme/fonts/<font>/LICENSE`. They come from
 [Fontsource](https://fontsource.org). To change the collection, edit the list in
 `scripts/fetch_curated_fonts.py` and run:

@@ -27,13 +27,13 @@
     },
     "icon-monochrome-512.png": {
       "size": 512,
-      "label": "Single-colour icon (e.g. Android themed icons)"
+      "label": "Single-color icon (e.g. Android themed icons)"
     }
   },
   "settings": {
     "background": {
       "label": "Icon background",
-      "help": "A hex colour behind it, e.g. #ffffff. Blank: transparent."
+      "help": "A hex color behind it, e.g. #ffffff. Blank: transparent."
     },
     "padding": {
       "label": "Icon padding (%)",
