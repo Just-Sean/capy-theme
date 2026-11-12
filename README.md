@@ -249,6 +249,7 @@ uv run pytest              # runs the tests on SQLite, no setup needed
 uv run pytest --cov        # the same, plus which lines the tests never run
 uv run ruff check .        # finds problems
 uv run ruff format .       # formats the code
+# before every PR, also check dependencies with pip-audit (see "Dependency vulnerabilities and test coverage" below)
 ```
 
 To run the tests on Postgres instead (needed before each release):
