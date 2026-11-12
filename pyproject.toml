@@ -35,6 +35,7 @@ dev = [
     "django-tailwind-cli>=4.8",
     "djangorestframework>=3.16,<4",  # only to test the API in DRF mode (7.1); never required
     "drf-spectacular>=0.28,<1",      # only to test the API appears in generated API docs
+    "pre-commit>=4.7",
 ]
 
 [tool.pytest.ini_options]

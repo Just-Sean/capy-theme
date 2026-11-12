@@ -1,0 +1,27 @@
+# Checks that run on every `git commit` (set up once with `uv run pre-commit install`).
+# gitleaks checks only the changes being committed (staged), so
+# `uv run pre-commit run --all-files` runs ruff on every file but scans nothing for
+# secrets; see the README for the gitleaks commands that scan the files and history.
+repos:
+  # Blocks commits that contain passwords, keys or tokens.
+  - repo: https://github.com/gitleaks/gitleaks
+    # Pinned to the tag's exact commit (tags can be moved); update with
+    # `uv run pre-commit autoupdate --freeze` and check the version it picks.
+    rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e  # frozen: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  # Lint and formatting, with the project's own ruff (the version in uv.lock).
+  # --force-exclude keeps ruff's own exclusions (migrations) when pre-commit passes file names.
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --force-exclude
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff format --check
+        entry: uv run ruff format --check --force-exclude
+        language: system
+        types: [python]

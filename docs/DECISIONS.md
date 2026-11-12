@@ -1369,3 +1369,23 @@ Recommended (made while building autonomously).
   the custom CSS fields stored an empty, switched-off custom CSS.
 - Everything made for the run (the project, its database container and volume,
   and its admin account) was deleted afterwards.
+
+## Checks on every commit: pre-commit with gitleaks and ruff (#178)
+
+- **pre-commit** (a dev dependency) runs the checks, as Sean's Python rules ask.
+  The hooks only run in clones where `pre-commit install` was run, so CI (next
+  steps of the safety-net plan) will run the same checks on every PR, where they
+  can't be skipped.
+- **gitleaks** uses its official hook, pinned to the tag's exact commit
+  (`# frozen: v8.30.1`) rather than the tag, because a moved tag would make every
+  developer build and run different code. It only scans staged changes, so the
+  README gives Docker commands to scan every file and the whole history, with the
+  image pinned by digest and the repo mounted read-only (the scanner only reads).
+  The first full-history scan found no leaks.
+- **ruff runs as a local hook** (`uv run ruff`), not through the `ruff-pre-commit`
+  mirror, so there's one ruff version: the one in `uv.lock`. `--force-exclude` is
+  needed because pre-commit passes file names directly, which otherwise bypasses
+  ruff's own exclusions (the migrations).
+- **Formatting is checked, not fixed** (`ruff format --check`), so a commit never
+  silently rewrites files; the failure says what to run.
+
