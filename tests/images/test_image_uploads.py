@@ -13,6 +13,7 @@ from capy_theme.images.models import ThemeAsset
 from capy_theme.images.slots import SLOTS
 from capy_theme.images.uploads import add_asset, prepare_image
 from capy_theme.models import Theme
+from tests.support.images import gif
 
 pytestmark = pytest.mark.django_db
 
@@ -45,31 +46,6 @@ def png(size=(10, 10), text=None, mode="RGBA"):
     buffer = io.BytesIO()
     Image.new(mode, size, (0, 128, 255, 255) if mode == "RGBA" else 0).save(
         buffer, "PNG", pnginfo=info
-    )
-    return buffer.getvalue()
-
-
-def gif(frames=1, comment=b"", duration=100, loop=None, transparent=False):
-    """A GIF; frames are clearly different (Pillow merges identical ones)."""
-    colors = ["red", "green", "blue"][:frames]
-    if transparent:  # a colored square on a transparent background
-        images = []
-        for color in colors:
-            frame = Image.new("RGBA", (10, 10), (0, 0, 0, 0))
-            frame.paste(Image.new("RGBA", (5, 5), color), (0, 0))
-            images.append(frame)
-    else:
-        images = [Image.new("RGB", (10, 10), color) for color in colors]
-    extra = {} if loop is None else {"loop": loop}
-    buffer = io.BytesIO()
-    images[0].save(
-        buffer,
-        "GIF",
-        save_all=frames > 1,
-        append_images=images[1:],
-        comment=comment,
-        duration=duration,
-        **extra,
     )
     return buffer.getvalue()
 

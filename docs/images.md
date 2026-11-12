@@ -16,6 +16,21 @@ with alt text. For every upload:
   other logos, the icon and the background pattern, and 5 MB for the print logo,
   social image and login background. A project can set a lower cap for every
   slot with `CAPY_THEME_IMAGE_MAX_BYTES`.
+- Animated images (GIFs, and animated WebP or PNG) can be at most 2000 pixels
+  wide or high, have at most 500 frames, and at most 50 million pixels in all
+  (frames × width × height): about 150 MB of memory and a second of work at most.
+  A frame that changes a few pixels takes only a few bytes in the file but is
+  decoded at full size, so without these limits a small file could use huge
+  amounts of memory and time when it's saved again. They're checked before
+  anything is decoded. A project can change them with
+  `CAPY_THEME_ANIMATION_MAX_SIZE`, `CAPY_THEME_ANIMATION_MAX_FRAMES` and
+  `CAPY_THEME_ANIMATION_MAX_PIXELS`.
+- For GIFs, every frame's own position and size is read from the file first. A
+  GIF whose frames reach past its edges is refused (GIF tools don't make them,
+  and Pillow would grow the image while decoding, after the checks).
+- A damaged file is refused as "not a supported image". Anything else that goes
+  wrong while processing an image (e.g. the server running out of memory) is
+  left as a normal server error, so Django logs it and it gets noticed.
 - The image is saved again without EXIF, text chunks and comments, so camera
   details and GPS locations are removed. Photos are turned upright first.
   Colour profiles are kept.

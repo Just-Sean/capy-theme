@@ -8,11 +8,17 @@ from django.core.files.base import ContentFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .. import conf
+from .gif_frames import BrokenGif, frame_extent
 from .slots import MODES, NO_SVG, SLOTS
 from .svg import clean_svg
 
 # Image info Pillow may write back when saving that is safe to keep.
 KEEP_INFO = ("icc_profile", "transparency", "duration", "loop", "background")
+NOT_AN_IMAGE = "That file isn't a supported image (PNG, JPEG, WebP, GIF or SVG)."
+# What Pillow raises while decoding or saving a damaged file (e.g. "image file is
+# truncated"). Only these become NOT_AN_IMAGE: anything else (running out of
+# memory, a bug) stays a server error, which Django logs, so it gets noticed.
+DAMAGED_FILE_ERRORS = (OSError, Image.DecompressionBombError)
 
 
 # Pillow format -> (content type, file extension)
@@ -45,7 +51,6 @@ def prepare_image(data, name, slot):
             f"The {label.lower()} is too big ({len(data) // 1024} KB; the limit is "
             f"{max_bytes // 1024} KB)."
         )
-    not_an_image = "That file isn't a supported image (PNG, JPEG, WebP, GIF or SVG)."
     if data.lstrip(b"\xef\xbb\xbf \t\r\n").startswith(b"<"):
         # Text starting with "<": only an SVG can be that. Cleaned, not re-encoded.
         if slot in NO_SVG:
@@ -72,19 +77,50 @@ def prepare_image(data, name, slot):
         SyntaxError,
         ValueError,
     ) as error:
-        raise ValidationError(not_an_image) from error
+        raise ValidationError(NOT_AN_IMAGE) from error
     if image.format not in FORMATS:
-        raise ValidationError(not_an_image)
+        raise ValidationError(NOT_AN_IMAGE)
     # Checked before decoding, so a huge image is never unpacked into memory.
-    if max(image.size) > max_pixels:  # (not for SVGs: they have no pixels)
+    frames, width, height = _frames_and_size(image, data)
+    if max(width, height) > max_pixels:  # (not for SVGs: they have no pixels)
         raise ValidationError(
-            f"The image is {image.width} × {image.height} pixels; the {label.lower()} can be "
+            f"The image is {width} × {height} pixels; the {label.lower()} can be "
             f"at most {max_pixels} pixels wide or high."
         )
+    if frames > 1:
+        _check_animation(frames, width, height)
+    return _clean_copy(image, name)
+
+
+def _frames_and_size(image, data):
+    """(frames, width, height), read without decoding. WebP and PNG state their
+    frame count, and only their first frame is ever decoded.
+
+    A GIF's frames each have their own position and size, and one can reach past
+    the size the image states. Pillow then grows the image while decoding (after
+    any check), or fails. Every frame's header is read (images/gif_frames.py), and
+    a GIF whose frames don't fit inside it is refused: GIF tools don't make them.
+    """
+    if image.format != "GIF":
+        return getattr(image, "n_frames", 1), image.width, image.height
+    try:
+        frames, width, height = frame_extent(data)
+    except BrokenGif as error:
+        raise ValidationError(NOT_AN_IMAGE) from error
+    if (width, height) != image.size:
+        raise ValidationError(
+            f"That GIF is damaged: a frame reaches past its edges ({image.width} × "
+            f"{image.height} pixels). Save it again from an image editor."
+        )
+    return frames, width, height
+
+
+def _clean_copy(image, name):
+    """Decode the image and save a copy without metadata (see prepare_image)."""
     try:
         image.load()
-    except OSError as error:
-        raise ValidationError(not_an_image) from error
+    except DAMAGED_FILE_ERRORS as error:
+        raise ValidationError(NOT_AN_IMAGE) from error
     content_type, extension = FORMATS[image.format]
     clean = _strip_metadata(image)
     output = io.BytesIO()
@@ -98,7 +134,10 @@ def prepare_image(data, name, slot):
         # from the file (comment included), and Pillow writes that into the new
         # file's header. An empty comment means none is written (issue #185).
         save_options |= {"save_all": True, "comment": b""}
-    clean.save(output, **save_options)
+    try:
+        clean.save(output, **save_options)  # decodes every frame of an animation
+    except DAMAGED_FILE_ERRORS as error:
+        raise ValidationError(NOT_AN_IMAGE) from error
     return {
         "file": ContentFile(output.getvalue(), name=f"{Path(name).stem}.{extension}"),
         "width": clean.width,
@@ -106,6 +145,37 @@ def prepare_image(data, name, slot):
         "content_type": content_type,
         "size": output.tell(),
     }
+
+
+def _check_animation(frames, width, height):
+    """Refuse animations that are too big, too long, or have too many pixels in all.
+
+    A frame that changes a few pixels takes a few bytes in the file but is decoded
+    at full size when the animation is saved again (issue #188). Pillow keeps every
+    frame that differs from the one before at full size until it has written them
+    all, so memory and time grow with the total pixels (measured: about 2 bytes
+    and 20 ns per pixel, plus about 80 MB of working copies at 2000 × 2000: about
+    150 MB and 1 s at the defaults). The frame size cap limits the working copies.
+    """
+    max_size = conf.positive_int("CAPY_THEME_ANIMATION_MAX_SIZE")
+    if max(width, height) > max_size:
+        raise ValidationError(
+            f"The animation is {width} × {height} pixels; animated images can be at most "
+            f"{max_size} pixels wide or high. Make it smaller."
+        )
+    max_frames = conf.positive_int("CAPY_THEME_ANIMATION_MAX_FRAMES")
+    if frames > max_frames:
+        raise ValidationError(
+            f"The animation has {frames} frames; animated images can have at most "
+            f"{max_frames}. Make it shorter."
+        )
+    total = frames * width * height
+    max_total = conf.positive_int("CAPY_THEME_ANIMATION_MAX_PIXELS")
+    if total > max_total:
+        raise ValidationError(
+            f"The animation is too big: {frames} frames of {width} × {height} pixels "
+            f"({total:,} in all; at most {max_total:,}). Make it shorter or smaller."
+        )
 
 
 def _strip_metadata(image):

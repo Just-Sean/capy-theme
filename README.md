@@ -182,6 +182,12 @@ published and activated in the admin, they show daisyUI's defaults.
 
 The module's tables go into whatever database the project uses.
 
+**In production**, run the project's app server with a worker timeout and a
+memory limit (e.g. gunicorn's `--timeout`, which is 30 seconds by default, and a
+container memory limit). capy-theme checks uploads before processing them, so a
+file that's too big is refused with a clear message, but these limits are the
+backstop if any upload (or anything else) ever takes too long or too much memory.
+
 ### Tailwind and daisyUI for a new project
 
 capy-theme themes a daisyUI 5 stylesheet; it doesn't build one. A project without
@@ -238,6 +244,9 @@ Optional settings a project can add to its `settings.py` (all defaults are in
 | `CAPY_THEME_EDITOR_BUTTON` | `True` | Show the live editor's **Edit theme** button in the corner of every page, for staff who can edit. `False` hides it (the editor still opens with `?edit=<theme id>`, e.g. from **Edit live** in the admin). |
 | `CAPY_THEME_FONT_MAX_BYTES` | `5242880` (5 MB) | The largest font file that can be uploaded, in bytes. |
 | `CAPY_THEME_IMAGE_MAX_BYTES` | `None` (each slot's own limit) | A cap on every image upload, in bytes. Each slot keeps its own limit (1 to 5 MB, in `images/slots.json`) when that's lower. |
+| `CAPY_THEME_ANIMATION_MAX_FRAMES` | `500` | The most frames an uploaded animated image (GIF, animated WebP or PNG) can have. Must be a positive whole number, like the next two. |
+| `CAPY_THEME_ANIMATION_MAX_SIZE` | `2000` | The most pixels an uploaded animated image can be wide or high (still images keep their slot's limit). This caps the memory each frame needs while it's processed: about 80 MB for an animation at the default size, before counting its frames. |
+| `CAPY_THEME_ANIMATION_MAX_PIXELS` | `50000000` (50 million) | The most pixels an uploaded animated image can have in all (frames × width × height). Saving an animation keeps its frames in memory, at about 2 bytes per pixel, so this caps the memory and time one upload can use: about 150 MB and 1 second at the defaults (measured). Raising it raises both. |
 | `CAPY_THEME_IMPORT_MAX_BYTES` | `52428800` (50 MB) | The largest theme import (all files in the zip, unpacked), in bytes. |
 
 ## Develop it

@@ -1430,3 +1430,42 @@ Recommended (made while building autonomously).
   protection. Sean will decide on requiring these checks once the safety-net
   work is done.
 
+
+## Limits on animated images (#188)
+
+- **Why:** uploads were limited by file size and by width and height, but not by
+  frame count. Each frame is decoded at full size when the image is saved again,
+  so a 1 KB GIF could take hundreds of MB and many seconds.
+- **Checked before anything is decoded.** For GIFs, `images/gif_frames.py` reads
+  every frame's header from the file (skipping the pixel data). A later frame can
+  be bigger than, or placed past, the size the image states, and Pillow grows the
+  image while decoding, after any check of the first size (found in review: a
+  1.8 MB GIF got past the slot's 4000 px limit as a 9000 × 9000 logo, using 4 GB).
+  Such GIFs are refused, as are frames with no pixels: GIF tools don't make
+  them, and Pillow fails on some of them while saving. The reader is stricter
+  than Pillow on purpose (it refuses bytes Pillow would skip). A fuzzer (200,000
+  damaged GIFs) found no file it measured smaller than Pillow, and no server error.
+- **Three limits, measured** (frames that each change, so Pillow keeps them all):
+  Pillow keeps every frame that differs from the one before at full size until it
+  has written them all, about 2 bytes per pixel in all, and takes about 20 ns per
+  pixel, on top of about 80 MB of working copies for a 2000 × 2000 animation. So
+  the total-pixel limit caps memory and time, and the size limit caps the working
+  copies. Defaults (Sean's choice): at most 2000 px wide or high, 500 frames, and
+  50 million pixels in all (measured worst case: about 150 MB and 1 s). An
+  earlier estimate (~0.7 bytes per pixel, from frames Pillow could store as tiny
+  changes) was wrong, which is why the pixel default went from 100 to 50 million.
+  Projects change them with `CAPY_THEME_ANIMATION_MAX_SIZE`,
+  `CAPY_THEME_ANIMATION_MAX_FRAMES` and `CAPY_THEME_ANIMATION_MAX_PIXELS`.
+- **Only animations:** still images keep their slot's limits.
+- **The settings must be positive whole numbers** (`conf.positive_int`): `None`
+  or `0` is a mistake reported clearly, not a way to switch a safety limit off.
+  They're checked when an animated image is uploaded, not at startup; a startup
+  check fits B8 (capy-theme's own `check --deploy` checks).
+- **Only damaged-file errors become "not a supported image":** `OSError` and
+  Pillow's size guard while decoding and saving, and `BrokenGif` from the reader.
+  A first version caught every error type there, which hid real problems (review
+  showed running out of memory reported to users as a bad file, with nothing
+  logged), so anything else stays a server error that Django logs. A GIF with a
+  cut-off later frame, which already caused a server error, is now refused.
+- **Backstop:** the README asks host projects for a worker timeout and a memory
+  limit, in case anything ever slips past the checks.

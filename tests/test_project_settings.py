@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from django.contrib.auth.models import Permission
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template import Context, Template
 from django.urls import reverse
@@ -17,7 +17,7 @@ from capy_theme import conf
 from capy_theme.artifacts.api import api_mode
 from capy_theme.css.custom import custom_css_url
 from capy_theme.fonts.uploads import prepare
-from capy_theme.images.uploads import add_asset, byte_limit
+from capy_theme.images.uploads import add_asset, byte_limit, prepare_image
 from capy_theme.models import Theme
 from capy_theme.portability.export import export_theme
 from capy_theme.portability.importing import import_theme
@@ -25,6 +25,7 @@ from capy_theme.themes import active
 from capy_theme.themes.catalogue import get_builtin_themes
 from capy_theme.themes.publishing import publish
 from tests.support.fonts import ttf_bytes
+from tests.support.images import gif
 
 pytestmark = pytest.mark.django_db
 README = (Path(__file__).resolve().parents[1] / "README.md").read_text()
@@ -138,3 +139,46 @@ def test_import_max_bytes(settings):
     settings.CAPY_THEME_IMPORT_MAX_BYTES = 10
     with pytest.raises(ValidationError, match="too big"):
         import_theme(io.BytesIO(data))
+
+
+def test_animation_max_frames(settings):
+    data = gif(frames=4)
+    settings.CAPY_THEME_ANIMATION_MAX_FRAMES = 4
+    assert prepare_image(data, "a.gif", "logo_main")
+    settings.CAPY_THEME_ANIMATION_MAX_FRAMES = 3
+    with pytest.raises(ValidationError, match="has 4 frames; animated images can have at most 3"):
+        prepare_image(data, "a.gif", "logo_main")
+
+
+def test_animation_max_size(settings):
+    data = gif(frames=2)  # 10 × 10
+    settings.CAPY_THEME_ANIMATION_MAX_SIZE = 10
+    assert prepare_image(data, "a.gif", "logo_main")
+    settings.CAPY_THEME_ANIMATION_MAX_SIZE = 9
+    with pytest.raises(ValidationError, match="10 × 10 pixels; animated images can be at most 9"):
+        prepare_image(data, "a.gif", "logo_main")
+
+
+def test_animation_max_pixels(settings):
+    data = gif(frames=4)  # 4 frames of 10 × 10: 400 pixels in all
+    settings.CAPY_THEME_ANIMATION_MAX_PIXELS = 400
+    assert prepare_image(data, "a.gif", "logo_main")
+    settings.CAPY_THEME_ANIMATION_MAX_PIXELS = 399
+    with pytest.raises(ValidationError, match="too big: 4 frames of 10 × 10 pixels"):
+        prepare_image(data, "a.gif", "logo_main")
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "CAPY_THEME_ANIMATION_MAX_FRAMES",
+        "CAPY_THEME_ANIMATION_MAX_SIZE",
+        "CAPY_THEME_ANIMATION_MAX_PIXELS",
+    ],
+)
+@pytest.mark.parametrize("value", [None, 0, -5, 2.5, "500", True])
+def test_animation_limits_must_be_positive_whole_numbers(settings, name, value):
+    # A mistake, not a way to switch the protection off: it's reported clearly.
+    setattr(settings, name, value)
+    with pytest.raises(ImproperlyConfigured, match=f"{name} must be a positive whole number"):
+        prepare_image(gif(frames=2), "a.gif", "logo_main")
