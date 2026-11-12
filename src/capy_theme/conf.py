@@ -20,7 +20,7 @@ DEFAULTS = {
     "CAPY_THEME_IMAGE_MAX_BYTES": None,  # None: each image slot's own limit
     "CAPY_THEME_ANIMATION_MAX_FRAMES": 500,
     "CAPY_THEME_ANIMATION_MAX_SIZE": 2000,  # px wide or high, for animated images only
-    "CAPY_THEME_ANIMATION_MAX_PIXELS": 100_000_000,  # frames × width × height
+    "CAPY_THEME_ANIMATION_MAX_PIXELS": 50_000_000,  # frames × width × height
     "CAPY_THEME_IMPORT_MAX_BYTES": 50 * MB,
 }
 

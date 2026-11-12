@@ -24,9 +24,9 @@ def test_the_issue_check_a_small_file_with_many_frames_is_refused():
 
 
 def test_too_many_pixels_in_all_is_refused():
-    # 30 frames of 2000 × 2000 is 120 million pixels: over the 100 million default.
-    with pytest.raises(ValidationError, match="too big: 30 frames of 2000 × 2000"):
-        prepare_image(many_frames_gif(30, size=2000), "a.gif", "background_login")
+    # 13 frames of 2000 × 2000 is 52 million pixels: over the 50 million default.
+    with pytest.raises(ValidationError, match="too big: 13 frames of 2000 × 2000"):
+        prepare_image(many_frames_gif(13, size=2000), "a.gif", "background_login")
 
 
 def test_animated_frames_bigger_than_the_animation_limit_are_refused():
@@ -40,21 +40,36 @@ def test_animated_frames_bigger_than_the_animation_limit_are_refused():
     [
         [(1, 1), (3000, 3000)],  # a later frame bigger than the image says it is
         [(1, 1), (1000, 1000, 2500, 0)],  # a later frame placed past its edge
+        [(1, 1), (2, 1, 9, 0)],  # one pixel over the edge
     ],
 )
-def test_later_frames_cant_make_the_animation_bigger_than_checked(frames):
-    # The image says it's 10 × 10; Pillow would grow it while decoding the frames,
-    # after the checks. The frames' own headers are read first, so it's refused.
+def test_frames_reaching_past_the_edges_are_refused(frames):
+    # The image says it's 10 × 10; Pillow would grow it while decoding the frames
+    # (after any check) or fail. Each frame's header is read first.
     data = hand_built_gif(10, frames)
     assert Image.open(io.BytesIO(data)).size == (10, 10)
-    with pytest.raises(ValidationError, match="3500 × 1000|3000 × 3000"):
+    with pytest.raises(ValidationError, match=r"damaged: a frame reaches past its edges \(10 × 10"):
         prepare_image(data, "a.gif", "background_login")
 
 
 def test_a_one_frame_gif_cant_get_past_the_slots_size_either():
+    # Pillow already reports a bigger first frame's size, so the slot's limit applies.
     data = hand_built_gif(10, [(5000, 5000)])
     with pytest.raises(ValidationError, match="5000 × 5000 pixels; the main logo can be at most"):
         prepare_image(data, "a.gif", "logo_main")
+
+
+def test_a_frame_with_no_pixels_is_refused():
+    data = hand_built_gif(10, [(1, 1), (0, 5)])
+    with pytest.raises(BrokenGif, match="Frame 2 has no pixels"):
+        frame_extent(data)
+    with pytest.raises(ValidationError, match=NOT_AN_IMAGE):
+        prepare_image(data, "a.gif", "logo_main")
+
+
+def test_frames_exactly_at_the_edges_are_fine():
+    data = hand_built_gif(10, [(1, 1), (1, 1, 9, 9)])
+    assert prepare_image(data, "a.gif", "logo_main")
 
 
 def test_normal_animations_and_still_images_are_accepted():
