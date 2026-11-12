@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Mode toggle:** the current mode is marked with `aria-current="true"` instead
+  of `aria-pressed`, which isn't allowed on links (found by Lighthouse). Project
+  CSS or tests that look for `[aria-pressed]` on the toggle need updating.
 - **Components view, final pass:** every editor setting shows there (unsaved image
   choices, an icon preview with the draft's background and padding, all heading
   levels and the display font), plus which domain's theme it shows and the custom

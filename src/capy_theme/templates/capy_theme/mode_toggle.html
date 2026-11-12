@@ -2,7 +2,8 @@
   {% theme_mode_toggle %}: Light / Dark / Auto buttons (daisyUI join and btn).
   Each is a link to the view that sets the cookie, so it works without
   JavaScript; the script from {% theme_head %} switches without reloading.
+  The current one has aria-current (aria-pressed isn't allowed on links).
 {% endcomment %}
 <div class="join" role="group" aria-label="Colour mode">
-  {% for value, label in options %}<a href="{% url 'capy_theme:set_mode' value %}?next={{ next|urlencode }}" data-capy-mode="{{ value }}" class="btn btn-sm join-item{% if value == current %} btn-active{% endif %}" aria-pressed="{% if value == current %}true{% else %}false{% endif %}" rel="nofollow">{{ label }}</a>{% endfor %}
+  {% for value, label in options %}<a href="{% url 'capy_theme:set_mode' value %}?next={{ next|urlencode }}" data-capy-mode="{{ value }}" class="btn btn-sm join-item{% if value == current %} btn-active{% endif %}"{% if value == current %} aria-current="true"{% endif %} rel="nofollow">{{ label }}</a>{% endfor %}
 </div>
