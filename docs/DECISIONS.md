@@ -1409,3 +1409,24 @@ Recommended (made while building autonomously).
   and fails below 80%** (Sean's minimum), only when run with `--cov`. Plain
   `pytest` stays fast and never fails on coverage; CI runs it with `--cov`.
 
+## Checks on every PR: GitHub Actions (#183)
+
+- **The same checks as locally, as separate jobs:** ruff, the tests with coverage
+  on SQLite and on Postgres 17, the README's pip-audit command and the README's
+  gitleaks history scan (same pinned image). Reusing the exact commands means a
+  green PR means the same as a green local run.
+- **Everything is pinned:** actions to commit hashes (tags can be moved), uv to
+  `UV_VERSION`, gitleaks by image digest, Python packages by `uv.lock` hashes, and
+  the Tailwind CLI by its published SHA-256, checked after download because the
+  tests run it. The Postgres test service is only pinned by tag: it's a throwaway
+  database with nothing secret in reach.
+- **The token can only read the repo** (`permissions: contents: read`), checkouts
+  don't keep git credentials, and every job has a time limit.
+- **The daisyUI build test must run, not skip:** the checksum step also fails if
+  the CLI isn't where the test looks for it, and `-rs` lists any skipped tests.
+- **The Postgres service only starts for the Postgres run.** The Tailwind CLI is
+  downloaded each run rather than cached, to avoid another third-party action.
+- **CI shows results but doesn't block merging yet:** `main` has no branch
+  protection. Sean will decide on requiring these checks once the safety-net
+  work is done.
+

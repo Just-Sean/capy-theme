@@ -344,20 +344,28 @@ uv run pytest --cov
 ### Checks on every PR (GitHub Actions)
 
 `.github/workflows/ci.yml` runs the same checks on GitHub for every pull request
-and every push to `main`, where they can't be skipped. The results are on the
-PR's **Checks** tab (and the repo's **Actions** tab). Each check is its own job:
+and every push to `main`, so every PR shows whether they pass, even if someone
+skipped the hooks locally. The results are on the PR's **Checks** tab (and the
+repo's **Actions** tab). Each check is its own job:
 
 - **Lint:** `ruff check` and `ruff format --check`.
-- **Tests:** `pytest --cov` (fails below 80% coverage), once on **SQLite** and
-  once on **Postgres 17**. It downloads the Tailwind CLI first, so the daisyUI
-  build test runs instead of being skipped.
+- **Tests:** `pytest --cov -rs` (fails below 80% coverage; lists any skipped
+  tests), once on **SQLite** and once on **Postgres 17**. It downloads the
+  Tailwind CLI first and checks it against Tailwind's published SHA-256, so the
+  daisyUI build test runs (instead of being skipped) with a verified binary.
 - **Dependency vulnerabilities:** the pip-audit command above.
 - **Secrets:** gitleaks over the whole git history, with the same pinned image as
   the commands above.
 
 The workflow can only read the repo, and every action in it is pinned to a commit
-hash (with its version in a comment). When updating gitleaks, change its image in
-the workflow too; when updating uv, change `UV_VERSION` there.
+hash (with its version in a comment). When updating:
+
+- **gitleaks:** change `GITLEAKS_IMAGE` in the workflow too.
+- **uv:** change `UV_VERSION` in the workflow.
+- **the Tailwind CLI** (`TAILWIND_CLI_VERSION` in `demo/demo_site/settings.py`):
+  change `TAILWIND_CLI` and `TAILWIND_CLI_SHA256` in the workflow. The hash is the
+  `tailwindcss-linux-x64` line of that release's `sha256sums.txt`:
+  `gh release download v<version> --repo tailwindlabs/tailwindcss -p sha256sums.txt -O - | grep linux-x64$`
 
 ## Commands
 
