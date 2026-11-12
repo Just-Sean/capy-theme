@@ -195,3 +195,34 @@ def test_animated_gifs_keep_every_frame():
     clean = prepare_image(gif(frames=3), "a.gif", "logo_main")
     image = reopen(clean)
     assert image.is_animated and image.n_frames == 3
+
+
+def comments_in_every_frame(image):
+    found = []
+    for index in range(getattr(image, "n_frames", 1)):
+        image.seek(index)
+        found.append(image.info.get("comment"))
+    return found
+
+
+def test_animated_gif_comments_are_removed_from_every_frame():
+    # Issue #185: animated GIFs kept their comment in every frame.
+    data = gif(frames=3, comment=b"made by Spy Camera")
+    assert all(comments_in_every_frame(Image.open(io.BytesIO(data))))  # the input has them
+    image = reopen(prepare_image(data, "a.gif", "logo_main"))
+    assert comments_in_every_frame(image) == [None, None, None]
+
+
+def test_animated_gifs_keep_their_timing_and_looping():
+    images = [Image.new("RGB", (10, 10), c) for c in ["red", "green", "blue"]]
+    buffer = io.BytesIO()
+    images[0].save(
+        buffer, "GIF", save_all=True, append_images=images[1:], duration=[100, 200, 300], loop=0
+    )
+    image = reopen(prepare_image(buffer.getvalue(), "a.gif", "logo_main"))
+    durations = []
+    for index in range(image.n_frames):
+        image.seek(index)
+        durations.append(image.info["duration"])
+    assert durations == [100, 200, 300]
+    assert image.info["loop"] == 0
