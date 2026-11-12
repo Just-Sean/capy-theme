@@ -5,7 +5,7 @@ from pathlib import Path
 
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
-from PIL import Image, ImageOps, ImageSequence, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .. import conf
 from .slots import MODES, NO_SVG, SLOTS
@@ -94,8 +94,10 @@ def prepare_image(data, name, slot):
     elif image.format == "PNG":
         save_options |= {"optimize": True}
     elif image.format == "GIF" and getattr(image, "is_animated", False):
-        clean, *rest = _clean_gif_frames(image)
-        save_options |= {"save_all": True, "append_images": rest}
+        # Saving every frame goes back to the first one, which re-reads its info
+        # from the file (comment included), and Pillow writes that into the new
+        # file's header. An empty comment means none is written (issue #185).
+        save_options |= {"save_all": True, "comment": b""}
     clean.save(output, **save_options)
     return {
         "file": ContentFile(output.getvalue(), name=f"{Path(name).stem}.{extension}"),
@@ -120,21 +122,6 @@ def _strip_metadata(image):
         clean = clean.copy() if clean is image else clean
     clean.info = {key: image.info[key] for key in KEEP_INFO if key in image.info}
     return clean
-
-
-def _clean_gif_frames(image):
-    """Every frame of an animated GIF, each copied with only the kept info.
-
-    Saving all frames reads each frame's own info again as it writes it (comments
-    included), so cleaning the first frame isn't enough: each one is copied and
-    cleaned on its own (issue #185). Timing and looping are kept.
-    """
-    frames = []
-    for frame in ImageSequence.Iterator(image):
-        copy = frame.copy()
-        copy.info = {key: frame.info[key] for key in KEEP_INFO if key in frame.info}
-        frames.append(copy)
-    return frames
 
 
 def add_asset(theme, slot, mode, upload, alt_text=""):
