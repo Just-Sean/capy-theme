@@ -246,6 +246,7 @@ Optional settings a project can add to its `settings.py` (all defaults are in
 uv sync                    # installs Python, Django and the test tools
 uv run pre-commit install  # checks every commit for secrets and lint (once per clone; see below)
 uv run pytest              # runs the tests on SQLite, no setup needed
+uv run pytest --cov        # the same, plus which lines the tests never run
 uv run ruff check .        # finds problems
 uv run ruff format .       # formats the code
 ```
@@ -309,6 +310,27 @@ you want by hand). Then update the Docker commands above to the same version and
 its digest (`docker pull ghcr.io/gitleaks/gitleaks:<version>`, then
 `docker inspect ghcr.io/gitleaks/gitleaks:<version> --format '{{index .RepoDigests 0}}'`).
 
+### Dependency vulnerabilities and test coverage
+
+Before every PR, check the dependencies for known security problems and look at
+what the tests cover:
+
+```bash
+uv export --frozen --format requirements-txt --no-emit-project --quiet \
+  | uv run pip-audit --disable-pip --require-hashes -r /dev/stdin
+uv run pytest --cov
+```
+
+- **pip-audit** checks every package in `uv.lock` (with its exact version and
+  hashes, including the dev tools) against the public vulnerability databases. It
+  prints "No known vulnerabilities found", or each problem with the version that
+  fixes it. The usual fix is upgrading that package (`uv lock --upgrade-package
+  <name>`), as its own change.
+- **Coverage** is set up in `pyproject.toml` (`[tool.coverage.*]`): it measures
+  `capy_theme` (not the migrations), checks both sides of every `if`, and lists
+  the lines no test runs, leaving fully covered files out. `uv run pytest --cov
+  --cov-report=html` also writes a browsable report to `htmlcov/` (git-ignored).
+
 ## Commands
 
 Every command in one place. Details are in the linked pages.
@@ -319,6 +341,8 @@ Every command in one place. Details are in the linked pages.
 | `uv run pytest` | Run the tests (SQLite) |
 | `DATABASE_URL=postgres://… uv run pytest` | Run the tests on Postgres (see above for a throwaway Docker database) |
 | `uv run ruff check .` / `uv run ruff format .` | Lint / format |
+| `uv run pytest --cov` | Run the tests and show which lines they never run |
+| `uv export --frozen --format requirements-txt --no-emit-project --quiet \| uv run pip-audit --disable-pip --require-hashes -r /dev/stdin` | Check the locked dependencies for known vulnerabilities |
 | `uv run pre-commit install` | Run gitleaks and ruff on every commit (once per clone) |
 | `uv run pre-commit run --all-files` | Run ruff on every file (gitleaks only checks staged changes) |
 | `docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f dir /repo --redact` | Scan every file for secrets |

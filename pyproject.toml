@@ -36,6 +36,8 @@ dev = [
     "djangorestframework>=3.16,<4",  # only to test the API in DRF mode (7.1); never required
     "drf-spectacular>=0.28,<1",      # only to test the API appears in generated API docs
     "pre-commit>=4.7",
+    "pip-audit>=2.10",          # checks the locked dependencies for known vulnerabilities
+    "pytest-cov>=7.1",          # test coverage (uv run pytest --cov)
 ]
 
 [tool.pytest.ini_options]
@@ -56,3 +58,13 @@ select = ["E", "W", "F", "I", "B", "S", "DJ", "UP"]
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["S101", "S105", "S106"]
 "demo/demo_site/settings.py" = ["S105"]   # the demo's dev-only SECRET_KEY
+
+# Test coverage, measured with `uv run pytest --cov` (pytest-cov).
+[tool.coverage.run]
+source = ["capy_theme"]
+branch = true                 # also checks both sides of every if/else
+omit = ["*/migrations/*"]
+
+[tool.coverage.report]
+show_missing = true           # lists the lines the tests never run
+skip_covered = true           # leaves fully covered files out of the list
