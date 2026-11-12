@@ -1,9 +1,13 @@
 # Checks that run on every `git commit` (set up once with `uv run pre-commit install`).
-# Run them on every file with `uv run pre-commit run --all-files`.
+# gitleaks checks only the changes being committed (staged), so
+# `uv run pre-commit run --all-files` runs ruff on every file but scans nothing for
+# secrets; see the README for the gitleaks commands that scan the files and history.
 repos:
   # Blocks commits that contain passwords, keys or tokens.
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.30.1
+    # Pinned to the tag's exact commit (tags can be moved); update with
+    # `uv run pre-commit autoupdate --freeze` and check the version it picks.
+    rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e  # frozen: v8.30.1
     hooks:
       - id: gitleaks
 

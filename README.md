@@ -244,6 +244,7 @@ Optional settings a project can add to its `settings.py` (all defaults are in
 
 ```bash
 uv sync                    # installs Python, Django and the test tools
+uv run pre-commit install  # checks every commit for secrets and lint (once per clone; see below)
 uv run pytest              # runs the tests on SQLite, no setup needed
 uv run ruff check .        # finds problems
 uv run ruff format .       # formats the code
@@ -273,7 +274,7 @@ docker stop capy-theme-pg-test                            # stops and removes it
 `.pre-commit-config.yaml` runs these checks each time you commit, and blocks the
 commit if one fails:
 
-- **gitleaks**: finds passwords, keys and tokens before they're committed.
+- **gitleaks**: finds passwords, keys and tokens in the changes being committed.
 - **ruff check** and **ruff format --check**: lint and formatting, with the
   project's own ruff.
 
@@ -281,21 +282,32 @@ Set it up once in each clone, after `uv sync`:
 
 ```bash
 uv run pre-commit install          # runs the checks on every commit from now on
-uv run pre-commit run --all-files  # runs them on every file, any time
+uv run pre-commit run --all-files  # runs ruff on every file, any time
+```
+
+gitleaks only looks at what's staged for a commit, so `--all-files` doesn't scan
+anything for secrets. To scan **every file** or the **whole git history**, use
+gitleaks' official Docker image (the same version as the hook, pinned to its exact
+image, with the repo mounted read-only):
+
+```bash
+docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f dir /repo --redact   # every file
+docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f git /repo --redact   # the whole history
 ```
 
 If gitleaks blocks a commit, remove the secret instead of skipping the check. If
 the secret was ever pushed, treat it as leaked and replace it.
 
-To scan the **whole git history** for secrets (not just new commits), use
-gitleaks' official Docker image, the same version as the hook:
+If a ruff check fails with "files were modified by this hook" and `uv.lock` has
+changed, `pyproject.toml` was changed without updating the lock file (`uv run`
+updated it). Stage `uv.lock` and commit again.
 
-```bash
-docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --redact
-```
-
-When updating gitleaks, change the version in both `.pre-commit-config.yaml` and
-this command.
+**Updating gitleaks:** the hook is pinned to a commit, not a tag, because tags can
+be moved. Run `uv run pre-commit autoupdate --freeze` and check the version in its
+`# frozen:` comment (it can pick an older tag; if so, set the commit of the version
+you want by hand). Then update the Docker commands above to the same version and
+its digest (`docker pull ghcr.io/gitleaks/gitleaks:<version>`, then
+`docker inspect ghcr.io/gitleaks/gitleaks:<version> --format '{{index .RepoDigests 0}}'`).
 
 ## Commands
 
@@ -308,8 +320,10 @@ Every command in one place. Details are in the linked pages.
 | `DATABASE_URL=postgres://… uv run pytest` | Run the tests on Postgres (see above for a throwaway Docker database) |
 | `uv run ruff check .` / `uv run ruff format .` | Lint / format |
 | `uv run pre-commit install` | Run gitleaks and ruff on every commit (once per clone) |
-| `uv run pre-commit run --all-files` | Run those checks on every file |
-| `docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --redact` | Scan the whole git history for secrets |
+| `uv run pre-commit run --all-files` | Run ruff on every file (gitleaks only checks staged changes) |
+| `docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f dir /repo --redact` | Scan every file for secrets |
+| `docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f git /repo --redact` | Scan the whole git history for secrets |
+| `uv run pre-commit autoupdate --freeze` | Update the gitleaks hook (see "Updating gitleaks") |
 | `uv run django-admin makemigrations capy_theme --settings=tests.settings --pythonpath=.` | Make migrations after changing a model |
 | `uv run python demo/manage.py migrate` | Create or update the demo database |
 | `uv run python demo/manage.py createsuperuser` | Make a demo admin account |
