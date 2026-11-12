@@ -6,7 +6,7 @@ A self-contained Django app (`capy_theme`) that any Django 6.1+ project
 can install. It has no project of its own: its tests run against a tiny
 stand-in project in `tests/`, and `demo/` is a small site for trying it out.
 
-## What it does (v0.7)
+## What it does
 
 Whoever runs the site controls its look from the Django admin, with no code
 changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
@@ -66,9 +66,20 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   images and icons in the draft theme, light and dark side by side, updating as
   you edit. **See it as a visitor** shows the published theme instead, by mode,
   offered theme or date.
-- **Permissions:** only users with `publish_theme` can publish or activate.
-
-Next: custom CSS, multiple sites, project settings and 1.0 (see `docs/PLAN.md`).
+- **Custom CSS** for anything the settings don't cover, published with the theme
+  and served as its own file after the theme stylesheet. Only people with the
+  `edit_custom_css` permission see or change it, and a project can turn it off.
+- **Multiple sites:** one install can give each domain its own theme (and its
+  own schedules).
+- **Safe uploads:** images and fonts are checked by their content, not their name.
+  Camera details and GPS locations are removed, SVGs are cleaned of scripts, and
+  size limits (including for animated GIFs) keep one upload from slowing the
+  server.
+- **Project settings** (all optional, with sensible defaults): see
+  [Settings](#settings).
+- **Permissions:** only users with `publish_theme` can publish, activate,
+  restore or schedule; `edit_custom_css` and `import_theme` cover custom CSS and
+  imports.
 
 ## Add it to a project
 
