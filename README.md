@@ -29,8 +29,8 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   own site), or external stylesheets like Adobe Fonts. Plus a type scale (base
   size, heading scale, line height, heading weight) and font preloading.
 - **Shape and effects:** corner radii, control sizes, border width, depth and noise.
-- **Branding and images:** a site name and tagline, and uploaded images (checked
-  by content, GPS and camera details removed, SVGs cleaned of scripts):
+- **Branding and images:** a site name and tagline, and uploaded images (see
+  Safe uploads below):
   - six logo slots (main, stacked, mark, wordmark, email, print) with dark
     versions and fallbacks, served as responsive AVIF/WebP/PNG at the header height;
   - every favicon and app icon made from one square icon;
@@ -50,8 +50,8 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   saves a numbered revision, recording who published it and when, and the site
   shows that. Every revision is kept; any two can be compared, and an old one
   restored (as a new revision).
-- **One active theme:** pick it with the admin's Activate action. It's cached, so
-  pages don't query the database for it.
+- **One active theme** (or one per domain, see Multiple sites): pick it with the
+  admin's Activate action. It's cached, so pages don't query the database for it.
 - **On every page:** `{% theme_head %}` links the theme's stylesheet (with the
   browser address-bar color and a visible focus outline), `{% theme_logo %}`
   shows the logo or site name, and every template gets a `theme` variable
@@ -73,13 +73,13 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   own schedules).
 - **Safe uploads:** images and fonts are checked by their content, not their name.
   Camera details and GPS locations are removed, SVGs are cleaned of scripts, and
-  size limits (including for animated GIFs) keep one upload from slowing the
-  server.
+  size limits (including for animated images) limit how much work one upload can
+  cause.
 - **Project settings** (all optional, with sensible defaults): see
   [Settings](#settings).
 - **Permissions:** only users with `publish_theme` can publish, activate,
-  restore or schedule; `edit_custom_css` and `import_theme` cover custom CSS and
-  imports.
+  restore, schedule or give a domain its own theme; `edit_custom_css` and
+  `import_theme` cover custom CSS and imports.
 
 ## Add it to a project
 
