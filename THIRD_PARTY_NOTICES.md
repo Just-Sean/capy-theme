@@ -69,6 +69,13 @@ its folder (e.g. `src/capy_theme/static/capy_theme/fonts/inter/LICENSE`).
 
 ## Modern Font Stacks
 
-Ten of the system font stacks in `src/capy_theme/fonts/system_stacks.json` come
+Ten of the system font stacks in `src/capy_theme/fonts/system_stacks.json` (and the
+copy in migration `0008_system_font_stacks.py`) come
 from [Modern Font Stacks](https://modernfontstacks.com), released under CC0 1.0
 (public domain): no notice is required; it's credited here.
+
+## Google Fonts character sets
+
+The Unicode ranges in `src/capy_theme/fonts/subsets.json` (which characters each
+character set, like "Latin", includes) follow the ones Google Fonts uses. They're
+plain facts, so no license applies; they're credited here.
