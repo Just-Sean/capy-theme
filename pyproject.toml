@@ -68,3 +68,4 @@ omit = ["*/migrations/*"]
 [tool.coverage.report]
 show_missing = true           # lists the lines the tests never run
 skip_covered = true           # leaves fully covered files out of the list
+fail_under = 80               # `pytest --cov` fails if total coverage drops below 80%

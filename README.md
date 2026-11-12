@@ -316,20 +316,29 @@ Before every PR, check the dependencies for known security problems and look at
 what the tests cover:
 
 ```bash
-uv export --frozen --format requirements-txt --no-emit-project --quiet \
-  | uv run pip-audit --disable-pip --require-hashes -r /dev/stdin
+(f=$(mktemp) && trap 'rm -f "$f"' EXIT && uv export --locked --format requirements-txt --no-emit-project --quiet -o "$f" && uv run pip-audit --disable-pip --require-hashes -r "$f")
 uv run pytest --cov
 ```
 
-- **pip-audit** checks every package in `uv.lock` (with its exact version and
-  hashes, including the dev tools) against the public vulnerability databases. It
-  prints "No known vulnerabilities found", or each problem with the version that
-  fixes it. The usual fix is upgrading that package (`uv lock --upgrade-package
+- **pip-audit** checks the packages in `uv.lock` (their exact versions and hashes,
+  including the dev tools) against the public vulnerability databases. It prints
+  "No known vulnerabilities found", or each problem with the version that fixes
+  it. The usual fix is upgrading that package (`uv lock --upgrade-package
   <name>`), as its own change.
+  - The command writes the lock file's packages to a temporary file first, so if
+    that step fails (e.g. `uv.lock` is out of date with `pyproject.toml`, which
+    `--locked` treats as an error) the whole command fails instead of auditing
+    nothing.
+  - It only checks packages used on **this** platform. On Linux with standard
+    Python it skips `tzdata` and `colorama` (Windows only) and `brotlicffi`,
+    `cffi` and `pycparser` (PyPy only).
+  - It doesn't cover the build tool (`uv_build`), uv itself, or the gitleaks hook.
 - **Coverage** is set up in `pyproject.toml` (`[tool.coverage.*]`): it measures
   `capy_theme` (not the migrations), checks both sides of every `if`, and lists
-  the lines no test runs, leaving fully covered files out. `uv run pytest --cov
-  --cov-report=html` also writes a browsable report to `htmlcov/` (git-ignored).
+  the lines no test runs, leaving fully covered files out. **`uv run pytest --cov`
+  fails if total coverage drops below 80%.** Plain `uv run pytest` doesn't measure
+  coverage, so it never fails for this. `uv run pytest --cov --cov-report=html`
+  also writes a browsable report to `htmlcov/` (git-ignored).
 
 ## Commands
 
@@ -341,8 +350,8 @@ Every command in one place. Details are in the linked pages.
 | `uv run pytest` | Run the tests (SQLite) |
 | `DATABASE_URL=postgres://… uv run pytest` | Run the tests on Postgres (see above for a throwaway Docker database) |
 | `uv run ruff check .` / `uv run ruff format .` | Lint / format |
-| `uv run pytest --cov` | Run the tests and show which lines they never run |
-| `uv export --frozen --format requirements-txt --no-emit-project --quiet \| uv run pip-audit --disable-pip --require-hashes -r /dev/stdin` | Check the locked dependencies for known vulnerabilities |
+| `uv run pytest --cov` | Run the tests, show which lines they never run, and fail below 80% coverage |
+| `(f=$(mktemp) && trap 'rm -f "$f"' EXIT && uv export --locked --format requirements-txt --no-emit-project --quiet -o "$f" && uv run pip-audit --disable-pip --require-hashes -r "$f")` | Check the locked dependencies for known vulnerabilities |
 | `uv run pre-commit install` | Run gitleaks and ruff on every commit (once per clone) |
 | `uv run pre-commit run --all-files` | Run ruff on every file (gitleaks only checks staged changes) |
 | `docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f dir /repo --redact` | Scan every file for secrets |
