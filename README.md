@@ -307,8 +307,8 @@ updated it). Stage `uv.lock` and commit again.
 **Updating gitleaks:** the hook is pinned to a commit, not a tag, because tags can
 be moved. Run `uv run pre-commit autoupdate --freeze` and check the version in its
 `# frozen:` comment (it can pick an older tag; if so, set the commit of the version
-you want by hand). Then update the Docker commands above to the same version and
-its digest (`docker pull ghcr.io/gitleaks/gitleaks:<version>`, then
+you want by hand). Then update the Docker commands above, and `GITLEAKS_IMAGE` in
+`.github/workflows/ci.yml`, to the same version and its digest (`docker pull ghcr.io/gitleaks/gitleaks:<version>`, then
 `docker inspect ghcr.io/gitleaks/gitleaks:<version> --format '{{index .RepoDigests 0}}'`).
 
 ### Dependency vulnerabilities and test coverage
@@ -340,6 +340,24 @@ uv run pytest --cov
   fails if total coverage drops below 80%.** Plain `uv run pytest` doesn't measure
   coverage, so it never fails for this. `uv run pytest --cov --cov-report=html`
   also writes a browsable report to `htmlcov/` (git-ignored).
+
+### Checks on every PR (GitHub Actions)
+
+`.github/workflows/ci.yml` runs the same checks on GitHub for every pull request
+and every push to `main`, where they can't be skipped. The results are on the
+PR's **Checks** tab (and the repo's **Actions** tab). Each check is its own job:
+
+- **Lint:** `ruff check` and `ruff format --check`.
+- **Tests:** `pytest --cov` (fails below 80% coverage), once on **SQLite** and
+  once on **Postgres 17**. It downloads the Tailwind CLI first, so the daisyUI
+  build test runs instead of being skipped.
+- **Dependency vulnerabilities:** the pip-audit command above.
+- **Secrets:** gitleaks over the whole git history, with the same pinned image as
+  the commands above.
+
+The workflow can only read the repo, and every action in it is pinned to a commit
+hash (with its version in a comment). When updating gitleaks, change its image in
+the workflow too; when updating uv, change `UV_VERSION` there.
 
 ## Commands
 
