@@ -1,6 +1,7 @@
 """Checking and cleaning uploaded images, and storing them as ThemeAssets."""
 
 import io
+import struct
 from pathlib import Path
 
 from django.core.exceptions import ValidationError
@@ -8,11 +9,23 @@ from django.core.files.base import ContentFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .. import conf
+from .gif_frames import BrokenGif, frame_extent
 from .slots import MODES, NO_SVG, SLOTS
 from .svg import clean_svg
 
 # Image info Pillow may write back when saving that is safe to keep.
 KEEP_INFO = ("icc_profile", "transparency", "duration", "loop", "background")
+# What Pillow can raise for a damaged file, whether opening, counting frames,
+# decoding or saving it. Each means "not a supported image", never a server error.
+DECODE_ERRORS = (
+    OSError,
+    EOFError,
+    SyntaxError,
+    ValueError,
+    IndexError,
+    struct.error,
+    Image.DecompressionBombError,
+)
 
 
 # Pillow format -> (content type, file extension)
@@ -76,16 +89,35 @@ def prepare_image(data, name, slot):
     if image.format not in FORMATS:
         raise ValidationError(not_an_image)
     # Checked before decoding, so a huge image is never unpacked into memory.
-    if max(image.size) > max_pixels:  # (not for SVGs: they have no pixels)
+    frames, width, height = _frames_and_size(image, data, not_an_image)
+    if max(width, height) > max_pixels:  # (not for SVGs: they have no pixels)
         raise ValidationError(
-            f"The image is {image.width} × {image.height} pixels; the {label.lower()} can be "
+            f"The image is {width} × {height} pixels; the {label.lower()} can be "
             f"at most {max_pixels} pixels wide or high."
         )
-    _check_animation(image, not_an_image)
+    if frames > 1:
+        _check_animation(frames, width, height)
     try:
-        image.load()
-    except OSError as error:
+        return _clean_copy(image, name)
+    except DECODE_ERRORS as error:
         raise ValidationError(not_an_image) from error
+
+
+def _frames_and_size(image, data, not_an_image):
+    """(frames, width, height) the image will really have once decoded, read
+    without decoding. A GIF's frames can reach past its stated size, so each
+    frame's header is read (images/gif_frames.py)."""
+    try:
+        if image.format == "GIF":
+            return frame_extent(data)
+        return getattr(image, "n_frames", 1), image.width, image.height
+    except (BrokenGif, *DECODE_ERRORS) as error:
+        raise ValidationError(not_an_image) from error
+
+
+def _clean_copy(image, name):
+    """Decode the image and save a copy without metadata (see prepare_image)."""
+    image.load()
     content_type, extension = FORMATS[image.format]
     clean = _strip_metadata(image)
     output = io.BytesIO()
@@ -109,32 +141,32 @@ def prepare_image(data, name, slot):
     }
 
 
-def _check_animation(image, not_an_image):
-    """Refuse animations with too many frames, or too many pixels in all.
+def _check_animation(frames, width, height):
+    """Refuse animations that are too big, too long, or have too many pixels in all.
 
     A frame that changes a few pixels takes a few bytes in the file but is decoded
-    at full size, so a small file can hold enough frames to use huge amounts of
-    memory when it's re-saved (issue #188). Counting frames only reads the file's
-    structure, so this runs before anything is decoded.
+    at full size when the animation is saved again (issue #188). Memory depends
+    mostly on the frame size (Pillow keeps a few full-size copies: about 100 MB at
+    2000 × 2000, over 400 MB at 4000 × 4000) and time on the total pixels.
     """
-    try:
-        frames = getattr(image, "n_frames", 1)
-    except (OSError, EOFError, SyntaxError, ValueError, IndexError) as error:
-        # A frame after the first can be broken in ways the quick check misses;
-        # Pillow then raises IndexError, among others, while counting.
-        raise ValidationError(not_an_image) from error
-    max_frames = conf.get("CAPY_THEME_ANIMATION_MAX_FRAMES")
+    max_size = conf.positive_int("CAPY_THEME_ANIMATION_MAX_SIZE")
+    if max(width, height) > max_size:
+        raise ValidationError(
+            f"The animation is {width} × {height} pixels; animated images can be at most "
+            f"{max_size} pixels wide or high. Make it smaller."
+        )
+    max_frames = conf.positive_int("CAPY_THEME_ANIMATION_MAX_FRAMES")
     if frames > max_frames:
         raise ValidationError(
             f"The animation has {frames} frames; animated images can have at most "
             f"{max_frames}. Make it shorter."
         )
-    total = frames * image.width * image.height
-    max_total = conf.get("CAPY_THEME_ANIMATION_MAX_PIXELS")
+    total = frames * width * height
+    max_total = conf.positive_int("CAPY_THEME_ANIMATION_MAX_PIXELS")
     if total > max_total:
         raise ValidationError(
-            f"The animation is too big: {frames} frames of {image.width} × {image.height} "
-            f"pixels ({total:,} in all; at most {max_total:,}). Make it shorter or smaller."
+            f"The animation is too big: {frames} frames of {width} × {height} pixels "
+            f"({total:,} in all; at most {max_total:,}). Make it shorter or smaller."
         )
 
 

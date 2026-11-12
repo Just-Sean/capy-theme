@@ -1435,13 +1435,27 @@ Recommended (made while building autonomously).
 
 - **Why:** uploads were limited by file size and by width and height, but not by
   frame count. Each frame is decoded at full size when the image is saved again,
-  so a 1 KB GIF could take hundreds of MB (measured: 459 MB and 11 s for 40
-  frames of 4000 × 4000).
-- **Two limits, checked before anything is decoded** (counting frames only reads
-  the file's structure): at most 500 frames and at most 100 million pixels in all
-  (frames × width × height, about 75 MB at the measured ~0.7 bytes per pixel).
-  Sean chose the defaults; projects change them with
-  `CAPY_THEME_ANIMATION_MAX_FRAMES` and `CAPY_THEME_ANIMATION_MAX_PIXELS`.
-- **Broken later frames:** counting frames can raise IndexError for a GIF whose
-  later frame is cut off (Pillow's quick check passes it). That was already a
-  server error on upload; it's now "not a supported image".
+  so a 1 KB GIF could take hundreds of MB and many seconds.
+- **Checked before anything is decoded.** For GIFs, `images/gif_frames.py` reads
+  every frame's header from the file (skipping the pixel data): a later frame can
+  be bigger than, or placed past, the size the image states, and Pillow grows the
+  image while decoding, after any check of the first size (found in review: a
+  1.8 MB GIF got past the slot's 4000 px limit as a 9000 × 9000 logo, using 4 GB).
+  The real size then goes through the slot's limit and the animation limits.
+- **Three limits, measured** (each upload in a fresh process): memory depends
+  mostly on the frame size, because Pillow keeps a few full-size frames while
+  saving (about 100 MB at 2000 × 2000, over 400 MB at 4000 × 4000, whatever the
+  frame count), and time on the total pixels (about 2 s for 100 million). So:
+  at most 2000 px wide or high, 500 frames, and 100 million pixels in all. Sean
+  chose the defaults; projects change them with `CAPY_THEME_ANIMATION_MAX_SIZE`,
+  `CAPY_THEME_ANIMATION_MAX_FRAMES` and `CAPY_THEME_ANIMATION_MAX_PIXELS`. An
+  earlier estimate of ~0.7 bytes per pixel was wrong (it came from frames Pillow
+  could store as tiny changes) and was replaced by these measurements.
+- **Only animations:** still images keep their slot's limits.
+- **The settings must be positive whole numbers** (`conf.positive_int`): `None`
+  or `0` is a mistake reported clearly, not a way to switch a safety limit off.
+- **Damaged files never cause a server error:** whatever Pillow raises while
+  counting, decoding or saving (`DECODE_ERRORS`) becomes "not a supported image".
+  A GIF with a cut-off later frame already caused a server error on upload.
+- **Backstop:** the README asks host projects for a worker timeout and a memory
+  limit, in case anything ever slips past the checks.

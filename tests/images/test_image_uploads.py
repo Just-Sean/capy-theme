@@ -13,6 +13,7 @@ from capy_theme.images.models import ThemeAsset
 from capy_theme.images.slots import SLOTS
 from capy_theme.images.uploads import add_asset, prepare_image
 from capy_theme.models import Theme
+from tests.support.images import gif
 
 pytestmark = pytest.mark.django_db
 
@@ -45,31 +46,6 @@ def png(size=(10, 10), text=None, mode="RGBA"):
     buffer = io.BytesIO()
     Image.new(mode, size, (0, 128, 255, 255) if mode == "RGBA" else 0).save(
         buffer, "PNG", pnginfo=info
-    )
-    return buffer.getvalue()
-
-
-def gif(frames=1, comment=b"", duration=100, loop=None, transparent=False):
-    """A GIF; frames are clearly different (Pillow merges identical ones)."""
-    colors = ["red", "green", "blue"][:frames]
-    if transparent:  # a colored square on a transparent background
-        images = []
-        for color in colors:
-            frame = Image.new("RGBA", (10, 10), (0, 0, 0, 0))
-            frame.paste(Image.new("RGBA", (5, 5), color), (0, 0))
-            images.append(frame)
-    else:
-        images = [Image.new("RGB", (10, 10), color) for color in colors]
-    extra = {} if loop is None else {"loop": loop}
-    buffer = io.BytesIO()
-    images[0].save(
-        buffer,
-        "GIF",
-        save_all=frames > 1,
-        append_images=images[1:],
-        comment=comment,
-        duration=duration,
-        **extra,
     )
     return buffer.getvalue()
 
@@ -296,49 +272,3 @@ def test_animated_gifs_keep_their_transparency():
     squares = every_frame(image, lambda frame: frame.convert("RGBA").getpixel((1, 1)))
     assert [alpha for *_, alpha in corners] == [0, 0]  # still see-through
     assert squares == [(255, 0, 0, 255), (0, 128, 0, 255)]
-
-
-# Limits on animations (issue #188).
-
-
-def tiny_frames_gif(frames, size=4000):
-    """A hand-built GIF: a size × size canvas with `frames` frames, each changing
-    one pixel. Each frame is a few bytes in the file but decoded at full size."""
-    header = b"GIF89a" + struct.pack("<HHBBB", size, size, 0x80, 0, 0) + b"\0\0\0\xff\xff\xff"
-    frame = (
-        b"\x21\xf9\x04\x00\x05\x00\x00\x00"  # timing: 50 ms
-        + b"\x2c"
-        + struct.pack("<HHHHB", 0, 0, 1, 1, 0)  # a 1 × 1 image at the top left
-        + b"\x02\x02\x44\x01\x00"  # its pixel data
-    )
-    return header + frame * frames + b"\x3b"
-
-
-def test_the_issue_check_a_small_file_with_many_frames_is_refused():
-    data = tiny_frames_gif(5000)
-    assert len(data) < 200_000  # well under every slot's size limit
-    with pytest.raises(ValidationError, match="has 5000 frames"):
-        prepare_image(data, "a.gif", "background_login")
-
-
-def test_a_short_but_huge_animation_is_refused():
-    # 40 frames of 4000 × 4000 is 640 million pixels: over the 100 million default.
-    with pytest.raises(ValidationError, match="too big: 40 frames of 4000 × 4000"):
-        prepare_image(tiny_frames_gif(40), "a.gif", "background_login")
-
-
-def test_normal_animations_and_still_images_are_accepted():
-    assert prepare_image(gif(frames=3), "a.gif", "logo_main")
-    assert prepare_image(png(size=(4000, 4000)), "big.png", "background_login")
-
-
-def test_a_gif_with_a_broken_later_frame_is_rejected_not_a_crash():
-    # Its second frame's color table is cut off. Pillow's quick check passes it,
-    # then counting the frames raised IndexError (a server error) before this check.
-    data = tiny_frames_gif(1, size=10)[:-1] + (
-        b"\x21\xf9\x04\x00\x05\x00\x00\x00\x2c"
-        + struct.pack("<HHHHB", 0, 0, 1, 1, 0x80)  # says a local color table follows
-        + b"\x02"
-    )
-    with pytest.raises(ValidationError, match="isn't a supported image"):
-        prepare_image(data, "a.gif", "logo_main")

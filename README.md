@@ -182,6 +182,12 @@ published and activated in the admin, they show daisyUI's defaults.
 
 The module's tables go into whatever database the project uses.
 
+**In production**, run the project's app server with a worker timeout and a
+memory limit (e.g. gunicorn's `--timeout`, which is 30 seconds by default, and a
+container memory limit). capy-theme checks uploads before processing them, so a
+file that's too big is refused with a clear message, but these limits are the
+backstop if any upload (or anything else) ever takes too long or too much memory.
+
 ### Tailwind and daisyUI for a new project
 
 capy-theme themes a daisyUI 5 stylesheet; it doesn't build one. A project without
@@ -238,8 +244,9 @@ Optional settings a project can add to its `settings.py` (all defaults are in
 | `CAPY_THEME_EDITOR_BUTTON` | `True` | Show the live editor's **Edit theme** button in the corner of every page, for staff who can edit. `False` hides it (the editor still opens with `?edit=<theme id>`, e.g. from **Edit live** in the admin). |
 | `CAPY_THEME_FONT_MAX_BYTES` | `5242880` (5 MB) | The largest font file that can be uploaded, in bytes. |
 | `CAPY_THEME_IMAGE_MAX_BYTES` | `None` (each slot's own limit) | A cap on every image upload, in bytes. Each slot keeps its own limit (1 to 5 MB, in `images/slots.json`) when that's lower. |
-| `CAPY_THEME_ANIMATION_MAX_FRAMES` | `500` | The most frames an uploaded animated image (GIF) can have. |
-| `CAPY_THEME_ANIMATION_MAX_PIXELS` | `100000000` (100 million) | The most pixels an uploaded animated image can have in all (frames × width × height). Each frame is decoded at full size when the image is saved again, so this caps the memory one upload can use (about 75 MB at the default). |
+| `CAPY_THEME_ANIMATION_MAX_FRAMES` | `500` | The most frames an uploaded animated image (GIF, animated WebP or PNG) can have. Must be a positive whole number, like the next two. |
+| `CAPY_THEME_ANIMATION_MAX_SIZE` | `2000` | The most pixels an uploaded animated image can be wide or high (still images keep their slot's limit). Saving an animation keeps a few full-size frames in memory, so this caps one upload's memory: about 100 MB at the default, over 400 MB at 4000. |
+| `CAPY_THEME_ANIMATION_MAX_PIXELS` | `100000000` (100 million) | The most pixels an uploaded animated image can have in all (frames × width × height), which caps the time it takes to process (about 2 seconds at the default). |
 | `CAPY_THEME_IMPORT_MAX_BYTES` | `52428800` (50 MB) | The largest theme import (all files in the zip, unpacked), in bytes. |
 
 ## Develop it

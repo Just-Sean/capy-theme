@@ -16,11 +16,16 @@ with alt text. For every upload:
   other logos, the icon and the background pattern, and 5 MB for the print logo,
   social image and login background. A project can set a lower cap for every
   slot with `CAPY_THEME_IMAGE_MAX_BYTES`.
-- Animated images (GIFs) can have at most 500 frames, and at most 100 million
-  pixels in all (frames × width × height), so a small file can't hold enough
-  frames to use huge amounts of memory when it's saved again. This is checked
-  before anything is decoded. A project can change the limits with
+- Animated images (GIFs, and animated WebP or PNG) can be at most 2000 pixels
+  wide or high, have at most 500 frames, and at most 100 million pixels in all
+  (frames × width × height). A frame that changes a few pixels takes only a few
+  bytes in the file but is decoded at full size, so without these limits a small
+  file could use huge amounts of memory and time when it's saved again. They're
+  checked before anything is decoded; for GIFs, every frame's own size is read
+  from the file, because a frame can reach past the size the image states. A
+  project can change them with `CAPY_THEME_ANIMATION_MAX_SIZE`,
   `CAPY_THEME_ANIMATION_MAX_FRAMES` and `CAPY_THEME_ANIMATION_MAX_PIXELS`.
+- A damaged file is refused as "not a supported image", however it's damaged.
 - The image is saved again without EXIF, text chunks and comments, so camera
   details and GPS locations are removed. Photos are turned upright first.
   Colour profiles are kept.
