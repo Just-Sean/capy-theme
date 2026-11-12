@@ -1430,3 +1430,18 @@ Recommended (made while building autonomously).
   protection. Sean will decide on requiring these checks once the safety-net
   work is done.
 
+
+## Limits on animated images (#188)
+
+- **Why:** uploads were limited by file size and by width and height, but not by
+  frame count. Each frame is decoded at full size when the image is saved again,
+  so a 1 KB GIF could take hundreds of MB (measured: 459 MB and 11 s for 40
+  frames of 4000 × 4000).
+- **Two limits, checked before anything is decoded** (counting frames only reads
+  the file's structure): at most 500 frames and at most 100 million pixels in all
+  (frames × width × height, about 75 MB at the measured ~0.7 bytes per pixel).
+  Sean chose the defaults; projects change them with
+  `CAPY_THEME_ANIMATION_MAX_FRAMES` and `CAPY_THEME_ANIMATION_MAX_PIXELS`.
+- **Broken later frames:** counting frames can raise IndexError for a GIF whose
+  later frame is cut off (Pillow's quick check passes it). That was already a
+  server error on upload; it's now "not a supported image".

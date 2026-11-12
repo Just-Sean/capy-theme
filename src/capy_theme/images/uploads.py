@@ -81,6 +81,7 @@ def prepare_image(data, name, slot):
             f"The image is {image.width} × {image.height} pixels; the {label.lower()} can be "
             f"at most {max_pixels} pixels wide or high."
         )
+    _check_animation(image, not_an_image)
     try:
         image.load()
     except OSError as error:
@@ -106,6 +107,35 @@ def prepare_image(data, name, slot):
         "content_type": content_type,
         "size": output.tell(),
     }
+
+
+def _check_animation(image, not_an_image):
+    """Refuse animations with too many frames, or too many pixels in all.
+
+    A frame that changes a few pixels takes a few bytes in the file but is decoded
+    at full size, so a small file can hold enough frames to use huge amounts of
+    memory when it's re-saved (issue #188). Counting frames only reads the file's
+    structure, so this runs before anything is decoded.
+    """
+    try:
+        frames = getattr(image, "n_frames", 1)
+    except (OSError, EOFError, SyntaxError, ValueError, IndexError) as error:
+        # A frame after the first can be broken in ways the quick check misses;
+        # Pillow then raises IndexError, among others, while counting.
+        raise ValidationError(not_an_image) from error
+    max_frames = conf.get("CAPY_THEME_ANIMATION_MAX_FRAMES")
+    if frames > max_frames:
+        raise ValidationError(
+            f"The animation has {frames} frames; animated images can have at most "
+            f"{max_frames}. Make it shorter."
+        )
+    total = frames * image.width * image.height
+    max_total = conf.get("CAPY_THEME_ANIMATION_MAX_PIXELS")
+    if total > max_total:
+        raise ValidationError(
+            f"The animation is too big: {frames} frames of {image.width} × {image.height} "
+            f"pixels ({total:,} in all; at most {max_total:,}). Make it shorter or smaller."
+        )
 
 
 def _strip_metadata(image):

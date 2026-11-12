@@ -17,6 +17,8 @@ DEFAULTS = {
     "CAPY_THEME_EDITOR_BUTTON": True,
     "CAPY_THEME_FONT_MAX_BYTES": 5 * MB,
     "CAPY_THEME_IMAGE_MAX_BYTES": None,  # None: each image slot's own limit
+    "CAPY_THEME_ANIMATION_MAX_FRAMES": 500,
+    "CAPY_THEME_ANIMATION_MAX_PIXELS": 100_000_000,  # frames × width × height
     "CAPY_THEME_IMPORT_MAX_BYTES": 50 * MB,
 }
 

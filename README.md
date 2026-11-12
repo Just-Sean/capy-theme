@@ -238,6 +238,8 @@ Optional settings a project can add to its `settings.py` (all defaults are in
 | `CAPY_THEME_EDITOR_BUTTON` | `True` | Show the live editor's **Edit theme** button in the corner of every page, for staff who can edit. `False` hides it (the editor still opens with `?edit=<theme id>`, e.g. from **Edit live** in the admin). |
 | `CAPY_THEME_FONT_MAX_BYTES` | `5242880` (5 MB) | The largest font file that can be uploaded, in bytes. |
 | `CAPY_THEME_IMAGE_MAX_BYTES` | `None` (each slot's own limit) | A cap on every image upload, in bytes. Each slot keeps its own limit (1 to 5 MB, in `images/slots.json`) when that's lower. |
+| `CAPY_THEME_ANIMATION_MAX_FRAMES` | `500` | The most frames an uploaded animated image (GIF) can have. |
+| `CAPY_THEME_ANIMATION_MAX_PIXELS` | `100000000` (100 million) | The most pixels an uploaded animated image can have in all (frames × width × height). Each frame is decoded at full size when the image is saved again, so this caps the memory one upload can use (about 75 MB at the default). |
 | `CAPY_THEME_IMPORT_MAX_BYTES` | `52428800` (50 MB) | The largest theme import (all files in the zip, unpacked), in bytes. |
 
 ## Develop it

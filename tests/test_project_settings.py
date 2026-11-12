@@ -17,7 +17,7 @@ from capy_theme import conf
 from capy_theme.artifacts.api import api_mode
 from capy_theme.css.custom import custom_css_url
 from capy_theme.fonts.uploads import prepare
-from capy_theme.images.uploads import add_asset, byte_limit
+from capy_theme.images.uploads import add_asset, byte_limit, prepare_image
 from capy_theme.models import Theme
 from capy_theme.portability.export import export_theme
 from capy_theme.portability.importing import import_theme
@@ -138,3 +138,27 @@ def test_import_max_bytes(settings):
     settings.CAPY_THEME_IMPORT_MAX_BYTES = 10
     with pytest.raises(ValidationError, match="too big"):
         import_theme(io.BytesIO(data))
+
+
+def animated_gif(frames, size=(10, 10)):
+    images = [Image.new("RGB", size, (i * 40 % 256, 0, 0)) for i in range(frames)]
+    buffer = io.BytesIO()
+    images[0].save(buffer, "GIF", save_all=True, append_images=images[1:], duration=50)
+    return buffer.getvalue()
+
+
+def test_animation_max_frames(settings):
+    data = animated_gif(4)
+    assert prepare_image(data, "a.gif", "logo_main")
+    settings.CAPY_THEME_ANIMATION_MAX_FRAMES = 3
+    with pytest.raises(ValidationError, match="has 4 frames; animated images can have at most 3"):
+        prepare_image(data, "a.gif", "logo_main")
+
+
+def test_animation_max_pixels(settings):
+    data = animated_gif(4)  # 4 frames of 10 × 10: 400 pixels in all
+    settings.CAPY_THEME_ANIMATION_MAX_PIXELS = 400
+    assert prepare_image(data, "a.gif", "logo_main")
+    settings.CAPY_THEME_ANIMATION_MAX_PIXELS = 399
+    with pytest.raises(ValidationError, match="too big: 4 frames of 10 × 10 pixels"):
+        prepare_image(data, "a.gif", "logo_main")
