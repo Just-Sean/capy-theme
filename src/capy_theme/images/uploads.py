@@ -94,7 +94,10 @@ def prepare_image(data, name, slot):
     elif image.format == "PNG":
         save_options |= {"optimize": True}
     elif image.format == "GIF" and getattr(image, "is_animated", False):
-        save_options |= {"save_all": True}
+        # Saving every frame goes back to the first one, which re-reads its info
+        # from the file (comment included), and Pillow writes that into the new
+        # file's header. An empty comment means none is written (issue #185).
+        save_options |= {"save_all": True, "comment": b""}
     clean.save(output, **save_options)
     return {
         "file": ContentFile(output.getvalue(), name=f"{Path(name).stem}.{extension}"),
