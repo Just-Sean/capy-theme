@@ -87,3 +87,12 @@ def test_the_page_makes_room_for_the_open_editor():
     css = (STATIC / "editor.css").read_text()
     assert "html.capy-editor-open body { padding-top: var(--capy-editor-banner-height)" in css
     assert "html.capy-editor-open body { padding-right: var(--capy-editor-width)" in css
+
+
+def test_the_components_frame_only_loads_a_path_on_this_site():
+    # Issue #195 (CodeQL js/xss-through-dom): the frame's address comes from the
+    # server-rendered mount, and is only used if it resolves to this site;
+    # anything else loads a blank page. (Checked in a browser too: see PR #196.)
+    script = (STATIC / "controls" / "components.js").read_text()
+    assert "url.origin === window.location.origin ? url.pathname : null" in script
+    assert 'if (!path) return "about:blank";' in script

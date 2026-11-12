@@ -10,7 +10,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from ..images.uploads import add_asset, asset_data
 from ..models import Theme
-from ..themes.publishing import NothingToPublish, publish
+from ..themes.publishing import NOTHING_TO_PUBLISH, NothingToPublish, publish
 from .access import can_edit, can_publish
 from .preview import preview
 from .saving import save_draft, suggestions
@@ -110,8 +110,8 @@ def editor_publish(request, pk):
         return JsonResponse({"errors": ["The request must be a JSON object."]}, status=400)
     try:
         revision = publish(theme, user=request.user, note=str(data.get("note", ""))[:2000])
-    except NothingToPublish as error:
-        return JsonResponse({"errors": [str(error)]}, status=409)
+    except NothingToPublish:
+        return JsonResponse({"errors": [NOTHING_TO_PUBLISH]}, status=409)
     except ValidationError as error:
         return JsonResponse({"errors": ["Can't publish: " + " ".join(error.messages)]}, status=400)
     except IntegrityError:

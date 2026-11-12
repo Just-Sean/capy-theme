@@ -21,9 +21,24 @@
     return JSON.stringify({ settings: { images: settings.images || {}, logo: settings.logo || {}, icon: settings.icon || {} } });
   }
 
+  // The page's address comes from the server-rendered mount; it's only used if it
+  // resolves to this site (so not "//...", "/\\...", another site or "javascript:").
+  function sameSitePath(value) {
+    if (!value) return null;
+    var url;
+    try {
+      url = new URL(value, window.location.href);
+    } catch (error) {
+      return null;
+    }
+    return url.origin === window.location.origin ? url.pathname : null;
+  }
+
   function frameUrl() {
     loadedKey = imageSettings();
-    return editor.mount.getAttribute("data-components-url") + "?changes=" + encodeURIComponent(loadedKey);
+    var path = sameSitePath(editor.mount.getAttribute("data-components-url"));
+    if (!path) return "about:blank";
+    return path + "?changes=" + encodeURIComponent(loadedKey);
   }
 
   // Reload the page when an image choice changes (debounced while typing).

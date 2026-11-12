@@ -8,6 +8,8 @@ from ..images.icons import make_icons
 from ..models import ThemeRevision
 from .validation import validate_settings
 
+NOTHING_TO_PUBLISH = "Nothing to publish: the draft matches the live revision."
+
 
 class NothingToPublish(Exception):
     """Raised when the draft's look already matches the live revision."""
@@ -25,7 +27,7 @@ def publish(theme, user=None, note=""):
     longer allows).
     """
     if not theme.has_unpublished_changes:
-        raise NothingToPublish("Nothing to publish: the draft matches the live revision.")
+        raise NothingToPublish(NOTHING_TO_PUBLISH)
 
     validate_settings(theme.settings)
     theme.clean()
