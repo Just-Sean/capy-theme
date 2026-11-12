@@ -208,7 +208,12 @@ def test_restore_explains_a_revision_that_can_no_longer_be_used(
 ):
     # Revision 3 used "cupcake"; the project has since limited the bases.
     login(client, django_user_model, "view_theme", "change_theme", "publish_theme")
-    client.post(restore_url(theme, 1))  # revision 1 (light) is live as revision 4
+    # Revision 3 is live, and restoring the live revision stops before any check
+    # ("already what's live"), so first make revision 1 live (as revision 4).
+    client.post(restore_url(theme, 1))
+    theme.refresh_from_db()
+    theme.settings = {**theme.settings, "tagline": "An unpublished edit"}
+    theme.save()
     settings.CAPY_THEME_BUILTIN_THEMES = ["light", "dark"]
     response = client.post(restore_url(theme, 3), follow=True)
     content = response.content.decode()
@@ -216,6 +221,9 @@ def test_restore_explains_a_revision_that_can_no_longer_be_used(
     assert "&#x27;cupcake&#x27; is not an available light daisyUI theme." in content
     theme.refresh_from_db()
     assert theme.live_revision.number == 4
+    # The draft is checked before it's saved, so the unpublished edit is kept.
+    assert theme.light_base == "light"
+    assert theme.settings["tagline"] == "An unpublished edit"
 
 
 def test_restore_explains_a_simultaneous_publish(client, django_user_model, theme, monkeypatch):
@@ -236,6 +244,8 @@ def test_revisions_page_without_both_revisions_shows_no_comparison(
     response = client.get(revisions_url(theme), {"a": "99", "b": "1"})
     assert response.status_code == 200
     assert response.context["differences"] is None
+    content = response.content.decode()
+    assert "<th>Setting</th>" not in content and "No differences" not in content  # none shown
 
 
 def test_restoring_the_live_revision_says_so(client, django_user_model, theme):

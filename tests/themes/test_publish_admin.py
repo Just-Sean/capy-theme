@@ -1,6 +1,7 @@
 """Tests for the admin's Publish page and revision list (issue #12)."""
 
 import pytest
+from django.contrib.auth.models import Permission
 from django.db import IntegrityError
 from django.urls import reverse
 
@@ -131,12 +132,18 @@ def test_staff_without_change_permission_cant_publish(client, theme, django_user
     assert not ThemeRevision.objects.exists()
 
 
-def test_publish_page_explains_an_invalid_draft(admin, theme, settings):
+def test_publish_page_explains_an_invalid_draft(client, django_user_model, theme, settings):
     # Issue #186: the draft uses a base the project no longer allows (the setting
     # changed after it was saved), so publishing is refused with the reason.
+    # A staff user with only the permissions publishing needs.
+    staff = django_user_model.objects.create_user("publisher", password="pw", is_staff=True)
+    staff.user_permissions.set(
+        Permission.objects.filter(codename__in=["view_theme", "change_theme", "publish_theme"])
+    )
+    client.force_login(staff)
     Theme.objects.filter(pk=theme.pk).update(light_base="cupcake")
     settings.CAPY_THEME_BUILTIN_THEMES = ["light", "dark"]
-    response = admin.post(publish_url(theme), {"note": ""}, follow=True)
+    response = client.post(publish_url(theme), {"note": ""}, follow=True)
     content = response.content.decode()
     assert "Can&#x27;t publish:" in content
     assert "&#x27;cupcake&#x27; is not an available light daisyUI theme." in content
