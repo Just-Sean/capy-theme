@@ -3,6 +3,7 @@
 import pytest
 from django.contrib.auth.models import Permission
 from django.core.cache import cache
+from django.db import IntegrityError
 from django.urls import reverse
 
 from capy_theme.models import Theme
@@ -197,3 +198,48 @@ def test_revisions_page_needs_view_or_change_permission(client, django_user_mode
     django_user_model.objects.filter(username="staff").delete()
     login(client, django_user_model, "change_theme")
     assert client.get(revisions_url(theme)).status_code == 200
+
+
+# The Restore and Revisions pages' other outcomes (issue #186).
+
+
+def test_restore_explains_a_revision_that_can_no_longer_be_used(
+    client, django_user_model, theme, settings
+):
+    # Revision 3 used "cupcake"; the project has since limited the bases.
+    login(client, django_user_model, "view_theme", "change_theme", "publish_theme")
+    client.post(restore_url(theme, 1))  # revision 1 (light) is live as revision 4
+    settings.CAPY_THEME_BUILTIN_THEMES = ["light", "dark"]
+    response = client.post(restore_url(theme, 3), follow=True)
+    content = response.content.decode()
+    assert "Can&#x27;t restore:" in content
+    assert "&#x27;cupcake&#x27; is not an available light daisyUI theme." in content
+    theme.refresh_from_db()
+    assert theme.live_revision.number == 4
+
+
+def test_restore_explains_a_simultaneous_publish(client, django_user_model, theme, monkeypatch):
+    def collide(*args, **kwargs):
+        raise IntegrityError("duplicate revision number")
+
+    monkeypatch.setattr("capy_theme.admin.publish_pages.restore_revision", collide)
+    login(client, django_user_model, "view_theme", "change_theme", "publish_theme")
+    response = client.post(restore_url(theme, 1), follow=True)
+    assert "Someone else just published this theme." in response.content.decode()
+    assert theme.revisions.count() == 3
+
+
+def test_revisions_page_without_both_revisions_shows_no_comparison(
+    client, django_user_model, theme
+):
+    login(client, django_user_model, "view_theme")
+    response = client.get(revisions_url(theme), {"a": "99", "b": "1"})
+    assert response.status_code == 200
+    assert response.context["differences"] is None
+
+
+def test_restoring_the_live_revision_says_so(client, django_user_model, theme):
+    login(client, django_user_model, "view_theme", "change_theme", "publish_theme")
+    response = client.post(restore_url(theme, 3), follow=True)
+    assert "Revision 3 is already what&#x27;s live." in response.content.decode()
+    assert theme.revisions.count() == 3

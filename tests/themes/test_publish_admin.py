@@ -129,3 +129,15 @@ def test_staff_without_change_permission_cant_publish(client, theme, django_user
     response = client.post(publish_url(theme), {"note": ""})
     assert response.status_code == 403
     assert not ThemeRevision.objects.exists()
+
+
+def test_publish_page_explains_an_invalid_draft(admin, theme, settings):
+    # Issue #186: the draft uses a base the project no longer allows (the setting
+    # changed after it was saved), so publishing is refused with the reason.
+    Theme.objects.filter(pk=theme.pk).update(light_base="cupcake")
+    settings.CAPY_THEME_BUILTIN_THEMES = ["light", "dark"]
+    response = admin.post(publish_url(theme), {"note": ""}, follow=True)
+    content = response.content.decode()
+    assert "Can&#x27;t publish:" in content
+    assert "&#x27;cupcake&#x27; is not an available light daisyUI theme." in content
+    assert not ThemeRevision.objects.exists()
