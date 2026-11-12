@@ -1389,3 +1389,23 @@ Recommended (made while building autonomously).
 - **Formatting is checked, not fixed** (`ruff format --check`), so a commit never
   silently rewrites files; the failure says what to run.
 
+## Dependency vulnerabilities and test coverage (#180)
+
+- **pip-audit checks `uv.lock`, not the installed environment**, so it checks
+  exactly the versions everyone installs. `uv export` writes them with their
+  hashes (`--disable-pip --require-hashes`, so pip-audit resolves nothing itself),
+  including the dev tools; the project itself is left out (`--no-emit-project`)
+  because capy-theme isn't on PyPI.
+- **The export goes to a temporary file, not a pipe.** With a pipe, a failed
+  export gave pip-audit empty input and it still said "No known vulnerabilities
+  found" (found in review). `--locked` makes an out-of-date `uv.lock` an error
+  instead of auditing old versions.
+- **Limits, written in the README:** only packages for the current platform are
+  checked (five Windows- or PyPy-only packages are skipped on Linux), and the
+  build tool, uv and the gitleaks hook aren't covered. The audit checks the locked
+  versions, not every version a host project could resolve within capy-theme's
+  version ranges.
+- **Coverage measures `capy_theme` with branch coverage, without the migrations,
+  and fails below 80%** (Sean's minimum), only when run with `--cov`. Plain
+  `pytest` stays fast and never fails on coverage; CI runs it with `--cov`.
+
