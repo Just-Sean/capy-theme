@@ -5,9 +5,9 @@ A reusable Django app (`capy_theme`) for theming any Django project with a daisy
 ## How we work
 
 - One issue at a time, in order. Build only what that issue's **Build** list says. Don't start the next issue or change unrelated files.
-- Each issue gets its own branch, created from an up-to-date `main` after the previous PR is merged. Name it `issue-<number>-<short-name>`, e.g. `issue-4-builtin-theme-catalogue`.
+- Each issue gets its own branch, created from an up-to-date `main` after the previous PR is merged. Name it `issue-<number>-<short-name>`, e.g. `issue-4-builtin-theme-catalog`.
 - Write tests for what you add. Then run `uv run pytest` and `uv run ruff check .`, fix any failures, and stop.
-- Commit on the issue branch with the issue number in the message, e.g. `Built-in theme catalogue (#4)`.
+- Commit on the issue branch with the issue number in the message, e.g. `Built-in theme catalog (#4)`.
 - Ask before pushing the branch and before opening the PR. The PR targets `main` and its body starts with `Closes #<number>`.
 - Finish with: the files you changed and why, and how to see it working.
 - If anything isn't covered by the issue (a dependency, a version, an approach, extra files), ask first. Don't decide.

@@ -6,7 +6,7 @@ import pytest
 from django.urls import reverse
 
 from capy_theme.models import Theme
-from capy_theme.themes.catalogue import THEMES
+from capy_theme.themes.catalog import THEMES
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -22,7 +22,7 @@ def theme():
 
 
 def change_cupcake(monkeypatch):
-    """Simulate a daisyUI update that changes cupcake's primary colour."""
+    """Simulate a daisyUI update that changes cupcake's primary color."""
     values = dict(THEMES["cupcake"]["values"], **{"--color-primary": "oklch(1% 0 0)"})
     monkeypatch.setitem(THEMES, "cupcake", {"scheme": "light", "values": values})
 

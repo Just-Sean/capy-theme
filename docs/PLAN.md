@@ -1,12 +1,12 @@
 # capy-theme: Build Plan
 
-capy-theme is a reusable Django app that lets whoever runs a site control its whole look from the admin: themes, colours, fonts, logos, icons and more, with no code changes or redeploys. It works in any Django project with a daisyUI 5 stylesheet, and gives the same branding to other front ends through a JSON API.
+capy-theme is a reusable Django app that lets whoever runs a site control its whole look from the admin: themes, colors, fonts, logos, icons and more, with no code changes or redeploys. It works in any Django project with a daisyUI 5 stylesheet, and gives the same branding to other front ends through a JSON API.
 
-> **Revised before Phase 7 (2026-11-10):** the showcase page is replaced by a **Components** view in the live editor (new step 6.7). 7.1's API is hybrid: a plain Django view, or a DRF view documented automatically by drf-spectacular when the project uses DRF (`CAPY_THEME_API` overrides). 7.6 becomes a developer docs page in the repo. 8.4 becomes the Components view's final pass. The module was also reorganised into sections of small files (#150) and its data tables moved to JSON (#152).
+> **Revised before Phase 7 (2026-11-10):** the showcase page is replaced by a **Components** view in the live editor (new step 6.7). 7.1's API is hybrid: a plain Django view, or a DRF view documented automatically by drf-spectacular when the project uses DRF (`CAPY_THEME_API` overrides). 7.6 becomes a developer docs page in the repo. 8.4 becomes the Components view's final pass. The module was also reorganized into sections of small files (#150) and its data tables moved to JSON (#152).
 
-> **Scope (after v0.5.0, 2026-11-10):** capy-theme handles every aspect of the theme but only applies it to the page's own look. Everything else it produces (logos for email and print, icons, the sharing image, colours, fonts) is **made available** to other modules through `capy_theme.artifacts.get_artifacts()`, `{% theme_artifacts %}` and the JSON API (7.1). It doesn't serve a web app manifest, output link-preview tags or send email; the project or another module (e.g. an app shell) does that with the artifacts. 5.5 and the tags part of 5.6 were removed in #143.
+> **Scope (after v0.5.0, 2026-11-10):** capy-theme handles every aspect of the theme but only applies it to the page's own look. Everything else it produces (logos for email and print, icons, the sharing image, colors, fonts) is **made available** to other modules through `capy_theme.artifacts.get_artifacts()`, `{% theme_artifacts %}` and the JSON API (7.1). It doesn't serve a web app manifest, output link-preview tags or send email; the project or another module (e.g. an app shell) does that with the artifacts. 5.5 and the tags part of 5.6 were removed in #143.
 
-> **Revised after v0.1.0 (2026-11-10):** the live theme editor moved up to Phase 3, straight after colours, and is now the main way to edit a theme's look (the admin form stays as a fallback). Fonts and images follow it and add their controls to it. 6.1 (light/dark toggle) was done early, in v0.1.0. Reasons are in `docs/DECISIONS.md`. GitHub issue numbers didn't change; their titles and milestones did.
+> **Revised after v0.1.0 (2026-11-10):** the live theme editor moved up to Phase 3, straight after colors, and is now the main way to edit a theme's look (the admin form stays as a fallback). Fonts and images follow it and add their controls to it. 6.1 (light/dark toggle) was done early, in v0.1.0. Reasons are in `docs/DECISIONS.md`. GitHub issue numbers didn't change; their titles and milestones did.
 
 The work is split into 9 phases and 66 small steps. Each step is one GitHub issue that changes a few files and ends with something you can see and check yourself. Each phase ends with a tagged release.
 
@@ -188,7 +188,7 @@ erDiagram
 | --- | --- | --- | --- |
 | Phase 0: Setup | - | 3 | The empty module exists on GitHub, with its own demo site for seeing it work. No other project involved. |
 | Phase 1: Foundation | v0.1.0 ✅ | 10 + 6.1 | Themes exist, one is live, and every page uses it. Publish, history and permissions work. Visitors can switch light/dark. |
-| Phase 2: Colours and shape | v0.2.0 | 8 | The engine: every colour and shape value can be overridden, stored and published, with readable text guaranteed. Plain admin fields. |
+| Phase 2: Colors and shape | v0.2.0 | 8 | The engine: every color and shape value can be overridden, stored and published, with readable text guaranteed. Plain admin fields. |
 | Phase 3: Live theme editor | v0.3.0 | 9 | Edit a theme on the real page and see every change instantly, then save the draft or publish it. The main way to edit. |
 | Phase 4: Fonts | v0.4.0 | 9 | Fonts for every role from every source, all self-hosted, chosen in the live editor. |
 | Phase 5: Images and icons | v0.5.0 | 9 | Every logo slot, icon and sharing image, generated from single uploads, with controls in the live editor. |
@@ -208,7 +208,7 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 
 ### Phase 1: Foundation (v0.1.0) ✅
 
-- [x] **1.1 Built-in theme catalogue** (#4)
+- [x] **1.1 Built-in theme catalog** (#4)
 - [x] **1.2 Theme model** (#5)
 - [x] **1.3 Revisions and publishing** (#6)
 - [x] **1.4 Active theme selection** (#7)
@@ -221,15 +221,15 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 - [x] **6.1 Mode settings and toggle** (#46), brought forward
 - [x] Extras found along the way: base-change notice (#78), decision log (#82), stylesheet version in URLs (#86), demo fixes (#90, #91)
 
-### Phase 2: Colours and shape, the engine (v0.2.0)
+### Phase 2: Colors and shape, the engine (v0.2.0)
 
-- [ ] **2.1 Colour overrides** (#14): Override any of the 20 colours, separately for light and dark.
-- [ ] **2.2 Colour input** (#15): Enter colours any common way, stored as OKLCH. Plain admin fields.
-- [ ] **2.3 Automatic text colours and background shades** (#16): Text is always readable on any colour chosen.
+- [ ] **2.1 Color overrides** (#14): Override any of the 20 colors, separately for light and dark.
+- [ ] **2.2 Color input** (#15): Enter colors any common way, stored as OKLCH. Plain admin fields.
+- [ ] **2.3 Automatic text colors and background shades** (#16): Text is always readable on any color chosen.
 - [ ] **2.4 Contrast warnings** (#17): WCAG ratings calculated on the server, shown in the admin and on the showcase.
 - [ ] **2.6 Shape and effects** (#19): daisyUI's shape settings.
-- [ ] **2.7 Browser colour, focus colour and email colours** (#20): Colour details outside the page itself.
-- [ ] **2.8 Showcase: colours and shape** (#21): See every colour and shape setting on the showcase.
+- [ ] **2.7 Browser color, focus color and email colors** (#20): Color details outside the page itself.
+- [ ] **2.8 Showcase: colors and shape** (#21): See every color and shape setting on the showcase.
 - [ ] **2.9 Release v0.2.0** (#22)
 
 (2.5 Palette suggestions moved to the editor as 3.4.)
@@ -237,9 +237,9 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 ### Phase 3: Live theme editor (v0.3.0)
 
 - [ ] **3.1 Editor on the showcase** (#42): An Edit theme panel on the showcase, for that user only.
-- [ ] **3.2 Draft preview endpoint** (#96): The server works out text colours and contrast for unsaved values, with the same code as publishing. Nothing is stored.
-- [ ] **3.3 Colour and shape controls** (#97): Pickers and sliders with an instant preview and contrast badges.
-- [ ] **3.4 Palette suggestions** (#18): From the primary colour or the logo.
+- [ ] **3.2 Draft preview endpoint** (#96): The server works out text colors and contrast for unsaved values, with the same code as publishing. Nothing is stored.
+- [ ] **3.3 Color and shape controls** (#97): Pickers and sliders with an instant preview and contrast badges.
+- [ ] **3.4 Palette suggestions** (#18): From the primary color or the logo.
 - [ ] **3.5 Save draft and publish from the editor** (#98): Through the existing permissions and revisions.
 - [ ] **3.6 Edit on any page** (#43): The editor on any page that uses `{% theme_head %}`.
 - [ ] **3.7 History: compare and restore** (#44): Undo with confidence.
@@ -254,7 +254,7 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 - [ ] **4.4 Font uploads** (#26): Use any font file.
 - [ ] **4.5 Google Fonts import** (#27): Any Google font, hosted locally.
 - [ ] **4.6 External font stylesheets** (#28): Licensed fonts that can't be self-hosted (e.g. Adobe Fonts).
-- [ ] **4.7 Type scale and font loading** (#29): Sizes and loading behaviour.
+- [ ] **4.7 Type scale and font loading** (#29): Sizes and loading behavior.
 - [ ] **4.8 Showcase: typography** (#30): See every font and type setting on the showcase.
 - [ ] **4.9 Release v0.4.0** (#31)
 
@@ -279,7 +279,7 @@ Full descriptions (goal, build list, checks) are in the GitHub issues. The issue
 - [x] **6.4 Device accessibility preferences** (#49): Respect visitors' system settings.
 - [x] **6.5 Showcase: mode and visitor choices** (#50): Try the visitor-facing controls on the showcase.
 - [x] **6.6 Release v0.6.0** (#51)
-- [x] **Reorganise into small sections** (#150) and **data tables to JSON** (#152)
+- [x] **Reorganize into small sections** (#150) and **data tables to JSON** (#152)
 - [x] **6.7 Components view in the editor** (#155): Replace the showcase page with every daisyUI component inside the live editor.
 - [x] **6.8 See it as a visitor** (#158): Admins see what visitors see (published theme, by mode, offered theme or date), a visitors summary, and the images and icons in the Components view.
 

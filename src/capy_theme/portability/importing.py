@@ -114,7 +114,8 @@ def _font(archive, font, stored):
         family=font["family"],
         source=font["source"],
         fallback_stack=font.get("fallback_stack", ""),
-        licence=font.get("licence", ""),
+        # Exports made before 1.0 call it "licence" (renamed in #199).
+        license=font.get("license", font.get("licence", "")),
         stylesheet_url=font.get("stylesheet_url", ""),
     )
     new.full_clean()

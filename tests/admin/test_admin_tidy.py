@@ -17,7 +17,7 @@ def test_sections_are_in_a_clear_order():
         "Publishing",
         "Base themes",
         "Branding",
-        "Light colours: Basic",
+        "Light colors: Basic",
         "Contrast",
         "Shape and effects",
         "Mode",
@@ -36,7 +36,7 @@ def test_every_setting_is_reachable():
 
 def test_advanced_parts_are_folded():
     options = dict(ThemeAdmin.fieldsets)
-    for name in ("Advanced", "Contrast", "Shape and effects", "Light colours: Expert"):
+    for name in ("Advanced", "Contrast", "Shape and effects", "Light colors: Expert"):
         assert "collapse" in options[name]["classes"], name
 
 

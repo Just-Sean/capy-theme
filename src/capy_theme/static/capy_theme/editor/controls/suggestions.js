@@ -1,5 +1,5 @@
-// Palette suggestions (shown in the colours section): from the current primary
-// colour and from the logo. Clicking one fills in the colours and previews them;
+// Palette suggestions (shown in the colors section): from the current primary
+// color and from the logo. Clicking one fills in the colors and previews them;
 // nothing is saved.
 (function () {
   "use strict";
@@ -34,7 +34,7 @@
 
   ui.suggestionBox = function () {
     var list = el("div", { class: "capy-editor-suggestions", "aria-live": "polite" });
-    var button = el("button", { type: "button", "data-capy-suggest": "", text: "Suggest colours" });
+    var button = el("button", { type: "button", "data-capy-suggest": "", text: "Suggest colors" });
     button.addEventListener("click", function () {
       list.textContent = "Finding suggestions…";
       var primary = ui.latest.values[ui.scheme]["--color-primary"];
@@ -64,7 +64,7 @@
     });
     return el("details", { class: "capy-editor-suggest" }, [
       el("summary", { text: "Suggestions" }),
-      el("p", { class: "capy-editor-note", text: "Colours that go with your primary colour, or from your logo. Click one to try it on this mode; nothing is saved." }),
+      el("p", { class: "capy-editor-note", text: "Colors that go with your primary color, or from your logo. Click one to try it on this mode; nothing is saved." }),
       button,
       list,
     ]);

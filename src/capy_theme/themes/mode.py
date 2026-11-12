@@ -1,4 +1,4 @@
-"""Light, dark or auto: which colour mode a page uses.
+"""Light, dark or auto: which color mode a page uses.
 
 The theme sets a default mode ("auto" follows the visitor's device) and whether
 visitors can switch. A visitor's choice is kept in a cookie. Forced modes use the
@@ -9,7 +9,7 @@ import json
 
 from django.utils.html import format_html, format_html_join
 
-from ..colors.maths import to_hex
+from ..colors.color_math import to_hex
 from ..colors.names import SCHEMES
 from ..colors.values import effective_values
 
@@ -72,7 +72,7 @@ def head_script(revision):
 
 
 def theme_color_meta(revision, mode):
-    """The <meta name="theme-color"> tags: the browser's address-bar colour.
+    """The <meta name="theme-color"> tags: the browser's address-bar color.
 
     Matches the page background. With a forced mode, one tag for that mode;
     otherwise one each for light and dark, chosen by the device setting.

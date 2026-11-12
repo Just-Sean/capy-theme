@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **American spelling everywhere** (color, license, catalog, gray, center...), in
+  the interface, docs and code. `Font.licence` is now `Font.license` (migration
+  0015 renames it, keeping every value), and the modules `themes/catalogue.py`
+  and `colors/maths.py` are now `themes/catalog.py` and `colors/color_math.py`.
+  Theme exports made before 1.0 (with `"licence"`) still import.
 - **Mode toggle:** the current mode is marked with `aria-current="true"` instead
   of `aria-pressed`, which isn't allowed on links (found by Lighthouse). Project
   CSS or tests that look for `[aria-pressed]` on the toggle need updating.
@@ -49,7 +54,7 @@ live editor shows every component and what visitors see.
 - **Removed:** the showcase page (`/theme/showcase/`) and its settings
   `CAPY_THEME_SHOWCASE` and `CAPY_THEME_BASE_TEMPLATE`. **Edit live** in the
   admin now opens the editor on the site's home page.
-- **Reorganised into sections** (no behaviour change): `themes/`, `colors/`,
+- **Reorganized into sections** (no behavior change): `themes/`, `colors/`,
   `css/`, `fonts/`, `images/`, `editor/`, `artifacts/`, `admin/` and `showcase/`,
   each made of small files (every Python file under 200 lines). daisyUI's
   built-in themes are now a JSON data file. Import paths inside the package
@@ -58,8 +63,8 @@ live editor shows every component and what visitors see.
   one page per section in `docs/`.
 - **Data moved out of Python into JSON files**, next to the code that reads them:
   system font stacks, character sets, shape and type settings, image slots,
-  the SVG allow-list, icon files and colour groups. Same values (checked one by
-  one); no behaviour change.
+  the SVG allow-list, icon files and color groups. Same values (checked one by
+  one); no behavior change.
 
 ## 0.6.0
 
@@ -68,7 +73,7 @@ makes its artifacts available; other modules apply them.
 
 - **Scope: capy-theme exposes theme artifacts, other modules apply them.**
   `capy_theme.artifacts.get_artifacts()` and `{% theme_artifacts %}` give every
-  published colour (OKLCH and hex), font, logo slot (with fallbacks and smaller
+  published color (OKLCH and hex), font, logo slot (with fallbacks and smaller
   copies), icon, sharing image and background as plain data, with absolute URLs
   when given a request.
 - **Visitor theme picker:** tick **Offer to visitors** on published themes;
@@ -110,7 +115,7 @@ uploads and chosen in the live editor or the admin.
   monochrome icons, with background and padding settings. Linked by
   `{% theme_head %}`.
 - **Web app manifest** at `/theme/manifest.webmanifest`: names, description, start
-  URL, display, orientation, colours and icons. Chrome reports it installable.
+  URL, display, orientation, colors and icons. Chrome reports it installable.
 - **Link previews:** a sharing image cropped to 1200 × 630 and Open Graph / Twitter
   card tags in `{% theme_head %}`, overridable per page with
   `{% theme_social_tags %}` in a block.
@@ -132,7 +137,7 @@ stylesheets), chosen in the live editor.
   copied into revisions.
 - **System font stacks:** 13 stacks (System sans/serif/mono plus ten from Modern
   Font Stacks), added by migration. Nothing to download.
-- **Curated collection:** 30 open-licence (OFL) fonts bundled, added with
+- **Curated collection:** 30 open-license (OFL) fonts bundled, added with
   `manage.py capy_theme_add_fonts`, with previews in the admin and editor.
 - **Uploads:** WOFF2, WOFF, TTF or OTF, checked and converted to WOFF2 with
   fontTools, optionally trimmed to a character subset. Weight and style are read
@@ -155,11 +160,11 @@ instantly, then save the draft or publish it.
   **Edit theme** button (on the showcase, and in the corner of every page via
   `{% theme_head %}`; `CAPY_THEME_EDITOR_BUTTON` hides the corner one) and
   `?edit=<id>`. The draft shows for that user only, with a banner and Exit.
-- **Controls:** base themes; the 20 colours for light and dark (picker, any
+- **Controls:** base themes; the 20 colors for light and dark (picker, any
   format, reset, live contrast badge); shape and effects.
 - **Palette suggestions:** analogous, complementary and triadic from the primary
-  colour, and the logo's main colours.
-- **Preview endpoint:** the server works out text colours, shades, contrast and
+  color, and the logo's main colors.
+- **Preview endpoint:** the server works out text colors, shades, contrast and
   CSS with the same code as publishing, and never writes.
 - **Save draft and Publish** from the editor (Publish needs `publish_theme`), with
   an unsaved-changes warning.
@@ -170,24 +175,24 @@ instantly, then save the draft or publish it.
 
 ## 0.2.0
 
-Colours and shape: every colour and shape value can be overridden, with readable
+Colors and shape: every color and shape value can be overridden, with readable
 text guaranteed.
 
-- **Colour overrides:** any of the 20 daisyUI colours, separately for light and
+- **Color overrides:** any of the 20 daisyUI colors, separately for light and
   dark, in `settings["colors"]`. Admin fields grouped Basic / Advanced / Expert;
-  blank fields use (and show) the base theme's colour.
-- **Colour input:** hex, rgb(), hsl(), oklch() or colour names, stored as OKLCH
-  (ColorAide), with the browser's colour picker beside each field.
-- **Automatic text colours and background shades:** readable `-content` colours
-  for overridden colours (WCAG AA, white/black fallback), and base-200, base-300
+  blank fields use (and show) the base theme's color.
+- **Color input:** hex, rgb(), hsl(), oklch() or color names, stored as OKLCH
+  (ColorAide), with the browser's color picker beside each field.
+- **Automatic text colors and background shades:** readable `-content` colors
+  for overridden colors (WCAG AA, white/black fallback), and base-200, base-300
   and base-content from an overridden background.
-- **Contrast warnings:** WCAG ratings (fail, AA, AAA) for every colour pair, next
-  to each colour field and in a table. Warnings only.
+- **Contrast warnings:** WCAG ratings (fail, AA, AAA) for every color pair, next
+  to each color field and in a table. Warnings only.
 - **Shape and effects:** radii, control sizes, border width, depth and noise, in
   `settings["shape"]`, for both modes.
-- **Browser, focus and email colours:** `theme-color` meta tags, an always-visible
+- **Browser, focus and email colors:** `theme-color` meta tags, an always-visible
   `:focus-visible` outline (`--capy-focus`), and `theme.email_colors` in hex.
-- **Showcase:** colour swatches (values, contrast, source) and shape samples.
+- **Showcase:** color swatches (values, contrast, source) and shape samples.
 - **New dependency:** coloraide.
 
 ## 0.1.0
@@ -195,7 +200,7 @@ text guaranteed.
 The foundation: themes exist, one is live, and every page uses it. Publishing,
 history and permissions work.
 
-- **Built-in theme catalogue:** daisyUI 5.7.50's 35 themes and their 28 values,
+- **Built-in theme catalog:** daisyUI 5.7.50's 35 themes and their 28 values,
   generated from the daisyUI package by `scripts/generate_builtin_themes.py`.
   `CAPY_THEME_BUILTIN_THEMES` limits which are offered.
 - **Theme model:** name, slug, light and dark base, and `settings` overrides,

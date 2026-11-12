@@ -215,7 +215,7 @@
   };
 
   // The same, but waits until changes stop for a moment (e.g. while dragging a
-  // colour picker), so the server gets one request instead of dozens.
+  // color picker), so the server gets one request instead of dozens.
   var pending = null;
   editor.schedulePreview = function (changes) {
     clearTimeout(pending);

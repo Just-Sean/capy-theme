@@ -33,7 +33,7 @@ with alt text. For every upload:
   left as a normal server error, so Django logs it and it gets noticed.
 - The image is saved again without EXIF, text chunks and comments, so camera
   details and GPS locations are removed. Photos are turned upright first.
-  Colour profiles are kept.
+  Color profiles are kept.
 - SVGs are cleaned with a strict allow-list (`src/capy_theme/images/svg_allowlist.json`, used by `images/svg.py`): only
   drawing elements and attributes are kept. Scripts, event handlers (`onload`
   and so on), embedded HTML, animation, links to other files or sites, and CSS
@@ -92,7 +92,7 @@ Every browser and home-screen icon is made from one square image (at least
 1. Upload it in the **icon** slot (live editor: **Images**; admin: the
    **Images** list), optionally with a dark version.
 2. Choose it (live editor: **Images → Logos and icon**; admin: **Icon**), and set
-   the **Icon background** (a hex colour; blank is transparent) and **Icon
+   the **Icon background** (a hex color; blank is transparent) and **Icon
    padding** (0–25% on each side) if you want.
 3. Save and publish. The icons are made when you publish.
 
@@ -106,7 +106,7 @@ from the icon image and its settings, so each revision keeps its icons:
 | `apple-touch-icon.png` | iPhone and iPad home screen (180 px, never transparent: white if no background is set) |
 | `icon-192.png`, `icon-512.png` | Android home screen and app icons |
 | `icon-maskable-512.png` | Android adaptive icons: the icon sits in the middle 80%, on a solid background |
-| `icon-monochrome-512.png` | Single-colour icons: white in the icon's shape |
+| `icon-monochrome-512.png` | Single-color icons: white in the icon's shape |
 
 `{% theme_head %}` links the ICO, SVG, 192 px and Apple icons (the tab and
 home-screen icon are part of the site's look). The 512 px, maskable and
@@ -117,7 +117,7 @@ project or PWA module gets them from [theme artifacts](artifacts.md).
 
 Choose an image for the **social** slot (PNG or JPEG, not SVG) in the live
 editor (**Images**) or the admin (**Sharing image**), then publish. It's cropped
-from its centre to 1200 × 630 when uploaded (transparent parts become white).
+from its center to 1200 × 630 when uploaded (transparent parts become white).
 capy-theme doesn't output link-preview tags (Open Graph, Twitter cards): the
 project or another module adds them, using the image from
 [theme artifacts](artifacts.md).
@@ -130,7 +130,7 @@ the live editor (**Images**; they preview straight away) or the admin
 (**Backgrounds**), then publish. They show only where the project's templates
 use them:
 
-- **Classes**: `class="capy-bg-login"` (covers the element, centred) or
+- **Classes**: `class="capy-bg-login"` (covers the element, centered) or
   `class="capy-bg-pattern"` (repeats). The demo's `<body>` uses `capy-bg-pattern`.
 - **CSS variables**: `--capy-bg-login` and `--capy-bg-pattern` (each a `url(...)`,
   switching with light and dark mode), e.g.

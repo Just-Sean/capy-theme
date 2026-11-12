@@ -1,4 +1,4 @@
-"""Tests for the editor's colour and shape controls (issue #97).
+"""Tests for the editor's color and shape controls (issue #97).
 
 The controls themselves are JavaScript (editor/controls/*.js), checked in headless
 Chrome while building. These tests cover the data the server gives them.
@@ -29,7 +29,7 @@ def editor_client(client, django_user_model):
     return client
 
 
-def test_controls_list_bases_colours_and_shape():
+def test_controls_list_bases_colors_and_shape():
     spec = controls()
     assert "cupcake" in spec["bases"]["light"] and "cupcake" not in spec["bases"]["dark"]
     assert [g["name"] for g in spec["color_groups"]] == ["Basic", "Advanced", "Expert"]
@@ -43,7 +43,7 @@ def test_bases_follow_the_project_setting(settings):
     assert controls()["bases"] == {"light": ["light"], "dark": ["dark"]}
 
 
-def test_preview_gives_hex_for_every_colour_picker():
+def test_preview_gives_hex_for_every_color_picker():
     theme = Theme.objects.create(name="Main", slug="main")
     result = preview(theme, {"settings": {"colors": {"light": {"primary": "#16a34a"}}}})
     assert set(result["hex"]["light"]) == set(COLOR_NAMES)

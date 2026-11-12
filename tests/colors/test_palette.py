@@ -31,7 +31,7 @@ def logo_bytes():
     return buffer.getvalue()
 
 
-def test_three_suggestions_from_a_primary_colour():
+def test_three_suggestions_from_a_primary_color():
     result = from_primary("#3b82f6")
     assert [s["name"] for s in result] == ["Analogous", "Complementary", "Triadic"]
     for suggestion in result:
@@ -43,7 +43,7 @@ def test_complementary_is_the_opposite_hue():
     assert round(hue(complementary["colors"]["secondary"])) == 280
 
 
-def test_logo_colours_most_used_first_ignoring_white():
+def test_logo_colors_most_used_first_ignoring_white():
     suggestion = from_logo(io.BytesIO(logo_bytes()))
     colors = suggestion["colors"]
     assert set(colors) == {"primary", "secondary", "accent", "neutral"}
@@ -52,7 +52,7 @@ def test_logo_colours_most_used_first_ignoring_white():
     assert 80 < hue(colors["accent"]) < 105  # yellow
 
 
-def test_logo_without_colour_gives_no_suggestion():
+def test_logo_without_color_gives_no_suggestion():
     image = Image.new("RGB", (50, 50), (255, 255, 255))
     buffer = io.BytesIO()
     image.save(buffer, "PNG")
@@ -104,7 +104,7 @@ def test_endpoint_without_logo(editor_client):
     assert names == ["Analogous", "Complementary", "Triadic"]
 
 
-def test_endpoint_rejects_a_bad_colour(editor_client):
+def test_endpoint_rejects_a_bad_color(editor_client):
     theme = Theme.objects.create(name="Main", slug="main")
     assert post(editor_client, theme, {"primary": "nope"}).status_code == 400
 

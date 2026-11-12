@@ -9,7 +9,7 @@ from capy_theme.colors.values import effective_values
 from capy_theme.css.shape import EFFECTS, SIZES, shape_values
 from capy_theme.css.stylesheet import render_css
 from capy_theme.models import Theme
-from capy_theme.themes.catalogue import THEMES
+from capy_theme.themes.catalog import THEMES
 from capy_theme.themes.publishing import publish
 from capy_theme.themes.validation import validate_settings
 

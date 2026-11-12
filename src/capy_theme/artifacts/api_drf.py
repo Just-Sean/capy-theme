@@ -86,7 +86,7 @@ class ArtifactsSerializer(serializers.Serializer):
 
 
 class ThemeAPIView(APIView):
-    """The active theme's colours, fonts, shape, logos, icons and images."""
+    """The active theme's colors, fonts, shape, logos, icons and images."""
 
     authentication_classes = []
     permission_classes = [AllowAny]

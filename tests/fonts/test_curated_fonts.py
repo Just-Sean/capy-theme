@@ -23,11 +23,11 @@ def media(settings, tmp_path):
     settings.MEDIA_URL = "/media/"
 
 
-def test_about_30_open_licence_fonts_are_bundled():
+def test_about_30_open_license_fonts_are_bundled():
     assert len(MANIFEST) == 30
     assert {f["category"] for f in MANIFEST} == {"sans", "serif", "mono", "display"}
     for font in MANIFEST:
-        assert font["licence"] == "SIL Open Font License 1.1"
+        assert font["license"] == "SIL Open Font License 1.1"
         assert (FONTS / font["id"] / "LICENSE").exists(), font["id"]
         assert font["files"], font["id"]
         for item in font["files"]:
@@ -40,7 +40,7 @@ def test_the_command_adds_them_to_the_library():
     assert "Done: 30 fonts added, 0 already in the library." in out.getvalue()
     inter = Font.objects.get(family="Inter")
     assert inter.source == "bundled"
-    assert "SIL Open Font License 1.1" in inter.licence
+    assert "SIL Open Font License 1.1" in inter.license
     assert {(f.weight, f.style) for f in inter.files.all()} == {
         (400, "normal"),
         (700, "normal"),

@@ -109,8 +109,8 @@ def import_family(family, weights=(400, 700), italic=True, subsets=("latin",), d
         font = Font.objects.create(
             family=family,
             source="google",
-            licence=f"Imported from Google Fonts. See https://fonts.google.com/specimen/"
-            f"{family.replace(' ', '+')} for its licence (most are the SIL Open Font License).",
+            license=f"Imported from Google Fonts. See https://fonts.google.com/specimen/"
+            f"{family.replace(' ', '+')} for its license (most are the SIL Open Font License).",
         )
         stored = {}  # url -> saved file name (variable fonts reuse one file)
         for face in faces:

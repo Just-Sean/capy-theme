@@ -30,9 +30,9 @@ def media_and_cache(settings, tmp_path):
     cache.clear()
 
 
-def png(name="logo.png", colour="red"):
+def png(name="logo.png", color="red"):
     buffer = io.BytesIO()
-    Image.new("RGB", (40, 20), colour).save(buffer, "PNG")
+    Image.new("RGB", (40, 20), color).save(buffer, "PNG")
     return SimpleUploadedFile(name, buffer.getvalue(), content_type="image/png")
 
 
@@ -76,9 +76,9 @@ def test_form_shows_current_values_and_blank_removes_them():
     assert form.save().settings == {}
 
 
-def with_logo(theme, name="logo.png", colour="red"):
+def with_logo(theme, name="logo.png", color="red"):
     """Upload a main logo for the theme and choose it (in the draft)."""
-    asset = add_asset(theme, "logo_main", "light", png(name, colour))
+    asset = add_asset(theme, "logo_main", "light", png(name, color))
     theme.settings = {**theme.settings, "images": {"logo_main": {"light": asset.pk}}}
     theme.save()
     return asset

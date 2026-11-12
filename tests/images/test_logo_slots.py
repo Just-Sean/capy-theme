@@ -29,9 +29,9 @@ def media(settings, tmp_path):
     cache.clear()
 
 
-def image(size=(600, 200), fmt="PNG", colour="red", name=None):
+def image(size=(600, 200), fmt="PNG", color="red", name=None):
     buffer = io.BytesIO()
-    Image.new("RGB", size, colour).save(buffer, fmt)
+    Image.new("RGB", size, color).save(buffer, fmt)
     return SimpleUploadedFile(name or f"logo.{fmt.lower()}", buffer.getvalue())
 
 
@@ -107,7 +107,7 @@ def test_images_only_in_the_slot_they_were_uploaded_for(theme):
 
 def test_fallbacks(theme):
     main = add_asset(theme, "logo_main", "light", image())
-    main_dark = add_asset(theme, "logo_main", "dark", image(colour="white"))
+    main_dark = add_asset(theme, "logo_main", "dark", image(color="white"))
     mark = add_asset(theme, "logo_mark", "light", image((100, 100)))
     snapshot = choose(
         theme, logo_main={"light": main, "dark": main_dark}, logo_mark={"light": mark}

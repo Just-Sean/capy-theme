@@ -22,7 +22,7 @@ from capy_theme.models import Theme
 from capy_theme.portability.export import export_theme
 from capy_theme.portability.importing import import_theme
 from capy_theme.themes import active
-from capy_theme.themes.catalogue import get_builtin_themes
+from capy_theme.themes.catalog import get_builtin_themes
 from capy_theme.themes.publishing import publish
 from tests.support.fonts import ttf_bytes
 from tests.support.images import gif

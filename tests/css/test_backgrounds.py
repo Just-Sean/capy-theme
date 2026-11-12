@@ -28,9 +28,9 @@ def media(settings, tmp_path):
     cache.clear()
 
 
-def png(colour="red", name="bg.png"):
+def png(color="red", name="bg.png"):
     buffer = io.BytesIO()
-    Image.new("RGB", (64, 64), colour).save(buffer, "PNG")
+    Image.new("RGB", (64, 64), color).save(buffer, "PNG")
     return SimpleUploadedFile(name, buffer.getvalue())
 
 

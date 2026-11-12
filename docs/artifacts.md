@@ -28,7 +28,7 @@ What's in it (all from the published revision; with a request, URLs are absolute
 | --- | --- |
 | `theme` | `name`, `slug`, `revision` |
 | `branding` | `site_name`, `tagline`, `logo_alt` |
-| `colors`, `colors_hex` | The 20 colours per mode (`light`, `dark`), as OKLCH and as `#rrggbb` |
+| `colors`, `colors_hex` | The 20 colors per mode (`light`, `dark`), as OKLCH and as `#rrggbb` |
 | `fonts` | Per role the theme sets: `family`, `stack` (CSS `font-family`), `source` |
 | `logos` | The six logo slots, `light` and `dark`, after fallbacks: `url`, `width`, `height`, `alt`, `content_type`, `variants` (smaller copies: `url`, `width`, `format`) |
 | `icons` | File name → URL: `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `icon-monochrome-512.png` |
@@ -88,7 +88,7 @@ It's made from the same data as the JSON API. File name `<theme slug>.tokens.jso
 media type `application/design-tokens+json`.
 
 - `light` and `dark` groups: `color` (all 20, as OKLCH components with a 6-digit
-  `hex` fallback; colourless greys have hue `"none"`) and `shape` (radii and sizes
+  `hex` fallback; colorless grays have hue `"none"`) and `shape` (radii and sizes
   as `rem`/`px` dimensions, depth and noise as numbers).
 - `font`: a `fontFamily` token per role the theme sets (the stack as a list).
 - `type`: base size, heading scale, line height and heading weight, if set.
@@ -114,7 +114,7 @@ daisyUI plugin:
 
 With daisyUI's standalone plugin files (no npm), change `"daisyui/theme"` to the
 path of your `daisyui-theme.mjs`. The blocks carry daisyUI's own variables only
-(colours, radii, sizes, border, depth, noise); fonts, the type scale, logos and
+(colors, radii, sizes, border, depth, noise); fonts, the type scale, logos and
 the other extras need `{% theme_head %}` or the API. The download is a snapshot:
 download it again after publishing changes.
 

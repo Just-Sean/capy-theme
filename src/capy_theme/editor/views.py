@@ -32,7 +32,7 @@ def editor_state(request, pk):
 def editor_preview(request, pk):
     """Preview unsaved editor values (JSON in, JSON out). Never writes anything.
 
-    Returns the CSS, every colour's value and the contrast ratings, from the same
+    Returns the CSS, every color's value and the contrast ratings, from the same
     code as publishing. Invalid values give 400 with the problems listed.
     """
     if not can_edit(request.user):
@@ -55,7 +55,7 @@ def editor_preview(request, pk):
 
 @require_POST
 def editor_suggestions(request, pk):
-    """Palette suggestions (JSON) from {"primary": "<any colour>"} and the theme's logo."""
+    """Palette suggestions (JSON) from {"primary": "<any color>"} and the theme's logo."""
     if not can_edit(request.user):
         return JsonResponse({"error": "You can't edit themes."}, status=403)
     theme = get_object_or_404(Theme, pk=pk)
@@ -64,7 +64,7 @@ def editor_suggestions(request, pk):
         primary = str(data.get("primary") or "") if isinstance(data, dict) else ""
         result = suggestions(theme, primary)
     except ValueError:
-        return JsonResponse({"errors": ["That isn't a colour."]}, status=400)
+        return JsonResponse({"errors": ["That isn't a color."]}, status=400)
     response = JsonResponse({"suggestions": result})
     response["Cache-Control"] = "no-store"
     return response

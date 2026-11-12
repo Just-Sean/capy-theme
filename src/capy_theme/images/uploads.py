@@ -182,8 +182,8 @@ def _strip_metadata(image):
     """A copy of the image with no EXIF, text chunks or comments.
 
     Photos are turned upright first (their EXIF says how they were held), so they
-    still look right once the EXIF is gone. Colour profiles are kept: they don't
-    identify anyone and keep colours accurate.
+    still look right once the EXIF is gone. Color profiles are kept: they don't
+    identify anyone and keep colors accurate.
     """
     if image.format == "GIF":
         clean = image  # GIFs carry no EXIF; Pillow only writes the comment back

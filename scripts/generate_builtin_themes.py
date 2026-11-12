@@ -11,7 +11,7 @@ Run it from the repo root after changing DAISYUI_VERSION:
     uv run python scripts/generate_builtin_themes.py
 
 It also checks that the demo site's daisyUI plugin (demo/tailwind/daisyui.mjs)
-is the same version, and warns if not, so the catalogue matches what the demo shows.
+is the same version, and warns if not, so the catalog matches what the demo shows.
 """
 
 import io
@@ -77,7 +77,7 @@ def build_themes(themes, order):
 def render(themes, version):
     """Return builtin_themes.json: the daisyUI version and every theme's scheme and values.
 
-    Generated: don't edit it by hand. capy_theme.themes.catalogue reads it.
+    Generated: don't edit it by hand. capy_theme.themes.catalog reads it.
     """
     data = {"daisyui_version": version, "themes": themes}
     return json.dumps(data, indent=1, ensure_ascii=False) + "\n"

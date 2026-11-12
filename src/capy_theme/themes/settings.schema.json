@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Just-Sean/capy-theme/settings.schema.json",
   "title": "capy-theme Theme.settings",
-  "description": "Every override a theme makes on top of its light and dark base themes. Each phase adds its own keys here (colours, fonts, shape and so on). Keys not listed are rejected.",
+  "description": "Every override a theme makes on top of its light and dark base themes. Each phase adds its own keys here (colors, fonts, shape and so on). Keys not listed are rejected.",
   "type": "object",
   "properties": {
     "site_name": {
@@ -21,7 +21,7 @@
       "maxLength": 200
     },
     "default_mode": {
-      "description": "The colour mode pages use: \"auto\" follows the visitor's device, \"light\" or \"dark\" forces one. Default \"auto\".",
+      "description": "The color mode pages use: \"auto\" follows the visitor's device, \"light\" or \"dark\" forces one. Default \"auto\".",
       "type": "string",
       "enum": [
         "auto",
@@ -34,7 +34,7 @@
       "type": "boolean"
     },
     "colors": {
-      "description": "Colour overrides, separately for light and dark. Anything not set comes from the base theme.",
+      "description": "Color overrides, separately for light and dark. Anything not set comes from the base theme.",
       "type": "object",
       "properties": {
         "light": {
@@ -333,7 +333,7 @@
       "type": "object",
       "properties": {
         "background": {
-          "description": "Icon background: a hex colour behind the icon. Missing means transparent.",
+          "description": "Icon background: a hex color behind the icon. Missing means transparent.",
           "type": "string",
           "pattern": "^#[0-9a-fA-F]{6}$"
         },
@@ -364,7 +364,7 @@
   "additionalProperties": false,
   "$defs": {
     "color": {
-      "description": "A colour in OKLCH, as daisyUI writes them, e.g. oklch(62% 0.19 260).",
+      "description": "A color in OKLCH, as daisyUI writes them, e.g. oklch(62% 0.19 260).",
       "type": "string",
       "pattern": "^oklch\\(\\s*[0-9.]+%?\\s+[0-9.]+\\s+[0-9.]+(\\s*/\\s*[0-9.]+%?)?\\s*\\)$"
     }

@@ -39,7 +39,7 @@ register = template.Library()
 def theme_head(context):
     """Output the active theme's stylesheet link, theme-color tags and mode script.
 
-    Also the theme-color meta tags (the browser's address-bar colour) and, for
+    Also the theme-color meta tags (the browser's address-bar color) and, for
     staff who can edit, the live editor. Outputs nothing (except the editor)
     if no theme is active. The script carries the CSP nonce when
     Django's CSP middleware is on.

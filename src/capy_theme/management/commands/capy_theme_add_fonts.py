@@ -23,7 +23,7 @@ STATIC_FONTS = MODULE / "static" / "capy_theme" / "fonts"
 
 
 class Command(BaseCommand):
-    help = "Add capy-theme's curated, open-licence fonts to the font library."
+    help = "Add capy-theme's curated, open-license fonts to the font library."
 
     def handle(self, *args, **options):
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
@@ -37,7 +37,7 @@ class Command(BaseCommand):
                     family=entry["family"],
                     source="bundled",
                     fallback_stack=entry["fallback"],
-                    licence=f"{entry['licence']}. Bundled with capy-theme from Fontsource "
+                    license=f"{entry['license']}. Bundled with capy-theme from Fontsource "
                     f"(@fontsource/{entry['id']} {entry['version']}).",
                 )
                 for item in entry["files"]:

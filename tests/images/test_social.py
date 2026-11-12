@@ -30,9 +30,9 @@ def media(settings, tmp_path):
     cache.clear()
 
 
-def picture(size=(1600, 1600), fmt="JPEG", mode="RGB", colour="red"):
+def picture(size=(1600, 1600), fmt="JPEG", mode="RGB", color="red"):
     buffer = io.BytesIO()
-    Image.new(mode, size, colour).save(buffer, fmt)
+    Image.new(mode, size, color).save(buffer, fmt)
     return SimpleUploadedFile(f"share.{fmt.lower()}", buffer.getvalue())
 
 

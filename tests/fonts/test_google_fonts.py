@@ -100,7 +100,7 @@ def test_import_stores_the_files_locally():
     google = FakeGoogle()
     font = import_family("Lora", download=google)
     assert font.source == "google"
-    assert "fonts.google.com/specimen/Lora" in font.licence
+    assert "fonts.google.com/specimen/Lora" in font.license
     files = list(font.files.all())
     assert {(f.weight, f.style, f.subset) for f in files} == {
         (400, "normal", "latin"),

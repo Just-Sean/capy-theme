@@ -18,7 +18,7 @@ SETTING_LABELS = {
 def describe(snapshot):
     """Return {readable name: value} for everything a revision saved.
 
-    E.g. {"Light base": "cupcake", "Light colour: Primary": "oklch(...)",
+    E.g. {"Light base": "cupcake", "Light color: Primary": "oklch(...)",
     "Shape: Box corner radius": 0.0}. Used to compare revisions.
     """
     settings = snapshot.get("settings", {})
@@ -36,7 +36,7 @@ def describe(snapshot):
     for scheme in ("light", "dark"):
         chosen = settings.get("colors", {}).get(scheme, {})
         for name in COLOR_NAMES:
-            rows[f"{scheme.capitalize()} colour: {label(name)}"] = chosen.get(name)
+            rows[f"{scheme.capitalize()} color: {label(name)}"] = chosen.get(name)
     shape = settings.get("shape", {})
     for name, spec in SIZES.items():
         rows[f"Shape: {spec[4]}"] = shape.get(name)

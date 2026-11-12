@@ -28,7 +28,7 @@ bottom:
 2. Publishing status
 3. Base themes
 4. Branding
-5. Colours (light and dark; Basic open, Advanced and Expert folded)
+5. Colors (light and dark; Basic open, Advanced and Expert folded)
 6. Contrast (folded)
 7. Shape and effects (folded)
 8. Mode
@@ -64,7 +64,7 @@ theme's **live revision**, which changes only when someone publishes:
   and removed only if the theme itself is deleted.
 - **Revisions** (button on the theme's edit page) lists every revision and
   **compares** any two, showing exactly which values changed (bases, logo,
-  branding, mode, each colour and each shape setting).
+  branding, mode, each color and each shape setting).
 - **Restore** (needs `publish_theme`) copies an old revision into the draft and
   publishes it **as a new revision**, noted "Restored revision N". Nothing in the
   history is deleted, and the site shows it straight away.
@@ -199,7 +199,7 @@ The same, plus publishing, as management commands (in the demo, use
 uv run python manage.py theme_export main -o main.capy-theme.zip   # default file: <slug>.capy-theme.zip
 uv run python manage.py theme_import main.capy-theme.zip            # as a draft
 uv run python manage.py theme_import main.capy-theme.zip --activate # publish it and make it the site's theme
-uv run python manage.py theme_publish main --note "New colours" --activate
+uv run python manage.py theme_publish main --note "New colors" --activate
 uv run python manage.py theme_rebuild_images                        # every theme, or give a slug
 ```
 

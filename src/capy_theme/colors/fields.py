@@ -3,13 +3,13 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
-from .maths import to_hex, to_oklch
+from .color_math import to_hex, to_oklch
 
 
 class ColorWidget(forms.TextInput):
-    """A text box for any colour format, with the browser's colour picker beside it.
+    """A text box for any color format, with the browser's color picker beside it.
 
-    Picking a colour writes its hex value into the text box; typing a value
+    Picking a color writes its hex value into the text box; typing a value
     moves the picker to match (static/capy_theme/admin/color_input.js).
     """
 
@@ -29,11 +29,11 @@ class ColorWidget(forms.TextInput):
 
 
 class ColorField(forms.CharField):
-    """Accepts hex, rgb(), hsl(), oklch() or a colour name; cleans to OKLCH text."""
+    """Accepts hex, rgb(), hsl(), oklch() or a color name; cleans to OKLCH text."""
 
     widget = ColorWidget
     default_error_messages = {
-        "invalid": "Enter a colour, e.g. #3b82f6, rgb(59 130 246) or oklch(62% 0.19 260).",
+        "invalid": "Enter a color, e.g. #3b82f6, rgb(59 130 246) or oklch(62% 0.19 260).",
     }
 
     def to_python(self, value):

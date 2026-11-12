@@ -1,4 +1,4 @@
-"""The catalogue of built-in daisyUI themes that capy-theme themes start from.
+"""The catalog of built-in daisyUI themes that capy-theme themes start from.
 
 The values come from builtin_themes.json, which is generated from the daisyUI
 package by scripts/generate_builtin_themes.py (don't edit it by hand). A project

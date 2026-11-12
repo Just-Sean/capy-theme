@@ -1,4 +1,4 @@
-"""Colour maths: OKLCH conversion, WCAG contrast, readable text colours and shades."""
+"""Color math: OKLCH conversion, WCAG contrast, readable text colors and shades."""
 
 from coloraide import Color
 
@@ -6,16 +6,16 @@ from .names import COLOR_NAMES
 
 
 def contrast(foreground, background):
-    """Return the WCAG 2 contrast ratio between two colours (1 to 21)."""
+    """Return the WCAG 2 contrast ratio between two colors (1 to 21)."""
     return Color(foreground).contrast(Color(background), method="wcag21")
 
 
 def readable_text(background):
-    """Return a text colour that reads well on `background`.
+    """Return a text color that reads well on `background`.
 
     Prefers a very light or very dark tint of the background's own hue, which
     looks better than plain white or black. If neither tint reaches WCAG AA
-    (4.5:1), uses pure white or black instead, which is the most any colour
+    (4.5:1), uses pure white or black instead, which is the most any color
     can get on a mid-tone background.
     """
     lightness, chroma, hue = Color(background).convert("oklch").coords(nans=False)
@@ -50,24 +50,24 @@ def _oklch(lightness, chroma, hue, alpha=1):
 
 
 def to_oklch(value):
-    """Return a colour written any common way as daisyUI-style OKLCH text.
+    """Return a color written any common way as daisyUI-style OKLCH text.
 
-    Accepts hex (#3b82f6), rgb(), hsl(), oklch() and colour names. Raises
-    ValueError if it isn't a colour. Example: "#3b82f6" -> "oklch(62.31% 0.188 259.81)".
+    Accepts hex (#3b82f6), rgb(), hsl(), oklch() and color names. Raises
+    ValueError if it isn't a color. Example: "#3b82f6" -> "oklch(62.31% 0.188 259.81)".
     """
     try:
         color = Color(value.strip()).convert("oklch")
     except (ValueError, TypeError, AttributeError) as error:
-        raise ValueError(f"{value!r} isn't a colour") from error
+        raise ValueError(f"{value!r} isn't a color") from error
     lightness, chroma, hue = color.coords(nans=False)
     return _oklch(lightness, chroma, hue, color.alpha(nans=False))
 
 
 def to_hex(value, alpha=None):
-    """Return an OKLCH (or any CSS) colour as #rrggbb, fitted into sRGB.
+    """Return an OKLCH (or any CSS) color as #rrggbb, fitted into sRGB.
 
-    Transparency is added (#rrggbbaa) only when the colour has some. With
-    alpha=False it's always dropped (the browser's colour input needs that).
+    Transparency is added (#rrggbbaa) only when the color has some. With
+    alpha=False it's always dropped (the browser's color input needs that).
     """
     return Color(value).convert("srgb").to_string(hex=True, fit=True, alpha=alpha)
 
@@ -91,10 +91,10 @@ NON_TEXT = 3.0  # WCAG 2 minimum contrast for focus outlines and other non-text 
 
 
 def focus_color(values):
-    """Return a focus-outline colour that stays visible on the page background.
+    """Return a focus-outline color that stays visible on the page background.
 
-    The primary colour if it has at least 3:1 contrast with the background
-    (WCAG's minimum for non-text parts), otherwise the text colour.
+    The primary color if it has at least 3:1 contrast with the background
+    (WCAG's minimum for non-text parts), otherwise the text color.
     """
     background = values["--color-base-100"]
     primary = values["--color-primary"]
@@ -102,7 +102,7 @@ def focus_color(values):
 
 
 def hex_colors(values):
-    """Return every colour as #rrggbb, keyed like "primary" or "base_100".
+    """Return every color as #rrggbb, keyed like "primary" or "base_100".
 
     For HTML emails, which can't use OKLCH or CSS variables.
     """

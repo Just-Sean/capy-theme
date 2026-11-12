@@ -1,15 +1,15 @@
-"""A theme's colour values per mode (the base theme with overrides on top), and contrast reports."""
+"""A theme's color values per mode (the base theme with overrides on top), and contrast reports."""
 
 from ..css.shape import shape_values
-from .maths import contrast, rating, readable_text, shade
+from .color_math import contrast, rating, readable_text, shade
 from .names import WITH_CONTENT, overrides
 
 
 def effective_values(snapshot, scheme):
     """Return a published revision's CSS values for one scheme.
 
-    The base theme's values, with the theme's shape and colour overrides on top. When a
-    colour is overridden but its text colour isn't, the text colour is worked
+    The base theme's values, with the theme's shape and color overrides on top. When a
+    color is overridden but its text color isn't, the text color is worked
     out so it's readable. When the background (base-100) is overridden but its
     shades or text aren't, those are worked out from it too.
     """
@@ -32,7 +32,7 @@ def effective_values(snapshot, scheme):
     return values
 
 
-# The colour pairs WCAG ratings are given for: (background, text on it).
+# The color pairs WCAG ratings are given for: (background, text on it).
 CONTRAST_PAIRS = [(name, f"{name}-content") for name in WITH_CONTENT] + [
     ("base-100", "base-content"),
     ("base-200", "base-content"),
@@ -41,7 +41,7 @@ CONTRAST_PAIRS = [(name, f"{name}-content") for name in WITH_CONTENT] + [
 
 
 def contrast_report(values):
-    """Return one entry per colour pair: background, text, ratio and rating.
+    """Return one entry per color pair: background, text, ratio and rating.
 
     `values` are a scheme's CSS values (from effective_values). Ratings are
     warnings only; they never stop a theme being saved or published.

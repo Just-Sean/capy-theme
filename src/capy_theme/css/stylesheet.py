@@ -6,7 +6,7 @@ from importlib.metadata import version
 
 from django.urls import reverse
 
-from ..colors.maths import focus_color
+from ..colors.color_math import focus_color
 from ..colors.values import effective_values
 from ..fonts.css import font_css
 from ..images.logo_tag import logo_css
@@ -50,7 +50,7 @@ def snapshot_css(snapshot, comment):
     Used for published revisions and, in the editor, for unsaved drafts, so the
     two always match.
     """
-    # Colours, plus the background image variables (none if not chosen).
+    # Colors, plus the background image variables (none if not chosen).
     light = effective_values(snapshot, "light") | background_variables(snapshot, "light")
     dark = effective_values(snapshot, "dark") | background_variables(snapshot, "dark")
     lines = [
@@ -70,7 +70,7 @@ def snapshot_css(snapshot, comment):
         '[data-theme="capy-dark"] {',
         *_block("dark", dark, indent="  "),
         "}",
-        # A keyboard-focus outline that stays visible on the theme's colours.
+        # A keyboard-focus outline that stays visible on the theme's colors.
         ":focus-visible {",
         "  outline: 2px solid var(--capy-focus);",
         "  outline-offset: 2px;",

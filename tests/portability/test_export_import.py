@@ -31,9 +31,9 @@ def media(settings, tmp_path):
     cache.clear()
 
 
-def png(size=(300, 100), colour="red", name="logo.png"):
+def png(size=(300, 100), color="red", name="logo.png"):
     buffer = io.BytesIO()
-    Image.new("RGB", size, colour).save(buffer, "PNG")
+    Image.new("RGB", size, color).save(buffer, "PNG")
     return SimpleUploadedFile(name, buffer.getvalue())
 
 
@@ -49,7 +49,7 @@ def theme():
     font_file.file.save(checked["file"].name, checked["file"], save=True)
     theme = Theme.objects.create(name="Main", slug="main", light_base="cupcake")
     light = add_asset(theme, "logo_main", "light", png(), "Our logo")
-    dark = add_asset(theme, "logo_main", "dark", png(colour="white", name="dark.png"))
+    dark = add_asset(theme, "logo_main", "dark", png(color="white", name="dark.png"))
     icon = add_asset(theme, "icon", "light", png((256, 256), name="icon.png"))
     theme.settings = {
         "site_name": "Capy",
@@ -192,3 +192,20 @@ def test_too_big_is_rejected(settings):
     settings.CAPY_THEME_IMPORT_MAX_BYTES = 10
     with pytest.raises(ValidationError, match="too big"):
         import_theme(zip_with(minimal()))
+
+
+def test_exports_made_before_1_0_still_import(theme):
+    # Before 1.0 a font's license was stored as "licence" (renamed in #199).
+    Font.objects.filter(family="Brand Sans").update(license="Brand license")
+    archive = zipfile.ZipFile(io.BytesIO(export_theme(theme)))
+    manifest = json.loads(archive.read("theme.json"))
+    for font in manifest["fonts"].values():
+        font["licence"] = font.pop("license")
+    old = io.BytesIO()
+    with zipfile.ZipFile(old, "w") as rewritten:
+        for item in archive.infolist():
+            data = json.dumps(manifest) if item.filename == "theme.json" else archive.read(item)
+            rewritten.writestr(item, data)
+    Font.objects.filter(source="upload").delete()
+    import_theme(io.BytesIO(old.getvalue()))
+    assert Font.objects.get(family="Brand Sans").license == "Brand license"

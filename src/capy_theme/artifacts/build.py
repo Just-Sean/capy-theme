@@ -18,7 +18,7 @@ every URL is absolute (e.g. for emails and manifests).
 
 from django.core.files.storage import default_storage
 
-from ..colors.maths import to_hex
+from ..colors.color_math import to_hex
 from ..colors.names import COLOR_NAMES, SCHEMES
 from ..colors.values import effective_values
 from ..css.backgrounds import VARIABLES as BACKGROUND_SLOTS

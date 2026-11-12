@@ -1,6 +1,6 @@
 """Respecting visitors' device settings: reduce motion and more contrast.
 
-daisyUI only honours "reduce motion" in a few components and has nothing for
+daisyUI only honors "reduce motion" in a few components and has nothing for
 "more contrast", so the theme stylesheet adds both for the whole page.
 """
 
@@ -22,7 +22,7 @@ def accessibility_css():
             "  }",
             "}",
             # More contrast: no noise texture or depth shading (they blur edges),
-            # thicker borders and a thicker focus outline. Colours stay the theme's.
+            # thicker borders and a thicker focus outline. Colors stay the theme's.
             "@media (prefers-contrast: more) {",
             "  :root, [data-theme] {",
             "    --noise: 0 !important;",

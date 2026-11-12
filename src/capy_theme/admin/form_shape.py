@@ -3,7 +3,7 @@
 from django import forms
 
 from ..css.shape import EFFECTS, SIZES
-from ..themes.catalogue import builtin_values
+from ..themes.catalog import builtin_values
 
 
 def add_fields(form_class):
@@ -16,7 +16,7 @@ def add_fields(form_class):
                 decimal_places=4,
                 label=f"{field_label} ({unit})",
                 help_text=f"{help_text} Leave blank to use the base theme's value "
-                "(shown greyed out).",
+                "(shown grayed out).",
             )
         )
     for name, (_variable, field_label, help_text) in EFFECTS.items():

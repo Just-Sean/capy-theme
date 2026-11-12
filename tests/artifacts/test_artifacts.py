@@ -9,13 +9,13 @@ from django.template import Context, Template
 from PIL import Image
 
 from capy_theme.artifacts import get_artifacts
-from capy_theme.colors.maths import to_hex
+from capy_theme.colors.color_math import to_hex
 from capy_theme.fonts.models import Font
 from capy_theme.images.icons import FILES
 from capy_theme.images.uploads import add_asset
 from capy_theme.models import Theme
 from capy_theme.themes.active import activate
-from capy_theme.themes.catalogue import THEMES
+from capy_theme.themes.catalog import THEMES
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -30,9 +30,9 @@ def media(settings, tmp_path):
     cache.clear()
 
 
-def png(size=(400, 100), colour="red", name="img.png"):
+def png(size=(400, 100), color="red", name="img.png"):
     buffer = io.BytesIO()
-    Image.new("RGB", size, colour).save(buffer, "PNG")
+    Image.new("RGB", size, color).save(buffer, "PNG")
     return SimpleUploadedFile(name, buffer.getvalue())
 
 
@@ -46,7 +46,7 @@ def published():
     )
     assets = {
         "main": add_asset(theme, "logo_main", "light", png(name="main.png")),
-        "main_dark": add_asset(theme, "logo_main", "dark", png(colour="blue", name="dark.png")),
+        "main_dark": add_asset(theme, "logo_main", "dark", png(color="blue", name="dark.png")),
         "email": add_asset(theme, "logo_email", "light", png(name="email.png"), "Email logo"),
         "icon": add_asset(theme, "icon", "light", png((256, 256), name="icon.png")),
         "social": add_asset(theme, "social", "light", png((1300, 700), name="share.png"), "Shop"),
@@ -82,7 +82,7 @@ def test_the_issue_check_every_artifact_without_touching_models(published):
         "tagline": "Hello",
         "logo_alt": "Capy logo",
     }
-    # Colours: all 20, per mode, as OKLCH and as hex for emails.
+    # Colors: all 20, per mode, as OKLCH and as hex for emails.
     assert len(artifacts["colors"]["light"]) == 20
     primary = THEMES["light"]["values"]["--color-primary"]
     assert artifacts["colors"]["light"]["primary"] == primary

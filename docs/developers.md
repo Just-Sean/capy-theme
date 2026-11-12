@@ -19,25 +19,25 @@ variables, so most pages never name them directly.
 
 | Variable | What it is |
 | --- | --- |
-| `--color-primary` | Primary colour (OKLCH) |
+| `--color-primary` | Primary color (OKLCH) |
 | `--color-primary-content` | Text on primary |
-| `--color-secondary` | Secondary colour |
+| `--color-secondary` | Secondary color |
 | `--color-secondary-content` | Text on secondary |
-| `--color-accent` | Accent colour |
+| `--color-accent` | Accent color |
 | `--color-accent-content` | Text on accent |
-| `--color-neutral` | Neutral colour |
+| `--color-neutral` | Neutral color |
 | `--color-neutral-content` | Text on neutral |
 | `--color-base-100` | Page background |
 | `--color-base-200` | Background, darker |
 | `--color-base-300` | Background, darkest |
 | `--color-base-content` | Text on the background |
-| `--color-info` | Info colour |
+| `--color-info` | Info color |
 | `--color-info-content` | Text on info |
-| `--color-success` | Success colour |
+| `--color-success` | Success color |
 | `--color-success-content` | Text on success |
-| `--color-warning` | Warning colour |
+| `--color-warning` | Warning color |
 | `--color-warning-content` | Text on warning |
-| `--color-error` | Error colour |
+| `--color-error` | Error color |
 | `--color-error-content` | Text on error |
 | `--radius-selector` | Corner radius of checkboxes, toggles and badges |
 | `--radius-field` | Corner radius of buttons and inputs |
@@ -52,7 +52,7 @@ variables, so most pages never name them directly.
 
 | Variable | When it's set | What it is |
 | --- | --- | --- |
-| `--capy-focus` | Always | The keyboard-focus outline colour (primary, or the text colour if primary has too little contrast) |
+| `--capy-focus` | Always | The keyboard-focus outline color (primary, or the text color if primary has too little contrast) |
 | `--font-sans` | A body font is chosen | Tailwind's sans font family (the body font) |
 | `--font-mono` | A monospace font is chosen | Tailwind's monospace font family |
 | `--capy-font-body` | A body font is chosen | The body font family |
@@ -74,7 +74,7 @@ variables, so most pages never name them directly.
 ## The JSON API
 
 `GET /theme/api.json` returns the active theme's published values and asset URLs
-(absolute): colours (OKLCH and hex), fonts with file URLs, shape, type, every
+(absolute): colors (OKLCH and hex), fonts with file URLs, shape, type, every
 logo slot (after fallbacks, with smaller copies), icons, the sharing image,
 backgrounds and mode settings. Full details: [artifacts.md](artifacts.md#the-json-api).
 
