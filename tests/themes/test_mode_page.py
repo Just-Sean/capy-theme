@@ -76,9 +76,10 @@ def test_toggle_has_three_links_and_marks_the_current_mode(rf):
         assert f'data-capy-mode="{mode}"' in html
         assert reverse("capy_theme:set_mode", args=[mode]) + "?next=/page/" in html
     assert (
-        'data-capy-mode="dark" class="btn btn-sm join-item btn-active" aria-pressed="true"' in html
+        'data-capy-mode="dark" class="btn btn-sm join-item btn-active" aria-current="true"' in html
     )
-    assert html.count('aria-pressed="true"') == 1
+    assert html.count('aria-current="true"') == 1
+    assert "aria-pressed" not in html  # not allowed on links (issue #197)
 
 
 def test_toggle_is_hidden_when_switching_is_off(rf):
@@ -98,6 +99,9 @@ def test_head_script_applies_the_mode_before_the_page_draws(rf):
     assert 'f="dark"' in script
     assert "s=true" in script
     assert "setAttribute('data-theme','capy-'+m)" in script
+    # The toggle's current link is marked with aria-current, not aria-pressed (#197).
+    assert "e.setAttribute('aria-current','true')" in script
+    assert "aria-pressed" not in script
 
 
 def test_head_script_knows_when_switching_is_off(rf):
