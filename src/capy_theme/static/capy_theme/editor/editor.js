@@ -108,6 +108,7 @@
     editor.panel.hidden = false;
     editor.banner.hidden = false;
     if (editor.launch) editor.launch.hidden = true;
+    document.documentElement.classList.add("capy-editor-open"); // the page makes room (editor.css)
     status("Loading the draft…");
     return fetch(mount.getAttribute("data-state-url"), {
       credentials: "same-origin",
@@ -141,6 +142,7 @@
     if (editor.panel) editor.panel.hidden = true;
     if (editor.banner) editor.banner.hidden = true;
     if (editor.launch) editor.launch.hidden = false;
+    document.documentElement.classList.remove("capy-editor-open");
   };
 
   // POST JSON to one of the editor's URLs; resolves with the reply, or rejects

@@ -109,6 +109,8 @@
   left: 0;
   right: min(24rem, 100vw);
   z-index: 2147482999;
+  box-sizing: border-box;
+  height: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -161,3 +163,12 @@
 .capy-editor-visitor[hidden] { display: none; }
 .capy-editor-switch { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
 .capy-editor-summary { margin: 0.5rem 0 0; padding-left: 1.1rem; font-size: 0.8rem; color: #374151; }
+
+/* While the editor is open, the page makes room for the banner and, when the
+   window is wide enough for both, for the panel, so nothing on the page is
+   covered (issue #193). On narrow screens the panel covers the page. */
+html.capy-editor-open body { margin-top: 2.5rem; }
+@media (min-width: 48rem) {
+  html.capy-editor-open body { margin-right: 24rem; }
+}
+
