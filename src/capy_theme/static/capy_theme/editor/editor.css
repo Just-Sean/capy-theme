@@ -1,12 +1,16 @@
 /* The live theme editor panel. Plain CSS (no Tailwind or daisyUI classes), so it
    looks the same on any page of any project. */
+:root {
+  --capy-editor-width: 24rem; /* the panel */
+  --capy-editor-banner-height: 2.5rem; /* the "Previewing the draft" banner */
+}
 .capy-editor {
   position: fixed;
   top: 0;
   right: 0;
   z-index: 2147483000;
   box-sizing: border-box;
-  width: min(24rem, 100vw);
+  width: min(var(--capy-editor-width), 100vw);
   height: 100vh;
   overflow-y: auto;
   padding: 1rem;
@@ -107,10 +111,10 @@
   position: fixed;
   top: 0;
   left: 0;
-  right: min(24rem, 100vw);
+  right: min(var(--capy-editor-width), 100vw);
   z-index: 2147482999;
   box-sizing: border-box;
-  height: 2.5rem;
+  height: var(--capy-editor-banner-height);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -143,7 +147,7 @@
   top: 0;
   bottom: 0;
   left: 0;
-  right: min(24rem, 100vw);
+  right: min(var(--capy-editor-width), 100vw);
   z-index: 2147482999;
   display: flex;
   flex-direction: column;
@@ -164,11 +168,15 @@
 .capy-editor-switch { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
 .capy-editor-summary { margin: 0.5rem 0 0; padding-left: 1.1rem; font-size: 0.8rem; color: #374151; }
 
-/* While the editor is open, the page makes room for the banner and, when the
-   window is wide enough for both, for the panel, so nothing on the page is
-   covered (issue #193). On narrow screens the panel covers the page. */
-html.capy-editor-open body { margin-top: 2.5rem; }
-@media (min-width: 48rem) {
-  html.capy-editor-open body { margin-right: 24rem; }
-}
+/* The banner's text stays on one line (cut short with "…"); it's in the panel too. */
+.capy-editor-banner span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
+/* While the editor is open, the page makes room for the banner and, when the
+   window is wide enough for both (twice the panel's width), for the panel, so the
+   page's own controls aren't covered (issue #193). Padding, unlike margin, doesn't
+   collapse into the page's first element. Elements the page fixes in place or
+   makes sticky can't be moved this way. On narrow screens the panel covers the page. */
+html.capy-editor-open body { padding-top: var(--capy-editor-banner-height); }
+@media (min-width: 48rem) {
+  html.capy-editor-open body { padding-right: var(--capy-editor-width); }
+}

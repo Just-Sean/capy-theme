@@ -40,6 +40,11 @@ Every change shows on the page straight away (in your browser only).
 - With unsaved changes, the panel says so, and closing it or leaving the page
   asks before throwing them away.
 
+- While it's open, the page makes room for it: it moves down below the editor's
+  banner and, in windows at least 48rem (768 px) wide, left of the panel, so the
+  page's own controls (like the Light / Dark / Auto buttons) can still be used.
+  Parts of the page it fixes in place or makes sticky (e.g. a sticky navbar)
+  don't move. On narrow screens the panel covers the page.
 - It edits the active theme, or any theme with `?edit=<theme id>` on any page's
   URL, which also opens the panel straight away.
 - The panel is plain CSS and JavaScript (`static/capy_theme/editor/`), not

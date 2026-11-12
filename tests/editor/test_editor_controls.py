@@ -79,14 +79,11 @@ def test_controls_script_is_bundled():
 def test_the_page_makes_room_for_the_open_editor():
     # Issue #193: the panel and banner covered the page's own controls (e.g. the
     # Light / Dark / Auto buttons). Opening the editor marks <html>, and the page
-    # then moves down by the banner's height and, on wide screens, left by the
-    # panel's width. Checked in a browser too (see the PR).
+    # gets room for the banner and, on wide screens, the panel. Checked in a
+    # browser too (see PR #194).
     script = (STATIC / "editor.js").read_text()
     assert 'classList.add("capy-editor-open")' in script
     assert 'classList.remove("capy-editor-open")' in script
     css = (STATIC / "editor.css").read_text()
-    assert "height: 2.5rem;" in css  # the banner
-    assert "html.capy-editor-open body { margin-top: 2.5rem; }" in css
-    assert "@media (min-width: 48rem)" in css
-    assert "html.capy-editor-open body { margin-right: 24rem; }" in css
-    assert "width: min(24rem, 100vw);" in css  # the panel
+    assert "html.capy-editor-open body { padding-top: var(--capy-editor-banner-height)" in css
+    assert "html.capy-editor-open body { padding-right: var(--capy-editor-width)" in css
