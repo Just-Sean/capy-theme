@@ -268,6 +268,35 @@ docker stop capy-theme-pg-test                            # stops and removes it
 
 (`docker rmi postgres:17` deletes the downloaded image when you no longer need it.)
 
+### Checks on every commit (pre-commit)
+
+`.pre-commit-config.yaml` runs these checks each time you commit, and blocks the
+commit if one fails:
+
+- **gitleaks**: finds passwords, keys and tokens before they're committed.
+- **ruff check** and **ruff format --check**: lint and formatting, with the
+  project's own ruff.
+
+Set it up once in each clone, after `uv sync`:
+
+```bash
+uv run pre-commit install          # runs the checks on every commit from now on
+uv run pre-commit run --all-files  # runs them on every file, any time
+```
+
+If gitleaks blocks a commit, remove the secret instead of skipping the check. If
+the secret was ever pushed, treat it as leaked and replace it.
+
+To scan the **whole git history** for secrets (not just new commits), use
+gitleaks' official Docker image, the same version as the hook:
+
+```bash
+docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --redact
+```
+
+When updating gitleaks, change the version in both `.pre-commit-config.yaml` and
+this command.
+
 ## Commands
 
 Every command in one place. Details are in the linked pages.
@@ -278,6 +307,9 @@ Every command in one place. Details are in the linked pages.
 | `uv run pytest` | Run the tests (SQLite) |
 | `DATABASE_URL=postgres://… uv run pytest` | Run the tests on Postgres (see above for a throwaway Docker database) |
 | `uv run ruff check .` / `uv run ruff format .` | Lint / format |
+| `uv run pre-commit install` | Run gitleaks and ruff on every commit (once per clone) |
+| `uv run pre-commit run --all-files` | Run those checks on every file |
+| `docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --redact` | Scan the whole git history for secrets |
 | `uv run django-admin makemigrations capy_theme --settings=tests.settings --pythonpath=.` | Make migrations after changing a model |
 | `uv run python demo/manage.py migrate` | Create or update the demo database |
 | `uv run python demo/manage.py createsuperuser` | Make a demo admin account |
