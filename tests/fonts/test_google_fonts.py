@@ -10,7 +10,14 @@ from django.urls import reverse
 from fontTools.ttLib import TTFont
 
 from capy_theme.css.stylesheet import render_css
-from capy_theme.fonts.google import css_url, fetch, import_family, parse
+from capy_theme.fonts.google import (
+    USER_AGENT,
+    available_faces,
+    css_url,
+    fetch,
+    import_family,
+    parse,
+)
 from capy_theme.fonts.models import Font
 from capy_theme.models import Theme
 from capy_theme.themes.publishing import publish
@@ -188,3 +195,121 @@ def test_every_weight_gets_a_rule_even_when_files_are_shared():
     css = render_css(publish(theme))
     assert css.count("@font-face") == 3
     assert "font-weight: 700;" in css
+
+
+# The checks around downloading (issue #181).
+
+
+def test_fetch_sends_a_browser_user_agent_and_a_timeout(monkeypatch):
+    seen = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self):
+            return b"css"
+
+    def fake_urlopen(request, timeout):
+        seen.append((request.full_url, request.get_header("User-agent"), timeout))
+        return Response()
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    url = "https://fonts.googleapis.com/css2?family=Lora"
+    assert fetch(url) == b"css"
+    assert len(seen) == 1  # the fake was used, so nothing went to the network
+    sent_url, agent, timeout = seen[0]
+    assert sent_url == url
+    assert agent == USER_AGENT  # asks for WOFF2, like a browser
+    assert timeout and timeout > 0  # never waits forever
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://fonts.googleapis.com.evil.example/css2",
+        "https://fonts.gstatic.com.evil.example/x.woff2",
+        "https://fonts.gstatic.com@evil.example/x.woff2",
+        "http://fonts.gstatic.com/x.woff2",
+    ],
+)
+def test_lookalike_addresses_are_never_downloaded(url):
+    with pytest.raises(ValueError, match="only Google Fonts"):
+        fetch(url)
+
+
+@pytest.mark.parametrize(
+    "elsewhere",
+    [
+        "https://evil.example/",
+        "https://fonts.gstatic.com.evil.example/",
+        "https://fonts.gstatic.com@evil.example/",
+    ],
+)
+def test_file_addresses_not_on_fonts_gstatic_are_refused(elsewhere):
+    # If the API ever answered with a file somewhere else (including addresses that
+    # only look like Google's), nothing is downloaded or kept.
+    class Elsewhere(FakeGoogle):
+        def __call__(self, url, timeout=60):
+            css = super().__call__(url, timeout)
+            return css.replace(b"https://fonts.gstatic.com/", elsewhere.encode())
+
+    fake = Elsewhere()
+    with pytest.raises(ValidationError, match="unexpected file address"):
+        import_family("Lora", weights=(400,), italic=False, download=fake)
+    assert not any(url.startswith(elsewhere) for url in fake.requests)
+    assert not Font.objects.filter(family="Lora").exists()
+
+
+def test_faces_without_an_https_address_are_skipped():
+    css = face("latin", "normal", 400, "ok") + face("latin", "normal", 700, "plain").replace(
+        "https://", "http://"
+    )
+    assert [f["weight"] for f in parse(css)] == [400]
+
+
+@pytest.mark.parametrize(
+    "problem", [urllib.error.URLError("no route to host"), TimeoutError("timed out")]
+)
+def test_google_unreachable_is_a_clear_error(problem):
+    def unreachable(url, timeout=60):
+        raise problem
+
+    with pytest.raises(ValidationError, match="couldn't be reached"):
+        import_family("Lora", download=unreachable)
+    assert not Font.objects.filter(family="Lora").exists()
+
+
+def test_a_server_error_isnt_mistaken_for_a_missing_weight():
+    # A 400 means "that weight doesn't exist" and is retried per weight; anything
+    # else (here a 503) is a real failure and is raised.
+    def down(url, timeout=60):
+        raise urllib.error.HTTPError(url, 503, "Service Unavailable", {}, None)
+
+    with pytest.raises(urllib.error.HTTPError):
+        available_faces("Lora", [(0, 400)], download=down)
+
+
+def test_a_server_error_while_retrying_each_weight_is_raised():
+    calls = []
+
+    def down_after_first(url, timeout=60):
+        calls.append(url)
+        code = 400 if len(calls) == 1 else 503
+        raise urllib.error.HTTPError(url, code, "error", {}, None)
+
+    with pytest.raises(urllib.error.HTTPError) as raised:
+        available_faces("Lora", [(0, 400), (0, 700)], download=down_after_first)
+    assert raised.value.code == 503
+
+
+def test_a_server_error_tells_the_user_google_couldnt_be_reached():
+    def down(url, timeout=60):
+        raise urllib.error.HTTPError(url, 503, "Service Unavailable", {}, None)
+
+    with pytest.raises(ValidationError, match="couldn't be reached"):
+        import_family("Lora", download=down)
+    assert not Font.objects.filter(family="Lora").exists()

@@ -128,3 +128,71 @@ def test_mount_passes_save_and_publish_urls(client, django_user_model, theme):
     content = client.get(f"/page/?edit={theme.pk}").content.decode()
     assert f'data-save-url="{reverse("capy_theme:editor_save", args=[theme.pk])}"' in content
     assert f'data-publish-url="{reverse("capy_theme:editor_publish", args=[theme.pk])}"' in content
+
+
+# Bad requests to the editor's endpoints (issue #181).
+
+
+@pytest.mark.parametrize("name", ["preview", "save", "publish"])
+@pytest.mark.parametrize("body", ["not json", "[1, 2]", '"text"'])
+def test_bad_json_is_refused_and_nothing_changes(client, django_user_model, theme, name, body):
+    login(client, django_user_model, "change_theme", "publish_theme")
+    url = reverse(f"capy_theme:editor_{name}", args=[theme.pk])
+    response = client.post(url, data=body, content_type="application/json")
+    assert response.status_code == 400
+    assert response.json()["errors"]
+    theme.refresh_from_db()
+    assert theme.settings == {"site_name": "Capy"}
+    assert not ThemeRevision.objects.exists()
+
+
+def test_publish_refuses_an_invalid_saved_draft(client, django_user_model, theme):
+    # A draft can only be invalid if it was changed outside the app (e.g. in the
+    # database directly); publishing it must fail cleanly, not make a revision.
+    Theme.objects.filter(pk=theme.pk).update(settings={"colors": {"light": {"primary": 5}}})
+    login(client, django_user_model, "change_theme", "publish_theme")
+    response = post(client, "publish", theme, {})
+    assert response.status_code == 400
+    assert response.json()["errors"][0].startswith("Can't publish:")
+    assert not ThemeRevision.objects.exists()
+
+
+def test_a_real_collision_leaves_the_database_clean(client, django_user_model, theme, monkeypatch):
+    # Someone else saves revision 1 between this publish choosing that number and
+    # saving it: the database itself refuses the duplicate. Everything this publish
+    # did is undone, and publishing works again afterwards.
+    from capy_theme.themes import publishing
+
+    real_css_version = publishing.css_version
+
+    def someone_else_publishes_first(theme_pk, number, snapshot):
+        ThemeRevision.objects.create(
+            theme_id=theme_pk, number=number, snapshot=snapshot, css_version="other"
+        )
+        return real_css_version(theme_pk, number, snapshot)
+
+    monkeypatch.setattr(publishing, "css_version", someone_else_publishes_first)
+    login(client, django_user_model, "change_theme", "publish_theme")
+    response = post(client, "publish", theme, {})
+    assert response.status_code == 409
+    theme.refresh_from_db()
+    assert theme.live_revision is None
+    monkeypatch.undo()
+    assert post(client, "publish", theme, {}).status_code == 200
+    assert list(theme.revisions.values_list("number", flat=True)) == [1]
+
+
+def test_publishing_at_the_same_moment_as_someone_else(
+    client, django_user_model, theme, monkeypatch
+):
+    # Two publishes racing for the same revision number: the second gets a clear 409.
+    from django.db import IntegrityError
+
+    def collide(*args, **kwargs):
+        raise IntegrityError("unique_revision_number")
+
+    monkeypatch.setattr("capy_theme.editor.views.publish", collide)
+    login(client, django_user_model, "change_theme", "publish_theme")
+    response = post(client, "publish", theme, {})
+    assert response.status_code == 409
+    assert "Someone else just published" in response.json()["errors"][0]
