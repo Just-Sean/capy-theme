@@ -21,9 +21,13 @@
     return JSON.stringify({ settings: { images: settings.images || {}, logo: settings.logo || {}, icon: settings.icon || {} } });
   }
 
+  // The page's address comes from the server-rendered mount; only a path on this
+  // site is used (never a full URL or a "javascript:" one).
   function frameUrl() {
     loadedKey = imageSettings();
-    return editor.mount.getAttribute("data-components-url") + "?changes=" + encodeURIComponent(loadedKey);
+    var path = editor.mount.getAttribute("data-components-url") || "";
+    if (!/^\/(?!\/)/.test(path)) return "about:blank";
+    return path + "?changes=" + encodeURIComponent(loadedKey);
   }
 
   // Reload the page when an image choice changes (debounced while typing).
