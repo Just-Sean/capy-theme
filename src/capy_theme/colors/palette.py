@@ -10,7 +10,7 @@ from .color_math import _oklch, to_oklch
 
 # name, description, hue shifts for secondary and accent (degrees)
 SCHEMES = [
-    ("Analogous", "Neighbouring hues: calm and harmonious.", 30, -30),
+    ("Analogous", "Neighboring hues: calm and harmonious.", 30, -30),
     ("Complementary", "The opposite hue: strong contrast.", 180, 150),
     ("Triadic", "Three evenly spaced hues: lively and balanced.", 120, 240),
 ]
