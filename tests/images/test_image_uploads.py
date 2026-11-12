@@ -49,6 +49,16 @@ def png(size=(10, 10), text=None, mode="RGBA"):
     return buffer.getvalue()
 
 
+def gif(frames=1, comment=b""):
+    # Clearly different frames: Pillow merges identical ones into one.
+    images = [Image.new("RGB", (10, 10), c) for c in ["red", "green", "blue"][:frames]]
+    buffer = io.BytesIO()
+    images[0].save(
+        buffer, "GIF", save_all=frames > 1, append_images=images[1:], comment=comment, duration=100
+    )
+    return buffer.getvalue()
+
+
 def reopen(clean):
     return Image.open(io.BytesIO(clean["file"].read()))
 
@@ -169,22 +179,14 @@ def test_an_image_that_only_breaks_when_decoded_is_rejected():
         + struct.pack(">I", zlib.crc32(b"IDAT" + garbage))
     )
     broken = data[:start] + chunk + data[start + 12 + length :]
-    with pytest.raises(ValidationError, match="isn.t a supported image"):
+    with pytest.raises(ValidationError, match="isn't a supported image"):
         prepare_image(broken, "logo.png", "logo_main")
 
 
-def gif(frames=1, comment=b""):
-    # Clearly different frames: Pillow merges identical ones into one.
-    images = [Image.new("RGB", (10, 10), c) for c in ["red", "green", "blue"][:frames]]
-    buffer = io.BytesIO()
-    images[0].save(
-        buffer, "GIF", save_all=frames > 1, append_images=images[1:], comment=comment, duration=100
-    )
-    return buffer.getvalue()
-
-
 def test_gif_comments_are_removed():
-    clean = prepare_image(gif(comment=b"made by Spy Camera"), "a.gif", "logo_main")
+    data = gif(comment=b"made by Spy Camera")
+    assert Image.open(io.BytesIO(data)).info["comment"]  # the test GIF really has one
+    clean = prepare_image(data, "a.gif", "logo_main")
     assert clean["content_type"] == "image/gif"
     assert "comment" not in reopen(clean).info
 

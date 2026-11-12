@@ -189,7 +189,7 @@ def test_text_after_an_empty_link_is_kept():
     assert "javascript" not in out and ">AB<" in out
 
 
-def test_text_after_a_removed_element_in_the_middle_is_kept():
+def test_text_after_a_removed_element_joins_the_previous_sibling():
     out = cleaned("<text><tspan>A</tspan><script>alert(1)</script>B</text>")
     assert "script" not in out and "</tspan>B</text>" in out
 

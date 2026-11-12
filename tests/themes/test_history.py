@@ -190,11 +190,10 @@ def test_restore_through_the_admin(client, django_user_model, theme):
 
 
 def test_revisions_page_needs_view_or_change_permission(client, django_user_model, theme):
-    # Staff with no theme permissions at all can't see a theme's history (issue #181).
+    # Staff with no theme permissions at all can't see a theme's history (issue #181);
+    # change permission alone is enough (view only is tested above).
     login(client, django_user_model)
     assert client.get(revisions_url(theme)).status_code == 403
-    client.logout()
-    login_view_only = django_user_model.objects.create_user("viewer", password="pw", is_staff=True)
-    login_view_only.user_permissions.set(Permission.objects.filter(codename="view_theme"))
-    client.force_login(login_view_only)
+    django_user_model.objects.filter(username="staff").delete()
+    login(client, django_user_model, "change_theme")
     assert client.get(revisions_url(theme)).status_code == 200

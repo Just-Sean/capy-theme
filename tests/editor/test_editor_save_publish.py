@@ -157,6 +157,31 @@ def test_publish_refuses_an_invalid_saved_draft(client, django_user_model, theme
     assert not ThemeRevision.objects.exists()
 
 
+def test_a_real_collision_leaves_the_database_clean(client, django_user_model, theme, monkeypatch):
+    # Someone else saves revision 1 between this publish choosing that number and
+    # saving it: the database itself refuses the duplicate. Everything this publish
+    # did is undone, and publishing works again afterwards.
+    from capy_theme.themes import publishing
+
+    real_css_version = publishing.css_version
+
+    def someone_else_publishes_first(theme_pk, number, snapshot):
+        ThemeRevision.objects.create(
+            theme_id=theme_pk, number=number, snapshot=snapshot, css_version="other"
+        )
+        return real_css_version(theme_pk, number, snapshot)
+
+    monkeypatch.setattr(publishing, "css_version", someone_else_publishes_first)
+    login(client, django_user_model, "change_theme", "publish_theme")
+    response = post(client, "publish", theme, {})
+    assert response.status_code == 409
+    theme.refresh_from_db()
+    assert theme.live_revision is None
+    monkeypatch.undo()
+    assert post(client, "publish", theme, {}).status_code == 200
+    assert list(theme.revisions.values_list("number", flat=True)) == [1]
+
+
 def test_publishing_at_the_same_moment_as_someone_else(
     client, django_user_model, theme, monkeypatch
 ):
