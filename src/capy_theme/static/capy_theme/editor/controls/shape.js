@@ -10,7 +10,7 @@
   function sizeRow(size) {
     var input = el("input", {
       type: "number",
-      step: "any",
+      step: String(size.step), // a real step: with "any" the arrows get stuck (#224)
       min: String(size.min),
       max: String(size.max),
       "data-capy-shape": size.name,

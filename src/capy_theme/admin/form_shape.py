@@ -2,7 +2,7 @@
 
 from django import forms
 
-from ..css.shape import EFFECTS, SIZES
+from ..css.shape import EFFECTS, SIZE_STEPS, SIZES
 from ..themes.catalog import builtin_values
 
 
@@ -37,7 +37,7 @@ def set_initial(form):
         field = form.fields[f"shape_{name}"]
         field.initial = shape.get(name)
         field.widget.attrs["placeholder"] = base.get(variable, "").removesuffix(unit)
-        field.widget.attrs["step"] = "any"
+        field.widget.attrs["step"] = str(SIZE_STEPS[name])
     for name in EFFECTS:
         if name in shape:
             form.fields[f"shape_{name}"].initial = "on" if shape[name] else "off"

@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from ..colors.names import COLOR_GROUPS, SCHEMES, label
 from ..css.custom import without_custom_css
-from ..css.shape import EFFECTS, SIZES
+from ..css.shape import EFFECTS, SIZE_STEPS, SIZES
 from ..css.stylesheet import snapshot_css
 from ..css.typography import TYPE_SETTINGS
 from ..fonts.library import ROLES, preview_stack
@@ -64,7 +64,15 @@ def controls():
             for group, names in COLOR_GROUPS.items()
         ],
         "sizes": [
-            {"name": name, "variable": v, "unit": unit, "min": low, "max": high, "label": lab}
+            {
+                "name": name,
+                "variable": v,
+                "unit": unit,
+                "min": low,
+                "max": high,
+                "step": SIZE_STEPS[name],
+                "label": lab,
+            }
             for name, (v, unit, low, high, lab, _help) in SIZES.items()
         ],
         "effects": [
