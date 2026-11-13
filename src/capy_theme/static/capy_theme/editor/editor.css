@@ -41,7 +41,10 @@
 .capy-editor button.capy-editor-primary { background: #2563eb; border-color: #2563eb; color: #ffffff; }
 .capy-editor button:disabled { opacity: 0.5; cursor: not-allowed; }
 .capy-editor :focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
-/* The file chooser's own button looks like the panel's other buttons (issue #221). */
+/* The file chooser's own button looks like the panel's other buttons (issue #221).
+   Keep these in step with `.capy-editor button` above. They're a separate rule on
+   purpose: a browser that didn't know the pseudo-element would drop a shared rule,
+   unstyling every button. */
 .capy-editor input[type="file"] { font: inherit; color: #111827; max-width: 100%; }
 .capy-editor input[type="file"]::file-selector-button {
   font: inherit;

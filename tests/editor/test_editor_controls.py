@@ -103,3 +103,6 @@ def test_the_file_chooser_looks_like_a_button():
     css = (STATIC / "editor.css").read_text()
     assert '.capy-editor input[type="file"]::file-selector-button {' in css
     assert '.capy-editor input[type="file"]::file-selector-button:hover' in css
+    assert (
+        '.capy-editor input[type="file"] { font: inherit; color: #111827; max-width: 100%; }' in css
+    )
