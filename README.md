@@ -492,6 +492,7 @@ Every command in one place. Details are in the linked pages.
 | [docs/developers.md](docs/developers.md) | **For developers using the theme from their own code:** every CSS variable, the JSON API with an example, the downloads |
 | [docs/development.md](docs/development.md) | The demo site and updating daisyUI |
 | [docs/PLAN.md](docs/PLAN.md), [docs/DECISIONS.md](docs/DECISIONS.md) | The build plan, and why things are the way they are |
+| [explained/](explained/capy-theme.md) | A file-by-file explanation of the whole project, mirroring its folders: each folder has `<folder>.md`, each file `<file name>.md` (e.g. `explained/src/capy_theme/css/shape.py.md`). Update it when files are added, removed or change job |
 
 ## Upgrading
 
@@ -580,5 +581,6 @@ job and stays under 200 lines.
 
 Outside the package: `tests/` (in the same sections), `demo/` (development only,
 never shipped), `scripts/` (generate daisyUI's themes, fetch the bundled fonts,
-build the Components view's CSS), `docs/`, and `LICENSE` and
+build the Components view's CSS), `docs/`, `explained/` (a file-by-file explanation
+of the project, see [Documentation](#documentation)), and `LICENSE` and
 `THIRD_PARTY_NOTICES.md` (both also shipped in the package, see [License](#license)).
