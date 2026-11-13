@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **CSP nonces work with Django's real CSP middleware:** the light/dark script
+  now always gets the request's nonce. Before, a page where nothing else had used
+  the nonce sent none, so browsers blocked the script under `script-src` with `NONCE`.
 - **Animated GIF uploads keep how each frame is cleared:** GIFs whose frames
   "clear to the background" no longer show earlier frames after cleaning. (A GIF
   that mixes clearing settings between frames can still differ: a Pillow limitation.)
