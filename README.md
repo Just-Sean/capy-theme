@@ -435,7 +435,9 @@ The workflow can only read the repo, and every action in it is pinned to a commi
 hash (with its version in a comment). When updating:
 
 - **gitleaks:** change `GITLEAKS_IMAGE` in the workflow too.
-- **uv:** change `UV_VERSION` in the workflow.
+- **uv:** change `UV_VERSION` in the workflow, and the `uv_build` range in
+  `pyproject.toml`'s `[build-system]` to the same minor version (e.g. uv 0.13.x:
+  `uv_build>=0.13,<0.14`), or every build warns.
 - **the Tailwind CLI** (`TAILWIND_CLI_VERSION` in `demo/demo_site/settings.py`):
   change `TAILWIND_CLI` and `TAILWIND_CLI_SHA256` in the workflow. The hash is the
   `tailwindcss-linux-x64` line of that release's `sha256sums.txt`:
