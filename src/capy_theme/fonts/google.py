@@ -5,6 +5,7 @@ them once from fonts.gstatic.com, checks them, and stores them like uploads.
 Visitors' browsers never contact Google.
 """
 
+import logging
 import re
 import urllib.error
 import urllib.parse
@@ -15,6 +16,8 @@ from django.db import transaction
 
 from .models import Font, FontFile
 from .uploads import prepare
+
+logger = logging.getLogger(__name__)
 
 CSS_API = "https://fonts.googleapis.com/css2"
 FILES_HOST = "https://fonts.gstatic.com/"
@@ -99,6 +102,7 @@ def import_family(family, weights=(400, 700), italic=True, subsets=("latin",), d
     try:
         faces = [f for f in available_faces(family, combos, download) if f["subset"] in subsets]
     except (urllib.error.URLError, TimeoutError) as error:
+        logger.warning("Google Fonts couldn't be reached for %r: %s", family, error)
         raise ValidationError(f"Google Fonts couldn't be reached ({error}).") from error
     if not faces:
         raise ValidationError(
@@ -132,4 +136,5 @@ def import_family(family, weights=(400, 700), italic=True, subsets=("latin",), d
             )
             font_file.file.name = name
             font_file.save()
+    logger.info("Imported Google font %r: %d font file(s) stored.", family, len(stored))
     return font

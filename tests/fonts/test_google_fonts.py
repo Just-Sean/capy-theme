@@ -1,13 +1,11 @@
 """Tests for importing Google Fonts (issue #27). No network: downloads are faked."""
 
-import io
 import urllib.error
 import urllib.parse
 
 import pytest
 from django.core.exceptions import ValidationError
 from django.urls import reverse
-from fontTools.ttLib import TTFont
 
 from capy_theme.css.stylesheet import render_css
 from capy_theme.fonts.google import (
@@ -21,7 +19,7 @@ from capy_theme.fonts.google import (
 from capy_theme.fonts.models import Font
 from capy_theme.models import Theme
 from capy_theme.themes.publishing import publish
-from tests.support.fonts import ttf_bytes
+from tests.support.google import FakeGoogle, face
 
 pytestmark = pytest.mark.django_db
 
@@ -30,50 +28,6 @@ pytestmark = pytest.mark.django_db
 def media(settings, tmp_path):
     settings.MEDIA_ROOT = tmp_path
     settings.MEDIA_URL = "/media/"
-
-
-def woff2():
-    font = TTFont(io.BytesIO(ttf_bytes()))
-    font.flavor = "woff2"
-    out = io.BytesIO()
-    font.save(out)
-    return out.getvalue()
-
-
-def face(subset, style, weight, name):
-    return f"""/* {subset} */
-@font-face {{
-  font-family: 'Lora';
-  font-style: {style};
-  font-weight: {weight};
-  font-display: swap;
-  src: url(https://fonts.gstatic.com/s/lora/v37/{name}.woff2) format('woff2');
-  unicode-range: U+0000-00FF;
-}}
-"""
-
-
-class FakeGoogle:
-    """Answers like the Google Fonts API for a family with 400, 700 and 400 italic."""
-
-    def __init__(self, family="Lora", have=((0, 400), (0, 700), (1, 400))):
-        self.family, self.have, self.requests = family, set(have), []
-
-    def __call__(self, url, timeout=60):
-        self.requests.append(url)
-        if url.startswith("https://fonts.gstatic.com/"):
-            return woff2()
-        query = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)["family"][0]
-        name, _, axes = query.partition(":ital,wght@")
-        combos = {tuple(int(x) for x in c.split(",")) for c in axes.split(";")}
-        if name != self.family or not combos <= self.have:
-            raise urllib.error.HTTPError(url, 400, "Bad Request", {}, None)
-        css = ""
-        for italic, weight in sorted(combos):
-            style = "italic" if italic else "normal"
-            css += face("latin", style, weight, f"lat-{style}")  # variable: one file per style
-            css += face("cyrillic", style, weight, f"cyr-{style}")
-        return css.encode()
 
 
 def test_parse_reads_each_face():

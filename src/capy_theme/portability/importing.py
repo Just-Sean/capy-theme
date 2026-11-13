@@ -7,6 +7,7 @@ is published or activated. If anything fails, nothing is kept.
 """
 
 import json
+import logging
 import zipfile
 from pathlib import Path
 
@@ -20,6 +21,8 @@ from ..fonts.models import Font, FontFile
 from ..fonts.uploads import prepare
 from ..images.uploads import add_asset
 from ..themes.models.theme import Theme
+
+logger = logging.getLogger(__name__)
 
 SCHEMA = json.loads(Path(__file__).with_name("theme_file.schema.json").read_text(encoding="utf-8"))
 
@@ -39,11 +42,13 @@ def import_theme(upload, keep_custom_css=True):
     stored = []  # files saved so far, deleted again if the import fails
     try:
         with transaction.atomic():
-            return _create(archive, manifest, stored)
+            theme = _create(archive, manifest, stored)
     except Exception:
         for field_file in stored:
             field_file.delete(save=False)
         raise
+    logger.info("Imported theme %r as an unpublished draft.", theme.slug)
+    return theme
 
 
 def _open(upload):

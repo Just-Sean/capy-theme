@@ -12,6 +12,7 @@ every server process catches up even when the project's cache isn't shared
 between processes.
 """
 
+import logging
 from uuid import uuid4
 
 from django.core.cache import cache
@@ -20,6 +21,8 @@ from django.utils import timezone
 
 from .. import conf
 from ..models import Theme, ThemeAssignment
+
+logger = logging.getLogger(__name__)
 
 CACHE_KEY = "capy_theme:active_theme"
 # Changed by clear_cache(), so every site's cached state is dropped at once.
@@ -163,6 +166,7 @@ def activate(theme, site=""):
         site=site.lower(), starts_at=None, ends_at=None, defaults={"theme": theme}
     )
     clear_cache()
+    logger.info("Activated theme %r for %s.", theme.slug, site.lower() or "every site")
 
 
 def clear_cache():

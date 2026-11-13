@@ -1,10 +1,14 @@
 """Revision history: comparing two revisions and restoring an old one."""
 
+import logging
+
 from ..colors.names import COLOR_NAMES, label
 from ..css.custom import summary as custom_css_summary
 from ..css.shape import EFFECTS, SIZES
 from ..images.slots import SLOTS
 from .publishing import publish
+
+logger = logging.getLogger(__name__)
 
 SETTING_LABELS = {
     "site_name": "Site name",
@@ -78,7 +82,11 @@ def restore(theme, revision, user=None):
     theme.settings = dict(snapshot.get("settings", {}))
     _drop_deleted_images(theme)
     theme.save()
-    return publish(theme, user=user, note=f"Restored revision {revision.number}")
+    new = publish(theme, user=user, note=f"Restored revision {revision.number}")
+    logger.info(
+        "Restored revision %d of theme %r as revision %d.", revision.number, theme.slug, new.number
+    )
+    return new
 
 
 def _drop_deleted_images(theme):
