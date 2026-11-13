@@ -106,3 +106,18 @@ def test_the_file_chooser_looks_like_a_button():
     assert (
         '.capy-editor input[type="file"] { font: inherit; color: #111827; max-width: 100%; }' in css
     )
+
+
+def test_every_shape_size_has_a_real_step():
+    # Issue #224: with step "any" the browser's arrows only jumped to a limit and
+    # then stopped (Small control size and Field size got stuck at 0.125).
+    sizes = controls()["sizes"]
+    steps = {size["name"]: size["step"] for size in sizes}
+    assert steps["size_selector"] == steps["size_field"] == 0.03125
+    assert steps["radius_box"] == 0.125
+    assert steps["border"] == 0.5
+    for size in sizes:
+        assert 0 < size["step"] <= size["max"] - size["min"], size["name"]
+    script = (STATIC / "controls" / "shape.js").read_text()
+    assert "step: String(size.step)" in script
+    assert 'step: "any"' not in script

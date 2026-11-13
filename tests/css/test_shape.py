@@ -109,3 +109,13 @@ def test_admin_has_a_shape_section(client, django_user_model):
     content = client.get(reverse("admin:capy_theme_theme_change", args=[theme.pk])).content
     assert b"Shape and effects" in content
     assert b'name="shape_radius_box"' in content
+
+
+def test_admin_size_fields_have_real_steps():
+    # Issue #224: step "any" left the arrows stuck; each field steps by its data's step.
+    form = ThemeForm()
+    for name in SIZES:
+        step = form.fields[f"shape_{name}"].widget.attrs["step"]
+        assert step != "any"
+        assert float(step) > 0
+    assert form.fields["shape_size_field"].widget.attrs["step"] == "0.03125"

@@ -1,11 +1,12 @@
 {
-  "_about": "The shape and effect settings: each one's CSS variable, unit, limits, label and help.",
+  "_about": "The shape and effect settings: each one's CSS variable, unit, limits, step (how far the arrows move it), label and help.",
   "sizes": {
     "radius_selector": {
       "variable": "--radius-selector",
       "unit": "rem",
       "min": 0,
       "max": 2,
+      "step": 0.125,
       "label": "Small corner radius",
       "help": "Checkboxes, toggles and badges. 0 is square."
     },
@@ -14,6 +15,7 @@
       "unit": "rem",
       "min": 0,
       "max": 2,
+      "step": 0.125,
       "label": "Field corner radius",
       "help": "Buttons, inputs, selects and tabs. 0 is square."
     },
@@ -22,6 +24,7 @@
       "unit": "rem",
       "min": 0,
       "max": 3,
+      "step": 0.125,
       "label": "Box corner radius",
       "help": "Cards, alerts, modals and other boxes. 0 is square."
     },
@@ -30,6 +33,7 @@
       "unit": "rem",
       "min": 0.125,
       "max": 0.5,
+      "step": 0.03125,
       "label": "Small control size",
       "help": "Base size of checkboxes, toggles and badges (daisyUI uses 0.1875–0.3125)."
     },
@@ -38,6 +42,7 @@
       "unit": "rem",
       "min": 0.125,
       "max": 0.5,
+      "step": 0.03125,
       "label": "Field size",
       "help": "Base size of buttons and inputs (daisyUI uses 0.1875–0.3125)."
     },
@@ -46,6 +51,7 @@
       "unit": "px",
       "min": 0,
       "max": 4,
+      "step": 0.5,
       "label": "Border width",
       "help": "Width of borders, in pixels."
     }

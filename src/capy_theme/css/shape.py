@@ -14,6 +14,8 @@ SIZES = {
     name: (s["variable"], s["unit"], s["min"], s["max"], s["label"], s["help"])
     for name, s in _DATA["sizes"].items()
 }
+# name: how far a number box's arrows move it (a real step: "any" leaves the arrows stuck)
+SIZE_STEPS = {name: s["step"] for name, s in _DATA["sizes"].items()}
 # name: (CSS variable, label, help)
 EFFECTS = {name: (e["variable"], e["label"], e["help"]) for name, e in _DATA["effects"].items()}
 SHAPE_NAMES = [*SIZES, *EFFECTS]
