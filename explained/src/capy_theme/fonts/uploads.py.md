@@ -1,6 +1,6 @@
 # src/capy_theme/fonts/uploads.py
 
-**What it is:** checking and converting font files, for uploads, Google imports, theme imports and the bundled fonts.
+**What it is:** checking and converting font files, for font uploads in the admin, Google Fonts imports and theme imports. (The bundled fonts don't go through it: `capy_theme_add_fonts` copies their ready-made WOFF2 files straight into storage.)
 
 **`prepare(data, name, subset)`:**
 

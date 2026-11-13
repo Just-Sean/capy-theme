@@ -1,6 +1,6 @@
 # src/capy_theme/portability/export.py
 
-**What it is:** `export_theme(theme)` returns a zip, `<slug>.capy-theme.zip`, with:
+**What it is:** `export_theme(theme)` returns a zip file's bytes. The admin's Export button and the `theme_export` command save them as `<slug>.capy-theme.zip`. The zip contains:
 
 - **`theme.json`:**
   - the format version, and which capy-theme made it

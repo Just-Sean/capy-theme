@@ -1,6 +1,6 @@
 # src/capy_theme/themes/publishing.py
 
-**What it is:** `publish(theme, user, note)`, the one way a draft goes live. It's used by the admin's Publish page, the editor's Publish button, restore, imports with `--activate`, and the `theme_publish` command.
+**What it is:** `publish(theme, user, note)`, the one way a draft goes live. It's used by the admin's Publish page, the editor's Publish button, restore, `theme_import --publish` or `--activate`, and the `theme_publish` command.
 
 **What it does:**
 

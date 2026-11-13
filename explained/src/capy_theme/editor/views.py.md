@@ -4,7 +4,7 @@
 
 | View | URL | Does |
 | --- | --- | --- |
-| `editor_state` | `GET editor/<id>/state/` | The draft and controls |
+| `editor_state` | `editor/<id>/state/` (the editor uses GET; the view doesn't restrict the method) | The draft and controls |
 | `editor_preview` | `POST editor/<id>/preview/` | CSS and values for unsaved changes; writes nothing |
 | `editor_suggestions` | `POST editor/<id>/suggestions/` | Color suggestions |
 | `editor_save` | `POST editor/<id>/save/` | Save draft, return the new state |

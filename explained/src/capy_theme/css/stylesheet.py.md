@@ -2,7 +2,7 @@
 
 **What it is:** builds the theme stylesheet.
 
-- **`snapshot_css(snapshot)`:** the full CSS for a theme's look. It's used for published revisions and, in the editor, for unsaved drafts, so the preview always matches what would be published. In order:
+- **`snapshot_css(snapshot, comment)`:** the full CSS (with `comment` as its first line) for a theme's look. It's used for published revisions and, in the editor, for unsaved drafts, so the preview always matches what would be published. In order:
   1. `:root { ... }` with the **light** values: colors, shape, background images, `--capy-focus`, `color-scheme`.
   2. The **dark** values inside `@media (prefers-color-scheme: dark)`.
   3. `[data-theme="capy-light"]` / `[data-theme="capy-dark"]` blocks that force a mode. The mode toggle and the Components view's side-by-side samples use these.
