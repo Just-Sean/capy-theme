@@ -96,3 +96,13 @@ def test_the_components_frame_only_loads_a_path_on_this_site():
     script = (STATIC / "controls" / "components.js").read_text()
     assert "url.origin === window.location.origin ? url.pathname : null" in script
     assert 'if (!path) return "about:blank";' in script
+
+
+def test_the_file_chooser_looks_like_a_button():
+    # Issue #221: the file input's button was left to the browser's plain default.
+    css = (STATIC / "editor.css").read_text()
+    assert '.capy-editor input[type="file"]::file-selector-button {' in css
+    assert '.capy-editor input[type="file"]::file-selector-button:hover' in css
+    assert (
+        '.capy-editor input[type="file"] { font: inherit; color: #111827; max-width: 100%; }' in css
+    )
