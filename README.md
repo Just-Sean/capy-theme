@@ -240,6 +240,29 @@ the demo):
    uv run python manage.py tailwind runserver   # while developing: rebuilds on changes
    ```
 
+## Logging
+
+capy-theme logs its important events through loggers named after its modules,
+all under `capy_theme`. It sets up no handlers itself, so the project's `LOGGING`
+setting decides where the messages go (and Django's default shows nothing below
+WARNING).
+
+- **INFO:** a theme published (with the revision number and the publisher's user
+  ID), activated (for every site or one domain) or imported, and a Google font
+  imported.
+- **WARNING:** Google Fonts couldn't be reached.
+
+Messages never include personal data such as names or email addresses. To see
+them, e.g. on the console:
+
+```python
+LOGGING = {
+    "version": 1,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {"capy_theme": {"handlers": ["console"], "level": "INFO"}},
+}
+```
+
 ## Settings
 
 Optional settings a project can add to its `settings.py` (all defaults are in

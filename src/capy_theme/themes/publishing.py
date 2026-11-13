@@ -1,5 +1,7 @@
 """Publishing: turning a theme's draft into the live revision pages use."""
 
+import logging
+
 from django.db import transaction
 from django.db.models import Max
 
@@ -7,6 +9,8 @@ from ..css.stylesheet import css_version
 from ..images.icons import make_icons
 from ..models import ThemeRevision
 from .validation import validate_settings
+
+logger = logging.getLogger(__name__)
 
 NOTHING_TO_PUBLISH = "Nothing to publish: the draft matches the live revision."
 
@@ -46,4 +50,10 @@ def publish(theme, user=None, note=""):
         )
         theme.live_revision = revision
         theme.save(update_fields=["live_revision"])
+    logger.info(
+        "Published theme %r as revision %d (user ID %s).",
+        theme.slug,
+        number,
+        revision.published_by_id,
+    )
     return revision
