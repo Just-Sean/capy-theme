@@ -50,8 +50,11 @@ def theme_head(context):
     if theme is None or theme.live_revision is None:
         return editor
     revision = theme.live_revision
+    # Django's nonce is lazy and counts as false until something reads it, so test
+    # for the CSP middleware (a nonce object exists) rather than the nonce's truth.
+    # Reading it here generates it, and the middleware then puts it in the header.
     nonce = get_nonce(request) if request is not None else None
-    nonce_attr = format_html(' nonce="{}"', nonce) if nonce else ""
+    nonce_attr = format_html(' nonce="{}"', str(nonce)) if nonce is not None else ""
     fonts = revision.snapshot.get("fonts")
     return format_html(
         '{}{}<link rel="stylesheet" href="{}">\n{}{}{}<script{}>{}</script>{}',
