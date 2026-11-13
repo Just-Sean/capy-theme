@@ -30,6 +30,7 @@ COLOR_TABLE_BITS = 0x07
 # transparency and disposal: how the frame is cleared before the next one is drawn
 # (0 or 1: left in place, 2: cleared to the background, 3: back to the one before).
 GRAPHIC_CONTROL = 0xF9
+GRAPHIC_CONTROL_SIZE = 4  # its data: flags (with the disposal), delay (2), transparent color
 DISPOSAL_SHIFT = 2
 DISPOSAL_BITS = 0x07
 
@@ -54,36 +55,39 @@ def _skip_sub_blocks(data, pos):
 
 
 def _blocks(data):
-    """Each block after the header: ("extension", label, position) or
-    ("image", position), in order. Raises BrokenGif for a damaged file."""
+    """Yield each block after the header, in order: ("extension", label, position)
+    or ("image", None, position). One at a time, so memory stays the same however
+    many blocks a file has. An image block is only yielded once its descriptor is
+    known to be whole. Raises BrokenGif for a damaged file."""
     try:
         flags = data[SIZE_OFFSET + 4]
         pos = HEADER_SIZE + _color_table_size(flags)
-        blocks = []
         # Some GIFs leave out the trailer; ending between blocks is fine.
         while pos < len(data) and data[pos] != TRAILER:
             if data[pos] == EXTENSION:
-                blocks.append(("extension", data[pos + 1], pos))
+                start, label = pos, data[pos + 1]
                 pos = _skip_sub_blocks(data, pos + 2)  # after the label
+                yield ("extension", label, start)
             elif data[pos] == IMAGE:
-                blocks.append(("image", None, pos))
-                local = data[pos + DESCRIPTOR_SIZE - 1]
+                start, local = pos, data[pos + DESCRIPTOR_SIZE - 1]
                 pos += DESCRIPTOR_SIZE + _color_table_size(local)
                 pos = _skip_sub_blocks(data, pos + 1)  # after the LZW code size
+                yield ("image", None, start)
             else:
                 raise BrokenGif(f"Unexpected byte {data[pos]:#x} at {pos}.")
     except (IndexError, struct.error) as error:
         raise BrokenGif("The file ends in the middle of a block.") from error
-    return blocks
 
 
 def frame_extent(data):
     """(frames, width, height): the number of frames and the size the image
     reaches once every frame is placed. Raises BrokenGif for a damaged file."""
-    blocks = _blocks(data)  # checks the header and every frame's descriptor are whole
-    width, height = struct.unpack_from("<HH", data, SIZE_OFFSET)
+    try:
+        width, height = struct.unpack_from("<HH", data, SIZE_OFFSET)
+    except struct.error as error:
+        raise BrokenGif("The file is too short to be a GIF.") from error
     frames = 0
-    for kind, _label, pos in blocks:
+    for kind, _label, pos in _blocks(data):
         if kind != "image":
             continue
         left, top, frame_width, frame_height = struct.unpack_from("<HHHH", data, pos + 1)
@@ -104,6 +108,8 @@ def frame_disposals(data):
         if kind == "image":
             disposals.append(current)
             current = 0
-        elif label == GRAPHIC_CONTROL and pos + 3 < len(data):
+        elif label == GRAPHIC_CONTROL and data[pos + 2] == GRAPHIC_CONTROL_SIZE:
+            # Only a whole graphic control block (as Pillow reads them); an empty
+            # one would make the next block's first byte look like a disposal.
             current = (data[pos + 3] >> DISPOSAL_SHIFT) & DISPOSAL_BITS
     return disposals

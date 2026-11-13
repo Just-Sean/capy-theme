@@ -11,12 +11,6 @@ from capy_theme.images.uploads import prepare_image
 from tests.support.images import gif, hand_built_gif, reopen
 
 
-@pytest.fixture(autouse=True)
-def media(settings, tmp_path):
-    settings.MEDIA_ROOT = tmp_path
-    settings.MEDIA_URL = "/media/"
-
-
 def every_frame(image, read):
     """read(image) for each frame of an (animated) image."""
     values = []
@@ -152,5 +146,19 @@ def test_identical_frames_with_different_disposals_dont_crash():
     second_gce = data.index(b"\x21\xf9\x04", data.index(b"\x21\xf9\x04") + 1)
     data = data[: second_gce + 3] + bytes([2 << 2]) + data[second_gce + 4 :]  # frame 2: disposal 2
     assert frame_disposals(data) == [0, 2]
-    clean = prepare_image(data, "a.gif", "logo_main")
-    assert clean["content_type"] == "image/gif"
+    image = reopen(prepare_image(data, "a.gif", "logo_main"))
+    assert getattr(image, "n_frames", 1) == 1  # saved as one still frame
+    original = Image.open(io.BytesIO(data)).convert("RGBA")
+    assert list(image.convert("RGBA").get_flattened_data()) == list(original.get_flattened_data())
+
+
+def test_the_frame_reader_handles_short_and_odd_files():
+    from capy_theme.images.gif_frames import BrokenGif, frame_extent
+
+    with pytest.raises(BrokenGif, match="too short"):
+        frame_extent(b"GIF89a")
+    # An empty graphic control block isn't read as a disposal (its next byte is a frame).
+    data = hand_built_gif(10, [(1, 1)])
+    gce = data.index(b"\x21\xf9\x04")
+    empty = data[:gce] + b"\x21\xf9\x00" + data[gce + 8 :]
+    assert frame_disposals(empty) == [0]

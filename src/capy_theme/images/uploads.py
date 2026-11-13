@@ -161,9 +161,11 @@ def _save(clean, save_options):
     try:
         clean.save(output, **save_options)
     except TypeError:
-        # A Pillow bug: when every frame is the same it saves one still frame, and
-        # that can't take a list of disposals. Disposal doesn't change a still
-        # frame, so save it without.
+        # A Pillow bug (13.0): when every frame is the same it saves one still
+        # frame, and that can't take a list of disposals. Disposal doesn't change a
+        # still frame, so save it without. Deliberately any TypeError while a list
+        # is given: Pillow's message isn't stable enough to match on. Everything
+        # else is re-raised, and a second failure isn't caught.
         if not isinstance(save_options.get("disposal"), list):
             raise
         output = io.BytesIO()
