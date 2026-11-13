@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Animated GIF uploads keep how each frame is cleared:** GIFs whose frames
+  "clear to the background" no longer show earlier frames after cleaning. (A GIF
+  that mixes clearing settings between frames can still differ: a Pillow limitation.)
 - **American spelling everywhere** (color, license, catalog, gray, center...), in
   the interface, docs and code. `Font.licence` is now `Font.license` (migration
   0015 renames it, keeping every value), and the modules `themes/catalogue.py`
