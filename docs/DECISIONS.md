@@ -1469,3 +1469,38 @@ Recommended (made while building autonomously).
   cut-off later frame, which already caused a server error, is now refused.
 - **Backstop:** the README asks host projects for a worker timeout and a memory
   limit, in case anything ever slips past the checks.
+
+## Running in a production-like host project (#212)
+
+Before v1.0, capy-theme ran in a throwaway project generated from
+`Just-Sean/django-starter`, set up the way Sean's rules describe production
+(deleted afterwards):
+
+- **Install:** capy-theme from a wheel built from `main`, which also checked the
+  packaging (templates, static files, JSON data and license files all shipped).
+- **Stack:** the starter's production image (gunicorn with 3 workers, `DEBUG`
+  off, WhiteNoise with hashed static files, Postgres 18), Redis as the shared
+  cache, an S3-compatible store for uploads (django-storages with Adobe S3Mock;
+  MinIO no longer publishes public images), and Django's built-in CSP with
+  `script-src 'self'` plus a nonce.
+- **Results:**
+  - `check --deploy` with real production values: no issues.
+  - All 15 migrations ran on Postgres 18.
+  - A theme with an uploaded logo (36 AVIF/WebP/PNG copies) and icon, and custom
+    CSS, published and activated. The page, theme stylesheet (immutable caching),
+    custom CSS, logos and all favicons (served from the S3 store), the JSON API
+    (with 304s), tokens and daisyUI downloads, and static files via WhiteNoise
+    all worked. capy-theme's log lines (#208) appeared through the project's
+    logging.
+  - A publish from another process reached all 3 workers immediately (30 of 30
+    requests), through the shared cache.
+  - The editor mounted for staff, and the Components view's `SAMEORIGIN` frame
+    header overrode the project's `X-Frame-Options: DENY`.
+- **Found and fixed:** the head script lost its CSP nonce under Django's real
+  (lazy) nonce, so browsers blocked it (#213). Re-run after the fix: the header
+  and the script share the nonce.
+- **Filed for later:** a strict CSP without `unsafe-inline` blocks a few inline
+  styles in the editor and admin (#214).
+- **For django-starter (not capy-theme):** gunicorn's control server can't write
+  to `/home/app` (the image's user has no home folder), and the starter has no
+  shared cache, S3 storage or CSP yet.
