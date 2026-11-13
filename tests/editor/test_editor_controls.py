@@ -113,7 +113,7 @@ def test_every_shape_size_has_a_real_step():
     # then stopped (Small control size and Field size got stuck at 0.125).
     sizes = controls()["sizes"]
     steps = {size["name"]: size["step"] for size in sizes}
-    assert steps["size_selector"] == steps["size_field"] == 0.03125
+    assert steps["size_selector"] == steps["size_field"] == 0.0625
     assert steps["radius_box"] == 0.125
     assert steps["border"] == 0.5
     for size in sizes:

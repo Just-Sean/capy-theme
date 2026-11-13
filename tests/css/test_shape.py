@@ -1,5 +1,7 @@
 """Tests for shape and effects (issue #19)."""
 
+from decimal import Decimal
+
 import pytest
 from django.core.exceptions import ValidationError
 from django.urls import reverse
@@ -118,4 +120,18 @@ def test_admin_size_fields_have_real_steps():
         step = form.fields[f"shape_{name}"].widget.attrs["step"]
         assert step != "any"
         assert float(step) > 0
-    assert form.fields["shape_size_field"].widget.attrs["step"] == "0.03125"
+    assert form.fields["shape_size_field"].widget.attrs["step"] == "0.0625"
+
+
+def test_every_arrow_stop_saves_in_the_admin():
+    # Review of #224: each value the arrows reach must pass the admin field's checks
+    # (a 5-decimal step like 0.03125 made every other stop fail to save).
+    form = ThemeForm()
+    for name in SIZES:
+        field = form.fields[f"shape_{name}"]
+        attrs = field.widget.attrs
+        low, high, step = (Decimal(attrs[key]) for key in ("min", "max", "step"))
+        value = low
+        while value <= high:
+            field.clean(str(value))
+            value += step

@@ -33,7 +33,7 @@
       "unit": "rem",
       "min": 0.125,
       "max": 0.5,
-      "step": 0.03125,
+      "step": 0.0625,
       "label": "Small control size",
       "help": "Base size of checkboxes, toggles and badges (daisyUI uses 0.1875–0.3125)."
     },
@@ -42,7 +42,7 @@
       "unit": "rem",
       "min": 0.125,
       "max": 0.5,
-      "step": 0.03125,
+      "step": 0.0625,
       "label": "Field size",
       "help": "Base size of buttons and inputs (daisyUI uses 0.1875–0.3125)."
     },
