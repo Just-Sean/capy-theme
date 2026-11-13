@@ -245,8 +245,10 @@ the demo):
 capy-theme keeps its data in the project's database and media storage, so the
 project's own backups need to include:
 
-- **Database:** every `capy_theme_*` table (themes, their published revisions,
-  schedules and site assignments, the font library, and uploaded images' records).
+- **Database:** back up the whole project database. capy-theme's tables
+  (`capy_theme_*`: themes, their published revisions, schedules and site
+  assignments, the font library, and uploaded images' records) are part of it
+  and link to the project's user table (who published each revision).
 - **Uploaded files** under `MEDIA_ROOT/capy_theme/` (or the project's file
   storage):
   - `assets/<slot>/`: every uploaded image, as checked and cleaned. These are
@@ -257,10 +259,16 @@ project's own backups need to include:
     `icons/` (favicons and app icons) are made from the originals. If they're lost,
     `uv run python manage.py theme_rebuild_images` makes them again.
 
+Restore the database and the media files from the same point in time (each
+image and font record points to a file), then run `theme_rebuild_images` if any
+generated files are missing. Restore only backups you trust: restored files
+don't go through the upload checks again.
+
 To keep a single theme as a portable file (its draft, images and fonts), use
 `theme_export` (see [Export and import](docs/themes.md#export-and-import)). It
-doesn't replace a backup: it leaves out the revision history and the other
-themes.
+doesn't replace a backup: it leaves out the revision history, the other themes,
+and site assignments and schedules. It does include the theme's custom CSS, so
+handle export files like the theme itself.
 
 ## Logging
 
