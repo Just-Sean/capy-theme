@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **New dependency `defusedxml`:** uploaded SVGs are parsed with it, as a second
+  layer against entity ("XML bomb") attacks on top of the existing DOCTYPE check.
 - **CSP nonces work with Django's real CSP middleware:** the light/dark script
   now always gets the request's nonce. Before, a page where nothing else had used
   the nonce sent none, so browsers blocked the script under `script-src` with `NONCE`.

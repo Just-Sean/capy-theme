@@ -42,7 +42,8 @@ with alt text. For every upload:
   drawing elements and attributes are kept. Scripts, event handlers (`onload`
   and so on), embedded HTML, animation, links to other files or sites, and CSS
   `@import` or external `url()` are removed. SVGs must be UTF-8, and SVGs with a
-  DOCTYPE or entities are rejected.
+  DOCTYPE or entities are rejected. They're parsed with `defusedxml`, which also
+  refuses entities and external references itself, as a second layer.
 - SVGs aren't converted to PNG. The slots where SVG can't be used take a PNG,
   JPEG, WebP or GIF instead: the email logo (email programs don't show SVG), the
   social sharing image (social sites don't accept it) and the icon (favicons are

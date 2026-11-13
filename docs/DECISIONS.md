@@ -1504,3 +1504,16 @@ Before v1.0, capy-theme ran in a throwaway project generated from
 - **For django-starter (not capy-theme):** gunicorn's control server can't write
   to `/home/app` (the image's user has no home folder), and the starter has no
   shared cache, S3 storage or CSP yet.
+
+## Parsing uploaded SVGs with defusedxml (#219)
+
+- CodeQL flagged uploaded SVGs going into Python's standard XML parser (an "XML
+  bomb": entities that expand to gigabytes). capy-theme already refused any SVG
+  with a DOCTYPE or entities before parsing, but CodeQL can't see that check.
+- Sean chose to add `defusedxml` (recommended by Python's documentation for
+  untrusted XML) as a second layer: it refuses DTDs, entities and external
+  references itself. The first check stays, for a clear message; a test proves
+  the second layer refuses a "billion laughs" bomb on its own. The `# noqa: S314`
+  that silenced ruff is gone.
+- One new runtime dependency for host projects: small, stable and widely used.
+
