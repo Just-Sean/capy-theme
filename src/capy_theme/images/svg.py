@@ -11,6 +11,8 @@ import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+from defusedxml import DefusedXmlException
+from defusedxml.ElementTree import fromstring as parse_untrusted_xml
 from django.core.exceptions import ValidationError
 
 SVG = "http://www.w3.org/2000/svg"
@@ -63,13 +65,15 @@ def clean_svg(data):
         text = data.decode("utf-8-sig")  # UTF-8 only, so the checks below see the real text
     except UnicodeDecodeError as error:
         raise ValidationError("SVGs must be saved as UTF-8.") from error
+    no_doctype = "SVGs with a DOCTYPE or entities aren't accepted."
     if re.search(r"<!DOCTYPE|<!ENTITY", text, re.IGNORECASE):
         # Entities can expand to huge sizes or read local files; logos don't need them.
-        raise ValidationError("SVGs with a DOCTYPE or entities aren't accepted.")
+        # Checked first for a clear message; defusedxml refuses them too, as a second layer.
+        raise ValidationError(no_doctype)
     try:
-        # Safe without defusedxml: its protections are against DOCTYPEs and
-        # entities, which are rejected above (and expat never fetches anything).
-        root = ET.fromstring(text)  # noqa: S314
+        root = parse_untrusted_xml(text)
+    except DefusedXmlException as error:
+        raise ValidationError(no_doctype) from error
     except ET.ParseError as error:
         raise ValidationError(not_svg) from error
     if root.tag not in (f"{{{SVG}}}svg", "svg"):

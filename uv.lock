@@ -108,6 +108,7 @@ version = "0.7.0"
 source = { editable = "." }
 dependencies = [
     { name = "coloraide" },
+    { name = "defusedxml" },
     { name = "django" },
     { name = "fonttools", extra = ["woff"] },
     { name = "jsonschema" },
@@ -132,6 +133,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "coloraide", specifier = ">=8,<9" },
+    { name = "defusedxml", specifier = ">=0.7.1,<0.8" },
     { name = "django", specifier = ">=6.1,<7" },
     { name = "fonttools", extras = ["woff"], specifier = ">=4,<5" },
     { name = "jsonschema", specifier = ">=4.26,<5" },

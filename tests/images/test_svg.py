@@ -196,3 +196,26 @@ def test_text_after_a_removed_element_joins_the_previous_sibling():
 
 def test_size_falls_back_to_width_and_height_when_the_viewbox_isnt_numbers():
     assert clean_svg(svg("", 'viewBox="a b c d" width="30" height="12px"'))[1:] == (30, 12)
+
+
+def test_defusedxml_refuses_entities_even_without_the_first_check(monkeypatch):
+    # Issue #219: the DOCTYPE check catches these first, with a clear message;
+    # defusedxml is a second layer. With the first check switched off, a classic
+    # "billion laughs" entity bomb is still refused, never expanded.
+    import types
+
+    import capy_theme.images.svg as svg_module
+
+    # Only the SVG module's view of `re` (patching re.search itself would also
+    # break pytest's own message matching).
+    monkeypatch.setattr(
+        svg_module, "re", types.SimpleNamespace(search=lambda *a, **k: None, IGNORECASE=0)
+    )
+    bomb = (
+        '<?xml version="1.0"?><!DOCTYPE svg [<!ENTITY a "aaaaaaaaaa">'
+        '<!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;">'
+        '<!ENTITY c "&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;">]>'
+        f"<svg {NS}><text>&c;</text></svg>"
+    ).encode()
+    with pytest.raises(ValidationError, match="DOCTYPE or entities"):
+        clean_svg(bomb)
