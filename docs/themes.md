@@ -149,7 +149,9 @@ the device. The script from `{% theme_head %}` does the same before the page
 draws (so cached pages are right too) and makes the buttons switch instantly.
 Without JavaScript, each button is a link to `/theme/mode/<light|dark|auto>/`,
 which sets the cookie and comes back to the page. The script carries Django's
-CSP nonce when the project uses Django's CSP middleware.
+CSP nonce when the project uses Django's CSP middleware. (With a nonce in the
+policy, don't cache whole pages that use `{% theme_head %}`: every visitor would
+get the same nonce.)
 
 ## Permissions
 

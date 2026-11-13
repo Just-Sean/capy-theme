@@ -114,7 +114,9 @@ def test_head_script_knows_when_switching_is_off(rf):
 def test_head_script_carries_the_csp_nonce(rf):
     live()
     request = get(rf)
-    request._csp_nonce = "abc123"  # what Django's CSP middleware sets
+    request._csp_nonce = (
+        "abc123"  # a ready-made nonce; Django's real lazy one is tested below (#213)
+    )
     assert '<script nonce="abc123">' in render("{% theme_head %}", request)
 
 
@@ -135,5 +137,6 @@ def test_head_script_and_csp_header_share_the_real_nonce(client, settings):
     ]
     settings.SECURE_CSP = {"script-src": [CSP.SELF, CSP.NONCE]}
     response = client.get("/page/")
-    nonce = re.search(r"'nonce-([^']+)'", response["Content-Security-Policy"]).group(1)
-    assert f'<script nonce="{nonce}">' in response.content.decode()
+    match = re.search(r"'nonce-([^']+)'", response["Content-Security-Policy"])
+    assert match, response["Content-Security-Policy"]  # the header has a nonce
+    assert f'<script nonce="{match.group(1)}">' in response.content.decode()
