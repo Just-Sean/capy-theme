@@ -8,7 +8,7 @@ from django.core.files.base import ContentFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .. import conf
-from .gif_frames import BrokenGif, frame_extent
+from .gif_frames import BrokenGif, frame_disposals, frame_extent
 from .slots import MODES, NO_SVG, SLOTS
 from .svg import clean_svg
 
@@ -89,7 +89,7 @@ def prepare_image(data, name, slot):
         )
     if frames > 1:
         _check_animation(frames, width, height)
-    return _clean_copy(image, name)
+    return _clean_copy(image, name, data)
 
 
 def _frames_and_size(image, data):
@@ -115,7 +115,7 @@ def _frames_and_size(image, data):
     return frames, width, height
 
 
-def _clean_copy(image, name):
+def _clean_copy(image, name, data):
     """Decode the image and save a copy without metadata (see prepare_image)."""
     try:
         image.load()
@@ -123,7 +123,6 @@ def _clean_copy(image, name):
         raise ValidationError(NOT_AN_IMAGE) from error
     content_type, extension = FORMATS[image.format]
     clean = _strip_metadata(image)
-    output = io.BytesIO()
     save_options = {"format": image.format}
     if image.format == "JPEG":
         save_options |= {"quality": 92, "optimize": True}
@@ -133,9 +132,11 @@ def _clean_copy(image, name):
         # Saving every frame goes back to the first one, which re-reads its info
         # from the file (comment included), and Pillow writes that into the new
         # file's header. An empty comment means none is written (issue #185).
-        save_options |= {"save_all": True, "comment": b""}
+        # Each frame keeps how it's cleared before the next (e.g. "clear to the
+        # background"); otherwise earlier frames would stay visible (issue #189).
+        save_options |= {"save_all": True, "comment": b"", "disposal": _disposal(data)}
     try:
-        clean.save(output, **save_options)  # decodes every frame of an animation
+        output = _save(clean, save_options)  # decodes every frame of an animation
     except DAMAGED_FILE_ERRORS as error:
         raise ValidationError(NOT_AN_IMAGE) from error
     return {
@@ -145,6 +146,29 @@ def _clean_copy(image, name):
         "content_type": content_type,
         "size": output.tell(),
     }
+
+
+def _disposal(data):
+    """Pillow's disposal option for an animated GIF: one number when every frame
+    uses the same (the usual case), otherwise one per frame."""
+    disposals = frame_disposals(data)
+    return disposals[0] if len(set(disposals)) == 1 else disposals
+
+
+def _save(clean, save_options):
+    """The saved image's bytes (in a BytesIO)."""
+    output = io.BytesIO()
+    try:
+        clean.save(output, **save_options)
+    except TypeError:
+        # A Pillow bug: when every frame is the same it saves one still frame, and
+        # that can't take a list of disposals. Disposal doesn't change a still
+        # frame, so save it without.
+        if not isinstance(save_options.get("disposal"), list):
+            raise
+        output = io.BytesIO()
+        clean.save(output, **{k: v for k, v in save_options.items() if k != "disposal"})
+    return output
 
 
 def _check_animation(frames, width, height):

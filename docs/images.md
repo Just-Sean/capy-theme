@@ -33,7 +33,8 @@ with alt text. For every upload:
   left as a normal server error, so Django logs it and it gets noticed.
 - The image is saved again without EXIF, text chunks and comments, so camera
   details and GPS locations are removed. Photos are turned upright first.
-  Color profiles are kept.
+  Color profiles are kept. Animated GIFs keep every frame, their timing,
+  looping and transparency, and how each frame is cleared before the next.
 - SVGs are cleaned with a strict allow-list (`src/capy_theme/images/svg_allowlist.json`, used by `images/svg.py`): only
   drawing elements and attributes are kept. Scripts, event handlers (`onload`
   and so on), embedded HTML, animation, links to other files or sites, and CSS

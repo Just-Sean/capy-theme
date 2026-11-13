@@ -52,3 +52,8 @@ def many_frames_gif(frames, size=4000):
     """A size × size GIF with `frames` frames that each change one pixel: a few
     bytes per frame in the file, but each is decoded at full size."""
     return hand_built_gif(size, [(1, 1)] * frames)
+
+
+def reopen(clean):
+    """The image prepare_image() saved, opened again."""
+    return Image.open(io.BytesIO(clean["file"].read()))
