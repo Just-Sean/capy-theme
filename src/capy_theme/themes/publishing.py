@@ -50,10 +50,6 @@ def publish(theme, user=None, note=""):
         )
         theme.live_revision = revision
         theme.save(update_fields=["live_revision"])
-    logger.info(
-        "Published theme %r as revision %d (user ID %s).",
-        theme.slug,
-        number,
-        revision.published_by_id,
-    )
+    publisher = f"user ID {revision.published_by_id}" if revision.published_by_id else "no user"
+    logger.info("Published theme %r as revision %d (%s).", theme.slug, number, publisher)
     return revision

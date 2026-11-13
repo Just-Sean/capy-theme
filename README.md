@@ -248,8 +248,8 @@ setting decides where the messages go (and Django's default shows nothing below
 WARNING).
 
 - **INFO:** a theme published (with the revision number and the publisher's user
-  ID), activated (for every site or one domain) or imported, and a Google font
-  imported.
+  ID), restored to an earlier revision, activated (for every site or one domain)
+  or imported, and a Google font imported.
 - **WARNING:** Google Fonts couldn't be reached.
 
 Messages never include personal data such as names or email addresses. To see
@@ -258,6 +258,7 @@ them, e.g. on the console:
 ```python
 LOGGING = {
     "version": 1,
+    "disable_existing_loggers": False,  # keep Django's own logging
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "loggers": {"capy_theme": {"handlers": ["console"], "level": "INFO"}},
 }

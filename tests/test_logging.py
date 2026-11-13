@@ -17,8 +17,9 @@ from capy_theme.models import Theme
 from capy_theme.portability.export import export_theme
 from capy_theme.portability.importing import import_theme
 from capy_theme.themes.active import activate
+from capy_theme.themes.history import restore
 from capy_theme.themes.publishing import publish
-from tests.fonts.test_google_fonts import FakeGoogle
+from tests.support.google import FakeGoogle
 
 pytestmark = pytest.mark.django_db
 
@@ -44,6 +45,26 @@ def test_publishing_logs_the_revision_and_the_publishers_id(logs):
         )
     ]
     assert "editor" not in logs.text  # an ID, never the person's name
+
+
+def test_publishing_without_a_user_says_so(logs):
+    publish(Theme.objects.create(name="Main", slug="main"))
+    assert messages(logs) == [
+        ("capy_theme.themes.publishing", "Published theme 'main' as revision 1 (no user).")
+    ]
+
+
+def test_restoring_logs_which_revision(logs):
+    theme = Theme.objects.create(name="Main", slug="main")
+    publish(theme)
+    theme.settings = {"site_name": "New"}
+    theme.save()
+    publish(theme)
+    logs.clear()
+    restore(theme, theme.revisions.get(number=1))
+    assert ("capy_theme.themes.history", "Restored revision 1 of theme 'main' as revision 3.") in (
+        messages(logs)
+    )
 
 
 def test_activating_logs_for_which_sites(logs):
@@ -94,4 +115,6 @@ def test_google_fonts_unreachable_is_a_warning(logs):
 
 def test_capy_theme_sets_up_no_handlers():
     # capy-theme adds no handlers of its own; the project's LOGGING decides.
-    assert logging.getLogger("capy_theme").handlers == []
+    names = [n for n in logging.root.manager.loggerDict if n.split(".")[0] == "capy_theme"]
+    assert "capy_theme.themes.publishing" in names
+    assert all(not logging.getLogger(n).handlers for n in names)
