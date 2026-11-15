@@ -1574,3 +1574,18 @@ Before v1.0, capy-theme ran in a throwaway project generated from
   prototype did) would miss a file that lies by more than one step. A test covers it.
 - The check runs the brotli unpacking twice (once counting, once in fontTools),
   which costs little for fonts this small.
+
+## Safe minimum versions (#234)
+
+- Found by the v1.0.0 pre-release review: the allowed ranges let host projects
+  install versions with known security problems.
+- **fontTools `>=4.60.2`:** older versions have a known security problem and some
+  fail on Python 3.14.
+- **brotli `>=1.2.1` as a direct dependency** (CPython), and **brotlicffi
+  `>=1.2.1.0`** on other Pythons such as PyPy, matching how `fonttools[woff]`
+  picks between them. They unpack WOFF2 fonts; versions before 1.2.0 can use huge
+  memory on small crafted input, and the font size limits (#191) need 1.2.x.
+- **Pillow has no upper cap** (`>=13` only), unlike the other dependencies.
+  Pillow only patches its newest major version, so a cap would keep projects off
+  security fixes. A future major version that breaks something is caught by CI.
+  Don't add the cap back without weighing that.
