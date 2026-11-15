@@ -20,4 +20,4 @@
 16. Custom CSS (only for people who may edit it)
 17. Advanced (the stored settings, ID and dates)
 
-Several of the later sections are folded by default to keep the page short.
+Several of the later sections are folded by default to keep the page short. On the page they're grouped into tabs (see `tabs.py`), where they open, except the colors' Advanced and Expert groups.

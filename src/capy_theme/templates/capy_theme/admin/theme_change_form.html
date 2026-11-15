@@ -1,5 +1,13 @@
 {% extends "admin/change_form.html" %}
-{% comment %}The theme edit page, with a Publish button next to History for users who may publish.{% endcomment %}
+{% load static %}
+{% comment %}The theme edit page: a Publish button next to History for users who may publish, and the
+sections grouped into tabs (capy_theme.admin.tabs). Without JavaScript the tab panels just
+follow each other, so the page reads top to bottom as before.{% endcomment %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'capy_theme/admin/tabs.css' %}" {% csp_nonce_attr %}>
+{% endblock %}
 
 {% block object-tools-items %}
   {% if original.pk and edit_live_url %}
@@ -13,4 +21,35 @@
     <li><a href="{% url 'admin:capy_theme_theme_export' original.pk %}">Export</a></li>
   {% endif %}
   {{ block.super }}
+{% endblock %}
+
+{% block field_sets %}
+  {% for tab in capy_tabs %}
+    {% if tab.fieldsets %}
+      <div class="capy-tab-panel" data-capy-tab="{{ tab.id }}" data-capy-tab-order="{{ tab.order }}" data-capy-tab-label="{{ tab.label }}">
+        {% for entry in tab.fieldsets %}
+          <div{% if entry.unfold %} data-capy-unfold{% endif %}>
+            {% include "admin/includes/fieldset.html" with fieldset=entry.fieldset heading_level=2 prefix="fieldset" id_prefix=0 id_suffix=entry.index %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endblock %}
+
+{% block inline_field_sets %}
+  {% for tab in capy_tabs %}
+    {% if tab.inlines %}
+      <div class="capy-tab-panel" data-capy-tab="{{ tab.id }}" data-capy-tab-order="{{ tab.order }}" data-capy-tab-label="{{ tab.label }}">
+        {% for inline_admin_formset in tab.inlines %}
+          {% include inline_admin_formset.opts.template %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+  {{ block.super }}
+  <script src="{% static 'capy_theme/admin/tabs.js' %}" defer {% csp_nonce_attr %}></script>
 {% endblock %}
