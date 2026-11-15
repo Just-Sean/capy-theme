@@ -477,7 +477,7 @@ Every command in one place. Details are in the linked pages.
 | `uv run python manage.py capy_theme_add_fonts` | Add the 30 bundled fonts to a project's font library ([fonts](docs/fonts.md)) |
 | `uv run python scripts/fetch_curated_fonts.py` | Re-download the bundled fonts from Fontsource ([fonts](docs/fonts.md)) |
 | `uv run python scripts/generate_builtin_themes.py` | Regenerate daisyUI's built-in themes after a daisyUI update ([development](docs/development.md)) |
-| `uv run python scripts/build_components_css.py` | Rebuild the Components view's stylesheet ([editor](docs/editor.md)) |
+| `uv run python scripts/build_components_css.py` | Rebuild the stylesheet of the Components view and the live edit page, after changing their templates ([editor](docs/editor.md)) |
 | `gh release download v5.7.50 --repo saadeghi/daisyui -p daisyui.mjs -p daisyui-theme.mjs` | Download daisyUI's plugin files for the demo when updating daisyUI ([development](docs/development.md)) |
 | `curl -sSfL -o tests/artifacts/dtcg/format-2025.10.json https://www.designtokens.org/schemas/2025.10/format.json` | Refresh the Design Tokens format schema the tests use ([tests/artifacts/dtcg](tests/artifacts/dtcg/README.md)) |
 | `uv build` | Build the package ([below](#build-the-package)) |

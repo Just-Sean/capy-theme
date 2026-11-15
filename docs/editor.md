@@ -11,7 +11,15 @@ to the admin) and every daisyUI component (buttons, badges, a card, alerts, a
 table, form fields, headings), with the live editor open on it. The admin's **Edit
 live** button opens it on that theme (`?edit=<id>`). Without `?edit=`, it opens on
 the active theme (or the first theme, if none is active). With no themes yet, it
-links to the admin to add one.
+links to the admin to add one; for a theme that doesn't exist (e.g. deleted), it
+says so and links to the active theme and the theme list.
+
+The tab title names the theme being edited. The header shows the published theme
+visitors see (its logo, site name and tagline, and its Light / Dark / Auto
+setting), as on any page; the editor previews the edited theme's draft colors,
+shape and fonts on everything. The sample headings have no size or weight
+classes, so the theme's heading scale and weight show on them. There's a skip
+link to the components, and the header wraps on narrow screens.
 
 It's self-contained. It has its own template
 (`templates/capy_theme/editor/live_edit.html`) and capy-theme's bundled daisyUI
@@ -22,8 +30,11 @@ it looks and works the same in every project and in the demo. It has nothing
 inline, so a strict Content Security Policy blocks nothing on it.
 
 Only staff who can change themes may open it. Logged-out visitors are sent to the
-admin login, and anyone else gets a 403. Code: `editor/live_edit_view.py`
-(issue #229).
+admin login, and anyone else gets the project's 403 page. It sends
+`X-Frame-Options: DENY` itself (even without Django's clickjacking middleware), so
+no site can frame the editor and trick a click on Save or Publish. It needs Django's
+admin at its usual `admin` namespace (`admin.site.urls`), as the rest of
+capy-theme does. Code: `editor/live_edit_view.py` (issue #229).
 
 ## The live theme editor
 
@@ -148,8 +159,10 @@ unique.
 
 The view brings its own stylesheet,
 `src/capy_theme/static/capy_theme/editor/components.css` (daisyUI plus the
-Tailwind classes the samples use), so it works in any project. It's built from
-those templates, so **rebuild it after changing them** (or after updating daisyUI):
+Tailwind classes the samples use), so it works in any project. The live edit page
+uses it too. It's built from those templates, the live edit page's
+(`live_edit.html`, `live_edit_components.html`) and the mode toggle and theme
+picker, so **rebuild it after changing any of them** (or after updating daisyUI):
 
 ```bash
 uv run python scripts/build_components_css.py

@@ -56,6 +56,56 @@ def test_non_staff_are_refused_even_with_the_permission(client, django_user_mode
     assert client.get(URL).status_code == 403
 
 
+def test_refusal_uses_the_projects_403_page(client, django_user_model, active, settings):
+    # PermissionDenied, so the project's own 403 template is shown, not plain text.
+    settings.DEBUG = False
+    log_in(client, django_user_model, "view_theme")
+    response = client.get(URL)
+    assert response.status_code == 403
+    assert response.content.decode() != "You can't edit themes."
+
+
+def test_inactive_staff_are_refused(client, django_user_model, active):
+    log_in(client, django_user_model, "change_theme")
+    django_user_model.objects.filter(username="u").update(is_active=False)
+    # An inactive user's session no longer counts as logged in, so: the login page.
+    response = client.get(URL)
+    assert response.status_code == 302
+    assert response["Location"].startswith("/admin/login/")
+
+
+def test_the_page_cant_be_framed(client, django_user_model, active):
+    # Its own header, even in a project without XFrameOptionsMiddleware (as here), so
+    # another site can't frame the editor and trick a click on Save or Publish.
+    log_in(client, django_user_model, "change_theme")
+    assert client.get(f"{URL}?edit={active.pk}")["X-Frame-Options"] == "DENY"
+
+
+@pytest.mark.parametrize("value", ["abc", "²", "-1", "1.0", ""])
+def test_an_unreadable_edit_value_opens_the_active_theme(client, django_user_model, active, value):
+    # "²" passes str.isdigit() but not int(): it used to crash the page.
+    log_in(client, django_user_model, "change_theme")
+    response = client.get(URL, {"edit": value})
+    assert response.status_code == 302
+    assert response["Location"] == f"{URL}?edit={active.pk}"
+
+
+def test_a_theme_that_doesnt_exist_says_so(client, django_user_model, active):
+    log_in(client, django_user_model, "change_theme")
+    response = client.get(f"{URL}?edit=99999")
+    assert response.status_code == 200
+    html = response.content.decode()
+    assert "That theme doesn't exist" in html
+    assert 'href="/admin/capy_theme/theme/"' in html
+    assert 'id="capy-editor"' not in html
+
+
+def test_an_unreadable_edit_value_with_no_themes_says_to_add_one(client, django_user_model):
+    log_in(client, django_user_model, "change_theme")
+    html = client.get(URL, {"edit": "abc"}).content.decode()
+    assert "There's no theme to edit yet." in html
+
+
 def test_without_edit_it_opens_on_the_active_theme(client, django_user_model, active):
     log_in(client, django_user_model, "change_theme")
     response = client.get(URL)
@@ -99,6 +149,35 @@ def test_the_page_has_the_header_components_and_the_editor(client, django_user_m
         assert f">{heading}</h2>" in html
     assert f'data-theme-id="{active.pk}"' in html
     assert "There's no theme to edit yet." not in html
+    # The page's own heading and title name the theme being edited; a skip link.
+    assert '<h1 class="sr-only">Live edit: Main</h1>' in html
+    assert "<title>Live edit: Main</title>" in html
+    assert 'href="#live-edit-main"' in html and 'id="live-edit-main"' in html
+
+
+def test_the_title_names_the_theme_being_edited_not_the_active_one(
+    client, django_user_model, active
+):
+    other = Theme.objects.create(name="Holiday", slug="holiday")
+    log_in(client, django_user_model, "change_theme")
+    html = client.get(f"{URL}?edit={other.pk}").content.decode()
+    assert "<title>Live edit: Holiday</title>" in html
+    assert f'data-theme-id="{other.pk}"' in html
+
+
+def test_sample_headings_take_the_themes_heading_scale(client, django_user_model, active):
+    # Utility classes would win over the theme's heading rules (they're in @layer
+    # base), so the sample headings have none.
+    log_in(client, django_user_model, "change_theme")
+    html = client.get(f"{URL}?edit={active.pk}").content.decode()
+    for level in range(1, 7):
+        assert f"<h{level}>Heading {level}</h{level}>" in html
+
+
+def test_sample_alerts_arent_announced_on_load(client, django_user_model, active):
+    log_in(client, django_user_model, "change_theme")
+    html = client.get(f"{URL}?edit={active.pk}").content.decode()
+    assert 'role="alert"' not in html
 
 
 @override_settings(

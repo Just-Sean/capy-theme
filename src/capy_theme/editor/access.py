@@ -18,10 +18,21 @@ def can_publish(user):
     return can_edit(user) and user.has_perm("capy_theme.publish_theme")
 
 
+def requested_theme_id(request):
+    """The theme id in ?edit=<id>, or None if there isn't a valid one.
+
+    Only ASCII digits count: str.isdigit() also accepts characters like "²", which
+    int() can't read, so a crafted URL would crash the page."""
+    requested = request.GET.get("edit", "")
+    if requested.isascii() and requested.isdigit():
+        return int(requested)
+    return None
+
+
 def editor_theme(request):
     """The theme the editor works on: ?edit=<id> if given, else the active theme."""
-    requested = request.GET.get("edit", "")
-    if requested.isdigit():
-        return Theme.objects.filter(pk=int(requested)).first()
+    requested = requested_theme_id(request)
+    if requested is not None:
+        return Theme.objects.filter(pk=requested).first()
     active = get_active_theme(request)
     return Theme.objects.filter(pk=active.pk).first() if active else None

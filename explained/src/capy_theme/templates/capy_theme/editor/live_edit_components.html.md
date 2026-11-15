@@ -10,4 +10,8 @@
 - form fields
 - headings 1 to 6 with body text and a link
 
-The form fields aren't inside a `<form>`, so pressing Enter in one never reloads the page and loses the editor's unsaved changes. The buttons are `type="button"` for the same reason.
+**Where it differs from the demo,** so the page works as a theme-building page:
+
+- **Form fields:** they aren't inside a `<form>`, and the buttons are `type="button"`. Pressing Enter or clicking never reloads the page and loses the editor's unsaved changes.
+- **Sample headings:** they have no size or weight classes. Utility classes would win over the theme's heading rules, so with none, the theme's heading scale and weight show.
+- **Sample alerts:** they have no `role="alert"`, so screen readers don't read them out when the page loads.
