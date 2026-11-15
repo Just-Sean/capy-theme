@@ -27,18 +27,22 @@ logger = logging.getLogger(__name__)
 SCHEMA = json.loads(Path(__file__).with_name("theme_file.schema.json").read_text(encoding="utf-8"))
 
 
-def import_theme(upload, keep_custom_css=True):
+def import_theme(upload, keep_custom_css=True, can_add_external_fonts=True):
     """Create a new, unpublished theme from an export zip. Returns the Theme.
 
     `upload` is a file object (e.g. an uploaded file). Without `keep_custom_css`
     (the importer can't edit custom CSS), the export's custom CSS is left out.
-    Raises ValidationError with a readable message if the file isn't a valid
-    capy-theme export.
+    Without `can_add_external_fonts` (the importer can't add fonts), an export that
+    would add an external font (a stylesheet from another site, loaded on every
+    page) is refused. Raises ValidationError with a readable message if the file
+    isn't a valid capy-theme export.
     """
     archive = _open(upload)
     manifest = _manifest(archive)
     if not keep_custom_css:
         manifest["theme"]["settings"].pop("custom_css", None)
+    if not can_add_external_fonts:
+        _refuse_new_external_fonts(manifest)
     stored = []  # files saved so far, deleted again if the import fails
     try:
         with transaction.atomic():
@@ -78,6 +82,16 @@ def _manifest(archive):
     if problems:
         raise ValidationError(["theme.json isn't a capy-theme export:", *problems[:5]])
     return manifest
+
+
+def _refuse_new_external_fonts(manifest):
+    """External fonts the library doesn't have yet need permission to add fonts (#235)."""
+    for font in manifest["fonts"].values():
+        if font["source"] == "external" and not Font.objects.filter(family=font["family"]).exists():
+            raise ValidationError(
+                f"The export adds the external font {font['family']}, which loads a "
+                "stylesheet from another site. Importing it needs permission to add fonts."
+            )
 
 
 def _create(archive, manifest, stored):

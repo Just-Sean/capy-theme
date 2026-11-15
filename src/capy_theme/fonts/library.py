@@ -80,13 +80,30 @@ def preview_stack(font):
     return f'"{family}", {font.fallback_stack or DEFAULT_FALLBACK["body"]}'
 
 
+CSS_SAFE = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_.:/?=&%~+,@#!$*")
+
+
+def css_string(value):
+    """`value` as a quoted CSS string that can't end the string, a rule or a <style> block.
+
+    Letters, digits and URL punctuation stay as they are; anything else becomes a
+    CSS escape (e.g. < becomes \\3c), which CSS reads back as the same character.
+    """
+    return '"' + "".join(c if c in CSS_SAFE else f"\\{ord(c):x} " for c in str(value)) + '"'
+
+
 def preview_faces(font):
-    """@font-face rules for a library font's regular file, for previews."""
+    """@font-face rules for a library font's regular file, for previews.
+
+    Every value from the font's data goes through css_string() or int(), so the
+    result is safe inside the admin's <style> block (#235).
+    """
     files = [f for f in font.files.all() if f.style == "normal"] or list(font.files.all())
-    family = font.family.replace('"', "")
+    family = css_string(font.family)
     return "".join(
-        f'@font-face{{font-family:"{family}";src:url("{file_url(f.file.name)}") format("woff2");'
-        f"font-weight:{f.weight};font-style:{f.style};font-display:swap}}"
+        f"@font-face{{font-family:{family};src:url({css_string(file_url(f.file.name))}) "
+        f'format("woff2");font-weight:{int(f.weight)};'
+        f"font-style:{'italic' if f.style == 'italic' else 'normal'};font-display:swap}}"
         for f in files
     )
 

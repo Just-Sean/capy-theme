@@ -64,6 +64,7 @@ class ImportExportMixin:
                 theme = import_theme(
                     form.cleaned_data["file"],
                     keep_custom_css=request.user.has_perm("capy_theme.edit_custom_css"),
+                    can_add_external_fonts=request.user.has_perm("capy_theme.add_font"),
                 )
             except ValidationError as error:
                 form.add_error("file", error)

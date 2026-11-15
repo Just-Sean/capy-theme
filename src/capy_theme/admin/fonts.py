@@ -168,6 +168,6 @@ class FontAdmin(admin.ModelAdmin):
         return format_html(
             '<style>{}</style><span style="font-family: {}; font-size: 1.25rem;">'
             "The quick brown fox jumps over the lazy dog</span>",
-            mark_safe(preview_faces(font)),  # noqa: S308 (built from the font's own data)
+            mark_safe(preview_faces(font)),  # noqa: S308 (every value is CSS-escaped)
             preview_stack(font),
         )

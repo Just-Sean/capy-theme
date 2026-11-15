@@ -48,8 +48,12 @@ HREF = {"href", f"{{{XLINK}}}href"}
 # <image> may only embed raster images inside the file, never load one.
 DATA_IMAGE = re.compile(r"^data:image/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/=\s]+$")
 # In attribute values and CSS: url() may only point inside the file (url(#id)).
+# Backslashes are refused too, because CSS escapes (\75rl( is url() get past the
+# other checks, and so are image-set() and @font-face, which load files without url()
+# (#237).
 UNSAFE_CSS = re.compile(
-    r"@import|url\(\s*['\"]?\s*[^#'\"\s)]|expression\s*\(|javascript:|behavior\s*:|-moz-binding",
+    r"@import|url\(\s*['\"]?\s*[^#'\"\s)]|expression\s*\(|javascript:|behavior\s*:|-moz-binding"
+    r"|\\|image-set\(|@font-face",
     re.IGNORECASE,
 )
 

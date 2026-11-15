@@ -56,6 +56,26 @@ def test_external_references_are_removed():
     assert "@import" not in out
 
 
+@pytest.mark.parametrize(
+    "body",
+    [
+        # The pre-release review's three bypasses (#237)
+        '<style>svg{background-image:image-set("https://evil.example/p.png" 1x)}</style>',
+        "<style>@font-face{src:\\75rl(https://evil.example/f)}</style>",
+        '<rect style="fill:\\75rl(https://evil.example/a#b)" width="4"/>',
+        # and their close relatives
+        '<style>svg{background:-webkit-image-set("https://evil.example/p.png" 1x)}</style>',
+        "<style>@\\69mport 'https://evil.example/a.css';</style>",
+        '<style>@font-face{font-family:x;src:local("x")}</style>',
+    ],
+)
+def test_css_that_could_load_outside_files_is_removed(body):
+    out = cleaned(body)
+    assert "evil" not in out
+    assert "\\" not in out
+    assert "@font-face" not in out
+
+
 def test_internal_references_are_kept():
     out = cleaned(
         '<defs><linearGradient id="g"><stop offset="0" stop-color="red"/></linearGradient>'

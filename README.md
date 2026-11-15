@@ -176,6 +176,11 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
    ]
    ```
 
+   In production, send `X-Content-Type-Options: nosniff` and
+   `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox`
+   with everything under `MEDIA_URL`. capy-theme cleans uploaded SVGs, and these
+   headers are a second layer if someone opens one directly.
+
 7. Create its database tables:
 
    ```bash
