@@ -17,6 +17,7 @@ from fontTools import subset as subsetter
 from fontTools.ttLib import TTFont, TTLibError
 
 from .. import conf
+from . import unpacking
 
 # Character sets fonts can be trimmed to, from subsets.json: {name: Unicode ranges}.
 SUBSETS = json.loads(Path(__file__).with_name("subsets.json").read_text(encoding="utf-8"))[
@@ -32,6 +33,7 @@ PARSE_ERRORS = (
     AssertionError,
     struct.error,
     zlib.error,
+    *unpacking.UNPACK_ERRORS,
     ValueError,
     KeyError,
     IndexError,
@@ -67,6 +69,7 @@ def prepare(data, name, subset="all"):
             f"{max_bytes() // 1024} KB)."
         )
     try:
+        unpacking.check(data)  # before fontTools unpacks anything (#191)
         font = TTFont(io.BytesIO(data))
         font.getGlyphOrder()  # make sure it really parses
     except PARSE_ERRORS as error:

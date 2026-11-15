@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Font files can't unpack into huge amounts of memory:** WOFF and WOFF2 fonts are
+  compressed, and a crafted file of under 1 KB could unpack to 512 MB. Before a
+  font is opened, capy-theme now checks the sizes it says it unpacks to and refuses
+  anything over the new `CAPY_THEME_FONT_MAX_UNPACKED_BYTES` setting (30 MB). It
+  then unpacks it in small steps and refuses it as soon as it gives more than it
+  said. This covers admin uploads, theme imports and Google Fonts downloads. WOFF2
+  font collections are refused, and a damaged WOFF2 file gets the usual "isn't a
+  font" message instead of a server error.
 - **Tabs on the theme edit page in the admin:** its sections are grouped into tabs
   (General, Branding, Fonts, Light colors, Dark colors, Shape and contrast, Images,
   Revisions, Advanced) instead of one long scroll. Inside a tab every section is open,

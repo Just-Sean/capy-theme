@@ -11,6 +11,7 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template import Context, Template
 from django.urls import reverse
+from fontTools.ttLib import TTFont
 from PIL import Image
 
 from capy_theme import conf
@@ -113,6 +114,17 @@ def test_font_max_bytes(settings):
     settings.CAPY_THEME_FONT_MAX_BYTES = 100
     with pytest.raises(ValidationError, match="too big"):
         prepare(ttf_bytes(), "font.ttf")
+
+
+def test_font_max_unpacked_bytes(settings):
+    woff2 = io.BytesIO()
+    font = TTFont(io.BytesIO(ttf_bytes()))
+    font.flavor = "woff2"
+    font.save(woff2)
+    prepare(woff2.getvalue(), "font.woff2")
+    settings.CAPY_THEME_FONT_MAX_UNPACKED_BYTES = 100
+    with pytest.raises(ValidationError, match="too big once unpacked"):
+        prepare(woff2.getvalue(), "font.woff2")
 
 
 def png(size=(200, 100)):

@@ -1546,3 +1546,31 @@ Before v1.0, capy-theme ran in a throwaway project generated from
   every page. That changed capy-theme's behavior instead of fixing the missing
   page.
 
+
+## Font unpacking limits (#191)
+
+- The pre-release security review confirmed the suspicion in #191: a WOFF2 file of
+  859 bytes unpacked to 512 MB (about 1 GB of memory), and a valid WOFF with
+  honest sizes and a 512 MB table of zeros was accepted. fontTools unpacks with no
+  limit and only checks sizes afterwards.
+- **Chosen:** a check before fontTools (`fonts/unpacking.py`), in two layers:
+  1. refuse if the sizes the file declares (tables, the whole font, metadata) add
+     up to more than `CAPY_THEME_FONT_MAX_UNPACKED_BYTES`
+  2. unpack each compressed part in steps (brotli, 1 MB at a time) or up to one
+     byte past its declared size (zlib), and refuse as soon as it gives more than
+     declared
+
+  Then fontTools unpacks again, now known to stay under the limit.
+- **Limit: 30 MB**, Sean's choice. It's the default of Google's WOFF2 library.
+  Real fonts unpack to well under it (the largest CJK fonts to about 15–20 MB),
+  and an honest 5 MB upload unpacks to about 10–15 MB.
+- **WOFF2 font collections are refused:** not needed for web fonts.
+- **Not done:** unpacking in a separate process with time and memory limits
+  (#191's step 4). The two layers stopped every crafted file within 0.01 s, so the
+  extra complexity isn't needed. The README's worker timeout and memory limit stay
+  as the backstop.
+- The brotli loop runs until the stream is finished. brotli can say it's ready
+  for more input while output is still waiting, so stopping then (as a first
+  prototype did) would miss a file that lies by more than one step. A test covers it.
+- The check runs the brotli unpacking twice (once counting, once in fontTools),
+  which costs little for fonts this small.
