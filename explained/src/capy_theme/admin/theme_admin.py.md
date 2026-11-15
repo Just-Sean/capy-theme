@@ -11,4 +11,5 @@
   - the publish status (live revision and whether the draft differs)
   - the read-only stored settings as JSON (with custom CSS hidden from people who can't edit it)
   - notes when daisyUI changed a base
+- **`render_change_form`** hands the template the page's tabs (`tabs.theme_tabs`).
 - **`get_form`** tells the form whether this user may edit custom CSS. **`get_fieldsets`** leaves the custom CSS section out for people who can't edit it.

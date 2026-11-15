@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Tabs on the theme edit page in the admin:** its sections are grouped into tabs
+  (General, Branding, Fonts, Light colors, Dark colors, Shape and contrast, Images,
+  Revisions, Advanced) instead of one long scroll. Inside a tab every section is open,
+  except the colors' Advanced and Expert groups. After a failed save, the first tab
+  with an error opens and tabs with errors are marked. Keyboard and screen-reader
+  friendly. Presentation only: the fields, saving and permissions are unchanged, and
+  without JavaScript the page reads top to bottom as before.
 - **Live edit page at `/theme/live-edit/`:** capy-theme's own page for building a
   theme. It has the header (logo, site name, tagline, Light / Dark / Auto, theme
   picker) and every daisyUI component, with the live editor open on it. It's

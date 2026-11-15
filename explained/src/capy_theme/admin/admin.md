@@ -11,6 +11,7 @@ The big theme form is split into one file per area (`form_*.py`). Each has three
 | `theme_form.py` | The theme edit form |
 | `form_colors.py`, `form_type.py`, `form_shape.py`, `form_images.py`, `form_custom_css.py` | Each area's fields |
 | `fieldsets.py` | The page's sections and their order |
+| `tabs.py` | How those sections are grouped into tabs |
 | `inlines.py` | The images list and revisions list on the theme page |
 | `publish_pages.py` | The Publish, Revisions (compare) and Restore pages |
 | `import_export.py` | Export button and Import theme page |

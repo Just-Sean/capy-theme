@@ -47,9 +47,8 @@ THEME_FIELDSETS = [
                 *[image_field_name(s, m) for s in LOGO_SLOTS for m in ("light", "dark")],
                 *[f"logo_{name}" for name in HEIGHTS],
             ],
-            "description": "Upload images in the Images list at the bottom of this page "
-            "(or in the live editor), save, then choose them here. Slots left empty use "
-            "the main logo.",
+            "description": "Upload images in the Images section (Images tab) or in the "
+            "live editor, save, then choose them here. Slots left empty use the main logo.",
         },
     ),
     ("Fonts", {"fields": [f"font_{role}" for role in ROLES]}),

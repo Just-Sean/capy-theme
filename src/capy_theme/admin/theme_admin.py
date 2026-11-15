@@ -19,6 +19,7 @@ from .form_colors import _pair
 from .import_export import ImportExportMixin
 from .inlines import ThemeAssetInline, ThemeRevisionInline
 from .publish_pages import PublishPagesMixin
+from .tabs import theme_tabs
 from .theme_form import ThemeForm
 
 
@@ -128,6 +129,10 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, admin.ModelAdmin):
             "edit_live_url": edit_live_url(object_id) if can_edit(request.user) else None,
         }
         return super().change_view(request, object_id, form_url, extra_context)
+
+    def render_change_form(self, request, context, *args, **kwargs):
+        context["capy_tabs"] = theme_tabs(context["adminform"], context["inline_admin_formsets"])
+        return super().render_change_form(request, context, *args, **kwargs)
 
     # Shown in the actions menu only to users with the publish_theme permission.
     @admin.action(
