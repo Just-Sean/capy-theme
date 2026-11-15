@@ -2,6 +2,7 @@
 
 import io
 import re
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -209,3 +210,22 @@ def test_animation_limits_must_be_positive_whole_numbers(settings, name, value):
     setattr(settings, name, value)
     with pytest.raises(ImproperlyConfigured, match=f"{name} must be a positive whole number"):
         prepare_image(gif(frames=2), "a.gif", "logo_main")
+
+
+def test_image_max_pixels(settings):
+    settings.CAPY_THEME_IMAGE_MAX_PIXELS = 20_000
+    with pytest.raises(ValidationError, match="at most 20,000 pixels"):
+        prepare_image(png((200, 101)), "big.png", "logo_main")
+    assert prepare_image(png((200, 100)), "ok.png", "logo_main")["width"] == 200
+
+
+def test_import_max_files(settings):
+    settings.CAPY_THEME_IMPORT_MAX_FILES = 1  # theme.json and one image: two files
+    data = export_theme(Theme.objects.create(name="Main", slug="main"))
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            archive.writestr("theme.json", original.read("theme.json"))
+        archive.writestr("images/extra.png", b"")
+    with pytest.raises(ValidationError, match="too many files"):
+        import_theme(io.BytesIO(buffer.getvalue()))

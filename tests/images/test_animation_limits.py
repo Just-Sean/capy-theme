@@ -126,3 +126,26 @@ def test_frame_extent_refuses_junk_where_a_block_should_start():
         frame_extent(data)
     with pytest.raises(ValidationError, match=NOT_AN_IMAGE):
         prepare_image(data, "a.gif", "logo_main")
+
+
+def png(width, height):
+    buffer = io.BytesIO()
+    Image.new("RGB", (width, height), "red").save(buffer, "PNG")
+    return buffer.getvalue()
+
+
+def test_a_still_image_with_too_many_pixels_in_all_is_refused(settings):
+    settings.CAPY_THEME_IMAGE_MAX_PIXELS = 20_000
+    with pytest.raises(ValidationError, match="at most 20,000 pixels"):
+        prepare_image(png(200, 101), "big.png", "logo_main")
+    assert prepare_image(png(200, 100), "ok.png", "logo_main")["width"] == 200
+
+
+def test_the_still_image_limit_is_checked_before_decoding(settings, monkeypatch):
+    settings.CAPY_THEME_IMAGE_MAX_PIXELS = 100
+    data = png(20, 20)
+    decoded = []
+    monkeypatch.setattr(Image.Image, "load", lambda self: decoded.append(self))
+    with pytest.raises(ValidationError, match="Make it smaller"):
+        prepare_image(data, "big.png", "logo_main")
+    assert not decoded

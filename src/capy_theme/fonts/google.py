@@ -15,7 +15,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from .models import Font, FontFile
-from .uploads import prepare
+from .uploads import max_bytes, prepare
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +32,33 @@ WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900]
 SUBSETS = ["latin", "latin-ext", "cyrillic", "cyrillic-ext", "greek", "greek-ext", "vietnamese"]
 
 
+ALLOWED = ("https://fonts.googleapis.com/", FILES_HOST)
+
+
+class GoogleOnlyRedirects(urllib.request.HTTPRedirectHandler):
+    """Follow a redirect only to another Google Fonts address."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not newurl.startswith(ALLOWED):
+            raise ValidationError("Google Fonts redirected to an unexpected address.")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def fetch(url, timeout=60):
-    """Download an https URL and return its bytes (replaced in tests)."""
-    if not url.startswith(("https://fonts.googleapis.com/", FILES_HOST)):
+    """Download an https URL and return its bytes (replaced in tests).
+
+    Only Google Fonts addresses, redirects included, and at most the font size
+    limit (CAPY_THEME_FONT_MAX_BYTES): a longer answer is refused, not read.
+    """
+    if not url.startswith(ALLOWED):
         raise ValueError(f"Refusing to download {url!r}: only Google Fonts addresses are allowed.")
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})  # noqa: S310
-    with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
-        return response.read()
+    opener = urllib.request.build_opener(GoogleOnlyRedirects)
+    with opener.open(request, timeout=timeout) as response:
+        data = response.read(max_bytes() + 1)
+    if len(data) > max_bytes():
+        raise ValidationError(f"A Google Fonts download is over {max_bytes() // 1024} KB.")
+    return data
 
 
 def css_url(family, combos):
@@ -109,6 +129,19 @@ def import_family(family, weights=(400, 700), italic=True, subsets=("latin",), d
             f"Google Fonts has no “{family}” in the chosen weights and character sets. "
             "Check the name at fonts.google.com."
         )
+    saved = []  # files stored so far, deleted again if the import fails
+    try:
+        font = _store(family, faces, download, saved)
+    except Exception:
+        for field_file in saved:
+            field_file.delete(save=False)
+        raise
+    logger.info("Imported Google font %r: %d font file(s) stored.", family, len(saved))
+    return font
+
+
+def _store(family, faces, download, saved):
+    """Create the Font and its files (see import_family); every stored file goes in `saved`."""
     with transaction.atomic():
         font = Font.objects.create(
             family=family,
@@ -126,6 +159,7 @@ def import_family(family, weights=(400, 700), italic=True, subsets=("latin",), d
                 prepared = prepare(download(face["url"]), f"{slug}-{face['subset']}.woff2", "all")
                 holder = FontFile(font=font)
                 holder.file.save(prepared["file"].name, prepared["file"], save=False)
+                saved.append(holder.file)
                 name = stored[face["url"]] = holder.file.name
             font_file = FontFile(
                 font=font,
@@ -136,5 +170,4 @@ def import_family(family, weights=(400, 700), italic=True, subsets=("latin",), d
             )
             font_file.file.name = name
             font_file.save()
-    logger.info("Imported Google font %r: %d font file(s) stored.", family, len(stored))
     return font
