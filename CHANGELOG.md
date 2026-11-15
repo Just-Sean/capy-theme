@@ -21,6 +21,44 @@
   versions have known memory-safety bugs). Pillow no longer has an upper version
   cap, so projects can take its security fixes, which only go into its newest
   major version.
+- **Font names and font fields can't inject script or CSS:** a font's family name
+  (letters, digits, spaces and hyphens), fallback fonts (a comma-separated list of
+  names) and character ranges (`U+…` values) are now checked, in the admin and in
+  theme imports (migration 0016). Before, they went into the admin's font previews
+  and every page's stylesheet as they were, so a crafted name could run script in
+  the admin, and a fallback list could add any CSS to public pages. The admin's
+  previews also escape every value. Importing a theme that adds an external font
+  now needs permission to add fonts.
+- **Uploaded SVGs can't load outside files through CSS tricks:** CSS escapes
+  (`\75rl(`), `image-set()` and `@font-face` are now removed like `url()` is. The
+  README recommends `nosniff` and a strict CSP header for uploaded files.
+- **Limits on imports, font downloads and big images:** a theme import that uses
+  the same file more than once is refused, as is a zip over the size limit (now
+  checked on the upload itself too) or with more than `CAPY_THEME_IMPORT_MAX_FILES`
+  (200) files. A damaged zip gives "The export is damaged." instead of a server
+  error. Font uploads in the admin are refused on their size before being read.
+  Google Fonts downloads follow redirects only to Google Fonts addresses and are
+  read up to the font size limit. A Google import that fails partway leaves no
+  files behind. Still images are refused before decoding if they have more than
+  `CAPY_THEME_IMAGE_MAX_PIXELS` (25 million) pixels.
+- **Custom CSS stays with those allowed to see it:** Export leaves out a theme's
+  custom CSS for users without the edit_custom_css permission. Restoring a revision
+  without that permission keeps the draft's current custom CSS instead of bringing
+  back the old one. "Offer to visitors" can only be changed by users who can
+  publish, since it puts a theme in front of visitors.
+- **Faster, safer custom CSS reading:** the Components view finds custom CSS
+  selectors in linear time. Crafted CSS (many unclosed comments, or long text with
+  no `{`) could tie up a worker for seconds.
+- **`Vary: Cookie` on the theme API and downloads:** `/theme/api.json`,
+  `tokens.json` and `daisyui-theme.css` depend on the visitor's theme choice.
+  Shared caches (CDNs, proxies) now keep one copy per cookie instead of serving one
+  visitor's choice to everyone.
+- **Colors and numbers that broke every page are refused:** a color such as
+  `oklch(50% 1e300 0)` passed validation, then every page using the theme returned
+  an error once it was published. Colors are now refused unless they're real colors
+  (lightness 0–100%, chroma up to 0.5), and NaN or infinite numbers are refused
+  anywhere in a theme's settings, in the admin, the editor and imports. A negative
+  hue (e.g. -30) is now saved as the same color (330) instead of failing.
 - **Tabs on the theme edit page in the admin:** its sections are grouped into tabs
   (General, Branding, Fonts, Light colors, Dark colors, Shape and contrast, Images,
   Revisions, Advanced) instead of one long scroll. Inside a tab every section is open,

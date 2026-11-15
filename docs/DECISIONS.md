@@ -1604,3 +1604,73 @@ Before v1.0, capy-theme ran in a throwaway project generated from
   Pillow only patches its newest major version, so a cap would keep projects off
   security fixes. A future major version that breaks something is caught by CI.
   Don't add the cap back without weighing that.
+
+## Font field and SVG injection fixes (#235, #237)
+
+- Found by the v1.0.0 pre-release review: a font's family name went into the
+  admin's preview `<style>` unescaped (script in the admin), and fallback stacks
+  and unicode ranges went into every page's stylesheet as they were (any CSS,
+  getting round the custom-CSS permission and `CAPY_THEME_CUSTOM_CSS=False`).
+- **Chosen:** validate the values where they're stored, in `fonts/models.py`, with
+  the same patterns in `theme_file.schema.json` for imports:
+  - family: letters, digits, spaces and hyphens (hyphens because built-in system
+    fonts such as Neo-Grotesque use them)
+  - fallback stack: comma-separated names, plain or quoted
+  - unicode-range: `U+…` values
+- **Admin previews escape every value for CSS** (`css_string()`). HTML escaping
+  doesn't work inside `<style>`, which is why `mark_safe` stays, on escaped text.
+- **Imports that add an external font need `add_font`.** An external font loads a
+  stylesheet from another site on every page. Reusing one already in the library
+  is fine.
+- **SVG cleaner (#237):** CSS with a backslash, `image-set(` or `@font-face` is
+  removed too. CSS escapes made `\75rl(` get past the `url(` check. The README
+  recommends `nosniff` and a strict CSP for `MEDIA_URL` as a second layer.
+
+## Import, download and image limits (#236)
+
+- Found by the pre-release security review: one file could be used hundreds of
+  times in an import; damaged zips gave 500s; font uploads were read before their
+  size was checked; Google Fonts downloads followed any redirect and had no size
+  limit; a 150 KB PNG of 6000 × 6000 pixels used about 850 MB.
+- **Reused paths are refused**, not cached: exports never reuse a path, so a
+  theme.json that does wasn't made by capy-theme.
+- **Redirects are checked before they're followed** (a redirect handler), so the
+  server never contacts another host. Downloads are read up to the font size
+  limit plus one byte.
+- **Still images: 25 million pixels in all** (`CAPY_THEME_IMAGE_MAX_PIXELS`),
+  checked before decoding. A 5000 × 5000 image fits; 6000 × 6000 doesn't.
+- **Imports: at most 200 files** (`CAPY_THEME_IMPORT_MAX_FILES`), and the upload
+  itself is held to `CAPY_THEME_IMPORT_MAX_BYTES`.
+- A Google import that fails deletes the files it already stored, as the theme
+  import does.
+
+## Custom CSS permissions, slow regexes and Vary: Cookie (#238, #239)
+
+- Found by the v1.0.0 pre-release review.
+- **Export** (admin) leaves out `custom_css` unless `can_edit_custom_css(user)`;
+  the `theme_export` command still includes it (command-line users are trusted).
+- **Restore** without that permission keeps the draft's current custom CSS (or
+  none), so a publisher can't bring back custom CSS someone removed.
+- **Offer to visitors** is read-only without `publish_theme`, like publishing and
+  activating, because it puts a theme in front of visitors.
+- **Selectors** for the Components view are found by splitting on braces and a
+  plain comment scan: linear time. The old regexes were quadratic on crafted input.
+- **Vary: Cookie** on api.json, tokens.json and daisyui-theme.css (shared
+  `cache_publicly()` in artifacts/api.py), because the theme can come from the
+  visitor's choice cookie. Ignoring the cookie was the alternative; it would
+  change what visitors who chose a theme get.
+
+## Color and number limits (#240)
+
+- Found by the pre-release QA review: oklch(50% 1e300 0) matched the stored-color
+  pattern `[0-9.]+`, saved, and then the contrast math overflowed on every page.
+  NaN got through because JSON Schema's minimum/maximum are always false for it.
+- **Chosen:** `to_oklch` refuses non-finite values, lightness outside 0–100%
+  (0.1% slack for rounding) and chroma above 0.5 (Rec. 2020 green, the most
+  saturated real color, is about 0.47). Hue is wrapped into 0–360, alpha clamped.
+- The schema allows at most 3 digits before the point (1 for chroma), so a stored
+  value can't be huge even when written by hand or imported.
+- `validate_settings` refuses NaN and infinity anywhere, so the model, editor and
+  imports are all covered without changing them.
+- **Alternative:** clamping out-of-range colors. Refusing shows the mistake instead
+  of silently changing the color.
