@@ -1,0 +1,130 @@
+{% comment %}
+  The live edit page's samples: every daisyUI component, as on the demo's home page.
+  The form fields aren't in a <form>, so pressing Enter in one never reloads the
+  page (and loses unsaved editor changes).
+{% endcomment %}
+<div class="space-y-10">
+
+  <section class="space-y-3">
+    <h2 class="text-2xl font-bold">Buttons</h2>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" class="btn">Default</button>
+      <button type="button" class="btn btn-neutral">Neutral</button>
+      <button type="button" class="btn btn-primary">Primary</button>
+      <button type="button" class="btn btn-secondary">Secondary</button>
+      <button type="button" class="btn btn-accent">Accent</button>
+      <button type="button" class="btn btn-info">Info</button>
+      <button type="button" class="btn btn-success">Success</button>
+      <button type="button" class="btn btn-warning">Warning</button>
+      <button type="button" class="btn btn-error">Error</button>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <button type="button" class="btn btn-primary btn-outline">Outline</button>
+      <button type="button" class="btn btn-primary btn-soft">Soft</button>
+      <button type="button" class="btn btn-ghost">Ghost</button>
+      <button type="button" class="btn btn-link">Link</button>
+      <button type="button" class="btn btn-primary btn-xs">Extra small</button>
+      <button type="button" class="btn btn-primary btn-sm">Small</button>
+      <button type="button" class="btn btn-primary btn-lg">Large</button>
+      <button type="button" class="btn btn-primary" disabled>Disabled</button>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-2xl font-bold">Badges</h2>
+    <div class="flex flex-wrap gap-2">
+      <span class="badge">Default</span>
+      <span class="badge badge-neutral">Neutral</span>
+      <span class="badge badge-primary">Primary</span>
+      <span class="badge badge-secondary">Secondary</span>
+      <span class="badge badge-accent">Accent</span>
+      <span class="badge badge-info">Info</span>
+      <span class="badge badge-success">Success</span>
+      <span class="badge badge-warning">Warning</span>
+      <span class="badge badge-error">Error</span>
+      <span class="badge badge-outline">Outline</span>
+    </div>
+  </section>
+
+  <section class="grid gap-6 md:grid-cols-2">
+    <div class="space-y-3">
+      <h2 class="text-2xl font-bold">Card</h2>
+      <div class="card bg-base-200 shadow-md">
+        <div class="card-body">
+          <h3 class="card-title">Lorem ipsum</h3>
+          <p>Dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+          <div class="card-actions justify-end">
+            <button type="button" class="btn btn-ghost btn-sm">Cancel</button>
+            <button type="button" class="btn btn-primary btn-sm">Continue</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="space-y-3">
+      <h2 class="text-2xl font-bold">Alerts</h2>
+      <div role="alert" class="alert alert-info"><span>Info: ut enim ad minim veniam.</span></div>
+      <div role="alert" class="alert alert-success"><span>Success: quis nostrud exercitation.</span></div>
+      <div role="alert" class="alert alert-warning"><span>Warning: ullamco laboris nisi.</span></div>
+      <div role="alert" class="alert alert-error"><span>Error: duis aute irure dolor.</span></div>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-2xl font-bold">Table</h2>
+    <div class="overflow-x-auto rounded-box border border-base-300">
+      <table class="table table-zebra">
+        <thead>
+          <tr><th>Name</th><th>Role</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Lorem Ipsum</td><td>Designer</td><td><span class="badge badge-success badge-sm">Active</span></td></tr>
+          <tr><td>Dolor Sit</td><td>Editor</td><td><span class="badge badge-warning badge-sm">Pending</span></td></tr>
+          <tr><td>Amet Consectetur</td><td>Viewer</td><td><span class="badge badge-error badge-sm">Disabled</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-2xl font-bold">Form fields</h2>
+    <div class="grid max-w-md gap-4">
+      <label class="flex flex-col gap-1">
+        <span class="label">Name</span>
+        <input type="text" class="input w-full" placeholder="Lorem ipsum">
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="label">Role</span>
+        <select class="select w-full">
+          <option>Designer</option>
+          <option>Editor</option>
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="label">Notes</span>
+        <textarea class="textarea w-full" placeholder="Dolor sit amet"></textarea>
+      </label>
+      <label class="flex items-center gap-2">
+        <input type="checkbox" class="checkbox checkbox-primary" checked> Checkbox
+      </label>
+      <label class="flex items-center gap-2">
+        <input type="checkbox" class="toggle toggle-primary" checked> Toggle
+      </label>
+      <label class="flex items-center gap-2">
+        <input type="radio" name="sample-radio" class="radio radio-primary" checked> Radio
+      </label>
+      <input type="range" class="range range-primary" value="40" aria-label="Sample slider">
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-2xl font-bold">Headings</h2>
+    <h1 class="text-5xl font-bold">Heading 1</h1>
+    <h2 class="text-4xl font-bold">Heading 2</h2>
+    <h3 class="text-3xl font-bold">Heading 3</h3>
+    <h4 class="text-2xl font-bold">Heading 4</h4>
+    <h5 class="text-xl font-bold">Heading 5</h5>
+    <h6 class="text-lg font-bold">Heading 6</h6>
+    <p class="max-w-prose">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. <a href="#" class="link link-primary">A link</a>.</p>
+  </section>
+
+</div>

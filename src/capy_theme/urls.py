@@ -11,6 +11,7 @@ from .artifacts.api import api_view
 from .css import views as css_views
 from .editor import components_view, custom_css_view
 from .editor import views as editor_views
+from .editor.live_edit_view import live_edit
 from .themes import views as theme_views
 
 app_name = "capy_theme"
@@ -18,6 +19,7 @@ app_name = "capy_theme"
 urlpatterns = [
     path("mode/<slug:mode>/", theme_views.set_mode, name="set_mode"),
     path("choose/<slug:slug>/", theme_views.choose_theme, name="choose_theme"),
+    path("live-edit/", live_edit, name="live_edit"),
     path(
         "editor/<int:pk>/components/", components_view.editor_components, name="editor_components"
     ),

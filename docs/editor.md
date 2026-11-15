@@ -2,6 +2,29 @@
 
 Code: `src/capy_theme/editor/` (Python) and `src/capy_theme/static/capy_theme/editor/` (the panel: `editor.js`, and one file per section in `controls/`). The Components view's page and samples are in `src/capy_theme/templates/capy_theme/editor/`.
 
+## The live edit page
+
+**`/theme/live-edit/`** is capy-theme's own page for building a theme, in every
+project that includes `capy_theme.urls`. It shows the header (the logo, or the site
+name, with the tagline, **Light / Dark / Auto**, the visitor theme picker and a link
+to the admin) and every daisyUI component (buttons, badges, a card, alerts, a
+table, form fields, headings), with the live editor open on it. The admin's **Edit
+live** button opens it on that theme (`?edit=<id>`). Without `?edit=`, it opens on
+the active theme (or the first theme, if none is active). With no themes yet, it
+links to the admin to add one.
+
+It's self-contained. It has its own template
+(`templates/capy_theme/editor/live_edit.html`) and capy-theme's bundled daisyUI
+stylesheet (the Components view's, `static/capy_theme/editor/components.css`), and
+it supplies its own `theme` and `request` template variables. So it doesn't use
+the project's base template, home page, Tailwind build or context processors, and
+it looks and works the same in every project and in the demo. It has nothing
+inline, so a strict Content Security Policy blocks nothing on it.
+
+Only staff who can change themes may open it. Logged-out visitors are sent to the
+admin login, and anyone else gets a 403. Code: `editor/live_edit_view.py`
+(issue #229).
+
 ## The live theme editor
 
 Staff who can change themes see an **Edit theme** button in

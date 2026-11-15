@@ -16,6 +16,10 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   ratings and palette suggestions (from the primary color or the logo). Every
   change shows instantly, for that user only, until they **Save draft** or
   **Publish**. The admin form stays as a plain fallback.
+- **Live edit page** at `/theme/live-edit/`: capy-theme's own page for building a
+  theme. It has the header (logo, tagline, Light / Dark / Auto) and every daisyUI
+  component, with the editor open, and works the same in any project (the admin's
+  **Edit live** opens it). Staff who can edit themes only.
 - **Themes** are based on any of daisyUI's 35 built-in themes: one light base and
   one dark base. A project can limit which are offered.
 - **Colors:** override any of the 20 colors, separately for light and dark, in

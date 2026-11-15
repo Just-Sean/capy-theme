@@ -1,0 +1,47 @@
+{% load static capy_theme %}<!doctype html>
+{% comment %}
+  The live edit page (/theme/live-edit/, issue #229): capy-theme's own page for
+  building a theme. The header and every daisyUI component, with the live editor
+  open on it (?edit=<id>). Self-contained: its own bundled daisyUI stylesheet, not
+  the project's base template or Tailwind build, so it's the same in every project.
+  Nothing inline (no style or script attributes), so a strict Content Security
+  Policy never blocks anything here.
+{% endcomment %}
+<html lang="en" {% theme_html_attrs %}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live edit{% if theme %}: {{ theme.name }}{% endif %}</title>
+  <link rel="stylesheet" href="{% static 'capy_theme/editor/components.css' %}">
+  {% theme_head %}
+</head>
+<body class="min-h-screen bg-base-100 text-base-content capy-bg-pattern">
+  <header class="navbar bg-base-200 px-4">
+    <div class="flex-1">
+      <a href="/" class="flex items-center gap-3 text-xl font-bold">
+        {% if theme.logo_url or theme.site_name %}{% theme_logo %}{% else %}Live edit{% endif %}
+      </a>
+      {% if theme.logo_url and theme.site_name %}<span class="ml-3 text-xl font-bold">{{ theme.site_name }}</span>{% endif %}
+      {% if theme.tagline %}<span class="ml-3 text-sm opacity-70">{{ theme.tagline }}</span>{% endif %}
+    </div>
+    <nav class="flex-none flex items-center gap-2" aria-label="Theme">
+      {% theme_mode_toggle %}
+      {% theme_picker as picker %}{% if picker %}
+        <details class="dropdown dropdown-end">
+          <summary class="btn btn-ghost btn-sm">Theme</summary>
+          <div class="dropdown-content z-10 mt-2 w-48 shadow">{{ picker }}</div>
+        </details>
+      {% endif %}
+      <a href="{% url 'admin:index' %}" class="btn btn-ghost btn-sm">Admin</a>
+    </nav>
+  </header>
+  <main class="mx-auto max-w-7xl p-6">
+    {% if no_theme %}
+      <div role="alert" class="alert alert-info mb-10">
+        <span>There's no theme to edit yet. <a class="link" href="{% url 'admin:capy_theme_theme_add' %}">Add one in the admin</a>, then come back here.</span>
+      </div>
+    {% endif %}
+    {% include "capy_theme/editor/live_edit_components.html" %}
+  </main>
+</body>
+</html>
