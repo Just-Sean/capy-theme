@@ -52,10 +52,11 @@ def page(client, theme):
     return client.get(reverse("admin:capy_theme_theme_change", args=[theme.pk])).content.decode()
 
 
-def test_edit_live_opens_the_editor_on_the_home_page(client, django_user_model):
+def test_edit_live_opens_the_live_edit_page(client, django_user_model):
+    # Issue #229: capy-theme's own page, not the project's home page.
     login(client, django_user_model, "view_theme", "change_theme")
     theme = Theme.objects.create(name="Main", slug="main")
-    assert f'href="/?edit={theme.pk}">Edit live</a>' in page(client, theme)
+    assert f'href="/theme/live-edit/?edit={theme.pk}">Edit live</a>' in page(client, theme)
 
 
 def test_no_edit_live_for_view_only_staff(client, django_user_model):

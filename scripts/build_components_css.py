@@ -1,8 +1,10 @@
-"""Build the live editor's Components view stylesheet with Tailwind CSS and daisyUI.
+"""Build the stylesheet of the Components view and the live edit page with Tailwind
+CSS and daisyUI.
 
 Writes src/capy_theme/static/capy_theme/editor/components.css from
-scripts/components.tailwind.css, scanning only the Components view's templates. Run
-it from the repo root after changing those templates or updating daisyUI:
+scripts/components.tailwind.css, scanning only those pages' templates (and the mode
+toggle and theme picker the live edit page shows). Run it from the repo root after
+changing those templates or updating daisyUI:
 
     uv run python scripts/build_components_css.py
 

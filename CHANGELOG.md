@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Live edit page at `/theme/live-edit/`:** capy-theme's own page for building a
+  theme. It has the header (logo, site name, tagline, Light / Dark / Auto, theme
+  picker) and every daisyUI component, with the live editor open on it. It's
+  self-contained (its own template and bundled stylesheet), so it's the same in
+  every project, and it's for staff who can edit themes. The admin's **Edit live**
+  now opens it instead of the site's home page.
 - **New dependency `defusedxml`:** uploaded SVGs are parsed with it, as a second
   layer against entity ("XML bomb") attacks on top of the existing DOCTYPE check.
 - **CSP nonces work with Django's real CSP middleware:** the light/dark script

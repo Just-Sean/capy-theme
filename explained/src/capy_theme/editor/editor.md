@@ -20,6 +20,7 @@ Every endpoint requires staff with the change-theme permission (publishing also 
 | `saving.py` | Save draft; color suggestions |
 | `views.py` | The JSON endpoints |
 | `visitors.py` | "See it as a visitor" |
+| `live_edit_view.py` | The live edit page at `/theme/live-edit/` (the header and every component, with the editor open) |
 | `components_view.py` | The Components view page and icon preview |
 | `images_panel.py` | The Components view's images section |
 | `custom_css_view.py` | The draft's custom CSS for the Components view |

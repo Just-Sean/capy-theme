@@ -68,6 +68,12 @@ def test_edit_parameter_works_on_any_page(rf, django_user_model, active):
     assert 'data-theme-name="Other"' in html
 
 
+def test_a_non_ascii_digit_in_edit_doesnt_crash_the_page(rf, django_user_model, active):
+    # "²" passes str.isdigit() but not int(): it used to raise ValueError (issue #229).
+    html = head(rf, user_with(django_user_model, "change_theme"), "?edit=%C2%B2")
+    assert 'data-theme-name="Main"' in html  # falls back to the active theme
+
+
 def test_editor_works_without_an_active_theme_when_editing_one(rf, django_user_model):
     theme = Theme.objects.create(name="Draft", slug="draft")
     html = head(rf, user_with(django_user_model, "change_theme"), f"?edit={theme.pk}")

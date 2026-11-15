@@ -16,6 +16,10 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   ratings and palette suggestions (from the primary color or the logo). Every
   change shows instantly, for that user only, until they **Save draft** or
   **Publish**. The admin form stays as a plain fallback.
+- **Live edit page** at `/theme/live-edit/`: capy-theme's own page for building a
+  theme. It has the header (logo, tagline, Light / Dark / Auto) and every daisyUI
+  component, with the editor open, and works the same in any project (the admin's
+  **Edit live** opens it). Staff who can edit themes only.
 - **Themes** are based on any of daisyUI's 35 built-in themes: one light base and
   one dark base. A project can limit which are offered.
 - **Colors:** override any of the 20 colors, separately for light and dark, in
@@ -473,7 +477,7 @@ Every command in one place. Details are in the linked pages.
 | `uv run python manage.py capy_theme_add_fonts` | Add the 30 bundled fonts to a project's font library ([fonts](docs/fonts.md)) |
 | `uv run python scripts/fetch_curated_fonts.py` | Re-download the bundled fonts from Fontsource ([fonts](docs/fonts.md)) |
 | `uv run python scripts/generate_builtin_themes.py` | Regenerate daisyUI's built-in themes after a daisyUI update ([development](docs/development.md)) |
-| `uv run python scripts/build_components_css.py` | Rebuild the Components view's stylesheet ([editor](docs/editor.md)) |
+| `uv run python scripts/build_components_css.py` | Rebuild the stylesheet of the Components view and the live edit page, after changing their templates ([editor](docs/editor.md)) |
 | `gh release download v5.7.50 --repo saadeghi/daisyui -p daisyui.mjs -p daisyui-theme.mjs` | Download daisyUI's plugin files for the demo when updating daisyUI ([development](docs/development.md)) |
 | `curl -sSfL -o tests/artifacts/dtcg/format-2025.10.json https://www.designtokens.org/schemas/2025.10/format.json` | Refresh the Design Tokens format schema the tests use ([tests/artifacts/dtcg](tests/artifacts/dtcg/README.md)) |
 | `uv build` | Build the package ([below](#build-the-package)) |

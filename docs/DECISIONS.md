@@ -1517,3 +1517,32 @@ Before v1.0, capy-theme ran in a throwaway project generated from
   that silenced ruff is gone.
 - One new runtime dependency for host projects: small, stable and widely used.
 
+## The live edit page (#229)
+
+- Testing capy-theme inside a django-starter project showed that the page themes
+  are built on existed only in the demo, which never ships. So capy-theme behaved
+  differently once installed. Sean's rule: capy-theme works the same everywhere.
+- It's now part of the module, at `/theme/live-edit/`: its own template (copied
+  from the demo's base and home page) and the bundled `components.css`, rebuilt
+  to cover it. It supplies its own context, so it needs nothing from the project
+  except Django's admin. **Edit live** opens it, replacing `/?edit=<id>` (3.8).
+- Staff who can edit themes only. It sends `X-Frame-Options: DENY` itself, so the
+  editor can't be framed even in a project without the clickjacking middleware.
+- `?edit=` now accepts ASCII digits only (`requested_theme_id`). "²" passed
+  `isdigit()` and crashed `int()` on any page with the editor.
+- It differs from the demo's page so that it works as a theme-building page:
+  - sample headings without utility classes (so the theme's heading scale shows)
+  - form samples not in a `<form>`, so Enter can't reload the page and lose
+    unsaved changes
+  - sample alerts without `role="alert"`
+  - a header that wraps
+  - a skip link and a screen-reader `<h1>`
+  - the brand as plain text (no link to the project's `/`)
+
+  The same fixes for the demo are a separate issue.
+- The header shows the published theme, as on any page; only the title names the
+  theme being edited. Showing the edited theme's branding there was left for later.
+- Considered and dropped (#228): making the editor open on the Components view on
+  every page. That changed capy-theme's behavior instead of fixing the missing
+  page.
+

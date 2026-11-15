@@ -3,6 +3,7 @@
 import json
 
 from django.contrib import admin, messages
+from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 
 from ..colors.names import SCHEMES
@@ -22,8 +23,8 @@ from .theme_form import ThemeForm
 
 
 def edit_live_url(theme_id):
-    """Where "Edit live" opens the editor: the site's home page, with ?edit=<id>."""
-    return f"/?edit={theme_id}"
+    """Where "Edit live" opens the editor: capy-theme's live edit page, with ?edit=<id>."""
+    return f"{reverse('capy_theme:live_edit')}?edit={theme_id}"
 
 
 @admin.register(Theme)

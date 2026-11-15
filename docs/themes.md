@@ -34,8 +34,9 @@ bottom:
 8. Mode
 9. Advanced (folded: stored settings, ID and dates)
 
-At the top right: **Edit live** opens the theme in the live editor (on the
-site's home page), next to **Revisions**, **Export**,
+At the top right: **Edit live** opens the theme in the live editor, on
+capy-theme's live edit page (`/theme/live-edit/`, see [the editor](editor.md)), next to
+**Revisions**, **Export**,
 **Publish** and Django's **History**.
 
 The **Advanced** section shows the theme's stored `settings` as read-only JSON.
