@@ -10,6 +10,11 @@
   said. This covers admin uploads, theme imports and Google Fonts downloads. WOFF2
   font collections are refused, and a damaged WOFF2 file gets the usual "isn't a
   font" message instead of a server error.
+- **Safer minimum versions:** fontTools must be 4.60.2 or newer (older versions
+  have known security problems), and brotli, which unpacks WOFF2 fonts, is now a
+  direct dependency at 1.2.1 or newer (older versions have known memory-safety
+  bugs). Pillow no longer has an upper version cap, so projects can take its
+  security fixes, which only go into its newest major version.
 - **Tabs on the theme edit page in the admin:** its sections are grouped into tabs
   (General, Branding, Fonts, Light colors, Dark colors, Shape and contrast, Images,
   Revisions, Advanced) instead of one long scroll. Inside a tab every section is open,
