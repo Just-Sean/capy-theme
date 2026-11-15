@@ -10,7 +10,9 @@ before fontTools sees the file and does two things:
    more than it said. So a file that lies about its sizes is refused before it can
    use more memory than the limit.
 
-TTF and OTF files aren't compressed, so the upload size limit already covers them.
+TTF and OTF files aren't compressed, so this has nothing to check for them. It
+only limits unpacking: a font can still be costly for fontTools to read, so that
+runs in its own process with memory and time limits (see `converting`).
 """
 
 import io
@@ -35,12 +37,9 @@ except ImportError:
 WOFF = b"wOFF"
 WOFF2 = b"wOF2"
 COLLECTION = "ttcf"  # several fonts in one file (fontTools reads the tag as text)
-BROTLI_STEP = 1024 * 1024  # the most brotli may unpack in one go, in bytes
+BROTLI_STEP = 1024 * 1024  # how much brotli unpacks per step (it may give up to ~2x)
 WOFF_HEADER = struct.Struct(">4s4sLHHLHHLLLLL")
 WOFF_TABLE = struct.Struct(">4sLLLL")  # tag, offset, compressed, unpacked, checksum
-
-# What a broken compressed part raises while it's being unpacked.
-UNPACK_ERRORS = (brotli.error, zlib.error)
 
 
 def max_unpacked_bytes():
@@ -71,7 +70,7 @@ def _check_woff2(data):
         tables.append(entry)
     packed_tables = sum(entry.length for entry in tables)  # as stored, before rebuilding
     tables_size = max(header["totalSfntSize"], sum(e.origLength for e in tables), packed_tables)
-    _refuse_over_limit(tables_size + header["metaOrigLength"])
+    _refuse_over_limit(tables_size + (header["metaOrigLength"] if header["metaLength"] else 0))
 
     start = stream.tell()
     _unpack_brotli(data[start : start + header["totalCompressedSize"]], packed_tables)
@@ -89,10 +88,10 @@ def _check_woff(data):
         for n in range(num_tables)
     ]
     tables_size = max(total_sfnt_size, sum(table[3] for table in tables))
-    _refuse_over_limit(tables_size + meta_unpacked)
+    _refuse_over_limit(tables_size + (meta_unpacked if meta_length else 0))
 
     for _tag, offset, packed, unpacked, _checksum in tables:
-        if packed < unpacked:  # fontTools only unpacks these; others are stored as-is
+        if packed != unpacked:  # stored as-is only when equal; check every other table
             _unpack_zlib(data[offset : offset + packed], unpacked)
     if meta_length:
         _unpack_zlib(data[meta_offset : meta_offset + meta_length], meta_unpacked)

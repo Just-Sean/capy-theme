@@ -1556,7 +1556,7 @@ Before v1.0, capy-theme ran in a throwaway project generated from
 - **Chosen:** a check before fontTools (`fonts/unpacking.py`), in two layers:
   1. refuse if the sizes the file declares (tables, the whole font, metadata) add
      up to more than `CAPY_THEME_FONT_MAX_UNPACKED_BYTES`
-  2. unpack each compressed part in steps (brotli, 1 MB at a time) or up to one
+  2. unpack each compressed part in steps (brotli, about 1–2 MB at a time) or up to one
      byte past its declared size (zlib), and refuse as soon as it gives more than
      declared
 
@@ -1565,10 +1565,25 @@ Before v1.0, capy-theme ran in a throwaway project generated from
   Real fonts unpack to well under it (the largest CJK fonts to about 15–20 MB),
   and an honest 5 MB upload unpacks to about 10–15 MB.
 - **WOFF2 font collections are refused:** not needed for web fonts.
-- **Not done:** unpacking in a separate process with time and memory limits
-  (#191's step 4). The two layers stopped every crafted file within 0.01 s, so the
-  extra complexity isn't needed. The README's worker timeout and memory limit stay
-  as the backstop.
+- **fontTools runs in its own process with memory and time limits** (#191's step
+  4, `fonts/converting.py`): `CAPY_THEME_FONT_MAX_MEMORY_BYTES` (512 MB) and
+  `CAPY_THEME_FONT_MAX_SECONDS` (30). The review of the first version showed the
+  unpacking check isn't enough: a 5 KB font of glyphs packed with points (65,536
+  points in about 530 bytes each) took 57 s and 918 MB in fontTools, and a TTF
+  near 5 MB would need about 14 GB. A point-count limit was the alternative, but it
+  only covers TrueType; the process limits cover every format and trick. Sean
+  chose this.
+  - `multiprocessing` with "spawn" (a fresh Python, safe in a threaded server)
+    rather than `subprocess`, which the S603 lint flags. About 0.1 s per font.
+  - The process limits its own memory (`RLIMIT_AS`) and CPU time (`RLIMIT_CPU`,
+    which also stops it if the web worker is killed first); the parent stops
+    waiting after the time limit. Windows has no such limits, so there only the
+    time limit applies.
+  - Every step of reading, trimming and saving runs inside the error handling, so
+    a font that breaks fontTools anywhere (e.g. a CFF subroutine calling itself)
+    is "isn't a font", never a server error. An unexpected crash is still an
+    error, logged, rather than hidden.
+  - A 4 MB CJK font (DroidSansFallback) converts in 6 s within the limits.
 - The brotli loop runs until the stream is finished. brotli can say it's ready
   for more input while output is still waiting, so stopping then (as a first
   prototype did) would miss a file that lies by more than one step. A test covers it.

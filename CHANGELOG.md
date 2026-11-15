@@ -8,13 +8,19 @@
   anything over the new `CAPY_THEME_FONT_MAX_UNPACKED_BYTES` setting (30 MB). It
   then unpacks it in small steps and refuses it as soon as it gives more than it
   said. This covers admin uploads, theme imports and Google Fonts downloads. WOFF2
-  font collections are refused, and a damaged WOFF2 file gets the usual "isn't a
-  font" message instead of a server error.
+  font collections are refused.
+- **Fonts are read in their own process, with memory and time limits:** a small
+  font can still be costly to read (a 5 KB font of densely packed glyphs took 57 s
+  and almost 1 GB). fontTools now runs in a separate process limited by
+  `CAPY_THEME_FONT_MAX_MEMORY_BYTES` (512 MB) and `CAPY_THEME_FONT_MAX_SECONDS`
+  (30); a font over either is refused as too complex. A damaged font now always
+  gets "isn't a font", never a server error, whichever step it breaks.
 - **Safer minimum versions:** fontTools must be 4.60.2 or newer (older versions
   have known security problems), and brotli, which unpacks WOFF2 fonts, is now a
   direct dependency at 1.2.1 or newer (brotlicffi 1.2.1.0 or newer on PyPy; older
-  versions have known memory-safety bugs). Pillow no longer has an upper version cap, so projects can take its
-  security fixes, which only go into its newest major version.
+  versions have known memory-safety bugs). Pillow no longer has an upper version
+  cap, so projects can take its security fixes, which only go into its newest
+  major version.
 - **Tabs on the theme edit page in the admin:** its sections are grouped into tabs
   (General, Branding, Fonts, Light colors, Dark colors, Shape and contrast, Images,
   Revisions, Advanced) instead of one long scroll. Inside a tab every section is open,

@@ -9,8 +9,9 @@ from django.urls import reverse
 from fontTools.ttLib import TTFont
 
 from capy_theme.css.stylesheet import render_css
+from capy_theme.fonts.converting import SUBSETS, codepoints
 from capy_theme.fonts.models import Font
-from capy_theme.fonts.uploads import SUBSETS, codepoints, prepare
+from capy_theme.fonts.uploads import prepare
 from capy_theme.models import Theme
 from capy_theme.themes.publishing import publish
 from tests.support.fonts import ttf_bytes

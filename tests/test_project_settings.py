@@ -25,7 +25,7 @@ from capy_theme.portability.importing import import_theme
 from capy_theme.themes import active
 from capy_theme.themes.catalog import get_builtin_themes
 from capy_theme.themes.publishing import publish
-from tests.support.fonts import ttf_bytes
+from tests.support.fonts import many_points_font, ttf_bytes
 from tests.support.images import gif
 
 pytestmark = pytest.mark.django_db
@@ -113,6 +113,21 @@ def test_editor_button(settings, rf, django_user_model):
 def test_font_max_bytes(settings):
     settings.CAPY_THEME_FONT_MAX_BYTES = 100
     with pytest.raises(ValidationError, match="too big"):
+        prepare(ttf_bytes(), "font.ttf")
+
+
+def test_font_max_memory_bytes(settings):
+    settings.CAPY_THEME_FONT_MAX_MEMORY_BYTES = 96 * 1024 * 1024
+    prepare(ttf_bytes(), "font.ttf")
+    with pytest.raises(ValidationError, match="too complex"):
+        prepare(many_points_font(50), "font.ttf")  # needs about 75 MB more
+
+
+def test_font_max_seconds(settings):
+    settings.CAPY_THEME_FONT_MAX_SECONDS = 5
+    prepare(ttf_bytes(), "font.ttf")
+    settings.CAPY_THEME_FONT_MAX_SECONDS = "5"
+    with pytest.raises(ImproperlyConfigured):
         prepare(ttf_bytes(), "font.ttf")
 
 
