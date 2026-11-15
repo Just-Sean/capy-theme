@@ -4,8 +4,8 @@
 
 - **Safer minimum versions:** fontTools must be 4.60.2 or newer (older versions
   have known security problems), and brotli, which unpacks WOFF2 fonts, is now a
-  direct dependency at 1.2.1 or newer (older versions have known memory-safety
-  bugs). Pillow no longer has an upper version cap, so projects can take its
+  direct dependency at 1.2.1 or newer (brotlicffi 1.2.1.0 or newer on PyPy; older
+  versions have known memory-safety bugs). Pillow no longer has an upper version cap, so projects can take its
   security fixes, which only go into its newest major version.
 - **Tabs on the theme edit page in the admin:** its sections are grouped into tabs
   (General, Branding, Fonts, Light colors, Dark colors, Shape and contrast, Images,

@@ -108,6 +108,7 @@ version = "0.7.0"
 source = { editable = "." }
 dependencies = [
     { name = "brotli", marker = "platform_python_implementation == 'CPython'" },
+    { name = "brotlicffi", marker = "platform_python_implementation != 'CPython'" },
     { name = "coloraide" },
     { name = "defusedxml" },
     { name = "django" },
@@ -134,6 +135,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "brotli", marker = "platform_python_implementation == 'CPython'", specifier = ">=1.2.1" },
+    { name = "brotlicffi", marker = "platform_python_implementation != 'CPython'", specifier = ">=1.2.1.0" },
     { name = "coloraide", specifier = ">=8,<9" },
     { name = "defusedxml", specifier = ">=0.7.1,<0.8" },
     { name = "django", specifier = ">=6.1,<7" },

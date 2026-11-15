@@ -7,13 +7,14 @@ license = "MIT"
 license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 requires-python = ">=3.14"
 dependencies = [
+    "brotli>=1.2.1; platform_python_implementation == 'CPython'",  # unpacks WOFF2 fonts
+    "brotlicffi>=1.2.1.0; platform_python_implementation != 'CPython'",  # the same, on PyPy
     "coloraide>=8,<9",        # reads colors in any CSS format and converts to OKLCH
     "defusedxml>=0.7.1,<0.8",  # parses uploaded SVGs safely (no entities or DTDs)
     "django>=6.1,<7",          # the Django versions this module supports
-    "fonttools[woff]>=4.60.2,<5",  # checks uploaded fonts and converts them to WOFF2 (with Brotli); older versions have known security problems
-    "brotli>=1.2.1; platform_python_implementation == 'CPython'",  # unpacks WOFF2 fonts; older versions have known memory-safety bugs (PyPy uses brotlicffi via fonttools[woff])
+    "fonttools[woff]>=4.60.2,<5",  # checks uploaded fonts and converts them to WOFF2
     "jsonschema>=4.26,<5",    # validates Theme.settings against settings.schema.json
-    "pillow>=13",              # checks uploaded logo images (Django ImageField); no upper cap, so projects get Pillow's security fixes (only its newest major version is patched)
+    "pillow>=13",              # checks uploaded logo images (no cap: see DECISIONS.md)
 ]
 classifiers = [
     "Framework :: Django",
