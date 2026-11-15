@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 
+from ..css.custom import can_edit_custom_css
 from ..models import Theme
 from ..themes.history import compare as compare_revisions
 from ..themes.history import restore as restore_revision
@@ -119,7 +120,12 @@ class PublishPagesMixin:
         revisions_url = reverse("admin:capy_theme_theme_revisions", args=[theme.pk])
         if request.method == "POST":
             try:
-                new = restore_revision(theme, revision, user=request.user)
+                new = restore_revision(
+                    theme,
+                    revision,
+                    user=request.user,
+                    restore_custom_css=can_edit_custom_css(request.user),
+                )
             except NothingToPublish:
                 messages.warning(request, f"Revision {number} is already what's live.")
             except ValidationError as error:

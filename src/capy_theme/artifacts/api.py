@@ -18,6 +18,7 @@ import json
 from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpResponseNotModified, JsonResponse
+from django.utils.cache import patch_vary_headers
 from django.views.decorators.http import require_GET
 
 from .. import conf
@@ -34,6 +35,18 @@ def payload(request):
         return None, None
     canonical = json.dumps(data, sort_keys=True, separators=(",", ":")).encode()
     return data, '"' + hashlib.sha256(canonical).hexdigest()[:32] + '"'
+
+
+def cache_publicly(response):
+    """Let browsers and shared caches keep the response for a minute.
+
+    The content depends on the visitor's theme choice (a cookie), so caches must
+    keep one copy per cookie (Vary: Cookie), or one visitor's choice would be
+    served to everyone.
+    """
+    response["Cache-Control"] = CACHE_CONTROL
+    patch_vary_headers(response, ["Cookie"])
+    return response
 
 
 def not_modified(request, etag):
@@ -53,8 +66,7 @@ def theme_api(request):
     else:
         response = JsonResponse(data)
     response["ETag"] = etag
-    response["Cache-Control"] = CACHE_CONTROL
-    return response
+    return cache_publicly(response)
 
 
 def api_mode():

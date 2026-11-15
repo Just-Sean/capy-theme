@@ -7,7 +7,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET
 
 from ..themes.active import get_active_theme
-from .api import CACHE_CONTROL
+from .api import cache_publicly
 from .build import get_artifacts
 from .daisyui_block import build_block
 from .tokens import build_tokens
@@ -16,8 +16,7 @@ from .tokens import build_tokens
 def _download(content, content_type, filename):
     response = HttpResponse(content, content_type=content_type)
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    response["Cache-Control"] = CACHE_CONTROL
-    return response
+    return cache_publicly(response)
 
 
 @require_GET

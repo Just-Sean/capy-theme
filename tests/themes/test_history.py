@@ -253,3 +253,51 @@ def test_restoring_the_live_revision_says_so(client, django_user_model, theme):
     response = client.post(restore_url(theme, 3), follow=True)
     assert "Revision 3 is already what&#x27;s live." in response.content.decode()
     assert theme.revisions.count() == 3
+
+
+# Restore and custom CSS (#238): only edit_custom_css may bring old custom CSS back.
+
+OLD_CSS = {"css": ".removed-on-purpose { display: none }", "enabled": True}
+
+
+@pytest.fixture
+def css_removed(theme):
+    """Revision 4 had custom CSS and an old tagline; revision 5 (live) removed the CSS."""
+    theme.settings = {**theme.settings, "custom_css": OLD_CSS, "tagline": "Old"}
+    theme.save()
+    publish(theme)
+    theme.settings = {key: value for key, value in theme.settings.items() if key != "custom_css"}
+    theme.settings["tagline"] = "New"
+    theme.save()
+    publish(theme)
+    return theme
+
+
+def test_restore_without_the_permission_keeps_the_current_custom_css(
+    client, django_user_model, css_removed
+):
+    login(client, django_user_model, "view_theme", "change_theme", "publish_theme")
+    client.post(restore_url(css_removed, 4))
+    css_removed.refresh_from_db()
+    assert css_removed.live_revision.number == 6
+    assert css_removed.settings["tagline"] == "Old"  # the rest is restored
+    assert "custom_css" not in css_removed.settings
+    assert "custom_css" not in css_removed.live_revision.snapshot["settings"]
+
+
+def test_restore_with_the_permission_brings_back_custom_css(client, django_user_model, css_removed):
+    login(
+        client, django_user_model, "view_theme", "change_theme", "publish_theme", "edit_custom_css"
+    )
+    client.post(restore_url(css_removed, 4))
+    css_removed.refresh_from_db()
+    assert css_removed.live_revision.snapshot["settings"]["custom_css"] == OLD_CSS
+
+
+def test_restore_without_custom_css_keeps_the_drafts_own(theme):
+    """The draft's custom CSS stays, even when the old revision had none."""
+    theme.settings = {**theme.settings, "custom_css": OLD_CSS}
+    theme.save()
+    restore(theme, rev(theme, 1), restore_custom_css=False)
+    theme.refresh_from_db()
+    assert theme.settings["custom_css"] == OLD_CSS

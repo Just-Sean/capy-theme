@@ -2,6 +2,7 @@
 
 import io
 import json
+import time
 
 import pytest
 from django.contrib.auth.models import Permission
@@ -203,3 +204,22 @@ def test_others_get_only_the_published_custom_css(client, django_user_model, the
 def test_selectors():
     css = "/* a comment { } */ .a, .b > p { x: 1 } @media (min-width: 1px) { .c { y: 2 } } .a {}"
     assert selectors(css) == [".a", ".b > p", ".c"]
+
+
+def test_selectors_keep_an_unclosed_comment_as_text():
+    assert selectors(".a {} /* never closed .b {") == [".a", "/* never closed .b"]
+
+
+@pytest.mark.parametrize(
+    "css",
+    [
+        "/*" * 50_000,  # many unclosed comments
+        "a" * 100_000,  # long text with no "{"
+        "a," * 50_000 + "{",  # one huge selector list
+    ],
+)
+def test_selectors_stay_fast_on_crafted_custom_css(css):
+    """Custom CSS can be 100,000 characters; the old regexes took quadratic time (#238)."""
+    started = time.monotonic()
+    selectors(css)
+    assert time.monotonic() - started < 0.5

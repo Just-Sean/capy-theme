@@ -15,7 +15,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .api import CACHE_CONTROL, not_modified, payload
+from .api import cache_publicly, not_modified, payload
 
 try:
     from drf_spectacular.utils import extend_schema
@@ -109,5 +109,4 @@ class ThemeAPIView(APIView):
             response = Response(data)
         if etag:
             response["ETag"] = etag
-        response["Cache-Control"] = CACHE_CONTROL
-        return response
+        return cache_publicly(response)

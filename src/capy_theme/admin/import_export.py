@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 
+from ..css.custom import can_edit_custom_css
 from ..models import Theme
 from ..portability.export import export_theme
 from ..portability.importing import import_theme
@@ -49,7 +50,8 @@ class ImportExportMixin:
         theme = get_object_or_404(Theme, pk=object_id)
         if not self.has_view_or_change_permission(request, theme):
             raise PermissionDenied
-        response = HttpResponse(export_theme(theme), content_type="application/zip")
+        data = export_theme(theme, keep_custom_css=can_edit_custom_css(request.user))
+        response = HttpResponse(data, content_type="application/zip")
         response["Content-Disposition"] = f'attachment; filename="{theme.slug}.capy-theme.zip"'
         return response
 

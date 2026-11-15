@@ -71,6 +71,14 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, admin.ModelAdmin):
             return fieldsets
         return [(name, options) for name, options in fieldsets if name != "Custom CSS"]
 
+    def get_readonly_fields(self, request, obj=None):
+        """Offering a theme to visitors puts it in front of them, so it needs the
+        publish_theme permission, like publishing and activating (#238)."""
+        fields = list(super().get_readonly_fields(request, obj))
+        if not self.has_publish_permission(request, obj):
+            fields.append("offered_to_visitors")
+        return fields
+
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("live_revision")
 

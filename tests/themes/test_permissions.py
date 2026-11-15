@@ -98,6 +98,41 @@ def test_designer_can_edit_drafts(designer, theme):
     assert theme.light_base == "cupcake"
 
 
+def draft_post(**extra):
+    return {
+        "name": "Main",
+        "slug": "main",
+        "light_base": "light",
+        "dark_base": "dark",
+        "assets-TOTAL_FORMS": "0",
+        "assets-INITIAL_FORMS": "0",
+        "revisions-TOTAL_FORMS": "0",
+        "revisions-INITIAL_FORMS": "0",
+        "revisions-MIN_NUM_FORMS": "0",
+        "revisions-MAX_NUM_FORMS": "1000",
+        **extra,
+    }
+
+
+def test_designer_cant_offer_a_theme_to_visitors(designer, theme):
+    """Offering a theme puts it in front of visitors, so it needs publish_theme (#238)."""
+    publish(theme)
+    page = designer.get(change_url(theme)).content.decode()
+    assert 'name="offered_to_visitors"' not in page
+    response = designer.post(change_url(theme), draft_post(offered_to_visitors="on"))
+    assert response.status_code == 302, response.content
+    theme.refresh_from_db()
+    assert theme.offered_to_visitors is False
+
+
+def test_publisher_can_offer_a_theme_to_visitors(publisher, theme):
+    publish(theme)
+    response = publisher.post(change_url(theme), draft_post(offered_to_visitors="on"))
+    assert response.status_code == 302, response.content
+    theme.refresh_from_db()
+    assert theme.offered_to_visitors is True
+
+
 def test_designer_sees_no_publish_button(designer, theme):
     content = designer.get(change_url(theme)).content.decode()
     assert publish_url(theme) not in content
