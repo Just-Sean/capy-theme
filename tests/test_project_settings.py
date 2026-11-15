@@ -118,10 +118,10 @@ def test_font_max_bytes(settings):
 
 
 def test_font_max_memory_bytes(settings):
-    settings.CAPY_THEME_FONT_MAX_MEMORY_BYTES = 96 * 1024 * 1024
+    settings.CAPY_THEME_FONT_MAX_MEMORY_BYTES = 128 * 1024 * 1024
     prepare(ttf_bytes(), "font.ttf")
     with pytest.raises(ValidationError, match="too complex"):
-        prepare(many_points_font(50), "font.ttf")  # needs about 75 MB more
+        prepare(many_points_font(150), "font.ttf")  # needs well over 200 MB
 
 
 def test_font_max_seconds(settings):

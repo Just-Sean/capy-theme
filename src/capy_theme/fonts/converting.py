@@ -144,8 +144,8 @@ def outcome(data, subset):
 def work(answer, data, subset, memory, seconds):
     """The separate process: limit itself, convert, and send the outcome back.
 
-    If something unexpected goes wrong, the process ends with its traceback in the
-    log and sends nothing.
+    If something unexpected goes wrong, the process ends with its traceback on
+    stderr (where the server's own error output goes) and sends nothing.
     """
     limit(memory, seconds)
     answer.send(outcome(data, subset))

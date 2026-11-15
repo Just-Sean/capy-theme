@@ -18,10 +18,10 @@ MB = 1024 * 1024
 
 @pytest.mark.parametrize("flavor", [None, "woff", "woff2"])
 def test_a_font_over_the_memory_limit_is_refused(settings, flavor):
-    """About 75 MB of points, against a 96 MB limit (the default is 512 MB)."""
-    settings.CAPY_THEME_FONT_MAX_MEMORY_BYTES = 96 * MB
+    """Well over 200 MB of points, against a 128 MB limit (the default is 512 MB)."""
+    settings.CAPY_THEME_FONT_MAX_MEMORY_BYTES = 128 * MB
     with pytest.raises(ValidationError, match="too complex to process safely"):
-        prepare(many_points_font(50, flavor), "points.ttf")
+        prepare(many_points_font(150, flavor), "points.ttf")
 
 
 def test_a_font_over_the_time_limit_is_refused_on_time(settings):
@@ -33,7 +33,7 @@ def test_a_font_over_the_time_limit_is_refused_on_time(settings):
 
 
 def test_a_font_under_the_limits_is_still_accepted(settings):
-    settings.CAPY_THEME_FONT_MAX_MEMORY_BYTES = 96 * MB
+    settings.CAPY_THEME_FONT_MAX_MEMORY_BYTES = 128 * MB
     settings.CAPY_THEME_FONT_MAX_SECONDS = 5
     assert prepare(ttf_bytes(), "f.ttf")["file"].read()[:4] == b"wOF2"
 

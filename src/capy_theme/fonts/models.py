@@ -8,7 +8,10 @@ from django.db import models
 # characters that can't end a string, a rule or a <style> block are allowed (#235).
 # The same patterns are in portability/theme_file.schema.json, for imports.
 FAMILY_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9 -]{0,99}$"
-_NAME = r"""(?:[A-Za-z0-9_. -]+|"[A-Za-z0-9_. -]+"|'[A-Za-z0-9_. -]+')"""
+# Words joined by single spaces, so every space has one place in the pattern: an
+# ambiguous pattern takes exponential time on crafted input (a regex DoS).
+_WORDS = r"[A-Za-z0-9_.-]+(?: [A-Za-z0-9_.-]+)*"
+_NAME = rf"""(?:{_WORDS}|"{_WORDS}"|'{_WORDS}')"""
 FALLBACK_PATTERN = rf"^\s*{_NAME}(?:\s*,\s*{_NAME})*\s*$"
 _RANGE = r"U\+[0-9A-Fa-f?]{1,6}(?:-[0-9A-Fa-f]{1,6})?"
 UNICODE_RANGE_PATTERN = rf"^{_RANGE}(?:\s*,\s*{_RANGE})*$"
@@ -19,7 +22,8 @@ family_validator = RegexValidator(
 fallback_validator = RegexValidator(
     FALLBACK_PATTERN,
     'List font names separated by commas, e.g. ui-sans-serif, "Segoe UI", sans-serif. '
-    "Names may use letters, digits, spaces, hyphens, dots and underscores.",
+    "Names may use letters, digits, hyphens, dots and underscores, with single spaces "
+    "between words.",
 )
 unicode_range_validator = RegexValidator(
     UNICODE_RANGE_PATTERN, "Use CSS unicode-range values, e.g. U+0000-00FF, U+0131."

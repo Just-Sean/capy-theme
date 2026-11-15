@@ -105,8 +105,14 @@ def _clean(element, plain):
     for attribute, value in list(element.attrib.items()):
         if not _attribute_ok(name, attribute, value):
             del element.attrib[attribute]
-    if name == "style" and UNSAFE_CSS.search(element.text or ""):
-        element.text = ""
+    if name == "style":
+        # Plain text only, checked as a whole: CSS after a child element (its tail)
+        # is still applied by browsers, so children are dropped first.
+        css = "".join(element.itertext())
+        for child in list(element):
+            element.remove(child)
+        element.text = "" if UNSAFE_CSS.search(css) else css
+        return
     index = 0
     while index < len(element):
         child = element[index]

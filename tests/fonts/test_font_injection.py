@@ -8,8 +8,11 @@ pre-release QA review's bug-proof tests.
 
 import io
 import json
+import time
 import zipfile
+from pathlib import Path
 
+import jsonschema
 import pytest
 from django.contrib.auth.models import Permission
 from django.core.cache import cache
@@ -17,9 +20,11 @@ from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.urls import reverse
 
+import capy_theme
 from capy_theme.css.stylesheet import render_css
-from capy_theme.fonts.library import css_string, preview_faces
-from capy_theme.fonts.models import Font, FontFile
+from capy_theme.fonts.css import font_css
+from capy_theme.fonts.library import DEFAULT_FALLBACK, css_string, preview_faces
+from capy_theme.fonts.models import Font, FontFile, fallback_validator
 from capy_theme.fonts.uploads import prepare
 from capy_theme.models import Theme
 from capy_theme.portability.importing import import_theme
@@ -30,6 +35,12 @@ pytestmark = pytest.mark.django_db
 
 INJECTED = "} body { display: none } :root { --x: y"
 SCRIPT = "</style><img src=x onerror=alert(1)>"
+SCHEMA = json.loads(
+    (Path(capy_theme.__file__).parent / "portability" / "theme_file.schema.json").read_text()
+)
+FALLBACK_SCHEMA_PATTERN = SCHEMA["properties"]["fonts"]["additionalProperties"]["properties"][
+    "fallback_stack"
+]["pattern"]
 
 
 @pytest.fixture(autouse=True)
@@ -276,3 +287,45 @@ def test_the_admin_import_passes_the_add_font_permission(
     assert Font.objects.filter(family="Far Away").exists() is added
     if not added:
         assert "needs permission to add fonts" in response.content.decode()
+
+
+# Regular expressions that can't be made slow (final review)
+
+
+@pytest.mark.parametrize(
+    "attack",
+    ["a" + " " * 40_000 + "!", "a  ," * 75 + "!", '"a  b" ,' * 40 + "!", "a " * 50_000 + "!"],
+)
+def test_the_fallback_check_stays_fast_on_crafted_input(attack):
+    """A pattern with two places for one space took exponential time (a regex DoS)."""
+    started = time.monotonic()
+    with pytest.raises(ValidationError):
+        fallback_validator(attack)
+    jsonschema.Draft7Validator({"pattern": FALLBACK_SCHEMA_PATTERN}).is_valid(attack)
+    assert time.monotonic() - started < 0.5
+
+
+# Values saved before they were checked still can't reach page CSS (final review)
+
+
+def test_a_revision_with_unsafe_old_font_values_gives_safe_css():
+    fonts = {
+        "body": {
+            "family": SCRIPT,
+            "source": "upload",
+            "fallback": "serif; " + INJECTED,
+            "files": [
+                {
+                    "url": '/m/f.woff2") ' + INJECTED,
+                    "weight": 400,
+                    "style": "normal; x",
+                    "unicode_range": "U+0000; " + INJECTED,
+                },
+            ],
+        }
+    }
+    css = "\n".join(font_css(fonts))
+    assert INJECTED not in css and "</style>" not in css  # only escaped copies remain
+    assert "--font-sans: " in css and DEFAULT_FALLBACK["body"] in css
+    assert "unicode-range" not in css
+    assert "font-style: normal;" in css

@@ -27,10 +27,13 @@
   theme imports (migration 0016). Before, they went into the admin's font previews
   and every page's stylesheet as they were, so a crafted name could run script in
   the admin, and a fallback list could add any CSS to public pages. The admin's
-  previews also escape every value. Importing a theme that adds an external font
-  now needs permission to add fonts.
+  previews also escape every value, and so does the page CSS, which also drops any
+  saved value that doesn't pass the checks (fonts saved before this release aren't
+  re-checked otherwise). Importing a theme that adds an external font now needs
+  permission to add fonts.
 - **Uploaded SVGs can't load outside files through CSS tricks:** CSS escapes
-  (`\75rl(`), `image-set()` and `@font-face` are now removed like `url()` is. The
+  (`\75rl(`), `image-set()` and `@font-face` are now removed like `url()` is, and
+  a `<style>` keeps only its text, checked as a whole. The
   README recommends `nosniff` and a strict CSP header for uploaded files.
 - **Limits on imports, font downloads and big images:** a theme import that uses
   the same file more than once is refused, as is a zip over the size limit (now

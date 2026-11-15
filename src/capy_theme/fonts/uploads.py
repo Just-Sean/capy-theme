@@ -79,7 +79,7 @@ def _convert_in_own_process(data, subset):
         process.join()
         if process.exitcode < 0:  # stopped by the OS: over the CPU or memory limit
             return {"too_complex": True}
-        raise RuntimeError("Font conversion failed; its error is in the log.") from None
+        raise RuntimeError("Font conversion failed; its traceback is on stderr.") from None
     finally:
         if process.is_alive():
             process.kill()

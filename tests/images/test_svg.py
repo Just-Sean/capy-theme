@@ -239,3 +239,21 @@ def test_defusedxml_refuses_entities_even_without_the_first_check(monkeypatch):
     ).encode()
     with pytest.raises(ValidationError, match="DOCTYPE or entities"):
         clean_svg(bomb)
+
+
+@pytest.mark.parametrize(
+    "style",
+    [
+        "<style><script/>@import url(https://evil.example/x.css);</style>",
+        "<style><g/>rect{fill:url(https://evil.example/b)}</style>",
+    ],
+)
+def test_css_after_a_child_element_in_style_is_checked_too(style):
+    """Text after a child (its tail) is CSS too; the final review got url() past this way."""
+    result = clean_svg(svg(style + '<rect width="1" height="1"/>'))[0].decode()
+    assert "evil.example" not in result
+
+
+def test_safe_css_in_style_is_kept_without_its_child_elements():
+    result = clean_svg(svg("<style>rect{fill:red}<g/> circle{fill:blue}</style>"))[0].decode()
+    assert "rect{fill:red} circle{fill:blue}" in result

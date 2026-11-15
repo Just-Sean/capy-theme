@@ -1625,6 +1625,17 @@ Before v1.0, capy-theme ran in a throwaway project generated from
 - **SVG cleaner (#237):** CSS with a backslash, `image-set(` or `@font-face` is
   removed too. CSS escapes made `\75rl(` get past the `url(` check. The README
   recommends `nosniff` and a strict CSP for `MEDIA_URL` as a second layer.
+- **From the final review of the combined PR:**
+  - The fallback pattern takes words joined by single spaces. The first version
+    let a space match in two places, which took exponential time on crafted input
+    (a regex DoS through the admin form or an import).
+  - Values saved before this change (in fonts and in published revisions) aren't
+    re-checked by the migration, so the page CSS checks again when it's written:
+    family names and file URLs are CSS-escaped, a fallback stack or unicode-range
+    that doesn't match the pattern is replaced by the default (or left out), and
+    weight and style are limited to a number and normal/italic.
+  - A `<style>` in an SVG keeps only its text, checked as a whole: CSS after a
+    child element (the child's tail) got past the check.
 
 ## Import, download and image limits (#236)
 
