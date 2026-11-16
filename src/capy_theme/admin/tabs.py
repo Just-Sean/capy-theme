@@ -1,8 +1,9 @@
 """How the theme admin page's sections are grouped into tabs.
 
 Presentation only: the page renders every section inside its tab's panel, and
-`static/capy_theme/admin/tabs.js` turns the panels into tabs. Without JavaScript the
-panels simply follow each other, so the page looks as it did before tabs.
+`static/capy_theme/admin/tabs.js` turns the panels into tabs and opens the sections
+(every section can be folded, #259). Without JavaScript the panels simply follow each
+other, every section folded; each opens with a click.
 """
 
 from django.utils.text import slugify
@@ -12,7 +13,7 @@ from .form_colors import color_fieldsets
 # (tab label, section names or inline model names). Sections not listed here land in
 # a final "More" tab, so a section added later is never lost.
 THEME_TABS = [
-    ("General", [None, "Publishing", "Base themes", "Mode", "Visitors"]),
+    ("General", ["Name", "Publishing", "Base themes", "Mode", "Visitors"]),
     ("Branding", ["Branding", "Icon", "Logos", "Backgrounds", "Sharing image"]),
     ("Fonts", ["Fonts", "Type scale"]),
     ("Light colors", [name for name, _ in color_fieldsets() if name.startswith("Light")]),

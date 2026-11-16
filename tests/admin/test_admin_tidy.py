@@ -24,7 +24,7 @@ def test_sections_are_in_a_clear_order():
         "Advanced",
     ]
     assert [names.index(n) for n in order] == sorted(names.index(n) for n in order)
-    assert names[0] is None  # name and slug first
+    assert names[0] == "Name"  # name and slug first
 
 
 def test_every_setting_is_reachable():
@@ -32,6 +32,14 @@ def test_every_setting_is_reachable():
     form_fields = set(ThemeForm().fields)
     assert form_fields <= in_sections
     assert {"publish_status", "contrast_table", "settings_json"} <= in_sections
+
+
+def test_every_section_can_be_folded():
+    for name, options in ThemeAdmin.fieldsets:
+        assert name, "a section needs a name to be foldable"
+        assert "collapse" in options["classes"], name
+    for inline in ThemeAdmin.inlines:
+        assert "collapse" in inline.classes, inline.__name__
 
 
 def test_advanced_parts_are_folded():

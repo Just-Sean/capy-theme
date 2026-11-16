@@ -169,7 +169,7 @@ def test_admin_groups_colors_basic_advanced_expert():
         for group in ("Basic", "Advanced", "Expert"):
             assert f"{scheme} colors: {group}" in names
     options = dict(ThemeAdmin.fieldsets)
-    assert options["Light colors: Basic"]["classes"] == []
+    assert options["Light colors: Basic"]["classes"] == ["collapse"]  # every section folds
     assert options["Light colors: Expert"]["classes"] == ["collapse"]
 
 

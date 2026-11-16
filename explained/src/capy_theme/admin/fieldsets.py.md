@@ -2,7 +2,7 @@
 
 **What it is:** `THEME_FIELDSETS`, the theme page's sections, top to bottom:
 
-1. Name and slug, with a tip pointing to **Edit live**
+1. Name (name and slug), with a tip pointing to **Edit live**
 2. Publishing (status)
 3. Base themes
 4. Branding
@@ -10,9 +10,9 @@
 6. Logos
 7. Fonts
 8. Type scale
-9. Colors (light and dark; Basic open, Advanced and Expert folded)
-10. Contrast (folded)
-11. Shape and effects (folded)
+9. Colors (light and dark; Basic, Advanced and Expert)
+10. Contrast
+11. Shape and effects
 12. Mode
 13. Visitors ("offered to visitors")
 14. Backgrounds
@@ -20,4 +20,4 @@
 16. Custom CSS (only for people who may edit it)
 17. Advanced (the stored settings, ID and dates)
 
-Several of the later sections are folded by default to keep the page short. On the page they're grouped into tabs (see `tabs.py`), where they open, except the colors' Advanced and Expert groups.
+Every section can be folded (a loop at the end gives each one Django's `collapse` class, #259). On the page they're grouped into tabs (see `tabs.py`), where they open, except the colors' Advanced and Expert groups, which stay folded.

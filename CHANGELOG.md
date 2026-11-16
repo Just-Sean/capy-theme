@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Every section of the theme admin page can be folded,** including the image and
+  revision lists. They still open when their tab is shown (the colors' Advanced and
+  Expert sections stay folded, as before). The first section is now titled "Name".
 - **Docs:** Python 3.14+ and `USE_TZ = True` are required; SQLite and PostgreSQL
   are the supported databases; run `collectstatic` on install and after updates;
   fonts on another media origin need `Access-Control-Allow-Origin`; the

@@ -2,7 +2,7 @@
 {% load static %}
 {% comment %}The theme edit page: a Publish button next to History for users who may publish, and the
 sections grouped into tabs (capy_theme.admin.tabs). Without JavaScript the tab panels just
-follow each other, so the page reads top to bottom as before.{% endcomment %}
+follow each other, every section folded (each opens with a click).{% endcomment %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -42,7 +42,9 @@ follow each other, so the page reads top to bottom as before.{% endcomment %}
     {% if tab.inlines %}
       <div class="capy-tab-panel" data-capy-tab="{{ tab.id }}" data-capy-tab-order="{{ tab.order }}" data-capy-tab-label="{{ tab.label }}">
         {% for inline_admin_formset in tab.inlines %}
-          {% include inline_admin_formset.opts.template %}
+          <div data-capy-unfold>
+            {% include inline_admin_formset.opts.template %}
+          </div>
         {% endfor %}
       </div>
     {% endif %}
