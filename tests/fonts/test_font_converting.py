@@ -4,7 +4,11 @@
 it, so its logic is also tested in this process (without the limits).
 """
 
+import io
+from pathlib import Path
+
 import pytest
+from fontTools.ttLib import TTFont
 
 from capy_theme.fonts import converting
 from tests.support.fonts import self_calling_cff_font, ttf_bytes
@@ -81,3 +85,25 @@ def test_without_os_limits_limit_does_nothing(monkeypatch):
 def test_trimming_keeps_only_the_subset():
     result = converting.outcome(ttf_bytes(), "latin")["font"]
     assert result["unicode_range"] == converting.SUBSETS["latin"]
+
+
+GARAMOND = (
+    Path(__file__).resolve().parents[2]
+    / "src/capy_theme/static/capy_theme/fonts/eb-garamond/eb-garamond-latin-400-normal.woff2"
+)
+
+
+def damaged_layout_font():
+    """EB Garamond as a TTF with one byte of its GPOS table changed (found by QA's fuzzing)."""
+    font = TTFont(GARAMOND)
+    font.flavor = None
+    out = io.BytesIO()
+    font.save(out)
+    data = bytearray(out.getvalue())
+    data[TTFont(io.BytesIO(bytes(data))).reader.tables["GPOS"].offset + 5297] = 168
+    return bytes(data)
+
+
+def test_a_damaged_layout_table_is_not_a_font_not_a_crash():
+    # fontTools raises AttributeError for it while trimming (#251).
+    assert converting.outcome(damaged_layout_font(), "latin") == {"not_a_font": True}

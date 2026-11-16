@@ -40,6 +40,7 @@ PARSE_ERRORS = (
     TypeError,
     UnicodeError,
     RecursionError,
+    AttributeError,  # a damaged layout table (GPOS, GSUB) read while trimming (#251)
 )
 try:
     import brotli
