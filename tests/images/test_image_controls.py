@@ -145,3 +145,21 @@ def test_editor_upload_needs_permission(client, django_user_model, theme):
     upload = SimpleUploadedFile("a.png", png())
     assert client.post(upload_url(theme), {"slot": "icon", "file": upload}).status_code == 403
     assert not ThemeAsset.objects.exists()
+
+
+def test_admin_refuses_an_oversized_upload_before_reading_it(
+    admin_client, theme, settings, monkeypatch
+):
+    # #253: the size is checked first, so a huge file is never read into memory.
+    settings.CAPY_THEME_IMAGE_MAX_BYTES = 1024
+
+    def must_not_read(*args, **kwargs):
+        raise AssertionError("the upload was read")
+
+    monkeypatch.setattr("capy_theme.admin.inlines.prepare_image", must_not_read)
+    url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
+    upload = SimpleUploadedFile("big.png", b"x" * 2048, content_type="image/png")
+    response = admin_client.post(url, admin_data(**{"assets-0-original": upload}))
+    assert response.status_code == 200
+    assert "The image is too big (the limit is 1 KB)." in response.content.decode()
+    assert not ThemeAsset.objects.exists()

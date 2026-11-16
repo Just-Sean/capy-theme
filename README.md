@@ -83,7 +83,9 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   [Settings](#settings).
 - **Permissions:** only users with `publish_theme` can publish, activate,
   restore, schedule or give a domain its own theme; `edit_custom_css` and
-  `import_theme` cover custom CSS and imports.
+  `import_theme` cover custom CSS and imports. Permission to add fonts lets
+  someone add an external font, whose stylesheet (any HTTPS address) then loads
+  on every page once a theme using it is published, so treat it like custom CSS.
 
 ## Add it to a project
 
@@ -207,6 +209,10 @@ memory limit (e.g. gunicorn's `--timeout`, which is 30 seconds by default, and a
 container memory limit). capy-theme checks uploads before processing them, so a
 file that's too big is refused with a clear message, but these limits are the
 backstop if any upload (or anything else) ever takes too long or too much memory.
+
+**With a wildcard `ALLOWED_HOSTS`** (e.g. `.example.com`), each subdomain a
+request names gets its own cached copy of the theme, so made-up subdomains can
+fill the cache. List the exact hosts where you can.
 
 **Fonts are converted in a separate process,** started with Python's
 `multiprocessing` ("spawn"), which limits its own memory and time

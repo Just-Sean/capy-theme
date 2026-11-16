@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.utils.html import format_html
 
 from ..images.models import ThemeAsset
-from ..images.uploads import prepare_image
+from ..images.uploads import byte_limit, prepare_image
 from ..models import ThemeRevision
 
 
@@ -53,6 +53,12 @@ class ThemeAssetForm(forms.ModelForm):
         upload = cleaned.get("original")
         slot = cleaned.get("slot")
         if upload and slot and self.instance.pk is None:
+            limit = byte_limit(slot)
+            if upload.size is not None and upload.size > limit:  # before reading it (#253)
+                self.add_error(
+                    "original", f"The image is too big (the limit is {limit // 1024} KB)."
+                )
+                return cleaned
             try:
                 upload.seek(0)
                 self.clean_image = prepare_image(upload.read(), upload.name, slot)

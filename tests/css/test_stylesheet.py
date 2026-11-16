@@ -6,6 +6,7 @@ import importlib.metadata
 import pytest
 from django.urls import reverse
 
+from capy_theme.css.stylesheet import snapshot_css
 from capy_theme.models import Theme
 from capy_theme.themes.catalog import THEMES
 from capy_theme.themes.publishing import publish
@@ -160,3 +161,25 @@ def test_stylesheet_is_served_with_or_without_v(client, theme):
     versioned = client.get(css_url(revision) + "?v=0.1.0")
     assert plain.status_code == versioned.status_code == 200
     assert plain.content == versioned.content
+
+
+# A theme name can't end the CSS comment it's written into (#253).
+
+ESCAPE = 'x */ @import url("https://evil.example/x.css"); /*'
+
+
+def test_a_name_with_a_comment_end_stays_inside_the_comment(client):
+    theme = Theme.objects.create(name=ESCAPE, slug="evil")
+    css = client.get(css_url(publish(theme))).content.decode()
+    first_line = css.splitlines()[0]
+    assert (
+        first_line
+        == '/* capy-theme: x * / @import url("https://evil.example/x.css"); /*, revision 1 */'
+    )
+    assert first_line.count("*/") == 1 and first_line.endswith("*/")
+
+
+def test_editor_css_comments_are_neutralized_too():
+    theme = Theme.objects.create(name="Plain", slug="plain")
+    css = snapshot_css(theme.snapshot(), f"capy-theme editor: preview of {ESCAPE}")
+    assert css.splitlines()[0].count("*/") == 1

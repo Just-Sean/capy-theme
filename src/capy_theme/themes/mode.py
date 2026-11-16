@@ -66,7 +66,8 @@ def head_script(revision):
         "document.addEventListener('click',function(e){"
         "var a=e.target.closest&&e.target.closest('[data-capy-mode]');if(!a||!s)return;"
         "e.preventDefault();var m=a.getAttribute('data-capy-mode');"
-        "document.cookie=n+'='+m+';path=/;max-age=" + str(COOKIE_MAX_AGE) + ";samesite=lax';"
+        "document.cookie=n+'='+m+';path=/;max-age=" + str(COOKIE_MAX_AGE) + ";samesite=lax'"
+        "+(location.protocol==='https:'?';secure':'');"
         "apply(m)})})();"
     )
 
