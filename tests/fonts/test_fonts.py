@@ -46,7 +46,7 @@ def test_theme_picks_fonts_by_role_and_snapshot_copies_them():
     fonts = theme.snapshot()["fonts"]
     assert fonts["heading"]["family"] == "Lora"
     assert len(fonts["heading"]["files"]) == 3
-    assert fonts["heading"]["files"][0]["url"].startswith("/media/capy_theme/fonts/")
+    assert fonts["heading"]["files"][0]["file"].startswith("capy_theme/fonts/")
 
 
 def test_no_fonts_key_without_fonts():
@@ -162,3 +162,24 @@ def test_editor_state_lists_fonts(client, django_user_model):
     theme = Theme.objects.create(name="Main", slug="main")
     data = client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()
     assert "Lora" in [f["family"] for f in data["controls"]["fonts"]]
+
+
+# Revisions store font file names; the URL is built when used (#254).
+
+
+def test_published_fonts_follow_a_new_media_url(settings):
+    font = make_font()
+    theme = Theme.objects.create(name="Main", slug="main", settings={"fonts": {"heading": font.pk}})
+    revision = publish(theme)
+    assert 'url("/media/capy_theme/fonts/' in render_css(revision)
+    settings.MEDIA_URL = "https://cdn.example.com/media/"
+    assert 'url("https://cdn.example.com/media/capy_theme/fonts/' in render_css(revision)
+
+
+def test_revisions_published_before_1_0_keep_their_stored_urls():
+    font = make_font()
+    theme = Theme.objects.create(name="Main", slug="main", settings={"fonts": {"heading": font.pk}})
+    revision = publish(theme)
+    for entry in revision.snapshot["fonts"]["heading"]["files"]:
+        entry["url"] = "/old/" + entry.pop("file")  # the pre-1.0 format
+    assert 'url("/old/capy_theme/fonts/' in render_css(revision)

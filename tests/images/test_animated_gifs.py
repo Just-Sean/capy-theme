@@ -162,3 +162,20 @@ def test_the_frame_reader_handles_short_and_odd_files():
     gce = data.index(b"\x21\xf9\x04")
     empty = data[:gce] + b"\x21\xf9\x00" + data[gce + 8 :]
     assert frame_disposals(empty) == [0]
+
+
+@pytest.mark.django_db
+def test_animated_header_logos_get_no_still_copies(settings, tmp_path):
+    # Resized copies would keep only the first frame, so the original is used (#254).
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    from capy_theme.images.uploads import add_asset
+    from capy_theme.models import Theme
+
+    settings.MEDIA_ROOT = tmp_path
+    theme = Theme.objects.create(name="Main", slug="main")
+    upload = SimpleUploadedFile("moving.gif", gif(frames=3), content_type="image/gif")
+    asset = add_asset(theme, "logo_main", "light", upload)
+    assert not asset.variants.exists()
+    still = SimpleUploadedFile("still.gif", gif(frames=1), content_type="image/gif")
+    assert add_asset(theme, "logo_main", "dark", still).variants.exists()

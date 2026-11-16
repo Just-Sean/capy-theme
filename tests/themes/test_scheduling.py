@@ -44,7 +44,7 @@ def published(name):
 
 @pytest.fixture
 def themes(clock):
-    default = published("Default")
+    default = published("Everyday")  # "default" is a reserved slug (#254)
     activate(default)
     holiday = published("Holiday")
     ThemeAssignment.objects.create(theme=holiday, starts_at=DEC_1, ends_at=DEC_26)

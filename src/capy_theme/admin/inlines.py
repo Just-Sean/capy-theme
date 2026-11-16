@@ -6,7 +6,9 @@ from django.core.exceptions import ValidationError
 from django.utils.html import format_html
 
 from ..images.models import ThemeAsset
+from ..images.sharing import make_sharing_image
 from ..images.uploads import byte_limit, prepare_image
+from ..images.variants import make_variants
 from ..models import ThemeRevision
 
 
@@ -75,6 +77,10 @@ class ThemeAssetForm(forms.ModelForm):
             asset.size, asset.content_type = clean["size"], clean["content_type"]
         if commit:
             asset.save()
+            if clean:  # the same copies an editor upload gets (#254)
+                make_variants(asset)
+                if asset.slot == "social":
+                    make_sharing_image(asset)
         return asset
 
 

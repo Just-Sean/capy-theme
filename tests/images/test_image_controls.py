@@ -163,3 +163,30 @@ def test_admin_refuses_an_oversized_upload_before_reading_it(
     assert response.status_code == 200
     assert "The image is too big (the limit is 1 KB)." in response.content.decode()
     assert not ThemeAsset.objects.exists()
+
+
+# Admin uploads get the same copies as editor uploads (#254).
+
+
+def png_upload(size):
+    output = io.BytesIO()
+    Image.new("RGB", size, (30, 90, 200)).save(output, "PNG")
+    return SimpleUploadedFile("pic.png", output.getvalue(), content_type="image/png")
+
+
+def test_a_header_logo_uploaded_in_the_admin_gets_its_smaller_copies(admin_client, theme):
+    url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
+    response = admin_client.post(url, admin_data(**{"assets-0-original": png_upload((300, 100))}))
+    assert response.status_code == 302
+    widths = set(theme.assets.get().variants.values_list("width", flat=True))
+    assert {64, 128, 300} <= widths
+
+
+def test_a_sharing_image_uploaded_in_the_admin_gets_its_1200_by_630_copy(admin_client, theme):
+    url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
+    data = admin_data(**{"assets-0-original": png_upload((1300, 700))}) | {
+        "assets-0-slot": "social"
+    }
+    assert admin_client.post(url, data).status_code == 302
+    sharing = theme.assets.get().variants.get(purpose="social")
+    assert (sharing.width, sharing.height) == (1200, 630)

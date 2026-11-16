@@ -20,7 +20,8 @@ def make_variants(asset):
     """Create the smaller copies of a header logo (AVIF, WebP, PNG or JPEG).
 
     Widths from WIDTHS that are smaller than the image, plus the image's own
-    width (at most MAX_WIDTH). Does nothing for SVGs and other slots.
+    width (at most MAX_WIDTH). Does nothing for SVGs, other slots and animated
+    images (the copies would keep only the first frame, so the original is used) (#254).
     """
     from .models import ThemeAssetVariant
 
@@ -28,6 +29,8 @@ def make_variants(asset):
         return
     with asset.original.open("rb") as file:
         image = Image.open(file)
+        if getattr(image, "is_animated", False):
+            return
         image.load()
     if image.mode not in ("RGB", "RGBA"):
         image = image.convert("RGBA")
