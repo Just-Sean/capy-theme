@@ -80,6 +80,31 @@ def test_restoring_the_live_revision_does_nothing(theme):
         restore(theme, rev(theme, 3))
 
 
+def test_a_failed_restore_keeps_the_unpublished_draft(theme):
+    # Restoring the live revision publishes nothing, so the draft must stay (#243).
+    theme.settings = {**theme.settings, "tagline": "An unpublished edit"}
+    theme.save()
+    with pytest.raises(NothingToPublish):
+        restore(theme, rev(theme, 3))
+    theme.refresh_from_db()
+    assert theme.settings["tagline"] == "An unpublished edit"
+
+
+def test_a_restore_that_collides_keeps_the_unpublished_draft(theme, monkeypatch):
+    def collide(*args, **kwargs):
+        raise IntegrityError("duplicate revision number")
+
+    monkeypatch.setattr("capy_theme.themes.history.publish", collide)
+    theme.settings = {**theme.settings, "tagline": "An unpublished edit"}
+    theme.save()
+    with pytest.raises(IntegrityError):
+        restore(theme, rev(theme, 1))
+    theme.refresh_from_db()
+    assert theme.light_base == "cupcake"
+    assert theme.settings["tagline"] == "An unpublished edit"
+    assert theme.revisions.count() == 3
+
+
 def test_restore_brings_back_the_old_logo(settings, tmp_path):
     from django.core.files.uploadedfile import SimpleUploadedFile
 
