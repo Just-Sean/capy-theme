@@ -208,6 +208,26 @@ container memory limit). capy-theme checks uploads before processing them, so a
 file that's too big is refused with a clear message, but these limits are the
 backstop if any upload (or anything else) ever takes too long or too much memory.
 
+**Fonts are converted in a separate process,** started with Python's
+`multiprocessing` ("spawn"), which limits its own memory and time
+(`CAPY_THEME_FONT_MAX_MEMORY_BYTES`, `CAPY_THEME_FONT_MAX_SECONDS`). So:
+
+- **Keep `CAPY_THEME_FONT_MAX_SECONDS` below the worker timeout.** Its default,
+  30, equals gunicorn's default `--timeout`, so the worker could be stopped
+  before the "too complex" message shows; raise the timeout (e.g. 60) or lower
+  the setting. Fonts are converted one after another, so a theme import or a
+  Google font with many files takes longer than one font: allow for that too.
+- **It can't start from a daemonic process,** such as a `multiprocessing` pool
+  worker; upload fonts from a normal web request or management command.
+- **Where the server's `sys.executable` isn't Python** (some uWSGI and mod_wsgi
+  setups), call `multiprocessing.set_executable()` with the path to the Python
+  interpreter when the project starts.
+- **The limits must fit the server's own:** neither limit can be above a hard
+  limit the operating system already sets for the process (`ulimit -H -v` and
+  `-t`); if one is, font uploads fail with a server error.
+- **macOS doesn't enforce the memory limit,** and Windows has no limits at all, so
+  only the time limit applies there (the parent stops waiting after it).
+
 ### Tailwind and daisyUI for a new project
 
 capy-theme themes a daisyUI 5 stylesheet; it doesn't build one. A project without
@@ -510,8 +530,39 @@ Every command in one place. Details are in the linked pages.
 
 ## Upgrading
 
-Run `uv run python manage.py migrate` after every update. Version notes:
+Run `uv run python manage.py migrate` after every update. Version notes, newest
+first:
 
+- **From 0.7 to 1.0:**
+  - Migrations: `0014_sitetheme` adds Site themes; `0015` renames `Font.licence`
+    to `Font.license` (code that reads `licence` must change); `0016` checks font
+    values (below).
+  - **Font values are now checked:** a font's family name (letters, digits,
+    spaces and hyphens), fallback fonts and character range (`U+…`). Pages are
+    already protected from values that don't fit, but a font saved earlier with one can't
+    be saved in the admin until it's corrected, and exporting a theme that uses
+    it gives a file the import refuses. Open each font in the admin and save it
+    to check.
+  - **Dependencies:** new `defusedxml` and `brotli` (`brotlicffi` on PyPy);
+    fontTools 4.60.2 or newer; Pillow no longer has an upper version cap.
+  - **New settings,** all optional with safe defaults (see Settings):
+    `CAPY_THEME_CUSTOM_CSS`, `CAPY_THEME_IMAGE_MAX_BYTES`,
+    `CAPY_THEME_IMAGE_MAX_PIXELS`, `CAPY_THEME_IMPORT_MAX_BYTES`,
+    `CAPY_THEME_IMPORT_MAX_FILES`, the three `CAPY_THEME_ANIMATION_*` limits and
+    the three font limits `CAPY_THEME_FONT_MAX_UNPACKED_BYTES`,
+    `CAPY_THEME_FONT_MAX_MEMORY_BYTES` and `CAPY_THEME_FONT_MAX_SECONDS`. Fonts
+    are now converted in a separate process; check the notes in "In production"
+    above.
+  - **Edit live** opens capy-theme's own page, `/theme/live-edit/`, which needs
+    the Django admin included under its usual `admin` namespace.
+  - The mode toggle marks the current mode with `aria-current="true"` instead of
+    `aria-pressed`; update project CSS or tests that look for `[aria-pressed]`.
+  - Internal modules renamed: `themes/catalogue.py` is `themes/catalog.py` and
+    `colors/maths.py` is `colors/color_math.py`. Only code that imported them
+    directly needs changing.
+- **From 0.6:** the showcase page and its settings (`CAPY_THEME_SHOWCASE`,
+  `CAPY_THEME_BASE_TEMPLATE`) are gone; remove them from your settings. The
+  editor's **Show all components** replaces it.
 - **From 0.5:** migration `0011_remove_app_and_social_settings` removes the web
   app manifest and link-preview settings (the manifest view and the tags are
   gone; the icons and sharing image stay, available through the artifacts and
@@ -520,9 +571,6 @@ Run `uv run python manage.py migrate` after every update. Version notes:
   main slot (light). Make its smaller copies with
   `uv run python manage.py theme_rebuild_images`. Revisions published before 0.5
   keep showing their old logo until the theme is published again.
-- **From 0.6:** the showcase page and its settings (`CAPY_THEME_SHOWCASE`,
-  `CAPY_THEME_BASE_TEMPLATE`) are gone; remove them from your settings. The
-  editor's **Show all components** replaces it.
 
 ## Build the package
 
