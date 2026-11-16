@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Works under a strict Content Security Policy in more places:** the Components
+  view's sample form no longer uses an inline `onsubmit` (it's no longer a form,
+  so Enter can't reload the page), its radial progress gets its value from the
+  bundled stylesheet instead of a `style` attribute, and the admin's color pickers
+  are sized by `color_input.js` instead of a `style` attribute (#244). The rest
+  of #214 is still open.
 - **A failed restore keeps the draft:** restoring an old revision saved it over the
   theme's draft before publishing it, so if publishing failed (for example,
   restoring the revision that's already live), unpublished edits were lost. Now

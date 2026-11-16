@@ -103,3 +103,14 @@ def test_picker_script_is_bundled():
         / "src/capy_theme/static/capy_theme/admin/color_input.js"
     )
     assert "data-capy-color-for" in script.read_text()
+
+
+def test_picker_has_no_inline_style():
+    # Sized by color_input.js instead, so a strict CSP doesn't block it (#244).
+    html = ColorField().widget.render("c", "#3b82f6", {"id": "id_c"})
+    assert " style=" not in html
+    script = (
+        Path(__file__).resolve().parents[2]
+        / "src/capy_theme/static/capy_theme/admin/color_input.js"
+    ).read_text()
+    assert "picker.style.setProperty(name, CAPY_PICKER_STYLE[name])" in script

@@ -11,3 +11,17 @@ document.addEventListener("input", function (event) {
     if (picker && /^#[0-9a-f]{6}$/i.test(target.value.trim())) picker.value = target.value.trim();
   }
 });
+
+// Sizes each picker to sit beside its text box. Set here rather than in a style
+// attribute, which a strict Content Security Policy would block (#244).
+var CAPY_PICKER_STYLE = {
+  "vertical-align": "middle", width: "2.5em", height: "2em",
+  padding: "0", border: "none", background: "none",
+};
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll("input[type=color][data-capy-color-for]").forEach(function (picker) {
+    Object.keys(CAPY_PICKER_STYLE).forEach(function (name) {
+      picker.style.setProperty(name, CAPY_PICKER_STYLE[name]);
+    });
+  });
+});
