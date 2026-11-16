@@ -112,11 +112,38 @@
   CSS (with the selectors it styles). Accessibility fixes for its samples.
 - **Project settings:** all in `capy_theme/conf.py`, each tested and listed in the
   README. New: `CAPY_THEME_CUSTOM_CSS`, `CAPY_THEME_IMAGE_MAX_BYTES`,
-  `CAPY_THEME_IMPORT_MAX_BYTES`.
+  `CAPY_THEME_IMPORT_MAX_BYTES` and the three `CAPY_THEME_ANIMATION_*` limits
+  (the font, image-pixel and import-file limits are described above).
 - **Multiple sites:** **Site themes** in the admin give a domain its own theme;
-  schedules can be limited to one domain. Everything follows the request's domain.
+  schedules can be limited to one domain. Everything follows the request's domain
+  (migration 0014).
 - **Custom CSS:** a CSS box on the theme (permission `edit_custom_css`), published
   with it and served as its own file after the theme stylesheet, with an on/off switch.
+- **Limits on animated images:** an uploaded animated image (GIF, WebP or PNG) is refused if it
+  has more frames, is wider or higher, or has more pixels in all than
+  `CAPY_THEME_ANIMATION_MAX_FRAMES` (500), `CAPY_THEME_ANIMATION_MAX_SIZE` (2000)
+  and `CAPY_THEME_ANIMATION_MAX_PIXELS` (50 million) allow, and GIFs whose frames
+  reach past the image's edges are refused (#188).
+- **Metadata is stripped from every frame of animated GIFs,** not just the first
+  (#185).
+- **Logging:** important events (publishing, restoring, activating, importing,
+  Google font imports, Google Fonts unreachable) go through loggers under
+  `capy_theme`; the project's `LOGGING` decides where they go. See the README's
+  Logging section (#208).
+- **MIT license:** `LICENSE` and `THIRD_PARTY_NOTICES.md` (for the bundled
+  daisyUI, Tailwind and fonts) ship with the package (#203).
+- **The open editor makes room for the page** instead of covering it, on screens
+  48rem and wider (#193).
+- **The editor's file chooser** is styled like its other buttons (#221).
+- **Shape size fields in the admin step by 0.0625,** so every arrow stop is a
+  value that saves (#224).
+- **An empty custom CSS isn't stored** (#176).
+- **Tighter redirect, cookie and frame checks:** the "next" address after
+  choosing a mode or theme must be on this site; the mode and theme-choice
+  cookies store only allowed values; the Components view only loads a page on
+  this site's origin (#195).
+- **Docs:** a Backing up section in the README (#210) and a note on running the
+  app server with a worker timeout and memory limit in production.
 
 ## 0.7.0
 
