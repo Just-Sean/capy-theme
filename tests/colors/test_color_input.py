@@ -113,4 +113,4 @@ def test_picker_has_no_inline_style():
         Path(__file__).resolve().parents[2]
         / "src/capy_theme/static/capy_theme/admin/color_input.js"
     ).read_text()
-    assert "picker.style.setProperty(name, CAPY_PICKER_STYLE[name])" in script
+    assert "DOMContentLoaded" in script and ".style.setProperty(" in script

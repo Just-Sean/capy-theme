@@ -7,6 +7,13 @@
   var ui = editor.ui;
   var el = ui.el;
 
+  // The controls are rebuilt after Save and Publish, which removes the button
+  // that was pressed; focus moves to its replacement so it isn't lost (#245).
+  function refocus(selector) {
+    var button = editor.panel && editor.panel.querySelector(selector);
+    if (button) button.focus();
+  }
+
   function saveDraft() {
     return editor
       .post(editor.mount.getAttribute("data-save-url"), editor.changes)
@@ -14,6 +21,7 @@
         ui.build(reply.state);
         editor.applyCss(reply.state.css);
         editor.status("Draft saved. Visitors won't see it until it's published.");
+        refocus("[data-capy-save]");
         document.dispatchEvent(new CustomEvent("capy-editor:saved"));
         return reply;
       })
@@ -37,6 +45,7 @@
           ui.build(reply.state);
           editor.applyCss(reply.state.css);
           editor.status("Published as revision " + reply.published + ". Visitors now see it.");
+          refocus("[data-capy-publish]");
           document.dispatchEvent(new CustomEvent("capy-editor:saved"));
         })
         .catch(function (error) {

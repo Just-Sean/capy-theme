@@ -142,3 +142,33 @@ def test_editor_files_are_bundled():
     assert "adoptedStyleSheets" in script
     assert "data-capy-editor-open" in script
     assert ".capy-editor" in (STATIC / "editor.css").read_text()
+
+
+# Keyboard focus (#245). The behavior itself runs in the browser; these check the
+# script has each part, and that the width it uses matches the stylesheet's.
+
+
+def test_editor_moves_focus_into_the_panel_and_back():
+    script = (STATIC / "editor.js").read_text()
+    assert '"aria-label": "Theme editor", tabindex: "-1"' in script
+    assert "editor.panel.focus()" in script and "returnFocus()" in script
+
+
+def test_escape_closes_the_editor():
+    script = (STATIC / "editor.js").read_text()
+    assert 'event.key !== "Escape"' in script and "editor.close()" in script
+
+
+def test_page_behind_a_full_width_panel_is_inert():
+    script = (STATIC / "editor.js").read_text()
+    css = (STATIC / "editor.css").read_text()
+    # The panel covers the page below 48rem, where the page stops making room.
+    assert "@media (min-width: 48rem)" in css
+    assert 'matchMedia("(max-width: 47.99rem)")' in script
+    assert 'setAttribute("inert", "")' in script
+
+
+def test_save_and_publish_keep_focus_on_their_button():
+    script = (STATIC / "controls" / "actions.js").read_text()
+    assert 'refocus("[data-capy-save]")' in script
+    assert 'refocus("[data-capy-publish]")' in script

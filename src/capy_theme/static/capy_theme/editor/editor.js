@@ -80,7 +80,8 @@
   }
 
   function buildPanel() {
-    var panel = el("aside", { class: "capy-editor", role: "dialog", "aria-label": "Theme editor" });
+    // tabindex="-1" so opening the editor can move focus to the panel itself.
+    var panel = el("aside", { class: "capy-editor", role: "dialog", "aria-label": "Theme editor", tabindex: "-1" });
     var header = el("div", { class: "capy-editor-header" });
     header.appendChild(el("h2", {}, "Editing " + mount.getAttribute("data-theme-name")));
     var close = el("button", { type: "button", "data-capy-editor-close": "" }, "Close");
@@ -102,13 +103,50 @@
     node.className = "capy-editor-status" + (isError ? " capy-editor-error" : "");
   }
 
+  // Keyboard focus (#245). Below this width the panel covers the whole page
+  // (editor.css), so the page behind it is made inert: Tab can't reach it.
+  var covered = window.matchMedia("(max-width: 47.99rem)");
+
+  function isEditorUi(node) {
+    return /(^|\s)capy-editor/.test(node.className || "");
+  }
+
+  function coverPage() {
+    var open = editor.panel && !editor.panel.hidden;
+    Array.prototype.forEach.call(document.body.children, function (node) {
+      if (isEditorUi(node)) return;
+      if (open && covered.matches) {
+        if (node.hasAttribute("inert")) return; // the page's own; left alone
+        node.setAttribute("inert", "");
+        node.setAttribute("data-capy-editor-inert", "");
+      } else if (node.hasAttribute("data-capy-editor-inert")) {
+        node.removeAttribute("inert");
+        node.removeAttribute("data-capy-editor-inert");
+      }
+    });
+  }
+  covered.addEventListener("change", coverPage);
+
+  // Back to whatever opened the editor (the Edit theme button or a link), if it's still there.
+  function returnFocus() {
+    var opener = editor.opener;
+    editor.opener = null;
+    if (opener && opener.isConnected && !opener.hidden) opener.focus();
+    else if (editor.launch && !editor.launch.hidden) editor.launch.focus();
+  }
+
   editor.open = function () {
+    var wasOpen = editor.panel && !editor.panel.hidden;
+    var active = document.activeElement;
+    if (!wasOpen) editor.opener = active && active !== document.body ? active : null;
     if (!editor.panel) editor.panel = buildPanel();
     if (!editor.banner) editor.banner = buildBanner();
     editor.panel.hidden = false;
     editor.banner.hidden = false;
     if (editor.launch) editor.launch.hidden = true;
     document.documentElement.classList.add("capy-editor-open"); // the page makes room (editor.css)
+    coverPage();
+    if (!wasOpen) editor.panel.focus();
     status("Loading the draft…");
     return fetch(mount.getAttribute("data-state-url"), {
       credentials: "same-origin",
@@ -143,6 +181,8 @@
     if (editor.banner) editor.banner.hidden = true;
     if (editor.launch) editor.launch.hidden = false;
     document.documentElement.classList.remove("capy-editor-open");
+    coverPage();
+    returnFocus();
   };
 
   // POST JSON to one of the editor's URLs; resolves with the reply, or rejects
@@ -232,6 +272,16 @@
       event.preventDefault();
       editor.close();
     }
+  });
+
+  // Escape closes the editor while focus is in it (the panel, banner or Components view).
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape" || event.defaultPrevented) return;
+    if (!editor.panel || editor.panel.hidden) return;
+    var inEditor = event.target.closest && event.target.closest(".capy-editor, .capy-editor-banner, .capy-editor-components");
+    if (!inEditor) return;
+    event.preventDefault();
+    editor.close();
   });
 
   editor.launch = floatingButton();

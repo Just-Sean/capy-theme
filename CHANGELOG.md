@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Live editor keyboard focus:** opening the editor moves focus into its panel,
+  and closing it (with its buttons or Escape) puts focus back on what opened it.
+  After Save draft or Publish, focus stays on that button instead of being lost.
+  On narrow screens and at high zoom, where the panel covers the page, the page
+  behind it can't be reached with Tab (#245).
 - **Works under a strict Content Security Policy in more places:** the Components
   view's sample form no longer uses an inline `onsubmit` (it's no longer a form,
   so Enter can't reload the page), its radial progress gets its value from the
