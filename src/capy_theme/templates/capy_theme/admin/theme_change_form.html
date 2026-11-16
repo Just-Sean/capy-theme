@@ -42,7 +42,9 @@ follow each other, so the page reads top to bottom as before.{% endcomment %}
     {% if tab.inlines %}
       <div class="capy-tab-panel" data-capy-tab="{{ tab.id }}" data-capy-tab-order="{{ tab.order }}" data-capy-tab-label="{{ tab.label }}">
         {% for inline_admin_formset in tab.inlines %}
-          {% include inline_admin_formset.opts.template %}
+          <div data-capy-unfold>
+            {% include inline_admin_formset.opts.template %}
+          </div>
         {% endfor %}
       </div>
     {% endif %}

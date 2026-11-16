@@ -12,7 +12,7 @@ from .form_colors import color_fieldsets
 # (tab label, section names or inline model names). Sections not listed here land in
 # a final "More" tab, so a section added later is never lost.
 THEME_TABS = [
-    ("General", [None, "Publishing", "Base themes", "Mode", "Visitors"]),
+    ("General", ["Name", "Publishing", "Base themes", "Mode", "Visitors"]),
     ("Branding", ["Branding", "Icon", "Logos", "Backgrounds", "Sharing image"]),
     ("Fonts", ["Fonts", "Type scale"]),
     ("Light colors", [name for name, _ in color_fieldsets() if name.startswith("Light")]),

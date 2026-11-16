@@ -81,13 +81,12 @@ def color_fieldsets():
     sets = []
     for scheme in SCHEMES:
         for group, names in COLOR_GROUPS.items():
-            classes = [] if group == "Basic" else ["collapse"]
             sets.append(
                 (
                     f"{scheme.capitalize()} colors: {group}",
                     {
                         "fields": [color_field_name(scheme, n) for n in names],
-                        "classes": classes,
+                        "classes": ["collapse"],
                     },
                 )
             )

@@ -9,6 +9,7 @@ from django.urls import reverse
 
 from capy_theme.admin.fieldsets import THEME_FIELDSETS
 from capy_theme.admin.tabs import LEFTOVER_TAB, STAY_FOLDED, THEME_TABS, theme_tabs
+from capy_theme.admin.theme_admin import ThemeAdmin
 from capy_theme.models import Theme
 
 pytestmark = pytest.mark.django_db
@@ -112,3 +113,12 @@ def test_a_section_without_a_tab_goes_to_more():
 def test_empty_tabs_are_left_out():
     tabs = theme_tabs([SimpleNamespace(name="Fonts")], [])
     assert [tab["label"] for tab in tabs] == ["Fonts"]
+
+
+def test_every_section_and_list_renders_foldable_and_opens_with_its_tab(admin_client):
+    html = change_page(admin_client)
+    sections = len(THEME_FIELDSETS) + len(ThemeAdmin.inlines)
+    assert html.count("<details>") == sections  # every section and list can be folded
+    # tabs.js opens each one when its tab is shown, except the colors' Advanced and
+    # Expert sections, which stay folded.
+    assert html.count("data-capy-unfold") == sections - len(STAY_FOLDED)

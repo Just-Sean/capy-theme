@@ -9,7 +9,7 @@ from .form_images import image_field_name
 
 THEME_FIELDSETS = [
     (
-        None,
+        "Name",
         {
             "fields": ["name", "slug"],
             "description": "The name and slug are labels in the admin; visitors never see "
@@ -111,3 +111,8 @@ THEME_FIELDSETS = [
         },
     ),
 ]
+
+# Every section can be folded. They still open when their tab is shown, except
+# the colors' Advanced and Expert sections (admin/tabs.py).
+for _name, _options in THEME_FIELDSETS:
+    _options["classes"] = sorted({*_options.get("classes", []), "collapse"})
