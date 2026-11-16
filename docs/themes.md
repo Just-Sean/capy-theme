@@ -162,9 +162,13 @@ theme). capy-theme adds three more, given to users or groups in the admin under
 
 | Permission | Allows |
 | --- | --- |
-| `capy_theme.publish_theme` | Publishing a theme, activating it, and restoring old revisions. Without it, the Publish button and the Activate action are hidden, and direct requests are refused. |
-| `capy_theme.edit_custom_css` | Editing a theme's custom CSS (from 8.1). |
-| `capy_theme.import_theme` | Importing themes (from 7.3). |
+| `capy_theme.publish_theme` | Publishing a theme, activating it, restoring old revisions, scheduling, Site themes, and **Offer to visitors**. Without it, those buttons and actions are hidden, and direct requests are refused. |
+| `capy_theme.edit_custom_css` | Seeing and editing a theme's custom CSS. Without it, Export leaves the custom CSS out, Import leaves it out, and Restore keeps the draft's current custom CSS. |
+| `capy_theme.import_theme` | Importing themes. An import that adds an external font also needs *Can add font*. |
+
+*Can add font* also lets someone add an external font, whose stylesheet then
+loads on every page once a theme using it is published, so treat it like
+`edit_custom_css`.
 
 For example, a "Designer" group with view, add and change can edit drafts, while
 only an "Editor" group with `publish_theme` as well can make changes live.
@@ -191,7 +195,15 @@ anything fails, nothing is kept.
 
 From code: `capy_theme.portability.export.export_theme(theme)` returns the zip's
 bytes, and `capy_theme.portability.importing.import_theme(file)` returns the new
-theme.
+theme. They don't check permissions themselves. From your own view, pass the
+user's:
+
+```python
+can_css = user.has_perm("capy_theme.edit_custom_css")
+export_theme(theme, keep_custom_css=can_css)
+import_theme(file, keep_custom_css=can_css,
+             can_add_external_fonts=user.has_perm("capy_theme.add_font"))
+```
 
 ### From the command line
 

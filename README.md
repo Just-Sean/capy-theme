@@ -2,8 +2,8 @@
 
 Theming for Django projects.
 
-A self-contained Django app (`capy_theme`) that any Django 6.1+ project
-can install. It has no project of its own: its tests run against a tiny
+A self-contained Django app (`capy_theme`) that any project on Python 3.14+ and
+Django 6.1+ can install. It has no project of its own: its tests run against a tiny
 stand-in project in `tests/`, and `demo/` is a small site for trying it out.
 
 ## What it does
@@ -163,7 +163,8 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
    If the project doesn't have Tailwind CSS and daisyUI yet, see
    [Tailwind and daisyUI for a new project](#tailwind-and-daisyui-for-a-new-project) below.
 
-6. Make sure the project stores and serves uploaded files, for theme logos.
+6. Make sure the project stores and serves uploaded files, for theme images,
+   icons and fonts.
    Set `MEDIA_ROOT` and `MEDIA_URL` in `settings.py`. While developing, serve them
    from `urls.py`; in production, serve that folder from the web server or a
    storage service:
@@ -183,11 +184,21 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
    with everything under `MEDIA_URL`. capy-theme cleans uploaded SVGs, and these
    headers are a second layer if someone opens one directly.
 
-7. Create its database tables:
+   If `MEDIA_URL` is on another origin (S3, a CDN or a media subdomain), the
+   storage must also send `Access-Control-Allow-Origin` with your site's origin for
+   files under `capy_theme/fonts/`. Browsers refuse cross-origin font files without
+   it, and the page silently falls back to the next font.
+
+7. Create its database tables and, in production, collect its static files (the
+   editor, admin and bundled font files):
 
    ```bash
    uv run python manage.py migrate
+   uv run python manage.py collectstatic
    ```
+
+   It needs `USE_TZ = True` (Django's default), since schedules are stored with
+   time zones.
 
 To show the theme's logo (or its site name if it has no logo), use
 `{% theme_logo %}`, or `{% theme_logo slot="mark" %}` for another logo slot (see
@@ -202,7 +213,8 @@ if no theme is active.
 Pages then show the **active** theme's **published** colors. Until a theme is
 published and activated in the admin, they show daisyUI's defaults.
 
-The module's tables go into whatever database the project uses.
+The module's tables go into the project's database. Supported databases are
+SQLite and PostgreSQL (the ones its tests run on).
 
 **In production**, run the project's app server with a worker timeout and a
 memory limit (e.g. gunicorn's `--timeout`, which is 30 seconds by default, and a
@@ -541,7 +553,8 @@ Every command in one place. Details are in the linked pages.
 
 ## Upgrading
 
-Run `uv run python manage.py migrate` after every update. Version notes, newest
+Run `uv run python manage.py migrate` and, in production,
+`uv run python manage.py collectstatic` after every update. Version notes, newest
 first:
 
 - **From 0.7 to 1.0:**
@@ -549,6 +562,10 @@ first:
     to `Font.license` (code that reads `licence` must change); `0016` checks font
     values (below). Restart every worker right after `migrate`, since workers
     still running the old code can't read fonts once the column is renamed.
+  - **Re-run `uv run python manage.py theme_rebuild_images`** once: images
+    uploaded in the admin's Images list before 1.0 got no smaller copies or
+    sharing image, and animated logos now use their original instead of still
+    copies.
   - **Permissions tightened:** importing a theme that adds an external font needs
     *Can add font*; Export and Restore leave custom CSS alone for users without
     `edit_custom_css`; **Offer to visitors** needs `publish_theme`. Check your
