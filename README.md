@@ -565,7 +565,13 @@ first:
   - **Re-run `uv run python manage.py theme_rebuild_images`** once: images
     uploaded in the admin's Images list before 1.0 got no smaller copies or
     sharing image, and animated logos now use their original instead of still
-    copies.
+    copies. Then **publish each theme again**: the command replaces the copies,
+    and a published revision keeps pointing at the copies it was published with,
+    so a copy that's gone (e.g. an animated logo's old still copy) shows as a
+    broken image until the theme is published again.
+  - **Rename any theme whose slug is `default`** in the admin: that slug is now
+    reserved for the visitor theme picker's "Site default", and a theme using it
+    can't be saved or published until it's renamed.
   - **Permissions tightened:** importing a theme that adds an external font needs
     *Can add font*; Export and Restore leave custom CSS alone for users without
     `edit_custom_css`; **Offer to visitors** needs `publish_theme`. Check your
