@@ -15,6 +15,7 @@
     spec: null, // what the panel offers (from the server)
     scheme: "light", // the color tab being edited
     latest: null, // the latest values, CSS and contrast from the server
+    saved: null, // the state as last loaded or saved, which Revert goes back to
     sections: [], // {order, build(state) -> element, fill()} from each section file
   });
 
@@ -93,6 +94,7 @@
     editor.changes = normalized();
     ui.baseline = JSON.stringify(editor.changes);
     ui.latest = state;
+    ui.saved = state;
     var container = editor.panel.querySelector(".capy-editor-controls");
     container.textContent = "";
     ui.sections

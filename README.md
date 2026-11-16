@@ -68,8 +68,7 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   and "more contrast" device settings are respected.
 - **Components view** in the editor: every daisyUI component and the theme's
   images and icons in the draft theme, light and dark side by side, updating as
-  you edit. **See it as a visitor** shows the published theme instead, by mode,
-  offered theme or date.
+  you edit.
 - **Custom CSS** for anything the settings don't cover, published with the theme
   and served as its own file after the theme stylesheet. Only people with the
   `edit_custom_css` permission see or change it, and a project can turn it off.

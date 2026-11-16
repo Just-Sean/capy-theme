@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Live editor: Revert, and no more "See it as a visitor":** a **Revert** button
+  next to Save draft throws away the unsaved changes and goes back to the saved
+  draft (it asks first). "See it as a visitor" and its `/theme/editor/visitor-view/`
+  endpoint are removed: the page shows the draft as you edit, which is what
+  visitors get once it's published (#261).
 - **Every section of the theme admin page can be folded,** including the image and
   revision lists. They still open when their tab is shown (the colors' Advanced and
   Expert sections stay folded, as before). The first section is now titled "Name".

@@ -7,7 +7,6 @@
 - how the page makes room for the panel
 - `?edit=<id>`
 - the JSON endpoints it uses
-- **See it as a visitor:** the published view, by mode, theme or date
 - **the Components view:** every daisyUI component and the theme's images, in light and dark, in an iframe
 - rebuilding the Components view's stylesheet (`scripts/build_components_css.py`)
 

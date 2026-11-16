@@ -14,7 +14,7 @@
 - `get_site_theme(request)`: the same but ignoring the visitor's choice.
 - `offered_themes()`
 - `activate(theme, site)`: the Activate action; the theme must be published.
-- `theme_at(when, site)`: uncached, for "See it as a visitor" on a date.
+- `theme_at(when, site)`: uncached; the admin's schedule page uses it.
 - `scheduled_assignments(site)`
 
 **Caching:**

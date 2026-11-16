@@ -221,7 +221,12 @@
   // Ask the server for the CSS, values and contrast of unsaved values, and show
   // them on the page. `changes` is {light_base?, dark_base?, settings?: {colors?, shape?}}.
   // Nothing is saved.
+  // Bumped by cancelPreview(), so a preview still on its way when the changes are
+  // reverted can't put them back on the page (#261).
+  var previewRound = 0;
+
   editor.preview = function (changes) {
+    var round = previewRound;
     return fetch(mount.getAttribute("data-preview-url"), {
       method: "POST",
       credentials: "same-origin",
@@ -241,15 +246,15 @@
         });
       })
       .then(function (result) {
+        if (round !== previewRound) return result; // reverted meanwhile: ignore it
         linkStylesheets(result.stylesheets);
-        // While "See it as a visitor" is on, the page keeps the visitors' theme.
-        if (!editor.viewCss) applyCss(result.css);
+        applyCss(result.css);
         if (editor.panel) status("Previewing unsaved changes. Nothing is saved yet.");
         document.dispatchEvent(new CustomEvent("capy-editor:preview", { detail: result }));
         return result;
       })
       .catch(function (error) {
-        if (editor.panel) status(error.message, true);
+        if (editor.panel && round === previewRound) status(error.message, true);
         throw error;
       });
   };
@@ -262,6 +267,12 @@
     pending = setTimeout(function () {
       editor.preview(changes).catch(function () {});
     }, 150);
+  };
+
+  // Drop a scheduled preview and ignore any still on its way (Revert uses this).
+  editor.cancelPreview = function () {
+    clearTimeout(pending);
+    previewRound += 1;
   };
 
   document.addEventListener("click", function (event) {
