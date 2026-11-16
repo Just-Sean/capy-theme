@@ -5,6 +5,7 @@ them once from fonts.gstatic.com, checks them, and stores them like uploads.
 Visitors' browsers never contact Google.
 """
 
+import http.client
 import logging
 import re
 import urllib.error
@@ -107,8 +108,14 @@ def available_faces(family, combos, download=fetch):
     return faces
 
 
-# What a failed or timed-out download raises (HTTPError is a URLError).
-UNREACHABLE = (urllib.error.URLError, TimeoutError)
+# What a failed, cut-off or timed-out download raises (HTTPError is a URLError;
+# a connection reset or a short read while reading the body isn't wrapped in one).
+UNREACHABLE = (
+    urllib.error.URLError,
+    TimeoutError,
+    ConnectionError,
+    http.client.HTTPException,
+)
 
 
 def _unreachable(family, error):

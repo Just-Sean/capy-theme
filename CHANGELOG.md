@@ -7,7 +7,8 @@
   1200 × 630 copy, as editor uploads already did. Before, link previews had no
   image (#254).
 - **The slug `default` is reserved:** visitors could never choose a theme with it,
-  since `/theme/choose/default/` means the site's own theme (#254).
+  since `/theme/choose/default/` means the site's own theme. An imported theme
+  with that slug gets `default-imported` (#254).
 - **A failed Google font file download** says "Google Fonts couldn't be reached"
   instead of giving a server error (#254).
 - **Animated header logos keep moving:** they get no resized copies (those kept

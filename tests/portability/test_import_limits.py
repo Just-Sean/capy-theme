@@ -75,6 +75,14 @@ def test_each_file_used_once_still_imports():
     assert theme.name == "Imported"
 
 
+def test_an_export_with_the_reserved_slug_gets_a_free_one():
+    # Exports from before 1.0 may use "default", which visitors' picker reserves (#254).
+    data = manifest()
+    data["theme"]["slug"] = "default"
+    theme = import_theme(io.BytesIO(export_zip(data)))
+    assert theme.slug == "default-imported"
+
+
 def test_a_damaged_zip_entry_is_a_clear_message_not_a_server_error():
     data = manifest({"font-1": font_entry("fonts/1-0.woff2")})
     # Change one byte of the stored font, so its checksum no longer matches.
