@@ -74,6 +74,9 @@
           var freshChoices = ui.imageChoices(body.assets);
           choices.replaceWith(freshChoices);
           choices = freshChoices;
+          // Keep the saved and latest state's images current, so Revert keeps them.
+          if (ui.saved) ui.saved.assets = body.assets;
+          if (ui.latest) ui.latest.assets = body.assets;
           fields.file.value = "";
           fields.alt.value = "";
           editor.status("Uploaded. Location and camera details were removed.");
