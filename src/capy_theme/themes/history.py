@@ -2,6 +2,8 @@
 
 import logging
 
+from django.db import transaction
+
 from ..colors.names import COLOR_NAMES, label
 from ..css.custom import summary as custom_css_summary
 from ..css.shape import EFFECTS, SIZES
@@ -74,7 +76,8 @@ def restore(theme, revision, user=None, restore_custom_css=True):
     The revision's base themes, logo and settings are copied into the theme's
     draft and published. The history isn't rewritten: the old revision stays,
     and a new one (with a note saying what was restored) becomes live. Raises
-    NothingToPublish if the live revision already matches.
+    NothingToPublish if the live revision already matches. If publishing fails,
+    the draft is left as it was (#243).
 
     With restore_custom_css=False the draft keeps its current custom CSS, for
     users without the edit_custom_css permission (#238).
@@ -89,8 +92,9 @@ def restore(theme, revision, user=None, restore_custom_css=True):
         if current_custom_css is not None:
             theme.settings["custom_css"] = current_custom_css
     _drop_deleted_images(theme)
-    theme.save()
-    new = publish(theme, user=user, note=f"Restored revision {revision.number}")
+    with transaction.atomic():  # a failed publish also undoes saving the draft
+        theme.save()
+        new = publish(theme, user=user, note=f"Restored revision {revision.number}")
     logger.info(
         "Restored revision %d of theme %r as revision %d.", revision.number, theme.slug, new.number
     )

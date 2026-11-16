@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **A failed restore keeps the draft:** restoring an old revision saved it over the
+  theme's draft before publishing it, so if publishing failed (for example,
+  restoring the revision that's already live), unpublished edits were lost. Now
+  the draft is only changed if the restore succeeds (#243).
 - **Font files can't unpack into huge amounts of memory:** WOFF and WOFF2 fonts are
   compressed, and a crafted file of under 1 KB could unpack to 512 MB. Before a
   font is opened, capy-theme now checks the sizes it says it unpacks to and refuses
