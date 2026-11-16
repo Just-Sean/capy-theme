@@ -9,7 +9,7 @@
 | `css/` | Writing the theme stylesheet: colors, shape, type, fonts, logos, backgrounds, accessibility, custom CSS |
 | `fonts/` | The font library: uploads, Google Fonts import, bundled fonts, font stacks |
 | `images/` | Image uploads and cleaning, SVG sanitizing, logo slots and copies, icons, the sharing image |
-| `editor/` | The live editor's server side: state, preview, save, publish, upload, visitor view, Components view |
+| `editor/` | The live editor's server side: state, preview, save, publish, upload, Components view |
 | `artifacts/` | The theme as data for other code: `get_artifacts()`, the JSON API, design tokens, daisyUI blocks |
 | `portability/` | Export and import as a zip |
 | `admin/` | Django admin pages for themes, fonts, schedules and site themes |

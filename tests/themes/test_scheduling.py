@@ -8,7 +8,12 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 
 from capy_theme.models import ScheduledTheme, Theme, ThemeAssignment
-from capy_theme.themes.active import activate, get_active_theme, scheduled_assignments
+from capy_theme.themes.active import (
+    activate,
+    get_active_theme,
+    scheduled_assignments,
+    theme_at,
+)
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -110,6 +115,12 @@ def test_a_visitors_choice_still_wins(themes, clock, rf):
 def test_scheduled_assignments_list(themes):
     _, holiday = themes
     assert [a.theme for a in scheduled_assignments()] == [holiday]
+
+
+def test_theme_at_uses_the_same_rules_as_the_site(themes):
+    default, holiday = themes
+    assert theme_at(datetime(2026, 12, 5, tzinfo=UTC)) == holiday
+    assert theme_at(datetime(2026, 11, 5, tzinfo=UTC)) == default
 
 
 def test_validation(clock):

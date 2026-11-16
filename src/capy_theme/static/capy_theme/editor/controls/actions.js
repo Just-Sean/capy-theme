@@ -75,14 +75,13 @@
     save.addEventListener("click", function () {
       saveDraft().catch(function () {});
     });
-    var undo = el("button", { type: "button", "data-capy-revert": "", text: "Revert" });
+    var undo = el("button", { type: "button", "data-capy-revert": "", "aria-describedby": "capy-editor-revert-note", text: "Revert" });
     undo.addEventListener("click", revert);
     return el("section", { class: "capy-editor-section capy-editor-actions" }, [
       el("h3", { text: "Save and publish" }),
       el("p", { class: "capy-editor-note", "data-capy-dirty": "", "aria-live": "polite" }),
-      save,
-      undo,
-      el("p", { class: "capy-editor-note", text: "Revert discards unsaved changes and goes back to the saved draft." }),
+      el("div", { class: "capy-editor-buttons" }, [save, undo]),
+      el("p", { class: "capy-editor-note", id: "capy-editor-revert-note", text: "Revert discards unsaved changes and goes back to the saved draft." }),
       state.can_publish
         ? publishControls()
         : el("p", { class: "capy-editor-note", text: "Publishing needs the publish permission." }),
