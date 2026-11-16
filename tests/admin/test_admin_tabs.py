@@ -122,3 +122,12 @@ def test_every_section_and_list_renders_foldable_and_opens_with_its_tab(admin_cl
     # tabs.js opens each one when its tab is shown, except the colors' Advanced and
     # Expert sections, which stay folded.
     assert html.count("data-capy-unfold") == sections - len(STAY_FOLDED)
+
+
+def test_tabs_script_moves_focus_off_the_save_button_on_load():
+    # If Django focused Save while every section was still folded (add page), the
+    # first field of the open tab gets focus instead (#259). Runs in the browser.
+    script = finders.find("capy_theme/admin/tabs.js")
+    with open(script, encoding="utf-8") as file:
+        text = file.read()
+    assert 'closest(".submit-row")' in text and "(first || start.button).focus()" in text

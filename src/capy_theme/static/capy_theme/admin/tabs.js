@@ -88,5 +88,13 @@
   var focused = document.activeElement;
   if (focused && panels.some(function (p) { return p.hidden && p.contains(focused); })) {
     start.button.focus();
+  } else if (focused && focused.closest && focused.closest(".submit-row")) {
+    // On the add page Django focuses the first visible field. If it ran while every
+    // section was still folded, that was the Save button at the bottom (#259), so
+    // focus the first field of the open tab instead.
+    var first = start.panels[0].querySelector(
+      "input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled])"
+    );
+    (first || start.button).focus();
   }
 })();

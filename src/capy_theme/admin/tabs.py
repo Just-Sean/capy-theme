@@ -1,8 +1,9 @@
 """How the theme admin page's sections are grouped into tabs.
 
 Presentation only: the page renders every section inside its tab's panel, and
-`static/capy_theme/admin/tabs.js` turns the panels into tabs. Without JavaScript the
-panels simply follow each other, so the page looks as it did before tabs.
+`static/capy_theme/admin/tabs.js` turns the panels into tabs and opens the sections
+(every section can be folded, #259). Without JavaScript the panels simply follow each
+other, every section folded; each opens with a click.
 """
 
 from django.utils.text import slugify
