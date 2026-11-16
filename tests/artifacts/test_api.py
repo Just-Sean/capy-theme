@@ -10,7 +10,7 @@ from django.urls import clear_url_caches
 from capy_theme.artifacts import api
 from capy_theme.artifacts.build import get_artifacts
 from capy_theme.models import Theme
-from capy_theme.themes.active import activate
+from capy_theme.themes.active import CHOICE_COOKIE, activate
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -150,6 +150,39 @@ def test_the_issue_check_listed_in_the_generated_api_docs(mode):
     assert "Artifacts" in schema["components"]["schemas"]
     properties = schema["components"]["schemas"]["Artifacts"]["properties"]
     assert {"colors", "fonts", "logos", "icons", "shape", "stylesheet_url"} <= set(properties)
+
+
+# Vary: Cookie (#239). The answer depends on the visitor's theme-choice cookie, so a
+# shared cache (CDN, proxy) must not give one visitor's chosen theme to everyone.
+
+
+@pytest.fixture
+def offered(live):
+    other = Theme.objects.create(
+        name="Other", slug="other", offered_to_visitors=True, settings={"site_name": "Other"}
+    )
+    publish(other)
+    return other
+
+
+@pytest.mark.parametrize("which", ["drf", "django"])
+def test_the_api_varies_by_cookie(client, offered, mode, which):
+    mode(which)
+    client.cookies[CHOICE_COOKIE] = "other"
+    response = client.get(URL)
+    assert response.json()["theme"]["slug"] == "other"
+    assert "Cookie" in response["Vary"]
+    etag = response["ETag"]
+    assert "Cookie" in client.get(URL, headers={"If-None-Match": etag})["Vary"]  # 304 too
+
+
+def test_the_downloads_vary_by_cookie(client, offered):
+    client.cookies[CHOICE_COOKIE] = "other"
+    for url in ("/theme/tokens.json", "/theme/daisyui-theme.css"):
+        response = client.get(url)
+        assert response.status_code == 200
+        assert response["Cache-Control"] == "public, max-age=60", url
+        assert "Cookie" in response["Vary"], url
 
 
 def test_not_in_the_api_docs_in_django_mode(mode):

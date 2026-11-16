@@ -5,6 +5,7 @@ file that each phase extends as it adds settings.
 """
 
 import json
+import math
 from functools import cache
 from pathlib import Path
 
@@ -27,8 +28,30 @@ def settings_validator():
 def validate_settings(value):
     """Raise ValidationError listing every problem if value doesn't match the schema."""
     errors = sorted(settings_validator().iter_errors(value), key=lambda error: list(error.path))
-    if errors:
-        raise ValidationError([_describe(error) for error in errors], code="invalid_settings")
+    messages = [_describe(error) for error in errors] + _not_finite(value)
+    if messages:
+        raise ValidationError(messages, code="invalid_settings")
+
+
+def _not_finite(value, path=""):
+    """Messages for NaN and infinite numbers, which JSON Schema's limits let through.
+
+    Python reads the JSON literals NaN and Infinity, and every comparison with NaN
+    is false, so a minimum or maximum never refuses it (#240).
+    """
+    if isinstance(value, float) and not math.isfinite(value):
+        return [f"{path}: {value} isn't a number." if path else f"{value} isn't a number."]
+    if isinstance(value, dict):
+        items = value.items()
+    elif isinstance(value, list):
+        items = enumerate(value)
+    else:
+        return []
+    return [
+        message
+        for key, item in items
+        for message in _not_finite(item, f"{path}/{key}" if path else str(key))
+    ]
 
 
 def _describe(error):

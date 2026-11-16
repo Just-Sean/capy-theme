@@ -107,6 +107,8 @@ name = "capy-theme"
 version = "0.7.0"
 source = { editable = "." }
 dependencies = [
+    { name = "brotli", marker = "platform_python_implementation == 'CPython'" },
+    { name = "brotlicffi", marker = "platform_python_implementation != 'CPython'" },
     { name = "coloraide" },
     { name = "defusedxml" },
     { name = "django" },
@@ -132,12 +134,14 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "brotli", marker = "platform_python_implementation == 'CPython'", specifier = ">=1.2.1" },
+    { name = "brotlicffi", marker = "platform_python_implementation != 'CPython'", specifier = ">=1.2.1.0" },
     { name = "coloraide", specifier = ">=8,<9" },
     { name = "defusedxml", specifier = ">=0.7.1,<0.8" },
     { name = "django", specifier = ">=6.1,<7" },
-    { name = "fonttools", extras = ["woff"], specifier = ">=4,<5" },
+    { name = "fonttools", extras = ["woff"], specifier = ">=4.60.2,<5" },
     { name = "jsonschema", specifier = ">=4.26,<5" },
-    { name = "pillow", specifier = ">=13,<14" },
+    { name = "pillow", specifier = ">=13" },
 ]
 
 [package.metadata.requires-dev]

@@ -176,6 +176,11 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
    ]
    ```
 
+   In production, send `X-Content-Type-Options: nosniff` and
+   `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox`
+   with everything under `MEDIA_URL`. capy-theme cleans uploaded SVGs, and these
+   headers are a second layer if someone opens one directly.
+
 7. Create its database tables:
 
    ```bash
@@ -312,11 +317,16 @@ Optional settings a project can add to its `settings.py` (all defaults are in
 | `CAPY_THEME_VISITOR_THEMES` | `True` | Let visitors choose among the themes offered to them with `{% theme_picker %}`. `False` turns the picker off and ignores visitors' choices. |
 | `CAPY_THEME_EDITOR_BUTTON` | `True` | Show the live editor's **Edit theme** button in the corner of every page, for staff who can edit. `False` hides it (the editor still opens with `?edit=<theme id>`, e.g. from **Edit live** in the admin). |
 | `CAPY_THEME_FONT_MAX_BYTES` | `5242880` (5 MB) | The largest font file that can be uploaded, in bytes. |
+| `CAPY_THEME_FONT_MAX_UNPACKED_BYTES` | `31457280` (30 MB) | The most a WOFF or WOFF2 font file may unpack to, in bytes. Fonts are compressed, so a small file could otherwise unpack to gigabytes. Real fonts unpack to well under this (the largest, with every Chinese, Japanese or Korean character, to about 15–20 MB); it matches the default of Google's WOFF2 library. Must be a positive whole number. |
+| `CAPY_THEME_FONT_MAX_MEMORY_BYTES` | `536870912` (512 MB) | The most memory reading and converting one font may use, in bytes. fontTools does this in its own process with this limit, because a small crafted font can otherwise need gigabytes. A 4 MB Chinese font needs well under it. Must be a positive whole number. On Windows there's no memory limit, only the time limit. |
+| `CAPY_THEME_FONT_MAX_SECONDS` | `30` | The most time reading and converting one font may take, in seconds; slower fonts are refused. Must be a positive whole number. |
 | `CAPY_THEME_IMAGE_MAX_BYTES` | `None` (each slot's own limit) | A cap on every image upload, in bytes. Each slot keeps its own limit (1 to 5 MB, in `images/slots.json`) when that's lower. |
+| `CAPY_THEME_IMAGE_MAX_PIXELS` | `25000000` (25 million) | The most pixels an uploaded still image can have in all (width × height), checked before it's decoded. A small, highly compressed file can state a huge size, and decoding one of 36 million pixels used about 850 MB. Must be a positive whole number. |
 | `CAPY_THEME_ANIMATION_MAX_FRAMES` | `500` | The most frames an uploaded animated image (GIF, animated WebP or PNG) can have. Must be a positive whole number, like the next two. |
 | `CAPY_THEME_ANIMATION_MAX_SIZE` | `2000` | The most pixels an uploaded animated image can be wide or high (still images keep their slot's limit). This caps the memory each frame needs while it's processed: about 80 MB for an animation at the default size, before counting its frames. |
 | `CAPY_THEME_ANIMATION_MAX_PIXELS` | `50000000` (50 million) | The most pixels an uploaded animated image can have in all (frames × width × height). Saving an animation keeps its frames in memory, at about 2 bytes per pixel, so this caps the memory and time one upload can use: about 150 MB and 1 second at the defaults (measured). Raising it raises both. |
-| `CAPY_THEME_IMPORT_MAX_BYTES` | `52428800` (50 MB) | The largest theme import (all files in the zip, unpacked), in bytes. |
+| `CAPY_THEME_IMPORT_MAX_BYTES` | `52428800` (50 MB) | The largest theme import, in bytes: both the uploaded zip and all the files in it, unpacked. |
+| `CAPY_THEME_IMPORT_MAX_FILES` | `200` | The most files a theme import zip can hold. Must be a positive whole number. |
 
 ## Develop it
 

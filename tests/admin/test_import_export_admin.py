@@ -1,6 +1,7 @@
 """Tests for the theme admin's Export button and Import theme page (issue #54)."""
 
 import io
+import json
 import zipfile
 
 import pytest
@@ -64,3 +65,42 @@ def test_import_page_shows_problems(client, django_user_model):
     assert response.status_code == 200
     assert "isn&#x27;t a zip file" in response.content.decode()
     assert not Theme.objects.exists()
+
+
+# Export and custom CSS (#238): the draft's custom CSS is only for edit_custom_css.
+
+SECRET = ".draft-only { color: hotpink }"
+
+
+@pytest.fixture
+def secret_theme():
+    return Theme.objects.create(
+        name="Secret", slug="secret", settings={"custom_css": {"css": SECRET, "enabled": True}}
+    )
+
+
+def exported_settings(client, theme):
+    response = client.get(reverse("admin:capy_theme_theme_export", args=[theme.pk]))
+    assert response.status_code == 200
+    manifest = json.loads(zipfile.ZipFile(io.BytesIO(response.content)).read("theme.json"))
+    return manifest["theme"]["settings"]
+
+
+def test_export_leaves_out_custom_css_without_the_permission(
+    client, django_user_model, secret_theme
+):
+    staff(client, django_user_model, "view_theme", "change_theme")
+    assert "custom_css" not in exported_settings(client, secret_theme)
+
+
+def test_export_keeps_custom_css_with_the_permission(client, django_user_model, secret_theme):
+    staff(client, django_user_model, "view_theme", "edit_custom_css")
+    assert exported_settings(client, secret_theme)["custom_css"]["css"] == SECRET
+
+
+def test_export_leaves_out_custom_css_when_the_project_switches_it_off(
+    client, django_user_model, secret_theme, settings
+):
+    settings.CAPY_THEME_CUSTOM_CSS = False
+    staff(client, django_user_model, "view_theme", "edit_custom_css")
+    assert "custom_css" not in exported_settings(client, secret_theme)

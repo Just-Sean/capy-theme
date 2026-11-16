@@ -1546,3 +1546,142 @@ Before v1.0, capy-theme ran in a throwaway project generated from
   every page. That changed capy-theme's behavior instead of fixing the missing
   page.
 
+
+## Font unpacking limits (#191)
+
+- The pre-release security review confirmed the suspicion in #191: a WOFF2 file of
+  859 bytes unpacked to 512 MB (about 1 GB of memory), and a valid WOFF with
+  honest sizes and a 512 MB table of zeros was accepted. fontTools unpacks with no
+  limit and only checks sizes afterwards.
+- **Chosen:** a check before fontTools (`fonts/unpacking.py`), in two layers:
+  1. refuse if the sizes the file declares (tables, the whole font, metadata) add
+     up to more than `CAPY_THEME_FONT_MAX_UNPACKED_BYTES`
+  2. unpack each compressed part in steps (brotli, about 1–2 MB at a time) or up to one
+     byte past its declared size (zlib), and refuse as soon as it gives more than
+     declared
+
+  Then fontTools unpacks again, now known to stay under the limit.
+- **Limit: 30 MB**, Sean's choice. It's the default of Google's WOFF2 library.
+  Real fonts unpack to well under it (the largest CJK fonts to about 15–20 MB),
+  and an honest 5 MB upload unpacks to about 10–15 MB.
+- **WOFF2 font collections are refused:** not needed for web fonts.
+- **fontTools runs in its own process with memory and time limits** (#191's step
+  4, `fonts/converting.py`): `CAPY_THEME_FONT_MAX_MEMORY_BYTES` (512 MB) and
+  `CAPY_THEME_FONT_MAX_SECONDS` (30). The review of the first version showed the
+  unpacking check isn't enough: a 5 KB font of glyphs packed with points (65,536
+  points in about 530 bytes each) took 57 s and 918 MB in fontTools, and a TTF
+  near 5 MB would need about 14 GB. A point-count limit was the alternative, but it
+  only covers TrueType; the process limits cover every format and trick. Sean
+  chose this.
+  - `multiprocessing` with "spawn" (a fresh Python, safe in a threaded server)
+    rather than `subprocess`, which the S603 lint flags. About 0.1 s per font.
+  - The process limits its own memory (`RLIMIT_AS`) and CPU time (`RLIMIT_CPU`,
+    which also stops it if the web worker is killed first); the parent stops
+    waiting after the time limit. Windows has no such limits, so there only the
+    time limit applies.
+  - Every step of reading, trimming and saving runs inside the error handling, so
+    a font that breaks fontTools anywhere (e.g. a CFF subroutine calling itself)
+    is "isn't a font", never a server error. An unexpected crash is still an
+    error, logged, rather than hidden.
+  - A 4 MB CJK font (DroidSansFallback) converts in 6 s within the limits.
+- The brotli loop runs until the stream is finished. brotli can say it's ready
+  for more input while output is still waiting, so stopping then (as a first
+  prototype did) would miss a file that lies by more than one step. A test covers it.
+- The check runs the brotli unpacking twice (once counting, once in fontTools),
+  which costs little for fonts this small.
+
+## Safe minimum versions (#234)
+
+- Found by the v1.0.0 pre-release review: the allowed ranges let host projects
+  install versions with known security problems.
+- **fontTools `>=4.60.2`:** older versions have a known security problem and some
+  fail on Python 3.14.
+- **brotli `>=1.2.1` as a direct dependency** (CPython), and **brotlicffi
+  `>=1.2.1.0`** on other Pythons such as PyPy, matching how `fonttools[woff]`
+  picks between them. They unpack WOFF2 fonts; versions before 1.2.0 can use huge
+  memory on small crafted input, and the font size limits (#191) need 1.2.x.
+- **Pillow has no upper cap** (`>=13` only), unlike the other dependencies.
+  Pillow only patches its newest major version, so a cap would keep projects off
+  security fixes. A future major version that breaks something is caught by CI.
+  Don't add the cap back without weighing that.
+
+## Font field and SVG injection fixes (#235, #237)
+
+- Found by the v1.0.0 pre-release review: a font's family name went into the
+  admin's preview `<style>` unescaped (script in the admin), and fallback stacks
+  and unicode ranges went into every page's stylesheet as they were (any CSS,
+  getting round the custom-CSS permission and `CAPY_THEME_CUSTOM_CSS=False`).
+- **Chosen:** validate the values where they're stored, in `fonts/models.py`, with
+  the same patterns in `theme_file.schema.json` for imports:
+  - family: letters, digits, spaces and hyphens (hyphens because built-in system
+    fonts such as Neo-Grotesque use them)
+  - fallback stack: comma-separated names, plain or quoted
+  - unicode-range: `U+…` values
+- **Admin previews escape every value for CSS** (`css_string()`). HTML escaping
+  doesn't work inside `<style>`, which is why `mark_safe` stays, on escaped text.
+- **Imports that add an external font need `add_font`.** An external font loads a
+  stylesheet from another site on every page. Reusing one already in the library
+  is fine.
+- **SVG cleaner (#237):** CSS with a backslash, `image-set(` or `@font-face` is
+  removed too. CSS escapes made `\75rl(` get past the `url(` check. The README
+  recommends `nosniff` and a strict CSP for `MEDIA_URL` as a second layer.
+- **From the final review of the combined PR:**
+  - The fallback pattern takes words joined by single spaces. The first version
+    let a space match in two places, which took exponential time on crafted input
+    (a regex DoS through the admin form or an import).
+  - Values saved before this change (in fonts and in published revisions) aren't
+    re-checked by the migration, so the page CSS checks again when it's written:
+    family names and file URLs are CSS-escaped, a fallback stack or unicode-range
+    that doesn't match the pattern is replaced by the default (or left out), and
+    weight and style are limited to a number and normal/italic.
+  - A `<style>` in an SVG keeps only its text, checked as a whole: CSS after a
+    child element (the child's tail) got past the check.
+
+## Import, download and image limits (#236)
+
+- Found by the pre-release security review: one file could be used hundreds of
+  times in an import; damaged zips gave 500s; font uploads were read before their
+  size was checked; Google Fonts downloads followed any redirect and had no size
+  limit; a 150 KB PNG of 6000 × 6000 pixels used about 850 MB.
+- **Reused paths are refused**, not cached: exports never reuse a path, so a
+  theme.json that does wasn't made by capy-theme.
+- **Redirects are checked before they're followed** (a redirect handler), so the
+  server never contacts another host. Downloads are read up to the font size
+  limit plus one byte.
+- **Still images: 25 million pixels in all** (`CAPY_THEME_IMAGE_MAX_PIXELS`),
+  checked before decoding. A 5000 × 5000 image fits; 6000 × 6000 doesn't.
+- **Imports: at most 200 files** (`CAPY_THEME_IMPORT_MAX_FILES`), and the upload
+  itself is held to `CAPY_THEME_IMPORT_MAX_BYTES`.
+- A Google import that fails deletes the files it already stored, as the theme
+  import does.
+
+## Custom CSS permissions, slow regexes and Vary: Cookie (#238, #239)
+
+- Found by the v1.0.0 pre-release review.
+- **Export** (admin) leaves out `custom_css` unless `can_edit_custom_css(user)`;
+  the `theme_export` command still includes it (command-line users are trusted).
+- **Restore** without that permission keeps the draft's current custom CSS (or
+  none), so a publisher can't bring back custom CSS someone removed.
+- **Offer to visitors** is read-only without `publish_theme`, like publishing and
+  activating, because it puts a theme in front of visitors.
+- **Selectors** for the Components view are found by splitting on braces and a
+  plain comment scan: linear time. The old regexes were quadratic on crafted input.
+- **Vary: Cookie** on api.json, tokens.json and daisyui-theme.css (shared
+  `cache_publicly()` in artifacts/api.py), because the theme can come from the
+  visitor's choice cookie. Ignoring the cookie was the alternative; it would
+  change what visitors who chose a theme get.
+
+## Color and number limits (#240)
+
+- Found by the pre-release QA review: oklch(50% 1e300 0) matched the stored-color
+  pattern `[0-9.]+`, saved, and then the contrast math overflowed on every page.
+  NaN got through because JSON Schema's minimum/maximum are always false for it.
+- **Chosen:** `to_oklch` refuses non-finite values, lightness outside 0–100%
+  (0.1% slack for rounding) and chroma above 0.5 (Rec. 2020 green, the most
+  saturated real color, is about 0.47). Hue is wrapped into 0–360, alpha clamped.
+- The schema allows at most 3 digits before the point (1 for chroma), so a stored
+  value can't be huge even when written by hand or imported.
+- `validate_settings` refuses NaN and infinity anywhere, so the model, editor and
+  imports are all covered without changing them.
+- **Alternative:** clamping out-of-range colors. Refusing shows the mistake instead
+  of silently changing the color.

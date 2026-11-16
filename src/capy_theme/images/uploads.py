@@ -89,6 +89,8 @@ def prepare_image(data, name, slot):
         )
     if frames > 1:
         _check_animation(frames, width, height)
+    else:
+        _check_still(width, height)
     return _clean_copy(image, name, data)
 
 
@@ -201,6 +203,20 @@ def _check_animation(frames, width, height):
         raise ValidationError(
             f"The animation is too big: {frames} frames of {width} × {height} pixels "
             f"({total:,} in all; at most {max_total:,}). Make it shorter or smaller."
+        )
+
+
+def _check_still(width, height):
+    """Refuse still images with too many pixels in all, before they're decoded.
+
+    A small, highly compressed file can state a large size: a 150 KB PNG of
+    6000 × 6000 pixels used about 850 MB while it was decoded and saved again.
+    """
+    max_total = conf.positive_int("CAPY_THEME_IMAGE_MAX_PIXELS")
+    if width * height > max_total:
+        raise ValidationError(
+            f"The image is {width} × {height} pixels ({width * height:,} in all); images "
+            f"can have at most {max_total:,} pixels. Make it smaller."
         )
 
 

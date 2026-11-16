@@ -17,9 +17,15 @@ from ..fonts.models import Font
 FORMAT = "capy-theme-export/1"
 
 
-def export_theme(theme):
-    """The theme as zip bytes (see the module docstring)."""
+def export_theme(theme, keep_custom_css=True):
+    """The theme as zip bytes (see the module docstring).
+
+    With keep_custom_css=False the draft's custom CSS is left out, for users who
+    may not see it (#238).
+    """
     settings = json.loads(json.dumps(theme.settings))
+    if not keep_custom_css:
+        settings.pop("custom_css", None)
     font_roles = {role: f"font-{pk}" for role, pk in settings.pop("fonts", {}).items()}
     image_slots = {
         slot: {mode: f"image-{pk}" for mode, pk in modes.items()}

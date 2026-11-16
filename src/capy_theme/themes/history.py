@@ -68,18 +68,26 @@ def compare(older, newer):
     ]
 
 
-def restore(theme, revision, user=None):
+def restore(theme, revision, user=None, restore_custom_css=True):
     """Make an old revision live again, as a new revision. Returns the new revision.
 
     The revision's base themes, logo and settings are copied into the theme's
     draft and published. The history isn't rewritten: the old revision stays,
     and a new one (with a note saying what was restored) becomes live. Raises
     NothingToPublish if the live revision already matches.
+
+    With restore_custom_css=False the draft keeps its current custom CSS, for
+    users without the edit_custom_css permission (#238).
     """
     snapshot = revision.snapshot
+    current_custom_css = theme.settings.get("custom_css")
     theme.light_base = snapshot["light_base"]
     theme.dark_base = snapshot["dark_base"]
     theme.settings = dict(snapshot.get("settings", {}))
+    if not restore_custom_css:
+        theme.settings.pop("custom_css", None)
+        if current_custom_css is not None:
+            theme.settings["custom_css"] = current_custom_css
     _drop_deleted_images(theme)
     theme.save()
     new = publish(theme, user=user, note=f"Restored revision {revision.number}")

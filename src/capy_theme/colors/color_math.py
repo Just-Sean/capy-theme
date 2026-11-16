@@ -1,5 +1,7 @@
 """Color math: OKLCH conversion, WCAG contrast, readable text colors and shades."""
 
+import math
+
 from coloraide import Color
 
 from .names import COLOR_NAMES
@@ -57,10 +59,27 @@ def to_oklch(value):
     """
     try:
         color = Color(value.strip()).convert("oklch")
-    except (ValueError, TypeError, AttributeError) as error:
+        lightness, chroma, hue = color.coords(nans=False)
+        alpha = color.alpha(nans=False)
+    except (ValueError, TypeError, AttributeError, OverflowError) as error:
         raise ValueError(f"{value!r} isn't a color") from error
-    lightness, chroma, hue = color.coords(nans=False)
-    return _oklch(lightness, chroma, hue, color.alpha(nans=False))
+    if not _in_range(lightness, chroma, hue, alpha):
+        raise ValueError(f"{value!r} isn't a color")
+    lightness = min(max(lightness, 0), 1)  # e.g. 1.0000000001 for white
+    return _oklch(lightness, chroma, hue % 360, min(max(alpha, 0), 1))
+
+
+# How far OKLCH values can go. Real colors stay inside these (the most saturated,
+# Rec. 2020 green, has a chroma of about 0.47). Beyond them, e.g. a chroma of 1e300,
+# the contrast math overflows and every page that uses the theme breaks (#240).
+LIGHTNESS_SLACK = 0.001  # rounding can put white or black a hair outside 0 to 1
+MAX_CHROMA = 0.5
+
+
+def _in_range(lightness, chroma, hue, alpha):
+    if not all(math.isfinite(number) for number in (lightness, chroma, hue, alpha)):
+        return False
+    return -LIGHTNESS_SLACK <= lightness <= 1 + LIGHTNESS_SLACK and 0 <= chroma <= MAX_CHROMA
 
 
 def to_hex(value, alpha=None):

@@ -14,7 +14,7 @@ from ..fonts.google import WEIGHTS as GOOGLE_WEIGHTS
 from ..fonts.google import import_family
 from ..fonts.library import preview_faces, preview_stack
 from ..fonts.models import Font, FontFile
-from ..fonts.uploads import SUBSET_CHOICES, prepare
+from ..fonts.uploads import SUBSET_CHOICES, max_bytes, prepare
 
 
 def _int(value, default):
@@ -61,6 +61,13 @@ class FontFileForm(forms.ModelForm):
             cleaned["weight"] = cleaned.get("weight") or self.instance.weight
             cleaned["style"] = cleaned.get("style") or self.instance.style
             return cleaned
+        if upload.size > max_bytes():  # before reading it all into memory
+            raise ValidationError(
+                {
+                    "file": f"The font file is too big ({upload.size // 1024} KB; the limit "
+                    f"is {max_bytes() // 1024} KB)."
+                }
+            )
         try:
             prepared = prepare(upload.read(), upload.name, cleaned.get("subset", "all"))
         except ValidationError as error:
@@ -168,6 +175,6 @@ class FontAdmin(admin.ModelAdmin):
         return format_html(
             '<style>{}</style><span style="font-family: {}; font-size: 1.25rem;">'
             "The quick brown fox jumps over the lazy dog</span>",
-            mark_safe(preview_faces(font)),  # noqa: S308 (built from the font's own data)
+            mark_safe(preview_faces(font)),  # noqa: S308 (every value is CSS-escaped)
             preview_stack(font),
         )

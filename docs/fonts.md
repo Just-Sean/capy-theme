@@ -35,6 +35,12 @@ the **Latin** characters, which often cuts it to a few percent of its size. Choo
 another subset (Latin Extended, Cyrillic, Greek, Vietnamese) or **All characters**
 to keep everything. Leave weight and style blank to read them from the font. The
 size limit is 5 MB per file (`CAPY_THEME_FONT_MAX_BYTES`).
+WOFF and WOFF2 files are compressed, so they're also refused if they would unpack
+to more than 30 MB (`CAPY_THEME_FONT_MAX_UNPACKED_BYTES`), or unpack to more than
+they say. That's checked before the font is opened, so a tiny crafted file can't
+use up the server's memory. Reading and converting each font then runs in its own
+process, limited to 512 MB and 30 seconds (`CAPY_THEME_FONT_MAX_MEMORY_BYTES`,
+`CAPY_THEME_FONT_MAX_SECONDS`); a font that needs more is refused as too complex.
 
 **Importing from Google Fonts.** On the Fonts list in the admin, click **Import
 from Google Fonts**, type a family name (e.g. *Lora*), and pick the weights,

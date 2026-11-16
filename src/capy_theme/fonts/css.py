@@ -1,6 +1,6 @@
 """The CSS for a theme's fonts: @font-face rules, variables and element rules."""
 
-from .library import stack
+from .library import css_string, safe_unicode_range, stack
 
 
 def font_css(fonts):
@@ -25,15 +25,17 @@ def font_css(fonts):
             if key in seen:
                 continue
             seen.add(key)
+            # Every value is escaped or checked: revisions may hold values saved
+            # before they were validated (#235).
             lines += [
                 "@font-face {",
-                f'  font-family: "{font["family"].replace(chr(34), "")}";',
-                f'  src: url("{f["url"]}") format("woff2");',
-                f"  font-weight: {f['weight']};",
-                f"  font-style: {f['style']};",
+                f"  font-family: {css_string(font['family'])};",
+                f'  src: url({css_string(f["url"])}) format("woff2");',
+                f"  font-weight: {int(f['weight'])};",
+                f"  font-style: {'italic' if f['style'] == 'italic' else 'normal'};",
                 "  font-display: swap;",
             ]
-            if f["unicode_range"]:
+            if safe_unicode_range(f["unicode_range"]):
                 lines.append(f"  unicode-range: {f['unicode_range']};")
             lines.append("}")
     variables = {

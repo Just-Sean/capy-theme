@@ -2,6 +2,7 @@
 
 import urllib.error
 import urllib.parse
+import urllib.request
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -10,6 +11,7 @@ from django.urls import reverse
 from capy_theme.css.stylesheet import render_css
 from capy_theme.fonts.google import (
     USER_AGENT,
+    GoogleOnlyRedirects,
     available_faces,
     css_url,
     fetch,
@@ -154,24 +156,34 @@ def test_every_weight_gets_a_rule_even_when_files_are_shared():
 # The checks around downloading (issue #181).
 
 
+class Response:
+    def __init__(self, body=b"css"):
+        self.body = body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def read(self, limit=-1):
+        return self.body if limit < 0 else self.body[:limit]
+
+
+def fake_opener(monkeypatch, seen, body=b"css"):
+    """Replace the network: record each request and answer with `body`."""
+
+    class Opener:
+        def open(self, request, timeout):
+            seen.append((request.full_url, request.get_header("User-agent"), timeout))
+            return Response(body)
+
+    monkeypatch.setattr("urllib.request.build_opener", lambda *handlers: Opener())
+
+
 def test_fetch_sends_a_browser_user_agent_and_a_timeout(monkeypatch):
     seen = []
-
-    class Response:
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *exc):
-            return False
-
-        def read(self):
-            return b"css"
-
-    def fake_urlopen(request, timeout):
-        seen.append((request.full_url, request.get_header("User-agent"), timeout))
-        return Response()
-
-    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    fake_opener(monkeypatch, seen)
     url = "https://fonts.googleapis.com/css2?family=Lora"
     assert fetch(url) == b"css"
     assert len(seen) == 1  # the fake was used, so nothing went to the network
@@ -267,3 +279,66 @@ def test_a_server_error_tells_the_user_google_couldnt_be_reached():
     with pytest.raises(ValidationError, match="couldn't be reached"):
         import_family("Lora", download=down)
     assert not Font.objects.filter(family="Lora").exists()
+
+
+def test_a_download_over_the_font_size_limit_is_refused(monkeypatch, settings):
+    settings.CAPY_THEME_FONT_MAX_BYTES = 100
+    fake_opener(monkeypatch, [], body=b"x" * 101)
+    with pytest.raises(ValidationError, match="over 0 KB"):
+        fetch("https://fonts.gstatic.com/s/lora/x.woff2")
+    fake_opener(monkeypatch, [], body=b"x" * 100)
+    assert fetch("https://fonts.gstatic.com/s/lora/x.woff2") == b"x" * 100
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        "https://evil.example/x.woff2",
+        "http://fonts.gstatic.com/x.woff2",
+        "https://fonts.gstatic.com.evil.example/x.woff2",
+        "http://169.254.169.254/latest/meta-data/",
+    ],
+)
+def test_redirects_away_from_google_fonts_are_refused(target):
+    request = urllib.request.Request("https://fonts.gstatic.com/s/lora/x.woff2")
+    with pytest.raises(ValidationError, match="unexpected address"):
+        GoogleOnlyRedirects().redirect_request(request, None, 302, "Found", {}, target)
+
+
+def test_redirects_within_google_fonts_are_followed():
+    request = urllib.request.Request("https://fonts.gstatic.com/s/lora/x.woff2")
+    target = "https://fonts.gstatic.com/s/lora/v2/x.woff2"
+    redirected = GoogleOnlyRedirects().redirect_request(request, None, 302, "Found", {}, target)
+    assert redirected.full_url == target
+
+
+def test_fetch_uses_the_google_only_redirect_handler(monkeypatch):
+    handlers = []
+
+    class Opener:
+        def open(self, request, timeout):
+            return Response()
+
+    def build_opener(*given):
+        handlers.extend(given)
+        return Opener()
+
+    monkeypatch.setattr("urllib.request.build_opener", build_opener)
+    fetch("https://fonts.googleapis.com/css2?family=Lora")
+    assert handlers == [GoogleOnlyRedirects]
+
+
+def test_an_import_refused_partway_leaves_no_files_behind(tmp_path):
+    """The Latin file is stored first; the Cyrillic one isn't a font."""
+
+    class HalfBroken(FakeGoogle):
+        def __call__(self, url, timeout=60):
+            if url.startswith("https://fonts.gstatic.com/") and "/cyr-" in url:
+                self.requests.append(url)
+                return b"not a font at all"
+            return super().__call__(url, timeout)
+
+    with pytest.raises(ValidationError, match="isn't a font"):
+        import_family("Lora", subsets=("latin", "cyrillic"), download=HalfBroken())
+    assert not Font.objects.filter(family="Lora").exists()
+    assert not [path for path in tmp_path.rglob("*") if path.is_file()]

@@ -13,22 +13,41 @@ from django.views.decorators.http import require_GET
 from ..css.custom import can_edit_custom_css
 from ..models import Theme
 
-_RULE = re.compile(r"([^{}]+)\{")
+_BRACES = re.compile(r"([{}])")
 
 
 def selectors(css, limit=50):
     """The selectors a stylesheet styles (e.g. [".hero", "h1"]), in order, without
-    at-rules like @media."""
+    at-rules like @media.
+
+    Linear time, because custom CSS can be long and crafted (#238): a rule's
+    prelude is the text before its "{", back to the previous brace.
+    """
     found = []
-    for match in _RULE.finditer(re.sub(r"/\*.*?\*/", "", css, flags=re.S)):
-        prelude = match.group(1).strip()
-        if not prelude or prelude.startswith("@"):
+    pieces = _BRACES.split(_without_comments(css))
+    for text, brace in zip(pieces[::2], pieces[1::2], strict=False):
+        prelude = text.strip()
+        if brace != "{" or not prelude or prelude.startswith("@"):
             continue
         for selector in prelude.split(","):
             selector = " ".join(selector.split())
             if selector and selector not in found:
                 found.append(selector)
     return found[:limit]
+
+
+def _without_comments(css):
+    """`css` with its /* comments */ removed (an unclosed one stays as text)."""
+    kept = []
+    start = 0
+    while (opening := css.find("/*", start)) != -1:
+        closing = css.find("*/", opening + 2)
+        if closing == -1:
+            break
+        kept.append(css[start:opening])
+        start = closing + 2
+    kept.append(css[start:])
+    return "".join(kept)
 
 
 @require_GET

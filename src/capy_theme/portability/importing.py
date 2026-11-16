@@ -9,6 +9,7 @@ is published or activated. If anything fails, nothing is kept.
 import json
 import logging
 import zipfile
+import zlib
 from pathlib import Path
 
 from django.core.exceptions import ValidationError
@@ -27,18 +28,22 @@ logger = logging.getLogger(__name__)
 SCHEMA = json.loads(Path(__file__).with_name("theme_file.schema.json").read_text(encoding="utf-8"))
 
 
-def import_theme(upload, keep_custom_css=True):
+def import_theme(upload, keep_custom_css=True, can_add_external_fonts=True):
     """Create a new, unpublished theme from an export zip. Returns the Theme.
 
     `upload` is a file object (e.g. an uploaded file). Without `keep_custom_css`
     (the importer can't edit custom CSS), the export's custom CSS is left out.
-    Raises ValidationError with a readable message if the file isn't a valid
-    capy-theme export.
+    Without `can_add_external_fonts` (the importer can't add fonts), an export that
+    would add an external font (a stylesheet from another site, loaded on every
+    page) is refused. Raises ValidationError with a readable message if the file
+    isn't a valid capy-theme export.
     """
     archive = _open(upload)
     manifest = _manifest(archive)
     if not keep_custom_css:
         manifest["theme"]["settings"].pop("custom_css", None)
+    if not can_add_external_fonts:
+        _refuse_new_external_fonts(manifest)
     stored = []  # files saved so far, deleted again if the import fails
     try:
         with transaction.atomic():
@@ -51,14 +56,26 @@ def import_theme(upload, keep_custom_css=True):
     return theme
 
 
+# What reading a damaged zip entry raises: a bad checksum or size, an encrypted
+# entry, or a compression method Python can't unpack.
+DAMAGED_ZIP_ERRORS = (zipfile.BadZipFile, RuntimeError, NotImplementedError, zlib.error, EOFError)
+
+
 def _open(upload):
+    limit = conf.get("CAPY_THEME_IMPORT_MAX_BYTES")  # the zip itself, and all its files unpacked
+    too_big = ValidationError(f"The export is too big (over {limit // 1024 // 1024} MB).")
+    if getattr(upload, "size", None) is not None and upload.size > limit:
+        raise too_big
     try:
         archive = zipfile.ZipFile(upload)
     except zipfile.BadZipFile as error:
         raise ValidationError("That isn't a zip file.") from error
-    limit = conf.get("CAPY_THEME_IMPORT_MAX_BYTES")  # all files in the zip, unpacked
-    if sum(info.file_size for info in archive.infolist()) > limit:
-        raise ValidationError(f"The export is too big (over {limit // 1024 // 1024} MB).")
+    members = archive.infolist()
+    max_files = conf.positive_int("CAPY_THEME_IMPORT_MAX_FILES")
+    if len(members) > max_files:
+        raise ValidationError(f"The export has too many files (over {max_files}).")
+    if sum(info.file_size for info in members) > limit:
+        raise too_big
     return archive
 
 
@@ -67,6 +84,8 @@ def _read(archive, name):
         return archive.read(name)
     except KeyError as error:
         raise ValidationError(f"The export is missing {name}.") from error
+    except DAMAGED_ZIP_ERRORS as error:
+        raise ValidationError("The export is damaged.") from error
 
 
 def _manifest(archive):
@@ -77,7 +96,30 @@ def _manifest(archive):
     problems = sorted(e.message for e in Draft7Validator(SCHEMA).iter_errors(manifest))
     if problems:
         raise ValidationError(["theme.json isn't a capy-theme export:", *problems[:5]])
+    _refuse_reused_paths(manifest)
     return manifest
+
+
+def _refuse_new_external_fonts(manifest):
+    """External fonts the library doesn't have yet need permission to add fonts (#235)."""
+    for font in manifest["fonts"].values():
+        if font["source"] == "external" and not Font.objects.filter(family=font["family"]).exists():
+            raise ValidationError(
+                f"The export adds the external font {font['family']}, which loads a "
+                "stylesheet from another site. Importing it needs permission to add fonts."
+            )
+
+
+def _refuse_reused_paths(manifest):
+    """Each file in the zip may be used once: otherwise one small file could be
+    checked, converted and stored hundreds of times."""
+    paths = [image["path"] for image in manifest["images"].values()]
+    paths += [item["path"] for font in manifest["fonts"].values() for item in font["files"]]
+    seen = set()
+    for path in paths:
+        if path in seen:
+            raise ValidationError(f"theme.json uses {path} more than once.")
+        seen.add(path)
 
 
 def _create(archive, manifest, stored):

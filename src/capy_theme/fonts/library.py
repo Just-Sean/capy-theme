@@ -1,9 +1,12 @@
 """Font roles and stacks, and copying a theme's chosen fonts into revisions."""
 
 import json
+import re
 from pathlib import Path
 
 from django.core.files.storage import default_storage
+
+from .models import FALLBACK_PATTERN, UNICODE_RANGE_PATTERN
 
 ROLES = {
     "body": "Body text",
@@ -64,29 +67,62 @@ def snapshot_fonts(settings):
     return {role: resolve(fonts[pk]) for role, pk in chosen.items() if pk in fonts}
 
 
+def safe_fallback(value, role):
+    """A fallback stack that's safe in CSS, or the role's default.
+
+    Values are checked when saved (#235), but revisions and fonts saved before that
+    may hold anything, so CSS output checks again.
+    """
+    if value and re.match(FALLBACK_PATTERN, value):
+        return value
+    return DEFAULT_FALLBACK[role]
+
+
+def safe_unicode_range(value):
+    """A unicode-range value that's safe in CSS, or "" (all characters)."""
+    return value if value and re.match(UNICODE_RANGE_PATTERN, value) else ""
+
+
 def stack(role, font):
     """The font-family value for a role: the font, then its fallbacks."""
-    family = font["family"].replace('"', "")
+    fallback = safe_fallback(font["fallback"], role)
     if font["source"] == "system":
-        return font["fallback"] or DEFAULT_FALLBACK[role]
-    return f'"{family}", {font["fallback"] or DEFAULT_FALLBACK[role]}'
+        return fallback
+    return f"{css_string(font['family'])}, {fallback}"
 
 
 def preview_stack(font):
     """A font-family value for showing a sample of a library font."""
+    fallback = safe_fallback(font.fallback_stack, "body")
     if font.source == "system":
-        return font.fallback_stack or DEFAULT_FALLBACK["body"]
-    family = font.family.replace('"', "")
-    return f'"{family}", {font.fallback_stack or DEFAULT_FALLBACK["body"]}'
+        return fallback
+    return f"{css_string(font.family)}, {fallback}"
+
+
+CSS_SAFE = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_.:/?=&%~+,@#!$*")
+
+
+def css_string(value):
+    """`value` as a quoted CSS string that can't end the string, a rule or a <style> block.
+
+    Letters, digits and URL punctuation stay as they are; anything else becomes a
+    CSS escape (e.g. < becomes \\3c), which CSS reads back as the same character.
+    """
+    return '"' + "".join(c if c in CSS_SAFE else f"\\{ord(c):x} " for c in str(value)) + '"'
 
 
 def preview_faces(font):
-    """@font-face rules for a library font's regular file, for previews."""
+    """@font-face rules for a library font's regular file, for previews.
+
+    Every value from the font's data goes through css_string() or int(), so the
+    result is safe inside the admin's <style> block (#235).
+    """
     files = [f for f in font.files.all() if f.style == "normal"] or list(font.files.all())
-    family = font.family.replace('"', "")
+    family = css_string(font.family)
     return "".join(
-        f'@font-face{{font-family:"{family}";src:url("{file_url(f.file.name)}") format("woff2");'
-        f"font-weight:{f.weight};font-style:{f.style};font-display:swap}}"
+        f"@font-face{{font-family:{family};src:url({css_string(file_url(f.file.name))}) "
+        f'format("woff2");font-weight:{int(f.weight)};'
+        f"font-style:{'italic' if f.style == 'italic' else 'normal'};font-display:swap}}"
         for f in files
     )
 

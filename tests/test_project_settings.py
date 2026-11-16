@@ -2,6 +2,7 @@
 
 import io
 import re
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -11,6 +12,7 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template import Context, Template
 from django.urls import reverse
+from fontTools.ttLib import TTFont
 from PIL import Image
 
 from capy_theme import conf
@@ -24,7 +26,7 @@ from capy_theme.portability.importing import import_theme
 from capy_theme.themes import active
 from capy_theme.themes.catalog import get_builtin_themes
 from capy_theme.themes.publishing import publish
-from tests.support.fonts import ttf_bytes
+from tests.support.fonts import many_points_font, ttf_bytes
 from tests.support.images import gif
 
 pytestmark = pytest.mark.django_db
@@ -115,6 +117,32 @@ def test_font_max_bytes(settings):
         prepare(ttf_bytes(), "font.ttf")
 
 
+def test_font_max_memory_bytes(settings):
+    settings.CAPY_THEME_FONT_MAX_MEMORY_BYTES = 128 * 1024 * 1024
+    prepare(ttf_bytes(), "font.ttf")
+    with pytest.raises(ValidationError, match="too complex"):
+        prepare(many_points_font(150), "font.ttf")  # needs well over 200 MB
+
+
+def test_font_max_seconds(settings):
+    settings.CAPY_THEME_FONT_MAX_SECONDS = 5
+    prepare(ttf_bytes(), "font.ttf")
+    settings.CAPY_THEME_FONT_MAX_SECONDS = "5"
+    with pytest.raises(ImproperlyConfigured):
+        prepare(ttf_bytes(), "font.ttf")
+
+
+def test_font_max_unpacked_bytes(settings):
+    woff2 = io.BytesIO()
+    font = TTFont(io.BytesIO(ttf_bytes()))
+    font.flavor = "woff2"
+    font.save(woff2)
+    prepare(woff2.getvalue(), "font.woff2")
+    settings.CAPY_THEME_FONT_MAX_UNPACKED_BYTES = 100
+    with pytest.raises(ValidationError, match="too big once unpacked"):
+        prepare(woff2.getvalue(), "font.woff2")
+
+
 def png(size=(200, 100)):
     buffer = io.BytesIO()
     Image.new("RGB", size, "red").save(buffer, "PNG")
@@ -182,3 +210,22 @@ def test_animation_limits_must_be_positive_whole_numbers(settings, name, value):
     setattr(settings, name, value)
     with pytest.raises(ImproperlyConfigured, match=f"{name} must be a positive whole number"):
         prepare_image(gif(frames=2), "a.gif", "logo_main")
+
+
+def test_image_max_pixels(settings):
+    settings.CAPY_THEME_IMAGE_MAX_PIXELS = 20_000
+    with pytest.raises(ValidationError, match="at most 20,000 pixels"):
+        prepare_image(png((200, 101)), "big.png", "logo_main")
+    assert prepare_image(png((200, 100)), "ok.png", "logo_main")["width"] == 200
+
+
+def test_import_max_files(settings):
+    settings.CAPY_THEME_IMPORT_MAX_FILES = 1  # theme.json and one image: two files
+    data = export_theme(Theme.objects.create(name="Main", slug="main"))
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            archive.writestr("theme.json", original.read("theme.json"))
+        archive.writestr("images/extra.png", b"")
+    with pytest.raises(ValidationError, match="too many files"):
+        import_theme(io.BytesIO(buffer.getvalue()))

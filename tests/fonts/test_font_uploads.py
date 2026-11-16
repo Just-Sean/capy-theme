@@ -8,9 +8,11 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from fontTools.ttLib import TTFont
 
+from capy_theme.admin.fonts import FontFileForm
 from capy_theme.css.stylesheet import render_css
+from capy_theme.fonts.converting import SUBSETS, codepoints
 from capy_theme.fonts.models import Font
-from capy_theme.fonts.uploads import SUBSETS, codepoints, prepare
+from capy_theme.fonts.uploads import prepare
 from capy_theme.models import Theme
 from capy_theme.themes.publishing import publish
 from tests.support.fonts import ttf_bytes
@@ -124,3 +126,13 @@ def test_the_issue_check_renamed_image_is_rejected_in_the_admin(client, django_u
     assert response.status_code == 200
     assert "isn&#x27;t a font" in response.content.decode()
     assert not Font.objects.filter(family="Fake").exists()
+
+
+def test_an_upload_over_the_size_limit_is_refused_before_it_is_read():
+    """The file says it's 6 MB but holds nothing: reading it would give "isn't a
+    font", so "too big" shows it was refused on its size alone."""
+    upload = SimpleUploadedFile("big.ttf", b"", "font/ttf")
+    upload.size = 6 * 1024 * 1024
+    form = FontFileForm(data={"subset": "all"}, files={"file": upload})
+    assert not form.is_valid()
+    assert form.errors["file"] == ["The font file is too big (6144 KB; the limit is 5120 KB)."]
