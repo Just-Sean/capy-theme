@@ -1,5 +1,6 @@
 """Tests for importing Google Fonts (issue #27). No network: downloads are faked."""
 
+import http.client
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -342,3 +343,36 @@ def test_an_import_refused_partway_leaves_no_files_behind(tmp_path):
         import_family("Lora", subsets=("latin", "cyrillic"), download=HalfBroken())
     assert not Font.objects.filter(family="Lora").exists()
     assert not [path for path in tmp_path.rglob("*") if path.is_file()]
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        urllib.error.URLError("connection reset"),
+        TimeoutError("timed out"),
+        urllib.error.HTTPError("https://fonts.gstatic.com/x", 503, "Unavailable", {}, None),
+        ConnectionResetError("connection reset by peer"),  # while reading the body
+        http.client.IncompleteRead(b"wOF2"),  # the download was cut short
+    ],
+)
+def test_a_failed_font_file_download_says_google_couldnt_be_reached(failure):
+    # The CSS answers, then a file download fails: a clear message, nothing kept (#254).
+    class FilesFail(FakeGoogle):
+        def __call__(self, url, timeout=60):
+            if url.startswith("https://fonts.gstatic.com/"):
+                raise failure
+            return super().__call__(url, timeout)
+
+    with pytest.raises(ValidationError, match="Google Fonts couldn't be reached"):
+        import_family("Lora", download=FilesFail())
+    assert not Font.objects.filter(family="Lora").exists()
+
+
+def test_a_storage_error_isnt_reported_as_google_unreachable(monkeypatch):
+    # Only download failures get that message; a failure saving the file is a real error.
+    def disk_full(*args, **kwargs):
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setattr("capy_theme.fonts.models.FontFile.save", disk_full)
+    with pytest.raises(OSError, match="No space left"):
+        import_family("Lora", download=FakeGoogle())

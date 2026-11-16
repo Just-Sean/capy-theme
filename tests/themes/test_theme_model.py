@@ -183,3 +183,14 @@ def test_admin_creates_a_theme(admin_client_logged_in):
     assert response.status_code == 302, response.content
     theme = Theme.objects.get(slug="holiday")
     assert (theme.light_base, theme.dark_base) == ("cupcake", "dracula")
+
+
+def test_the_slug_default_is_reserved():
+    # /theme/choose/default/ is the picker's "Site default", so visitors could never
+    # choose a theme with this slug (#254).
+    with pytest.raises(ValidationError, match='"default" is reserved'):
+        Theme.objects.create(name="Default", slug="default")
+    form = ThemeForm(
+        data={"name": "Default", "slug": "default", "light_base": "light", "dark_base": "dark"}
+    )
+    assert not form.is_valid() and "slug" in form.errors

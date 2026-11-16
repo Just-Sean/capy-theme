@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- **Images uploaded in the admin get their copies:** header logos uploaded in the
+  theme page's Images list now get their smaller copies, and sharing images their
+  1200 × 630 copy, as editor uploads already did. Before, link previews had no
+  image (#254).
+- **The slug `default` is reserved:** visitors could never choose a theme with it,
+  since `/theme/choose/default/` means the site's own theme. An imported theme
+  with that slug gets `default-imported` (#254).
+- **A failed Google font file download** says "Google Fonts couldn't be reached"
+  instead of giving a server error (#254).
+- **Animated header logos keep moving:** they get no resized copies (those kept
+  only the first frame), so the original is used (#254).
+- **Published fonts follow `MEDIA_URL`:** revisions now store each font file's
+  name and build its URL when the CSS is made, as images do, so a new media
+  address or CDN applies to published themes too. Revisions published before
+  keep their stored URLs. Themes using uploaded or Google fonts show "Unpublished
+  changes" until they're published again (#254).
 - **A theme's name can't add CSS to pages:** a name containing `*/` ended the
   comment it's written into at the top of the theme stylesheet (and the editor's
   preview and the daisyUI download), so anyone who could rename a theme could add

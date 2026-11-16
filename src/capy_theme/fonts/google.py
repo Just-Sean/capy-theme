@@ -5,6 +5,7 @@ them once from fonts.gstatic.com, checks them, and stores them like uploads.
 Visitors' browsers never contact Google.
 """
 
+import http.client
 import logging
 import re
 import urllib.error
@@ -107,6 +108,21 @@ def available_faces(family, combos, download=fetch):
     return faces
 
 
+# What a failed, cut-off or timed-out download raises (HTTPError is a URLError;
+# a connection reset or a short read while reading the body isn't wrapped in one).
+UNREACHABLE = (
+    urllib.error.URLError,
+    TimeoutError,
+    ConnectionError,
+    http.client.HTTPException,
+)
+
+
+def _unreachable(family, error):
+    logger.warning("Google Fonts couldn't be reached for %r: %s", family, error)
+    return ValidationError(f"Google Fonts couldn't be reached ({error}).")
+
+
 def import_family(family, weights=(400, 700), italic=True, subsets=("latin",), download=fetch):
     """Download a Google font and add it to the library. Returns the new Font.
 
@@ -121,9 +137,8 @@ def import_family(family, weights=(400, 700), italic=True, subsets=("latin",), d
     combos = [(0, w) for w in weights] + ([(1, w) for w in weights] if italic else [])
     try:
         faces = [f for f in available_faces(family, combos, download) if f["subset"] in subsets]
-    except (urllib.error.URLError, TimeoutError) as error:
-        logger.warning("Google Fonts couldn't be reached for %r: %s", family, error)
-        raise ValidationError(f"Google Fonts couldn't be reached ({error}).") from error
+    except UNREACHABLE as error:
+        raise _unreachable(family, error) from error
     if not faces:
         raise ValidationError(
             f"Google Fonts has no “{family}” in the chosen weights and character sets. "
@@ -132,9 +147,11 @@ def import_family(family, weights=(400, 700), italic=True, subsets=("latin",), d
     saved = []  # files stored so far, deleted again if the import fails
     try:
         font = _store(family, faces, download, saved)
-    except Exception:
+    except Exception as error:
         for field_file in saved:
             field_file.delete(save=False)
+        if isinstance(error, UNREACHABLE):  # a font file's download failed (#254)
+            raise _unreachable(family, error) from error
         raise
     logger.info("Imported Google font %r: %d font file(s) stored.", family, len(saved))
     return font

@@ -21,7 +21,7 @@ from .. import conf
 from ..fonts.models import Font, FontFile
 from ..fonts.uploads import prepare
 from ..images.uploads import add_asset
-from ..themes.models.theme import Theme
+from ..themes.models.theme import RESERVED_SLUG, Theme
 
 logger = logging.getLogger(__name__)
 
@@ -207,6 +207,8 @@ def _known(mapping, key):
 def _free(field, value):
     """`value`, or with " (imported)" / "-imported" added until no theme has it."""
     taken = set(Theme.objects.values_list(field, flat=True))
+    if field == "slug":
+        taken.add(RESERVED_SLUG)  # an export from before 1.0 may use it (#254)
     if value not in taken:
         return value
     suffix = " (imported{})" if field == "name" else "-imported{}"

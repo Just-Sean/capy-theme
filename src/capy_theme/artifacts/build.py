@@ -24,7 +24,7 @@ from ..colors.values import effective_values
 from ..css.backgrounds import VARIABLES as BACKGROUND_SLOTS
 from ..css.shape import EFFECTS, SIZES
 from ..css.stylesheet import stylesheet_url
-from ..fonts.library import ROLES, stack
+from ..fonts.library import ROLES, font_file_url, stack
 from ..images.icons import icon_urls
 from ..images.logos import HEADER_SLOTS, LOGO_SLOTS, resolve
 from ..images.sharing import sharing_image
@@ -97,7 +97,7 @@ def get_artifacts(request=None):
                 "stylesheet": font.get("stylesheet") or "",
                 "files": [
                     {
-                        "url": url(f["url"]),
+                        "url": url(font_file_url(f)),
                         "weight": f["weight"],
                         "style": f["style"],
                         "unicode_range": f["unicode_range"],

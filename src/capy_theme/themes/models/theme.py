@@ -13,6 +13,8 @@ from ...images.models import ThemeAsset
 from ..catalog import builtin_values
 from ..validation import validate_base, validate_settings
 
+RESERVED_SLUG = "default"  # the visitor theme picker's "Site default"
+
 
 class Theme(models.Model):
     """A saved theme: two built-in daisyUI bases plus the overrides in `settings`.
@@ -96,6 +98,10 @@ class Theme(models.Model):
         image_errors = self._image_errors()
         if image_errors:
             errors["settings"] = errors.get("settings", []) + image_errors
+        if self.slug == RESERVED_SLUG:
+            # /theme/choose/default/ means the site's own theme, so visitors could
+            # never choose a theme with this slug (#254).
+            errors["slug"] = [f'"{RESERVED_SLUG}" is reserved; choose another slug.']
         for field, scheme in (("light_base", "light"), ("dark_base", "dark")):
             try:
                 validate_base(getattr(self, field), scheme)

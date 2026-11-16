@@ -43,7 +43,7 @@ def resolve(font):
         "stylesheet": font.stylesheet_url,
         "files": [
             {
-                "url": file_url(f.file.name),
+                "file": f.file.name,  # the URL is built when used (#254)
                 "weight": f.weight,
                 "style": f.style,
                 "subset": f.subset,
@@ -56,6 +56,15 @@ def resolve(font):
 
 def file_url(name):
     return default_storage.url(name)
+
+
+def font_file_url(entry):
+    """The URL of one font file in a snapshot.
+
+    Revisions store the file's name, so a new MEDIA_URL or CDN applies to them
+    too; revisions published before 1.0 stored the URL itself (#254).
+    """
+    return file_url(entry["file"]) if "file" in entry else entry["url"]
 
 
 def snapshot_fonts(settings):
@@ -157,6 +166,7 @@ def preload_urls(fonts):
                 f["subset"] not in ("latin", "all"),
             ),
         )[0]
-        if best["url"] not in urls:
-            urls.append(best["url"])
+        best_url = font_file_url(best)
+        if best_url not in urls:
+            urls.append(best_url)
     return urls
