@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_POST
 
 from ..images.uploads import add_asset, asset_data
 from ..models import Theme
@@ -15,7 +15,6 @@ from .access import can_edit, can_publish
 from .preview import preview
 from .saving import save_draft, suggestions
 from .state import draft_state
-from .visitors import visitor_summary, visitor_view
 
 
 def editor_state(request, pk):
@@ -23,7 +22,7 @@ def editor_state(request, pk):
     if not can_edit(request.user):
         return JsonResponse({"error": "You can't edit themes."}, status=403)
     theme = get_object_or_404(Theme.objects.select_related("live_revision"), pk=pk)
-    response = JsonResponse(draft_state(theme, request.user, request))
+    response = JsonResponse(draft_state(theme, request.user))
     response["Cache-Control"] = "no-store"
     return response
 
@@ -91,7 +90,7 @@ def editor_save(request, pk):
         save_draft(theme, data)
     except ValidationError as error:
         return JsonResponse({"errors": error.messages}, status=400)
-    return JsonResponse({"saved": True, "state": draft_state(theme, request.user, request)})
+    return JsonResponse({"saved": True, "state": draft_state(theme, request.user)})
 
 
 @require_POST
@@ -123,9 +122,7 @@ def editor_publish(request, pk):
             },
             status=409,
         )
-    return JsonResponse(
-        {"published": revision.number, "state": draft_state(theme, request.user, request)}
-    )
+    return JsonResponse({"published": revision.number, "state": draft_state(theme, request.user)})
 
 
 @require_POST
@@ -154,20 +151,3 @@ def editor_upload(request, pk):
     return JsonResponse(
         {"uploaded": asset_data(asset), "assets": [asset_data(a) for a in theme.assets.all()]}
     )
-
-
-@require_GET
-def editor_visitor_view(request):
-    """What visitors see (JSON): the summary, and the published CSS for the view.
-
-    ?theme=<offered slug> or ?date=YYYY-MM-DD pick what to show. Writes nothing.
-    """
-    if not can_edit(request.user):
-        return JsonResponse({"error": "You can't edit themes."}, status=403)
-    try:
-        view = visitor_view(request.GET.get("theme", ""), request.GET.get("date", ""), request)
-    except ValidationError as error:
-        return JsonResponse({"errors": error.messages}, status=400)
-    response = JsonResponse({**view, "summary": visitor_summary(request)})
-    response["Cache-Control"] = "no-store"
-    return response

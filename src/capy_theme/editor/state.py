@@ -16,7 +16,6 @@ from ..images.uploads import asset_data, byte_limit
 from ..themes.catalog import get_builtin_themes
 from .access import can_publish
 from .preview import preview
-from .visitors import visitor_summary
 
 
 def editor_urls(theme):
@@ -28,11 +27,10 @@ def editor_urls(theme):
         "publish": reverse("capy_theme:editor_publish", args=[theme.pk]),
         "upload": reverse("capy_theme:editor_upload", args=[theme.pk]),
         "components": reverse("capy_theme:editor_components", args=[theme.pk]),
-        "visitor_view": reverse("capy_theme:editor_visitor_view"),
     }
 
 
-def draft_state(theme, user, request=None):
+def draft_state(theme, user):
     """Everything the editor needs about a theme's draft, as JSON-ready data."""
     return {
         "id": theme.pk,
@@ -47,7 +45,6 @@ def draft_state(theme, user, request=None):
         "urls": editor_urls(theme),
         "assets": [asset_data(a) for a in theme.assets.all()],
         "controls": controls(),
-        "visitors": visitor_summary(request),
         **preview(theme, {}),
     }
 

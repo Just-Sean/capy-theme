@@ -6,8 +6,8 @@
 
 1. `{% theme_head %}` calls `mount.py`. For staff who can edit, it adds the editor's script and settings to the page.
 2. The script (`static/capy_theme/editor/`) loads the draft from `state/`, and sends every change to `preview/`, which returns CSS made by **the same code as publishing**.
-3. **Save draft** and **Publish** call `save/` and `publish/`. Uploads go to `upload/`.
-4. **See it as a visitor** uses `visitor-view/`. The **Components view** is its own page (`components/`) in an iframe.
+3. **Save draft** and **Publish** call `save/` and `publish/`; **Revert** goes back to the saved draft without a request. Uploads go to `upload/`.
+4. The **Components view** is its own page (`components/`) in an iframe.
 
 Every endpoint requires staff with the change-theme permission (publishing also needs `publish_theme`), uses Django's CSRF protection for POSTs, and never caches.
 
@@ -19,7 +19,6 @@ Every endpoint requires staff with the change-theme permission (publishing also 
 | `preview.py` | Applies unsaved values and previews them (writes nothing) |
 | `saving.py` | Save draft; color suggestions |
 | `views.py` | The JSON endpoints |
-| `visitors.py` | "See it as a visitor" |
 | `live_edit_view.py` | The live edit page at `/theme/live-edit/` (the header and every component, with the editor open) |
 | `components_view.py` | The Components view page and icon preview |
 | `images_panel.py` | The Components view's images section |

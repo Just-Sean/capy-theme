@@ -61,7 +61,7 @@
       doc.capyDraftSheet = new frame.contentWindow.CSSStyleSheet();
       doc.adoptedStyleSheets = [doc.capyDraftSheet];
     }
-    doc.capyDraftSheet.replaceSync(editor.viewCss || ui.latest.css);
+    doc.capyDraftSheet.replaceSync(ui.latest.css);
   }
 
   function build() {
@@ -105,7 +105,6 @@
     reloadIfImagesChanged();
   });
   document.addEventListener("capy-editor:loaded", pushCss);
-  document.addEventListener("capy-editor:view", pushCss);
   // After Save draft or Publish, reload it so its images section is up to date.
   document.addEventListener("capy-editor:saved", function () {
     if (frame && frame.contentWindow) frame.contentWindow.location.reload();
@@ -126,7 +125,7 @@
         if (view && !view.hidden) hide();
         else show();
       });
-      return el("section", { class: "capy-editor-section", "data-capy-keep": "" }, [
+      return el("section", { class: "capy-editor-section" }, [
         toggle,
         el("p", { class: "capy-editor-note", text: "Every daisyUI component in the draft theme, light and dark, updating as you edit." }),
       ]);

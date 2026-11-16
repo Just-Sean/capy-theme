@@ -179,3 +179,27 @@ def test_save_and_publish_keep_focus_on_their_button():
     script = (STATIC / "controls" / "actions.js").read_text()
     assert 'refocus("[data-capy-save]")' in script
     assert 'refocus("[data-capy-publish]")' in script
+
+
+# "See it as a visitor" is gone; Revert goes back to the saved draft (#261).
+
+
+def test_see_it_as_a_visitor_is_gone(editor_client, active):
+    assert editor_client.get("/theme/editor/visitor-view/").status_code == 404
+    state = editor_client.get(state_url(active)).json()
+    assert "visitors" not in state and "visitor_view" not in state["urls"]
+    page = editor_client.get(PAGE).content.decode()
+    assert "visitor.js" not in page and "data-visitor-view-url" not in page
+    assert not (STATIC / "controls" / "visitor.js").exists()
+
+
+def test_revert_goes_back_to_the_saved_draft():
+    actions = (STATIC / "controls" / "actions.js").read_text()
+    core = (STATIC / "controls" / "core.js").read_text()
+    script = (STATIC / "editor.js").read_text()
+    assert '"data-capy-revert": "", text: "Revert"' in actions
+    assert "editor.isDirty()" in actions and "window.confirm(" in actions
+    assert "ui.build(ui.saved)" in actions and "ui.saved = state;" in core
+    # A preview still on its way can't put the discarded changes back.
+    assert "editor.cancelPreview();" in actions
+    assert "if (round !== previewRound) return result;" in script

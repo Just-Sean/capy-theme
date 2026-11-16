@@ -29,7 +29,6 @@ urlpatterns = [
         name="editor_icon_preview",
     ),
     path("editor/<int:pk>/custom.css", custom_css_view.editor_custom_css, name="editor_custom_css"),
-    path("editor/visitor-view/", editor_views.editor_visitor_view, name="editor_visitor_view"),
     path("editor/<int:pk>/state/", editor_views.editor_state, name="editor_state"),
     path("editor/<int:pk>/preview/", editor_views.editor_preview, name="editor_preview"),
     path(

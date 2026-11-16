@@ -10,7 +10,6 @@
 | `editor_save` | `POST editor/<id>/save/` | Save draft, return the new state |
 | `editor_publish` | `POST editor/<id>/publish/` | Publish (needs `publish_theme`), with an optional note |
 | `editor_upload` | `POST editor/<id>/upload/` | Upload an image through the same checks as the admin |
-| `editor_visitor_view` | `GET editor/visitor-view/` | "See it as a visitor" data |
 
 **Errors come back as JSON with clear messages:**
 

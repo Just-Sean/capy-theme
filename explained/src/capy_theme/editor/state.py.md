@@ -8,7 +8,7 @@
   - its CSS, the live revision number, and whether there are unpublished changes
   - whether this user can publish
   - the theme's uploaded images
-  - the visitor summary, the current values and contrast
+  - the current values and contrast
 - **`controls()`:** what the panel offers, built from the same data files the admin uses, so the two always agree:
   - the base theme lists and the color groups
   - shape sizes with their limits and steps, and effects

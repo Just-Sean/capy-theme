@@ -68,6 +68,8 @@ Every change shows on the page straight away (in your browser only).
 - **Save draft** stores the panel's values in the theme's draft (needs the
   change permission). Visitors don't see it until it's published. Only the bases,
   colors and shape are changed; the name, branding and mode stay as they are.
+- **Revert** throws away the unsaved changes and goes back to the saved draft
+  (it asks first). Nothing on the server changes.
 - **Publish** (needs `publish_theme`) saves any unsaved changes first, then
   publishes, with an optional note, through the same revisions as the admin's
   Publish page.
@@ -91,26 +93,6 @@ Every change shows on the page straight away (in your browser only).
   as publishing (so the preview matches what would be published), are for staff
   with change permission only, and **never write anything**. The preview needs
   Django's CSRF token, which the page passes to the script.
-
-## See it as a visitor
-
-**See it as a visitor** at the top of the editor panel shows the page as visitors
-see it right now: the **published** theme, not your draft. The draft controls
-are hidden while it's on; turning it off brings the draft back. Nothing is saved
-or changed. Options:
-
-- **Mode:** as now, light, dark, or the device setting.
-- **Theme:** the site's theme, or one of the themes offered to visitors (as a
-  visitor's own choice would show it).
-- **On date:** the site's theme at noon on that day, including scheduled themes,
-  to check a schedule before it starts.
-
-Below the options, a summary lists what's set up for visitors: the live theme,
-its default mode and whether visitors can switch, the offered themes, and
-running and upcoming schedules with their dates. The Components view follows the
-same view while it's on. The data comes from `/theme/editor/visitor-view/`
-(staff who can edit only; `?theme=<slug>` or `?date=YYYY-MM-DD`), using the same
-rules as the live site.
 
 ## The Components view
 
