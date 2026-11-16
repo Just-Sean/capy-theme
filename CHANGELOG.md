@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Docs:** Python 3.14+ and `USE_TZ = True` are required; SQLite and PostgreSQL
+  are the supported databases; run `collectstatic` on install and after updates;
+  fonts on another media origin need `Access-Control-Allow-Origin`; the
+  permissions table is up to date; `export_theme`/`import_theme` called from code
+  need the user's permissions passed in; after upgrading to 1.0, re-run
+  `theme_rebuild_images` and publish each theme again, and rename any theme
+  whose slug is `default` (#255).
 - **Images uploaded in the admin get their copies:** header logos uploaded in the
   theme page's Images list now get their smaller copies, and sharing images their
   1200 × 630 copy, as editor uploads already did. Before, link previews had no
