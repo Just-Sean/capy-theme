@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from django.contrib.auth.models import Permission
+from django.template.loader import render_to_string
 from django.urls import reverse
 
 from capy_theme.editor.components_view import COMPONENTS
@@ -84,12 +85,16 @@ def test_bundled_stylesheet_has_the_components():
 
 
 def test_the_page_has_nothing_a_strict_csp_would_block(editor_client, url):
-    # #244: no inline handlers or style attributes, and no <form> whose Enter
-    # key could reload the page (the sample form is a <div>).
+    # #244: no inline handlers or style attributes.
     html = editor_client.get(url).content.decode()
     assert " style=" not in html
     assert " onsubmit=" not in html and " onclick=" not in html
-    assert "<form" not in html
+
+
+def test_sample_fields_arent_a_form():
+    # Enter in a sample field must never reload the page, so they're not in a <form> (#244).
+    html = render_to_string("capy_theme/editor/components/forms.html", {"mode": "light"})
+    assert "Form fields" in html and "<form" not in html
 
 
 def test_radial_progress_value_comes_from_the_bundled_stylesheet(editor_client, url):
