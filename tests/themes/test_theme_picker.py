@@ -160,3 +160,10 @@ def test_offering_isnt_an_unpublished_change(themes):
     secret.offered_to_visitors = True
     secret.save()
     assert not secret.has_unpublished_changes
+
+
+@pytest.mark.parametrize("secure", [True, False])
+def test_the_choice_cookie_is_secure_on_https(themes, client, secure):
+    # #253
+    response = client.get(reverse("capy_theme:choose_theme", args=["ocean"]), secure=secure)
+    assert bool(response.cookies[CHOICE_COOKIE]["secure"]) is secure

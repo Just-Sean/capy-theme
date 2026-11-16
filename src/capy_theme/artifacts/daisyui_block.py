@@ -8,6 +8,7 @@ extras need {% theme_head %}.
 """
 
 from ..colors.values import effective_values
+from ..css.stylesheet import css_comment
 
 # The variables a daisyUI theme block may set.
 _PREFIXES = ("--color-", "--radius-", "--size-")
@@ -17,8 +18,8 @@ _EXACT = ("--border", "--depth", "--noise")
 def build_block(theme, revision):
     """The CSS text: two @plugin "daisyui/theme" blocks for the published revision."""
     blocks = [
-        f"/* {theme.name} (revision {revision.number}), exported by capy-theme as daisyUI\n"
-        "   themes. Paste it into your Tailwind source after the daisyUI plugin. */"
+        f"/* {css_comment(theme.name)} (revision {revision.number}), exported by capy-theme as\n"
+        "   daisyUI themes. Paste it into your Tailwind source after the daisyUI plugin. */"
     ]
     for scheme in ("light", "dark"):
         values = effective_values(revision.snapshot, scheme)

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **A theme's name can't add CSS to pages:** a name containing `*/` ended the
+  comment it's written into at the top of the theme stylesheet (and the editor's
+  preview and the daisyUI download), so anyone who could rename a theme could add
+  CSS to every page. It's now kept inside the comment (#253).
+- **Admin image uploads are refused on their size before being read** (#253).
+- **The mode and theme-choice cookies are `Secure` on HTTPS** (#253).
 - **Theme imports can't unpack more than they say:** a zip entry that claimed a
   few bytes was unpacked in full before being refused, so a tiny crafted import
   could use hundreds of MB. Each file is now read up to its stated size only, and

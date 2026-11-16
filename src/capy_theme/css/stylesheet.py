@@ -44,6 +44,12 @@ def render_css(revision):
     )
 
 
+def css_comment(text):
+    """`text` made safe inside /* ... */: a "*/" in it would end the comment early
+    and turn the rest into real CSS (e.g. a theme named "x */ @import ...") (#253)."""
+    return text.replace("*/", "* /")
+
+
 def snapshot_css(snapshot, comment):
     """Return the CSS for a snapshot of a theme's look (published or draft).
 
@@ -54,7 +60,7 @@ def snapshot_css(snapshot, comment):
     light = effective_values(snapshot, "light") | background_variables(snapshot, "light")
     dark = effective_values(snapshot, "dark") | background_variables(snapshot, "dark")
     lines = [
-        f"/* {comment} */",
+        f"/* {css_comment(comment)} */",
         ":root {",
         *_block("light", light, indent="  "),
         "}",

@@ -9,7 +9,7 @@ from capy_theme.admin.theme_form import ThemeForm
 from capy_theme.context_processors import theme as theme_context
 from capy_theme.models import Theme
 from capy_theme.themes.active import activate
-from capy_theme.themes.mode import COOKIE_MAX_AGE, COOKIE_NAME
+from capy_theme.themes.mode import COOKIE_MAX_AGE, COOKIE_NAME, head_script
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -118,3 +118,17 @@ def test_mode_settings_are_published_like_everything_else(rf):
     assert render("{% theme_html_attrs %}", get(rf)) == ""  # not published yet
     publish(theme)
     assert render("{% theme_html_attrs %}", get(rf)) == 'data-theme="capy-dark"'
+
+
+# Secure cookies on HTTPS (#253).
+
+
+@pytest.mark.parametrize("secure", [True, False])
+def test_the_mode_cookie_is_secure_on_https(client, secure):
+    live()
+    response = client.get(reverse("capy_theme:set_mode", args=["dark"]), secure=secure)
+    assert bool(response.cookies[COOKIE_NAME]["secure"]) is secure
+
+
+def test_the_head_script_marks_its_cookie_secure_on_https():
+    assert "+(location.protocol==='https:'?';secure':'');" in head_script(live().live_revision)

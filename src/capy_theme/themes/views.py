@@ -29,7 +29,12 @@ def set_mode(request, mode):
     if theme is not None and theme.live_revision is not None:
         if mode_settings(theme.live_revision)[1]:
             response.set_cookie(
-                COOKIE_NAME, chosen, max_age=COOKIE_MAX_AGE, samesite="Lax", httponly=False
+                COOKIE_NAME,
+                chosen,
+                max_age=COOKIE_MAX_AGE,
+                samesite="Lax",
+                httponly=False,
+                secure=request.is_secure(),
             )
     return response
 
@@ -53,6 +58,7 @@ def choose_theme(request, slug):
             max_age=COOKIE_MAX_AGE,
             samesite="Lax",
             httponly=True,
+            secure=request.is_secure(),
         )
     return response
 

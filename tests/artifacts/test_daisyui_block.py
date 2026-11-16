@@ -93,3 +93,12 @@ def test_the_issue_check_tailwind_builds_it(client, live, tmp_path):
     assert "main-light" in built and "main-dark" in built
     assert "oklch(65% 0.24 350)" in built
     assert "prefers-color-scheme: dark" in built
+
+
+def test_a_name_with_a_comment_end_stays_inside_the_comment(client, live):
+    # #253: the theme name goes into the file's opening comment.
+    Theme.objects.filter(pk=live.theme_id).update(name="x */ :root { color: red } /*")
+    cache.clear()
+    css = client.get(URL).content.decode()
+    comment = css.split("*/", 1)[0]
+    assert "x * / :root { color: red }" in comment
