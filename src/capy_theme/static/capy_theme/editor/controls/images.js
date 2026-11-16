@@ -85,8 +85,7 @@
           editor.status(error.message, true);
         });
     });
-    return el("section", { class: "capy-editor-section" }, [
-      el("h3", { text: "Images" }),
+    return ui.section("Images", [
       el("label", { class: "capy-editor-field" }, [el("span", { text: "Slot" }), fields.slot]),
       el("label", { class: "capy-editor-field" }, [el("span", { text: "Mode" }), fields.mode]),
       el("label", { class: "capy-editor-field" }, [el("span", { text: "Alt text" }), fields.alt]),

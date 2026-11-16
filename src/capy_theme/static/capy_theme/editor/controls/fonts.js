@@ -58,7 +58,7 @@
     var note = ui.spec.fonts.length
       ? null
       : el("p", { class: "capy-editor-note", text: "The font library is empty. Add fonts in the admin under Capy Theme → Fonts." });
-    return el("section", { class: "capy-editor-section" }, [el("h3", { text: "Fonts and type" }), note].concat(rows));
+    return ui.section("Fonts and type", [note].concat(rows));
   }
 
   function fill() {

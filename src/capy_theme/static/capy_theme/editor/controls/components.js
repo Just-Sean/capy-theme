@@ -125,7 +125,7 @@
         if (view && !view.hidden) hide();
         else show();
       });
-      return el("section", { class: "capy-editor-section" }, [
+      return ui.section("Components", [
         toggle,
         el("p", { class: "capy-editor-note", text: "Every daisyUI component in the draft theme, light and dark, updating as you edit." }),
       ]);

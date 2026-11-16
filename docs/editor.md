@@ -50,7 +50,9 @@ permission; visitors get none of its files. To hide the corner button (for
 example, to put your own link to `?edit=<id>` somewhere), set
 `CAPY_THEME_EDITOR_BUTTON = False`.
 
-The panel has:
+Every section of the panel folds (click its title), and all start open, except
+**Save and publish**, which stays open. A section you fold stays folded after
+Save draft or Revert. The panel has:
 
 - **Base themes:** the light and dark base.
 - **Colors:** Light and Dark tabs, with Basic open and Advanced and Expert

@@ -31,6 +31,14 @@
     return node;
   };
 
+  // A panel section that folds: its title is a heading inside <summary>. Starts open.
+  ui.section = function (title, children) {
+    var fold = ui.el("details", { class: "capy-editor-fold", "data-capy-fold": title, open: "" }, [
+      ui.el("summary", {}, [ui.el("h3", { text: title })]),
+    ].concat(children));
+    return ui.el("section", { class: "capy-editor-section" }, [fold]);
+  };
+
   // The color overrides for one mode, created if missing.
   ui.colors = function (mode) {
     var settings = ui.changes.settings;
@@ -96,6 +104,11 @@
     ui.latest = state;
     ui.saved = state;
     var container = editor.panel.querySelector(".capy-editor-controls");
+    // Sections folded before a rebuild (Save, Revert) stay folded after it.
+    var folded = Array.prototype.map.call(
+      container.querySelectorAll("[data-capy-fold]:not([open])"),
+      function (fold) { return fold.getAttribute("data-capy-fold"); }
+    );
     container.textContent = "";
     ui.sections
       .slice()
@@ -103,6 +116,9 @@
       .forEach(function (section) {
         container.appendChild(section.build(state));
       });
+    container.querySelectorAll("[data-capy-fold]").forEach(function (fold) {
+      if (folded.indexOf(fold.getAttribute("data-capy-fold")) !== -1) fold.removeAttribute("open");
+    });
     ui.fill();
     ui.showDirty();
   };

@@ -72,11 +72,7 @@
       });
       return details;
     });
-    return el("section", { class: "capy-editor-section" }, [
-      el("h3", { text: "Colors" }),
-      tabs(),
-      ui.suggestionBox(),
-    ].concat(groups));
+    return ui.section("Colors", [tabs(), ui.suggestionBox()].concat(groups));
   }
 
   // Each color's value (typed or worked out), its picker and its contrast badge.
