@@ -58,6 +58,7 @@ def import_theme(upload, keep_custom_css=True, can_add_external_fonts=True):
 
 # What reading a damaged zip entry raises: a bad checksum or size, an encrypted
 # entry, or a compression method Python can't unpack.
+ALLOWED_COMPRESSION = (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED)
 DAMAGED_ZIP_ERRORS = (zipfile.BadZipFile, RuntimeError, NotImplementedError, zlib.error, EOFError)
 
 
@@ -71,6 +72,10 @@ def _open(upload):
     except zipfile.BadZipFile as error:
         raise ValidationError("That isn't a zip file.") from error
     members = archive.infolist()
+    # Exports only use deflate (or none). Other methods (bzip2, LZMA) can't be
+    # unpacked a bounded amount at a time, so they're refused (#251).
+    if any(info.compress_type not in ALLOWED_COMPRESSION for info in members):
+        raise ValidationError("The export is damaged.")
     max_files = conf.positive_int("CAPY_THEME_IMPORT_MAX_FILES")
     if len(members) > max_files:
         raise ValidationError(f"The export has too many files (over {max_files}).")
@@ -80,8 +85,19 @@ def _open(upload):
 
 
 def _read(archive, name):
+    """Read one file, never unpacking more than the size the zip says it has.
+
+    A crafted entry can claim a few bytes and unpack to gigabytes; reading at most
+    its stated size (plus one byte) keeps memory bounded, and zipfile then refuses
+    it as damaged (its checksum doesn't match) (#251).
+    """
     try:
-        return archive.read(name)
+        info = archive.getinfo(name)
+        with archive.open(info) as entry:
+            data = entry.read(info.file_size + 1)
+        if len(data) != info.file_size:
+            raise zipfile.BadZipFile("unpacked size differs from the stated size")
+        return data
     except KeyError as error:
         raise ValidationError(f"The export is missing {name}.") from error
     except DAMAGED_ZIP_ERRORS as error:

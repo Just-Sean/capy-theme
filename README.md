@@ -218,7 +218,12 @@ backstop if any upload (or anything else) ever takes too long or too much memory
   the setting. Fonts are converted one after another, so a theme import or a
   Google font with many files takes longer than one font: allow for that too.
 - **It can't start from a daemonic process,** such as a `multiprocessing` pool
-  worker; upload fonts from a normal web request or management command.
+  worker; upload fonts from a normal web request or management command. A
+  project's own script that handles fonts needs the usual
+  `if __name__ == "__main__":` guard, because the new process imports it again.
+- **Leave memory for it:** size the server or container for its workers plus
+  `CAPY_THEME_FONT_MAX_MEMORY_BYTES` (512 MB) for each font upload that can run at
+  the same time, or lower the setting.
 - **Where the server's `sys.executable` isn't Python** (some uWSGI and mod_wsgi
   setups), call `multiprocessing.set_executable()` with the path to the Python
   interpreter when the project starts.
@@ -338,7 +343,7 @@ Optional settings a project can add to its `settings.py` (all defaults are in
 | `CAPY_THEME_EDITOR_BUTTON` | `True` | Show the live editor's **Edit theme** button in the corner of every page, for staff who can edit. `False` hides it (the editor still opens with `?edit=<theme id>`, e.g. from **Edit live** in the admin). |
 | `CAPY_THEME_FONT_MAX_BYTES` | `5242880` (5 MB) | The largest font file that can be uploaded, in bytes. |
 | `CAPY_THEME_FONT_MAX_UNPACKED_BYTES` | `31457280` (30 MB) | The most a WOFF or WOFF2 font file may unpack to, in bytes. Fonts are compressed, so a small file could otherwise unpack to gigabytes. Real fonts unpack to well under this (the largest, with every Chinese, Japanese or Korean character, to about 15–20 MB); it matches the default of Google's WOFF2 library. Must be a positive whole number. |
-| `CAPY_THEME_FONT_MAX_MEMORY_BYTES` | `536870912` (512 MB) | The most memory reading and converting one font may use, in bytes. fontTools does this in its own process with this limit, because a small crafted font can otherwise need gigabytes. A 4 MB Chinese font needs well under it. Must be a positive whole number. On Windows there's no memory limit, only the time limit. |
+| `CAPY_THEME_FONT_MAX_MEMORY_BYTES` | `536870912` (512 MB) | The most memory reading and converting one font may use, in bytes. fontTools does this in its own process with this limit, because a small crafted font can otherwise need gigabytes. A 4 MB Chinese font needs well under it. Must be a positive whole number. On macOS and Windows there's no memory limit, only the time limit. |
 | `CAPY_THEME_FONT_MAX_SECONDS` | `30` | The most time reading and converting one font may take, in seconds; slower fonts are refused. Must be a positive whole number. |
 | `CAPY_THEME_IMAGE_MAX_BYTES` | `None` (each slot's own limit) | A cap on every image upload, in bytes. Each slot keeps its own limit (1 to 5 MB, in `images/slots.json`) when that's lower. |
 | `CAPY_THEME_IMAGE_MAX_PIXELS` | `25000000` (25 million) | The most pixels an uploaded still image can have in all (width × height), checked before it's decoded. A small, highly compressed file can state a huge size, and decoding one of 36 million pixels used about 850 MB. Must be a positive whole number. |
@@ -536,7 +541,15 @@ first:
 - **From 0.7 to 1.0:**
   - Migrations: `0014_sitetheme` adds Site themes; `0015` renames `Font.licence`
     to `Font.license` (code that reads `licence` must change); `0016` checks font
-    values (below).
+    values (below). Restart every worker right after `migrate`, since workers
+    still running the old code can't read fonts once the column is renamed.
+  - **Permissions tightened:** importing a theme that adds an external font needs
+    *Can add font*; Export and Restore leave custom CSS alone for users without
+    `edit_custom_css`; **Offer to visitors** needs `publish_theme`. Check your
+    editors' groups.
+  - **Colors are now limited to real OKLCH values** (lightness 0–100%, chroma up
+    to 0.5). A theme saved with a value outside that must be corrected before it
+    can be saved again.
   - **Font values are now checked:** a font's family name (letters, digits,
     spaces and hyphens), fallback fonts and character range (`U+…`). Pages are
     already protected from values that don't fit, but a font saved earlier with one can't

@@ -2,6 +2,7 @@
 
 import io
 import json
+import tracemalloc
 import zipfile
 
 import pytest
@@ -93,12 +94,13 @@ def test_a_damaged_zip_entry_is_a_clear_message_not_a_server_error():
     ],
 )
 def test_every_kind_of_unreadable_entry_is_a_clear_message(monkeypatch, error):
-    def unreadable(self, name, pwd=None):
+    def unreadable(self, name, mode="r", pwd=None, **kwargs):
         raise error
 
-    monkeypatch.setattr(zipfile.ZipFile, "read", unreadable)
+    data = export_zip(manifest())  # written before reading breaks
+    monkeypatch.setattr(zipfile.ZipFile, "open", unreadable)
     with pytest.raises(ValidationError, match="The export is damaged"):
-        import_theme(io.BytesIO(export_zip(manifest())))
+        import_theme(io.BytesIO(data))
 
 
 def test_an_upload_over_the_limit_is_refused_before_it_is_opened(settings, monkeypatch):
@@ -118,3 +120,49 @@ def test_a_zip_with_too_many_files_is_refused(settings):
         import_theme(io.BytesIO(export_zip(manifest(), files)))
     settings.CAPY_THEME_IMPORT_MAX_FILES = 4
     import_theme(io.BytesIO(export_zip(manifest(), files)))
+
+
+# A zip entry that understates its size must not be unpacked in full (#251).
+
+
+def lying_zip(method, megabytes):
+    """A theme.json padded with `megabytes` MB of spaces whose stated size is 10 bytes."""
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", method) as archive:
+        with archive.open("theme.json", "w") as entry:
+            entry.write(json.dumps(manifest()).encode())
+            for _ in range(megabytes):
+                entry.write(b" " * (1024 * 1024))
+    data = bytearray(buffer.getvalue())
+    data[22:26] = (10).to_bytes(4, "little")  # the local header's unpacked size
+    central = bytes(data).rfind(b"PK\x01\x02")
+    data[central + 24 : central + 28] = (10).to_bytes(4, "little")  # and the central one
+    return bytes(data)
+
+
+def peak_memory_while_importing(data):
+    tracemalloc.start()
+    try:
+        with pytest.raises(ValidationError, match="The export is damaged"):
+            import_theme(io.BytesIO(data))
+        return tracemalloc.get_traced_memory()[1]
+    finally:
+        tracemalloc.stop()
+
+
+def test_a_deflate_entry_that_lies_about_its_size_is_refused_not_unpacked():
+    data = lying_zip(zipfile.ZIP_DEFLATED, 200)
+    assert len(data) < 1024 * 1024
+    assert peak_memory_while_importing(data) < 5 * 1024 * 1024
+
+
+def test_a_bzip2_entry_is_refused_before_it_is_unpacked():
+    # bzip2 (and LZMA) can't be unpacked a bounded amount at a time; exports never use them.
+    data = lying_zip(zipfile.ZIP_BZIP2, 300)
+    assert len(data) < 100 * 1024
+    assert peak_memory_while_importing(data) < 5 * 1024 * 1024
+
+
+def test_an_honest_entry_still_imports_after_the_bounded_read():
+    theme = import_theme(io.BytesIO(export_zip(manifest())))
+    assert theme.slug == "imported"

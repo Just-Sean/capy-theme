@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Theme imports can't unpack more than they say:** a zip entry that claimed a
+  few bytes was unpacked in full before being refused, so a tiny crafted import
+  could use hundreds of MB. Each file is now read up to its stated size only, and
+  entries packed with anything but deflate (or stored) are refused as damaged (#251).
+- **A font with a damaged layout table gets "isn't a font"** instead of a server
+  error (#251).
+- **Escape in the Components view closes only that view,** not the whole editor,
+  as before #245 (#251).
 - **Live editor keyboard focus:** opening the editor moves focus into its panel,
   and closing it (with its buttons or Escape) puts focus back on what opened it.
   After Save draft or Publish, focus stays on that button instead of being lost.

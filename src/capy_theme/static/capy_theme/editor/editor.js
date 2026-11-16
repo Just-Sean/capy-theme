@@ -274,12 +274,14 @@
     }
   });
 
-  // Escape closes the editor while focus is in it (the panel, banner or Components view).
+  // Escape closes the editor while focus is in its panel or banner. While the
+  // Components view is open, Escape closes only that view (controls/components.js) (#251).
   document.addEventListener("keydown", function (event) {
     if (event.key !== "Escape" || event.defaultPrevented) return;
     if (!editor.panel || editor.panel.hidden) return;
-    var inEditor = event.target.closest && event.target.closest(".capy-editor, .capy-editor-banner, .capy-editor-components");
+    var inEditor = event.target.closest && event.target.closest(".capy-editor, .capy-editor-banner");
     if (!inEditor) return;
+    if (document.querySelector(".capy-editor-components:not([hidden])")) return; // that closes first
     event.preventDefault();
     editor.close();
   });

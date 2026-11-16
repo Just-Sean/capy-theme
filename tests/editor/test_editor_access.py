@@ -159,6 +159,13 @@ def test_escape_closes_the_editor():
     assert 'event.key !== "Escape"' in script and "editor.close()" in script
 
 
+def test_escape_in_the_components_view_closes_only_the_view():
+    # The editor's Escape handler ignores the view and steps aside while it's open (#251).
+    script = (STATIC / "editor.js").read_text()
+    assert 'closest(".capy-editor, .capy-editor-banner")' in script
+    assert '.capy-editor-components:not([hidden])")) return;' in script
+
+
 def test_page_behind_a_full_width_panel_is_inert():
     script = (STATIC / "editor.js").read_text()
     css = (STATIC / "editor.css").read_text()
