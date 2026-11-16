@@ -201,8 +201,9 @@ user's:
 ```python
 can_css = user.has_perm("capy_theme.edit_custom_css")
 export_theme(theme, keep_custom_css=can_css)
-import_theme(file, keep_custom_css=can_css,
-             can_add_external_fonts=user.has_perm("capy_theme.add_font"))
+import_theme(
+    file, keep_custom_css=can_css, can_add_external_fonts=user.has_perm("capy_theme.add_font")
+)
 ```
 
 ### From the command line
