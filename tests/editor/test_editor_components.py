@@ -83,6 +83,20 @@ def test_bundled_stylesheet_has_the_components():
         assert selector in css, selector
 
 
+def test_the_page_has_nothing_a_strict_csp_would_block(editor_client, url):
+    # #244: no inline handlers or style attributes, and no <form> whose Enter
+    # key could reload the page (the sample form is a <div>).
+    html = editor_client.get(url).content.decode()
+    assert " style=" not in html
+    assert " onsubmit=" not in html and " onclick=" not in html
+    assert "<form" not in html
+
+
+def test_radial_progress_value_comes_from_the_bundled_stylesheet(editor_client, url):
+    assert "[--value:70]" in editor_client.get(url).content.decode()
+    assert r".\[--value\:70\]{--value:70}" in (STATIC / "components.css").read_text()
+
+
 def test_the_showcase_is_gone(client):
     assert client.get("/theme/showcase/").status_code == 404
 
