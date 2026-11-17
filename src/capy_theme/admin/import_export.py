@@ -4,14 +4,14 @@ from django import forms
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 
 from ..css.custom import can_edit_custom_css
-from ..models import Theme
 from ..portability.export import export_theme
 from ..portability.importing import import_theme
+from .save_publish import theme_or_404
 
 
 class ImportForm(forms.Form):
@@ -47,7 +47,7 @@ class ImportExportMixin:
         return request.user.has_perm("capy_theme.import_theme")
 
     def export_view(self, request, object_id):
-        theme = get_object_or_404(Theme, pk=object_id)
+        theme = theme_or_404(self, request, object_id)
         if not self.has_view_or_change_permission(request, theme):
             raise PermissionDenied
         data = export_theme(theme, keep_custom_css=can_edit_custom_css(request.user))

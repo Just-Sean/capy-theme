@@ -12,6 +12,7 @@ from django.views.decorators.http import require_GET
 
 from ..css.custom import can_edit_custom_css
 from ..models import Theme
+from .access import can_edit
 
 _BRACES = re.compile(r"([{}])")
 
@@ -52,8 +53,9 @@ def _without_comments(css):
 
 @require_GET
 def editor_custom_css(request, pk):
-    """The draft's custom CSS (if it's on), for users who may edit custom CSS."""
-    if not can_edit_custom_css(request.user):
+    """The draft's custom CSS (if it's on), for editors who may edit custom CSS:
+    active staff who can edit themes, like every editor address (#275)."""
+    if not (can_edit(request.user) and can_edit_custom_css(request.user)):
         return HttpResponseForbidden("You can't edit custom CSS.")
     theme = get_object_or_404(Theme, pk=pk)
     custom = theme.settings.get("custom_css", {})

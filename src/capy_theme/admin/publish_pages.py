@@ -8,11 +8,11 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 
 from ..css.custom import can_edit_custom_css
-from ..models import Theme
 from ..themes.history import compare as compare_revisions
 from ..themes.history import restore as restore_revision
 from ..themes.publishing import NothingToPublish
 from .fonts import _int
+from .save_publish import theme_or_404
 
 
 class PublishPagesMixin:
@@ -37,7 +37,7 @@ class PublishPagesMixin:
     # Revisions: list, compare and restore
 
     def revisions_view(self, request, object_id):
-        theme = get_object_or_404(Theme.objects.select_related("live_revision"), pk=object_id)
+        theme = theme_or_404(self, request, object_id)
         if not self.has_view_or_change_permission(request, theme):
             raise PermissionDenied
         revisions = list(theme.revisions.select_related("published_by"))
@@ -63,7 +63,7 @@ class PublishPagesMixin:
         return TemplateResponse(request, "capy_theme/admin/revisions.html", context)
 
     def restore_view(self, request, object_id, number):
-        theme = get_object_or_404(Theme.objects.select_related("live_revision"), pk=object_id)
+        theme = theme_or_404(self, request, object_id)
         if not self.has_publish_permission(request, theme):
             raise PermissionDenied
         revision = get_object_or_404(theme.revisions, number=number)
