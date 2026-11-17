@@ -1685,3 +1685,13 @@ Before v1.0, capy-theme ran in a throwaway project generated from
   imports are all covered without changing them.
 - **Alternative:** clamping out-of-range colors. Refusing shows the mistake instead
   of silently changing the color.
+
+## 8.6 Release v1.0.0 (#64)
+
+- Released after the pre-release reviews (every agent), Sean's hands-on testing
+  in a separate django-starter project (8.5), and a final security audit with no
+  Critical, High or Medium findings (its two Lows fixed in #275). Tests on SQLite
+  and PostgreSQL 17, the package checked with `uv build`.
+- Everything that isn't a security problem waits for v2, Sean's call. Planned:
+  deleting old revisions so their images can be deleted (option C). Open issues
+  for later: #231, #214, #206.
