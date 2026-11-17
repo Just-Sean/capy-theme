@@ -41,9 +41,7 @@
 
   function build() {
     var rows = ui.spec.sizes.map(sizeRow).concat(ui.spec.effects.map(effectRow));
-    return el("section", { class: "capy-editor-section" }, [
-      el("details", {}, [el("summary", { text: "Shape and effects" })].concat(rows)),
-    ]);
+    return ui.section("Shape and effects", rows);
   }
 
   function fill() {

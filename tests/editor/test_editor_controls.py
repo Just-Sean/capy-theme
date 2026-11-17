@@ -121,3 +121,47 @@ def test_every_shape_size_has_a_real_step():
     script = (STATIC / "controls" / "shape.js").read_text()
     assert "step: String(size.step)" in script
     assert 'step: "any"' not in script
+
+
+def test_every_editor_section_folds_except_save():
+    controls_dir = STATIC / "controls"
+    core = (controls_dir / "core.js").read_text()
+    # One helper builds every foldable section, open to start with.
+    assert 'el("details", { class: "capy-editor-fold", "data-capy-fold": title, open: "" }' in core
+    assert 'ui.el("summary", {}, [ui.el("h3", { text: title })])' in core
+    for name, title in [
+        ("bases.js", "Base themes"),
+        ("colors.js", "Colors"),
+        ("fonts.js", "Fonts and type"),
+        ("images.js", "Images"),
+        ("shape.js", "Shape and effects"),
+        ("components.js", "Components"),
+    ]:
+        script = (controls_dir / name).read_text()
+        assert f'ui.section("{title}"' in script, name
+        assert 'el("h3"' not in script, name
+    # Save and publish stays open: it holds the "Unsaved changes" note.
+    actions = (controls_dir / "actions.js").read_text()
+    assert "ui.section(" not in actions and 'el("h3", { text: "Save and publish" })' in actions
+
+
+def test_every_fold_keeps_its_state_when_the_panel_is_rebuilt():
+    controls_dir = STATIC / "controls"
+    core = (controls_dir / "core.js").read_text()
+    assert 'wasOpen[fold.getAttribute("data-capy-fold")] = fold.open;' in core
+    assert "if (name in wasOpen) fold.open = wasOpen[name];" in core
+    # The folds inside Colors take part too.
+    colors = (controls_dir / "colors.js").read_text()
+    assert '{ "data-capy-fold": "Colors: " + group.name }' in colors
+    suggestions = (controls_dir / "suggestions.js").read_text()
+    assert '"data-capy-fold": "Colors: Suggestions"' in suggestions
+
+
+def test_closing_the_components_view_opens_its_folded_section():
+    components = (STATIC / "controls" / "components.js").read_text()
+    fold = components.index('var fold = toggle.closest("details");')
+    assert (
+        fold
+        < components.index("if (fold) fold.open = true;")
+        < components.index("toggle.focus();", fold)
+    )

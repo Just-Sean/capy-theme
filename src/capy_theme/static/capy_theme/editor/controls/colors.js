@@ -66,17 +66,15 @@
 
   function build() {
     var groups = ui.spec.color_groups.map(function (group, index) {
-      var details = el("details", index === 0 ? { open: "" } : {}, [el("summary", { text: group.name })]);
+      var attrs = { "data-capy-fold": "Colors: " + group.name };
+      if (index === 0) attrs.open = "";
+      var details = el("details", attrs, [el("summary", { text: group.name })]);
       group.colors.forEach(function (color) {
         details.appendChild(colorRow(color));
       });
       return details;
     });
-    return el("section", { class: "capy-editor-section" }, [
-      el("h3", { text: "Colors" }),
-      tabs(),
-      ui.suggestionBox(),
-    ].concat(groups));
+    return ui.section("Colors", [tabs(), ui.suggestionBox()].concat(groups));
   }
 
   // Each color's value (typed or worked out), its picker and its contrast badge.

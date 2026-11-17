@@ -27,11 +27,7 @@
   ui.sections.push({
     order: 10,
     build: function () {
-      return el("section", { class: "capy-editor-section" }, [
-        el("h3", { text: "Base themes" }),
-        baseSelect("light"),
-        baseSelect("dark"),
-      ]);
+      return ui.section("Base themes", [baseSelect("light"), baseSelect("dark")]);
     },
   });
 })();

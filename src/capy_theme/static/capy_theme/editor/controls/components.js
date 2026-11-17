@@ -93,6 +93,9 @@
     if (view) view.hidden = true;
     if (toggle) {
       toggle.setAttribute("aria-expanded", "false");
+      // A folded Components section would hide the button, so open it first.
+      var fold = toggle.closest("details");
+      if (fold) fold.open = true;
       toggle.focus();
     }
   }
@@ -125,7 +128,7 @@
         if (view && !view.hidden) hide();
         else show();
       });
-      return el("section", { class: "capy-editor-section" }, [
+      return ui.section("Components", [
         toggle,
         el("p", { class: "capy-editor-note", text: "Every daisyUI component in the draft theme, light and dark, updating as you edit." }),
       ]);
