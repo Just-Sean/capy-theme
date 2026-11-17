@@ -1,6 +1,6 @@
 """Storing checked images as a theme's assets, and which assets are in use."""
 
-from .slots import SLOTS
+from .slots import SLOT_MODES, SLOTS
 
 ALT_MAX = 200
 
@@ -33,28 +33,76 @@ def store_asset(theme, slot, mode, clean, alt_text=""):
     return asset
 
 
-def where_used(theme, settings, asset):
+def revisions_of(theme):
+    """(number, snapshot, is live) for each of the theme's revisions, newest first.
+    Load once and pass to where_used / refusal for many images."""
+    if theme.pk is None:
+        return []
+    return [
+        (number, snapshot, pk == theme.live_revision_id)
+        for pk, number, snapshot in theme.revisions.order_by("-number").values_list(
+            "pk", "number", "snapshot"
+        )
+    ]
+
+
+def _uses(theme, settings, asset, revisions):
+    """[(kind, description)] for where an asset is chosen: kind is "draft", "live"
+    or "revision". Choices a slot can't have (e.g. an old dark email logo) don't count."""
+    uses = [("draft", f"the draft's {place}") for place in _places(settings, asset)]
+    for number, snapshot, live in revisions if revisions is not None else revisions_of(theme):
+        for place in _places(snapshot.get("settings", {}), asset):
+            if live:
+                uses.append(("live", f"the published theme's {place}"))
+            else:
+                uses.append(("revision", f"revision {number}'s {place}"))
+    return uses
+
+
+def _places(settings, asset):
+    return [
+        _place(slot, mode)
+        for slot, modes in settings.get("images", {}).items()
+        for mode, pk in modes.items()
+        if pk == asset.pk and mode in SLOT_MODES.get(slot, ())
+    ]
+
+
+def where_used(theme, settings, asset, revisions=None):
     """Where an asset is in use, as short descriptions; [] if it's free to delete.
 
-    In use means chosen in the draft (`settings`, which may be unsaved) or shown
-    by the live revision.
+    In use means chosen in the draft (`settings`, which may be unsaved) or in any of
+    the theme's revisions: restoring a revision needs its images (#271).
     """
-    uses = []
-    for slot, modes in settings.get("images", {}).items():
-        for mode, pk in modes.items():
-            if pk == asset.pk:
-                uses.append(f"the draft's {_place(slot, mode)}")
-    live = theme.live_revision.snapshot if theme.live_revision_id else {}
-    for slot, modes in live.get("images", {}).items():
-        for mode, image in modes.items():
-            if image.get("file") == asset.original.name:
-                uses.append(f"the published theme's {_place(slot, mode)}")
-    return uses
+    return [text for _kind, text in _uses(theme, settings, asset, revisions)]
+
+
+def refusal(theme, settings, asset, revisions=None):
+    """Why an asset can't be deleted and what to do instead, or "" if it can be."""
+    uses = _uses(theme, settings, asset, revisions)
+    if not uses:
+        return ""
+    kinds = {kind for kind, _text in uses}
+    steps = []
+    if kinds & {"draft", "live"}:
+        steps.append(
+            "To free it, choose another image for that slot (or None; for dark mode, "
+            "Same as light) and save" + (", then publish." if "live" in kinds else ".")
+        )
+    if "revision" in kinds:
+        steps.append(
+            "An earlier revision uses it, and restoring that revision needs it, so it "
+            "can't be deleted while that revision exists."
+        )
+    return (
+        f"This image can't be deleted: it's used as {'; '.join(t for _k, t in uses)}. "
+        + " ".join(steps)
+    )
 
 
 def _place(slot, mode):
     label = SLOTS.get(slot, (slot,))[0].lower()
-    return label if slot == "social" else f"{label} ({mode})"
+    return label if len(SLOT_MODES.get(slot, ())) < 2 else f"{label} ({mode})"
 
 
 def asset_data(asset):

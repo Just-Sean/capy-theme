@@ -183,10 +183,15 @@ def theme_logo(context, slot="main", **attrs):
             f"theme_logo: unknown slot {slot!r}; use main, stacked, mark, wordmark, email or print."
         )
     brand = branding(theme.live_revision)
-    request = context.get("request")
+    # The user is absent without Django's auth middleware (as in editor/mount.py).
+    user = getattr(context.get("request"), "user", None)
     marker = (
-        {"data-capy-logo-slot": slot, "data-capy-logo-attrs": json.dumps(attrs)}
-        if request is not None and can_edit(request.user)
+        {
+            "data-capy-logo-slot": slot,
+            # As text, like the HTML attributes themselves (any value works).
+            "data-capy-logo-attrs": json.dumps({k: str(v) for k, v in attrs.items()}),
+        }
+        if user is not None and can_edit(user)
         else {}
     )
     html = logo_html(theme.live_revision.snapshot, slot, brand["logo_alt"], attrs, marker)

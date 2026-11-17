@@ -5,7 +5,7 @@
       "label": "Main logo",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "Your logo in the site header, beside or instead of the site name. Most sites only need this one: every other logo version below uses it when left empty.",
+      "help": "Your logo in the site header, beside or instead of the site name. Most sites only need this one: every other logo version uses it when left empty.",
       "modes": [
         "light",
         "dark"
@@ -15,7 +15,7 @@
       "label": "Stacked logo",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "Your symbol above your name, for narrow spaces such as a phone-width header or a sidebar. capy-theme doesn't show it on its own pages: your project's templates use it with {% theme_logo slot=\"stacked\" %}. Leave it empty to use the main logo.",
+      "help": "Your symbol above your name, for narrow spaces such as a phone-width header or a sidebar. It only shows where your site's developer has added it to the site's pages. Leave it empty to use the main logo. (For developers: {% theme_logo slot=\"stacked\" %}.)",
       "modes": [
         "light",
         "dark"
@@ -25,7 +25,7 @@
       "label": "Logo mark",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "Just the symbol, without the name, for tight spots such as an app bar, an avatar or a footer. Your project's templates use it with {% theme_logo slot=\"mark\" %}. Leave it empty to use the main logo.",
+      "help": "Just the symbol, without the name, for tight spots such as an app bar, an avatar or a footer. It only shows where your site's developer has added it to the site's pages. Leave it empty to use the main logo. (For developers: {% theme_logo slot=\"mark\" %}.)",
       "modes": [
         "light",
         "dark"
@@ -35,7 +35,7 @@
       "label": "Wordmark",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "Just the name in lettering, without the symbol, for places that already show the symbol. Your project's templates use it with {% theme_logo slot=\"wordmark\" %}. Leave it empty to use the main logo.",
+      "help": "Just the name in lettering, without the symbol, for places that already show the symbol. It only shows where your site's developer has added it to the site's pages. Leave it empty to use the main logo. (For developers: {% theme_logo slot=\"wordmark\" %}.)",
       "modes": [
         "light",
         "dark"
@@ -45,7 +45,7 @@
       "label": "Email logo",
       "max_mb": 1,
       "max_pixels": 2000,
-      "help": "For the HTML emails your site sends. Email programs don't show SVG, so use a PNG or JPEG; and emails have no dark mode, so there's only a light version. Your project's email templates get it from the theme artifacts. Leave it empty to use the main logo.",
+      "help": "For the emails your site sends. Email programs don't show SVG, so use a PNG or JPEG (WebP and GIF don't show in some email programs). Emails have no dark mode, so there's only a light version. It only shows in emails your site's developer has set up to use it. Leave it empty to use the main logo. (For developers: the theme artifacts.)",
       "modes": [
         "light"
       ]
@@ -54,7 +54,7 @@
       "label": "Print logo",
       "max_mb": 5,
       "max_pixels": 6000,
-      "help": "A high-resolution version (up to 6000 px) for printed pages, PDFs or invoices. Print has no dark mode, so there's only a light version. Your project's templates use it with {% theme_logo slot=\"print\" %}. Leave it empty to use the main logo.",
+      "help": "A high-resolution version (up to 6000 px) for printed pages, PDFs or invoices. Print has no dark mode, so there's only a light version. It only shows where your site's developer has added it to the site's pages. Leave it empty to use the main logo. (For developers: {% theme_logo slot=\"print\" %}.)",
       "modes": [
         "light"
       ]
@@ -73,7 +73,7 @@
       "label": "Social sharing image",
       "max_mb": 5,
       "max_pixels": 6000,
-      "help": "Shown when someone shares a link to your site (link previews in chat apps and social sites). It's cropped to 1200 × 630 from its center. Your project's templates or another module add the preview tags.",
+      "help": "The picture shown when someone shares a link to your site, in chat apps and social sites. It's cropped to 1200 × 630 from its center. It only shows once your site's developer has added link previews. (For developers: the theme artifacts.)",
       "modes": [
         "light"
       ]
@@ -82,7 +82,7 @@
       "label": "Login background",
       "max_mb": 5,
       "max_pixels": 6000,
-      "help": "A picture behind the login page. It shows where your project's templates use class=\"capy-bg-login\" or the CSS variable --capy-bg-login.",
+      "help": "A picture behind the login page. It only shows where your site's developer has added it to the site's pages. (For developers: class=\"capy-bg-login\" or the CSS variable --capy-bg-login.)",
       "modes": [
         "light",
         "dark"
@@ -92,7 +92,7 @@
       "label": "Page background pattern",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "A small image repeated behind pages. It shows where your project's templates use class=\"capy-bg-pattern\" or the CSS variable --capy-bg-pattern.",
+      "help": "A small image repeated behind pages. It only shows where your site's developer has added it to the site's pages. (For developers: class=\"capy-bg-pattern\" or the CSS variable --capy-bg-pattern.)",
       "modes": [
         "light",
         "dark"

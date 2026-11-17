@@ -11,6 +11,6 @@
   - the publish status (live revision and whether the draft differs)
   - the read-only stored settings as JSON (with custom CSS hidden from people who can't edit it)
   - notes when daisyUI changed a base
-- **`render_change_form`** hands the template the page's tabs (`tabs.theme_tabs`).
+- **`render_change_form`** hands the template the page's tabs (`tabs.theme_tabs`). When the page is shown again after a failed save, it first asks each slot that had a new file to choose it again (`form_images.ask_to_choose_again`), whatever the error was.
 - **`save_model`** saves the theme, then `form_images.save_images` stores new uploads and chooses them (they need the saved theme, #271).
 - **`get_form`** tells the form whether this user may edit custom CSS. **`get_fieldsets`** leaves the custom CSS section out for people who can't edit it.

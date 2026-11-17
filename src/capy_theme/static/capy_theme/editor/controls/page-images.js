@@ -9,6 +9,12 @@
   var editor = window.capyEditor;
   if (!editor || !editor.ui) return;
   var HEADER = ["logo_main", "logo_stacked", "logo_mark", "logo_wordmark"];
+  // What {% theme_logo %} writes, and the only attributes copied from its
+  // data-capy-logo-attrs onto the draft's logo. Anything else (event handlers,
+  // style, src...) is ignored: a page could hold a forged marker, e.g. in content
+  // its users wrote.
+  var MARKED = ["IMG", "PICTURE", "SPAN"];
+  var SAFE = /^(class|id|title|aria-[a-z-]+|data-(?!capy-logo)[a-z0-9-]+)$/;
   var spots = null; // [{slot, attrs, nodes, originals}]
   var icons = null; // [{link, href}] and whether we added the link
 
@@ -16,23 +22,33 @@
     var found = [];
     document.querySelectorAll("[data-capy-logo-slot]").forEach(function (node) {
       var slot = node.getAttribute("data-capy-logo-slot");
+      if (MARKED.indexOf(node.tagName) === -1 || HEADER.concat(["logo_email", "logo_print"]).indexOf(slot) === -1) return;
       var last = found[found.length - 1];
       if (last && last.slot === slot && last.nodes[last.nodes.length - 1] === node.previousElementSibling) {
         last.nodes.push(node);
         return;
       }
-      var attrs = {};
-      try {
-        attrs = JSON.parse(node.getAttribute("data-capy-logo-attrs") || "{}") || {};
-      } catch (error) {
-        attrs = {};
-      }
-      found.push({ slot: slot, attrs: attrs, nodes: [node] });
+      found.push({ slot: slot, attrs: safeAttrs(node.getAttribute("data-capy-logo-attrs")), nodes: [node] });
     });
     found.forEach(function (spot) {
       spot.originals = spot.nodes.slice();
     });
     return found;
+  }
+
+  function safeAttrs(text) {
+    var attrs = {};
+    var parsed = null;
+    try {
+      parsed = JSON.parse(text || "{}");
+    } catch (error) {
+      parsed = null;
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return attrs;
+    Object.keys(parsed).forEach(function (key) {
+      if (SAFE.test(key) && typeof parsed[key] === "string") attrs[key] = parsed[key];
+    });
+    return attrs;
   }
 
   function img(spot, image) {
@@ -121,7 +137,8 @@
   }
 
   function show(data) {
-    if (!data || !data.page_images) return;
+    // Only while the editor is shown; closing it put the published ones back.
+    if (!data || !data.page_images || !editor.panel || editor.panel.hidden) return;
     if (!spots) spots = findSpots();
     var images = data.page_images;
     spots.forEach(function (spot) {

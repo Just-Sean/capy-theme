@@ -11,10 +11,13 @@
   straight away. Most sites only need the main logo, so the other five logo
   versions are folded under "More logo versions (optional)". Email and print logos
   no longer offer a dark image (they always used the light one).
-- **Alt text can be edited after upload** (admin and live editor).
+- **Alt text can be edited after upload** (admin and live editor). In the admin,
+  the current image's alt text box only ever changes that image, and a new upload
+  has its own alt text box.
 - **Media** (admin) lists every uploaded image with where it's used. An image
-  nobody uses can be deleted; deleting one the draft or the published theme uses
-  is refused with a message saying what to do. Managing images now needs the
+  nobody uses can be deleted; deleting one the draft, the published theme or an
+  earlier revision uses is refused with a message saying what to do (restoring a
+  revision needs its images). Managing images now needs the
   change-theme permission (as uploading did), not the image model's own
   permissions.
 - **The live editor shows the draft's logos and tab icon** on the page before
@@ -23,7 +26,9 @@
   `data-capy-logo-slot` so the editor can find it; visitors get the same HTML.
 - **The live edit page header shows the theme being edited** (its draft logo,
   site name and tagline), not the published site theme.
-- **The editor's Upload button can't send twice** (#222).
+- **The editor's Upload button can't send twice** (#222), and a dark image can't be
+  uploaded for a slot that only has a light one. Save draft drops such a choice
+  left in older themes, as the admin does.
 - **Live edit page: Switch theme** replaces the visitors' theme picker in the
   header. It lists every theme (unpublished ones marked) and opens the editor on
   the one you pick, asking first if there are unsaved changes. Before, the menu

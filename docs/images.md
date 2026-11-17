@@ -13,13 +13,15 @@ shows:
 - what it's for and its limits (size, largest width or height, whether SVG is
   allowed), and what happens if it's left empty;
 - its current image, and a choice of the images uploaded for it earlier;
-- **Upload a new image**, with its alt text. In the admin, the new image is
+- **Upload a new image**, with its own alt text box. In the admin, the new image is
   stored and chosen when you save the page (several slots can get one in the same
   save; if another part of the page has an error, choose the file again, since
   browsers don't keep it). In the live editor it's stored straight away and
   chosen in your unsaved changes: **Save draft** keeps the choice, **Revert**
   drops it (the image stays in the theme's list);
-- the alt text of the current image, which can be changed at any time.
+- the alt text of the current image, which can be changed at any time. It only
+  ever changes that image: choosing another image in the same save leaves the
+  other image's alt text as it was.
 
 An image stays with the slot it was uploaded for. For every upload:
 
@@ -75,10 +77,18 @@ straight away, in your browser only (see [the editor](editor.md)).
 The admin's **Media** tab lists every image uploaded for the theme, with a
 preview, its slot and mode, its size, where it's used, and its alt text (which can
 be changed there too). An image nothing uses can be deleted. An image that the
-draft or the published theme uses can't: the save is refused with a message
-saying where it's used. Upload a new image for that slot, or set the slot to
-None, and save; then delete it. (Unsetting it and deleting it in the same save
-works too.) Managing images needs the same permission as editing the theme.
+draft, the published theme or any earlier revision uses can't: the save is
+refused, the page says so at the top, and the image's row says where it's used
+and what to do:
+
+- **Used by the draft:** choose another image for that slot (or None; for dark
+  mode, Same as light) and save; then delete it. (Doing both in the same save
+  works too.)
+- **Used by the published theme:** the same, then publish.
+- **Used by an earlier revision:** it can't be deleted, because restoring that
+  revision needs it. (Revisions are kept for good, so such an image stays.)
+
+Managing images needs the same permission as editing the theme.
 
 ## Logos
 

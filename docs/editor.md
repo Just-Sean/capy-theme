@@ -85,7 +85,11 @@ While the editor is open, the draft's logos show wherever the page has a
 icon. That's only in your browser; closing the editor puts the published ones
 back. (For staff who can edit themes, `{% theme_logo %}` marks each logo with
 `data-capy-logo-slot` so the editor can find it; visitors get the same HTML as
-always.) The generated favicons and app icons are made when you publish.
+always. If a project caches whole pages or template fragments with the logo in
+them, keep editors' pages out of that cache (or vary it by user): otherwise a
+visitor could be served the marked HTML, which is harmless, or an editor the
+unmarked HTML, where the preview can't swap the logo.) The generated favicons
+and app icons are made when you publish.
 - **Suggestions** (in the Colors section): click **Suggest colors** for colors
   that go with the current primary (analogous, complementary, triadic) and, if the
   theme has a logo, the logo's main colors. Clicking a suggestion fills in those

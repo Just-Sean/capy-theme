@@ -4,7 +4,7 @@ from django import forms
 from django.contrib import admin
 from django.utils.html import format_html
 
-from ..images.assets import where_used
+from ..images.assets import refusal, revisions_of, where_used
 from ..images.models import ThemeAsset
 from ..models import ThemeRevision
 
@@ -39,23 +39,30 @@ class ThemeRevisionInline(admin.TabularInline):
 class ThemeAssetFormSet(forms.BaseInlineFormSet):
     """Refuses to delete an image that's in use (#271)."""
 
-    def clean(self):
-        super().clean()
-        for form in self.deleted_forms:
-            asset = form.instance
-            if asset.pk is None:
-                continue
-            uses = where_used(self.instance, self.instance.settings, asset)
-            if uses:
-                # Not deleted after all, and an error on the row: Django skips errors on
-                # rows being deleted, and an error on a row shows the Media list unfolded.
-                form.cleaned_data["DELETE"] = False
-                form.add_error(
-                    None,
-                    f"This image can't be deleted: it's used as {' and '.join(uses)}. "
-                    "Upload a new image for that slot, or set it to None, and save; "
-                    "then delete this one.",
-                )
+    def _should_delete_form(self, form):
+        """A row marked for deletion whose image is in use isn't deleted: it gets an
+        error instead. Checked here, where Django decides which rows are deleted, so
+        the error counts like any other row error (the page says so at the top and
+        the Media list is shown unfolded)."""
+        if not super()._should_delete_form(form) or form.instance.pk is None:
+            return False
+        if not hasattr(form, "capy_refusal"):
+            if not hasattr(self, "capy_revisions"):
+                self.capy_revisions = revisions_of(self.instance)
+            form.capy_refusal = refusal(
+                self.instance, self.instance.settings, form.instance, self.capy_revisions
+            )
+            if form.capy_refusal:
+                form.add_error(None, form.capy_refusal)
+                _untick(form)
+        return not form.capy_refusal
+
+
+def _untick(form):
+    """Show the row's Delete box unticked when the page comes back."""
+    data = form.data.copy()
+    data.pop(form.add_prefix("DELETE"), None)
+    form.data = data
 
 
 class ThemeAssetInline(admin.TabularInline):
@@ -109,5 +116,7 @@ class ThemeAssetInline(admin.TabularInline):
     def used(self, asset):
         if not asset.pk:
             return ""
-        uses = where_used(asset.theme, asset.theme.settings, asset)
+        if getattr(self, "capy_revisions", None) is None:  # once per page, not per row
+            self.capy_revisions = revisions_of(asset.theme)
+        uses = where_used(asset.theme, asset.theme.settings, asset, self.capy_revisions)
         return "; ".join(uses) if uses else "Not used: can be deleted"

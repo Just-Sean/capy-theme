@@ -71,7 +71,7 @@ def admin_data(upload, slot="logo_main", mode="light", alt="Logo"):
         "dark_base": "dark",
         "visitors_can_switch": "on",
         f"{name}_upload": upload,
-        f"{name}_alt": alt,
+        f"{name}_upload_alt": alt,  # the new image's own alt text box
         "assets-TOTAL_FORMS": "0",
         "assets-INITIAL_FORMS": "0",
         "revisions-TOTAL_FORMS": "0",

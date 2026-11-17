@@ -10,6 +10,7 @@ from ..colors.values import contrast_report, effective_values
 from ..css.custom import without_custom_css
 from ..css.stylesheet import snapshot_css
 from ..fonts.library import external_stylesheets
+from ..images.slots import SLOT_MODES
 from ..themes.validation import validate_base, validate_settings
 from .page_images import page_images
 
@@ -53,6 +54,7 @@ def apply_changes(theme, data):
                 settings[key] = changes[key]
             else:
                 settings.pop(key, None)
+    _drop_modes_a_slot_cant_have(settings)
     for scheme, colors in settings.get("colors", {}).items():
         if not isinstance(colors, dict):
             continue
@@ -76,6 +78,24 @@ def apply_changes(theme, data):
         raise ValidationError(errors)
     draft.settings = settings
     return draft
+
+
+def _drop_modes_a_slot_cant_have(settings):
+    """Drop e.g. a dark email logo: email and print logos and the sharing image only
+    have a light one (#271). Dropped, not refused, like the admin does, so a theme
+    saved before that still saves."""
+    images = settings.get("images")
+    if not isinstance(images, dict):
+        return
+    for slot, modes in list(images.items()):
+        if slot in SLOT_MODES and isinstance(modes, dict):
+            kept = {mode: pk for mode, pk in modes.items() if mode in SLOT_MODES[slot]}
+            if kept:
+                images[slot] = kept
+            else:
+                del images[slot]
+    if not images:
+        settings.pop("images")
 
 
 def preview(theme, data):

@@ -10,4 +10,4 @@ Each control shows:
 - **Alt text** for the current image. An edit goes into `ui.changes.alts` and is saved with Save draft.
 - **Upload a new image** (folded): a file, its alt text and **Upload and use**
 
-**Uploading:** the file goes to `upload/`, where the server checks, cleans and stores it straight away. It's then chosen in the unsaved changes, so Save draft keeps the choice and Revert drops it. The image stays in the theme's list either way. The button is disabled while uploading, so a double click can't upload twice (#222).
+**Uploading:** the file goes to `upload/`, where the server checks, cleans and stores it straight away. It's then chosen in the unsaved changes, so Save draft keeps the choice and Revert drops it. The image stays in the theme's list either way. While uploading, the button and the slot's choice are off, and the "uploading" state is kept outside the redraw, so nothing can start a second upload (#222). If the editor was closed, saved or reverted meanwhile, the new image is only added to the list, not chosen. A failed upload turns the button back on without redrawing, so the chosen file stays.

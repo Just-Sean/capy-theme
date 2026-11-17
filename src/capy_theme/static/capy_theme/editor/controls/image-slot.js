@@ -56,6 +56,7 @@
   // The control for one slot and mode; it redraws itself when its image changes.
   ui.slotControl = function (spec, mode) {
     var box = el("div", { class: "capy-editor-slot", "data-capy-slot": spec.name + ":" + mode });
+    var uploading = false; // kept across redraws, so a redraw can't allow a second upload
     function draw() {
       box.textContent = "";
       var id = "capy-slot-" + (counter += 1);
@@ -76,6 +77,7 @@
         select.appendChild(el("option", { value: String(a.id), text: a.name + " (" + a.width + " × " + a.height + (a.mode === "dark" ? ", dark" : "") + ")" }));
       });
       select.value = current ? String(current.id) : "";
+      select.disabled = uploading;
       select.addEventListener("change", function () {
         choose(spec.name, mode, select.value ? Number(select.value) : null);
         draw();
@@ -97,26 +99,36 @@
 
       var file = el("input", { type: "file", id: id + "-file", accept: spec.svg ? "image/png,image/jpeg,image/webp,image/gif,image/svg+xml" : "image/png,image/jpeg,image/webp,image/gif" });
       var newAlt = el("input", { type: "text", id: id + "-new-alt", maxlength: "200" });
-      var button = el("button", { type: "button", text: "Upload and use" });
+      var button = el("button", { type: "button", text: uploading ? "Uploading…" : "Upload and use" });
+      button.disabled = uploading;
       button.addEventListener("click", function () {
-        if (button.disabled) return;
+        if (uploading) return;
         if (!file.files.length) {
           editor.status("Choose an image to upload for the " + label.toLowerCase() + ".", true);
           return;
         }
-        button.disabled = true; // one upload at a time (#222)
+        uploading = true; // one upload at a time (#222)
+        select.disabled = true;
+        button.disabled = true;
         button.setAttribute("aria-busy", "true");
         button.textContent = "Uploading…";
         editor.status("Uploading…");
         send(ui.saved.urls.upload, spec.name, mode, file.files[0], newAlt.value)
           .then(function (body) {
+            uploading = false;
             remember(body.assets);
+            // Closed, saved or reverted meanwhile: this slot is gone. The image is in
+            // the theme's list; it isn't chosen behind the user's back.
+            if (!box.isConnected || !editor.panel || editor.panel.hidden) return;
             choose(spec.name, mode, body.uploaded.id);
             draw();
             editor.status("Uploaded and chosen for the " + label.toLowerCase() + ". Save draft to keep it. Location and camera details were removed.");
             box.querySelector("select").focus();
           })
           .catch(function (error) {
+            uploading = false;
+            // Nothing redrawn, so the chosen file and the open fold stay as they were.
+            select.disabled = false;
             button.disabled = false;
             button.removeAttribute("aria-busy");
             button.textContent = "Upload and use";

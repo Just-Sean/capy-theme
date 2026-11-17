@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 
 from ..images.assets import asset_data
+from ..images.slots import SLOT_MODES
 from ..images.uploads import add_asset
 from ..models import Theme
 from ..themes.publishing import NOTHING_TO_PUBLISH, NothingToPublish, publish
@@ -139,14 +140,12 @@ def editor_upload(request, pk):
     upload = request.FILES.get("file")
     if upload is None:
         return JsonResponse({"errors": ["Choose an image to upload."]}, status=400)
+    slot, mode = request.POST.get("slot", ""), request.POST.get("mode", "light")
+    if slot in SLOT_MODES and mode not in SLOT_MODES[slot]:
+        # Email and print logos and the sharing image only have a light one (#271).
+        return JsonResponse({"errors": ["This image only has a light version."]}, status=400)
     try:
-        asset = add_asset(
-            theme,
-            request.POST.get("slot", ""),
-            request.POST.get("mode", "light"),
-            upload,
-            request.POST.get("alt_text", ""),
-        )
+        asset = add_asset(theme, slot, mode, upload, request.POST.get("alt_text", ""))
     except ValidationError as error:
         return JsonResponse({"errors": error.messages}, status=400)
     return JsonResponse(

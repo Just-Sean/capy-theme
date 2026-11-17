@@ -136,14 +136,14 @@ def clean(form, cleaned, settings):
 
 
 def ask_to_choose_again(form):
-    """Browsers don't keep a chosen file when the page comes back with errors, so
-    say so next to each slot that had one (#271)."""
-    if not form.errors:
-        return
+    """Browsers don't keep a chosen file when the page comes back with errors (in
+    the form or in a list below it), so say so next to each slot that had one.
+    Called by ThemeAdmin when the page is shown again after a failed save (#271)."""
+    cleaned = getattr(form, "cleaned_data", None) or {}
     for slot, modes in CHOOSABLE.items():
         for mode in modes:
             name = image_field_name(slot, mode)
-            value = form.cleaned_data.get(name) or {}
+            value = cleaned.get(name) or {}
             if value.get("clean") and name not in form.errors:
                 form.add_error(name, CHOOSE_AGAIN)
 
@@ -157,16 +157,18 @@ def save_images(form, theme):
     for slot, modes in CHOOSABLE.items():
         for mode in modes:
             value = form.cleaned_data.get(image_field_name(slot, mode)) or {}
-            alt = value.get("alt")
             if value.get("clean"):
-                asset = store_asset(theme, slot, mode, value["clean"], alt or "")
+                asset = store_asset(theme, slot, mode, value["clean"], value["upload_alt"])
                 images.setdefault(slot, {})[mode] = asset.pk
                 changed = True
-            elif value.get("choice") in assets and alt is not None:
-                asset = assets[value["choice"]]
-                if asset.alt_text != alt:
-                    asset.alt_text = alt
-                    asset.save(update_fields=["alt_text"])
+            _save_alt(assets.get(value.get("alt_for")), value.get("alt"))
     if changed:
         theme.settings["images"] = images
         theme.save()
+
+
+def _save_alt(asset, alt):
+    """The alt text typed for the image the page showed (never another one)."""
+    if asset is not None and alt is not None and asset.alt_text != alt:
+        asset.alt_text = alt
+        asset.save(update_fields=["alt_text"])

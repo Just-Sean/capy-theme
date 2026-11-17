@@ -4,13 +4,16 @@
 
 **Code it covers:** `src/capy_theme/admin/form_images.py`, `admin/slot_image.py`, `admin/inlines.py`, `images/assets.py`, `widgets/slot_image.html`
 
-**Its 15 tests** (each name says what must hold):
+**Its 39 tests** (each name says what must hold):
 
 - every slot explains what its for and its limits
 - the main logo is up front and the others are under more
 - a slot shows its current image and offers its earlier uploads
 - an svg cant be picked where it isnt allowed
 - choosing an earlier upload and editing its alt text
+- a new upload gets its own alt text not the current images
+- a forged alt for another slots image is ignored
+- choose again is said when the theme name is taken
 - several uploads in one save
 - a file must be chosen again if another field has an error
 - new themes can have images from the start
@@ -21,5 +24,26 @@
 - alt text can be edited in media
 - media has no upload form
 - where used counts the draft and the live revision
+- choosing another earlier image keeps its own alt text
+- choosing an earlier image for an empty slot keeps its alt text
+- a file must be chosen again when media has an error
+- a choice that isnt this slots is refused
+- a dark upload can be chosen for light
+- an svg is refused in a slot without svg
+- an svg is fine in the main logo
+- an oversized file is refused before it is read
+- a bad upload isnt told to choose again
+- an upload wins over choosing an earlier image
+- uploads in different sections in one save
+- email and print dark fields posted anyway are ignored
+- alt text is trimmed and limited
+- an alt text edit in media isnt undone by the slot
+- an image only the live revision uses cant be deleted
+- deleting two where one is in use deletes neither
+- an image used in another slot mode cant be deleted
+- a user without change theme cant delete from media
+- an image an earlier revision uses cant be deleted
+- the advice says to publish when the published theme uses it
+- an old dark email choice doesnt block deleting
 
 Run just this file with `uv run pytest tests/admin/test_admin_images.py`.

@@ -1,6 +1,8 @@
 {% comment %}
   One image slot and mode on the theme page (admin/slot_image.py, #271): the
-  current image, a choice of this slot's earlier uploads, a new upload and the alt
+  current image and its alt text, a choice of this slot's earlier uploads, and a
+  new upload with its own alt text. The hidden "alt_for" says which image the alt
+  text box belongs to, so choosing another image never changes that one's alt
   text. The field's label (e.g. "Main logo (light)") is for the choice; each other
   input has its own label. No inline styles: admin/images.css.
 {% endcomment %}<div class="capy-slot-image">
@@ -10,9 +12,12 @@
   </div>
   <div class="capy-slot-inputs">
     <span class="capy-slot-row"><select name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>{% for value, text, selected in widget.options %}<option value="{{ value }}"{% if selected %} selected{% endif %}>{{ text }}</option>{% endfor %}</select></span>
-    <label class="capy-slot-row" for="{{ widget.attrs.id }}_upload">Upload a new image
+    {% if widget.current %}<input type="hidden" name="{{ widget.name }}_alt_for" value="{{ widget.current.pk }}">
+    <label class="capy-slot-row" for="{{ widget.attrs.id }}_alt">Alt text of the current image (describes it for screen readers)
+      <input type="text" name="{{ widget.name }}_alt" id="{{ widget.attrs.id }}_alt" maxlength="{{ widget.alt_max }}" value="{{ widget.alt }}"></label>{% endif %}
+    <label class="capy-slot-row" for="{{ widget.attrs.id }}_upload">Upload a new image (it replaces the current one when you save)
       <input type="file" name="{{ widget.name }}_upload" id="{{ widget.attrs.id }}_upload" accept="{{ widget.accept }}"></label>
-    <label class="capy-slot-row" for="{{ widget.attrs.id }}_alt">Alt text (describes the image for screen readers)
-      <input type="text" name="{{ widget.name }}_alt" id="{{ widget.attrs.id }}_alt" maxlength="200" value="{{ widget.alt }}"></label>
+    <label class="capy-slot-row" for="{{ widget.attrs.id }}_upload_alt">Alt text for the new image
+      <input type="text" name="{{ widget.name }}_upload_alt" id="{{ widget.attrs.id }}_upload_alt" maxlength="{{ widget.alt_max }}" value="{{ widget.upload_alt }}"></label>
   </div>
 </div>
