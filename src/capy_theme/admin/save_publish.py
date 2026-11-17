@@ -25,7 +25,13 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from ..models import ThemeAssignment
-from ..themes.active import NotPublished, activate, default_theme, get_active_theme
+from ..themes.active import (
+    NotPublished,
+    activate,
+    default_theme,
+    get_active_theme,
+    not_published_message,
+)
 from ..themes.publishing import (
     NOTE_MAX,
     NOTHING_TO_PUBLISH,
@@ -104,8 +110,8 @@ def run_publish(request, theme, activate_too, quiet=False):
             revision = publish(theme, user=user, note=note)
     except NothingToPublish:
         say(messages.WARNING, NOTHING_TO_PUBLISH)
-    except NotPublished as error:
-        say(messages.ERROR, str(error))
+    except NotPublished:
+        say(messages.ERROR, not_published_message(theme))
     except ValidationError as error:
         say(messages.ERROR, "Can't publish: " + " ".join(error.messages))
     except IntegrityError:
@@ -317,8 +323,8 @@ class SavePublishMixin:
         theme = self._row_theme(request, object_id)
         try:
             activate(theme)
-        except NotPublished as error:
-            messages.error(request, str(error))
+        except NotPublished:
+            messages.error(request, not_published_message(theme))
         else:
             level, text = activated_message(theme)
             messages.add_message(request, level, text)

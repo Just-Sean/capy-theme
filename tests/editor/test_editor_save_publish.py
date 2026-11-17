@@ -352,3 +352,21 @@ def test_publish_for_a_missing_theme_is_not_found(client, django_user_model):
         reverse("capy_theme:editor_publish", args=[999]), "{}", content_type="application/json"
     )
     assert response.status_code == 404
+
+
+def test_the_not_published_message_is_built_not_copied_from_the_error(
+    client, django_user_model, monkeypatch
+):
+    # CodeQL: don't send an exception's text to the browser. The message is built
+    # from the theme instead, so whatever the error says can't reach the user.
+    from capy_theme.themes.active import NotPublished
+
+    def refuse(*args, **kwargs):
+        raise NotPublished("internal detail: /srv/app/secret.py line 3")
+
+    monkeypatch.setattr("capy_theme.editor.views.publish_and_activate", refuse)
+    login(client, django_user_model, "change_theme", "publish_theme")
+    theme = Theme.objects.create(name="Main", slug="main")
+    reply = post(client, "publish", theme, {"activate": True})
+    assert reply.status_code == 400
+    assert reply.json()["errors"] == ["Publish “Main” before activating it."]

@@ -22,3 +22,4 @@
 
 - The state per domain is cached for `CAPY_THEME_CACHE_SECONDS`, but expires early at the next schedule start or end, so schedules switch on time.
 - `clear_cache()` changes a "generation" key, which drops every domain's cache at once. `signals.py` calls it on every change.
+- **`not_published_message(theme)`:** the "Publish “X” before activating it." message, built from the theme. The admin and the editor show this, never the exception's own text (CodeQL: nothing else can leak into it).

@@ -12,7 +12,7 @@ from ..images.assets import asset_data
 from ..images.slots import SLOT_MODES
 from ..images.uploads import add_asset
 from ..models import Theme
-from ..themes.active import NotPublished, get_active_theme
+from ..themes.active import NotPublished, get_active_theme, not_published_message
 from ..themes.publishing import (
     NOTE_MAX,
     NOTHING_TO_PUBLISH,
@@ -132,8 +132,8 @@ def editor_publish(request, pk):
             revision = publish(theme, user=request.user, note=note)
     except NothingToPublish:
         return JsonResponse({"errors": [NOTHING_TO_PUBLISH]}, status=409)
-    except NotPublished as error:
-        return JsonResponse({"errors": [str(error)]}, status=400)
+    except NotPublished:  # the message is built, not taken from the exception
+        return JsonResponse({"errors": [not_published_message(theme)]}, status=400)
     except ValidationError as error:
         return JsonResponse({"errors": ["Can't publish: " + " ".join(error.messages)]}, status=400)
     except IntegrityError:

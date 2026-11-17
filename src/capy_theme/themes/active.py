@@ -155,6 +155,12 @@ def scheduled_assignments(site=""):
     )
 
 
+def not_published_message(theme):
+    """What to tell someone who tries to activate a theme that's never been published.
+    Built here, not read back from the exception, so nothing else can leak into it."""
+    return f"Publish “{theme}” before activating it."
+
+
 def default_theme():
     """The theme activated for every site (the default when no schedule is running
     and a domain has no site theme of its own), or None. Read from the database."""
@@ -172,7 +178,7 @@ def activate(theme, site=""):
     Raises NotPublished if it has no live revision.
     """
     if theme.live_revision_id is None:
-        raise NotPublished(f"Publish “{theme}” before activating it.")
+        raise NotPublished(not_published_message(theme))
     ThemeAssignment.objects.update_or_create(
         site=site.lower(), starts_at=None, ends_at=None, defaults={"theme": theme}
     )
