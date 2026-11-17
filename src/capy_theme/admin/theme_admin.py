@@ -122,7 +122,7 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, SavePublishMixin, admin.M
             settings["custom_css"] = f"({custom_css_summary(theme.settings)})"
         return format_html("<pre>{}</pre>", json.dumps(settings, indent=2, sort_keys=True))
 
-    @admin.display(boolean=True, description="Active")
+    @admin.display(boolean=True, description="Showing now")
     def is_active(self, theme):
         active = get_active_theme()
         return active is not None and active.pk == theme.pk
@@ -136,28 +136,19 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, SavePublishMixin, admin.M
         save_images(form, obj)  # new uploads need the saved theme (#271)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
-        theme = Theme.objects.select_related("live_revision").filter(pk=object_id).first()
         extra_context = {
             **(extra_context or {}),
-            **self.save_publish_context(request, theme),
-            "can_publish": self.has_publish_permission(request),
             "edit_live_url": edit_live_url(object_id) if can_edit(request.user) else None,
         }
         return super().change_view(request, object_id, form_url, extra_context)
 
-    def add_view(self, request, form_url="", extra_context=None):
-        extra_context = {
-            **(extra_context or {}),
-            **self.save_publish_context(request, None),
-            "can_publish": self.has_publish_permission(request),
-        }
-        return super().add_view(request, form_url, extra_context)
-
-    def render_change_form(self, request, context, *args, **kwargs):
+    def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
         if request.method == "POST":  # shown again after a failed save
             ask_to_choose_again(context["adminform"].form)
+        # The Save and publish area (#273), for the theme Django already loaded.
+        context.update(self.save_publish_context(request, None if add else obj))
         context["capy_tabs"] = theme_tabs(context["adminform"], context["inline_admin_formsets"])
-        return super().render_change_form(request, context, *args, **kwargs)
+        return super().render_change_form(request, context, add, change, form_url, obj)
 
     @admin.display(description="Live revision", ordering="live_revision__number")
     def live_revision_number(self, theme):

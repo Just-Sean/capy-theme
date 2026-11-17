@@ -2,12 +2,16 @@
 and publish, and Save, publish and activate buttons, the theme list's row buttons
 (#273), and the revision list."""
 
+import re
+from datetime import timedelta
+
 import pytest
 from django.contrib.auth.models import Permission
 from django.db import IntegrityError
 from django.urls import reverse
+from django.utils import timezone
 
-from capy_theme.models import Theme, ThemeRevision
+from capy_theme.models import Theme, ThemeAssignment, ThemeRevision
 from capy_theme.themes.active import activate, get_active_theme
 from capy_theme.themes.publishing import publish
 
@@ -54,7 +58,7 @@ def test_edit_page_has_the_three_buttons_with_descriptions_and_status(admin, the
     for button, words in [
         ("_capy_save", "Visitors see nothing until you publish."),
         ("_capy_publish", "makes this version of the theme live"),
-        ("_capy_publish_activate", "makes this the site's theme"),
+        ("_capy_publish_activate", "makes this the default theme"),
     ]:
         assert f'name="{button}"' in content and words in content, button
     assert "Not published yet" in content  # the status line
@@ -93,7 +97,7 @@ def test_save_publish_and_activate(admin, theme):
     assert theme.live_revision.number == 1
     assert get_active_theme().pk == theme.pk
     content = admin.get(change_url(theme)).content.decode()
-    assert "it&#x27;s now the site&#x27;s theme" in content
+    assert "“Main” is now the default theme." in content
     # Already the site's theme: no activate button.
     assert 'name="_capy_publish_activate"' not in content
 
@@ -247,3 +251,234 @@ def test_the_row_buttons_only_accept_post(admin, theme):
     for action in ("publish_now", "publish_activate", "activate"):
         assert admin.get(row_url(theme, action)).status_code == 405
     assert not ThemeRevision.objects.exists()
+
+
+# QA for #273: edge cases
+
+
+ADD = reverse("admin:capy_theme_theme_add")
+
+
+def test_a_non_numeric_id_on_the_theme_page_isnt_a_server_error(admin):
+    # Django's own change page redirects for an id that can't exist; it must not crash.
+    response = admin.get("/admin/capy_theme/theme/abc/change/")
+    assert response.status_code == 302
+
+
+@pytest.mark.parametrize("path", ["publish-now", "publish-and-activate", "activate"])
+def test_a_non_numeric_id_on_a_row_button_is_not_found(admin, path):
+    assert admin.post(f"/admin/capy_theme/theme/abc/{path}/").status_code == 404
+
+
+@pytest.mark.parametrize("action", ["publish_now", "publish_activate", "activate"])
+def test_a_row_button_for_a_missing_theme_is_not_found(admin, action):
+    assert admin.post(reverse(f"admin:capy_theme_theme_{action}", args=[999])).status_code == 404
+
+
+def test_save_draft_in_a_popup_closes_the_popup(admin):
+    # The Scheduled theme and Site theme pages add a theme in a popup ("+").
+    url = ADD + "?_popup=1"
+    data = _post_back(admin.get(url).content.decode())
+    data.update({"name": "Pop", "slug": "pop", "_capy_save": "", "_popup": "1"})
+    response = admin.post(url, data)
+    assert response.status_code == 200  # Django's popup response, not a redirect
+    assert Theme.objects.filter(slug="pop").exists()
+
+
+def test_an_add_only_user_isnt_sent_to_a_page_they_cant_open(client, django_user_model):
+    user = django_user_model.objects.create_user("adder", password="pw", is_staff=True)
+    user.user_permissions.set(Permission.objects.filter(codename="add_theme"))
+    client.force_login(user)
+    data = _post_back(client.get(ADD).content.decode())
+    data.update({"name": "New", "slug": "new", "_capy_save": ""})
+    response = client.post(ADD, data)
+    assert response.status_code == 302
+    assert client.get(response.url).status_code == 200
+
+
+def test_the_publish_note_survives_a_form_error(admin, theme):
+    response = press(admin, theme, "_capy_publish", slug="", _capy_note="Launch notes")
+    assert response.status_code == 200
+    assert 'value="Launch notes"' in response.content.decode()
+
+
+def running_schedule(theme):
+    now = timezone.now()
+    return ThemeAssignment.objects.create(
+        theme=theme, site="", starts_at=now - timedelta(days=1), ends_at=now + timedelta(days=1)
+    )
+
+
+def test_activate_during_a_running_schedule_doesnt_claim_success(admin, theme, user):
+    publish(theme, user=user)
+    sale = Theme.objects.create(name="Sale", slug="sale")
+    publish(sale, user=user)
+    running_schedule(sale)
+    content = admin.post(row_url(theme, "activate"), follow=True).content.decode()
+    if "“Main” is now the default theme." in content:
+        assert get_active_theme().pk == theme.pk, "told it's showing; Sale still is"
+    # It says what happened instead: the default changed, the schedule still shows.
+    assert "“Main” is now the default theme, but a theme schedule is showing “Sale”" in content
+
+
+def test_the_default_theme_isnt_offered_activate_during_a_schedule(admin, theme, user):
+    publish(theme, user=user)
+    activate(theme)
+    sale = Theme.objects.create(name="Sale", slug="sale")
+    publish(sale, user=user)
+    running_schedule(sale)
+    assert 'name="_capy_publish_activate"' not in admin.get(change_url(theme)).content.decode()
+
+
+def test_a_scheduled_theme_can_still_be_made_the_default(admin, user):
+    sale = Theme.objects.create(name="Sale", slug="sale")
+    publish(sale, user=user)
+    running_schedule(sale)
+    assert ">Activate<" in row_buttons(admin, sale)
+
+
+# Coverage (passing)
+
+
+def test_without_a_capy_button_django_buttons_still_work(admin, theme):
+    for button, where in [("_save", CHANGELIST), ("_addanother", ADD), ("_continue", None)]:
+        response = press(admin, theme, button, light_base="cupcake")
+        assert response.status_code == 302
+        assert response.url == (where or change_url(theme))
+    assert not ThemeRevision.objects.exists()
+
+
+def test_several_buttons_at_once_do_the_first_one(admin, theme):
+    data = _post_back(admin.get(change_url(theme)).content.decode())
+    data.update({"_capy_save": "", "_capy_publish_activate": ""})
+    admin.post(change_url(theme), data)
+    assert not ThemeRevision.objects.exists() and get_active_theme() is None
+    data = _post_back(admin.get(change_url(theme)).content.decode())
+    data.update({"_capy_publish": "", "_capy_publish_activate": ""})
+    admin.post(change_url(theme), data)
+    theme.refresh_from_db()
+    assert theme.live_revision.number == 1 and get_active_theme() is None
+
+
+def test_a_very_long_note_is_cut_to_2000_characters(admin, theme):
+    press(admin, theme, "_capy_publish", _capy_note="é" * 5000)
+    theme.refresh_from_db()
+    assert theme.live_revision.note == "é" * 2000
+
+
+def test_a_form_error_publishes_and_activates_nothing(admin, theme):
+    response = press(admin, theme, "_capy_publish_activate", slug="")
+    assert response.status_code == 200
+    assert "Not published yet" in response.content.decode()
+    assert not ThemeRevision.objects.exists() and get_active_theme() is None
+
+
+def test_view_only_users_have_no_buttons_and_cant_post_them(client, django_user_model, theme):
+    viewer = django_user_model.objects.create_user("viewer", password="pw", is_staff=True)
+    viewer.user_permissions.set(
+        Permission.objects.filter(codename__in=["view_theme", "publish_theme"])
+    )
+    client.force_login(viewer)
+    content = client.get(change_url(theme)).content.decode()
+    assert 'name="_capy_save"' not in content and 'name="_capy_publish"' not in content
+    response = client.post(change_url(theme), {"_capy_publish": "", "name": "X", "slug": "x"})
+    assert response.status_code == 403
+    assert not ThemeRevision.objects.exists()
+
+
+@pytest.mark.parametrize("action", ["publish_now", "publish_activate", "activate"])
+def test_row_buttons_need_login(client, theme, action):
+    response = client.post(row_url(theme, action))
+    assert response.status_code == 302 and "login" in response.url
+    assert not ThemeRevision.objects.exists()
+
+
+def test_activating_the_site_theme_again_keeps_one_assignment(admin, theme, user):
+    publish(theme, user=user)
+    activate(theme)
+    assert admin.post(row_url(theme, "activate")).status_code == 302
+    assert ThemeAssignment.objects.count() == 1 and get_active_theme().pk == theme.pk
+
+
+def test_the_status_line_and_active_column_agree_after_activating(admin, theme, user):
+    other = Theme.objects.create(name="Other", slug="other")
+    for each in (theme, other):
+        publish(each, user=user)
+    activate(other)
+    admin.get(CHANGELIST)  # both pages seen while Other is the site's theme
+    admin.get(change_url(theme))
+    admin.post(row_url(theme, "activate"))
+    assert "<dt>Default theme</dt><dd>Yes</dd>" in admin.get(change_url(theme)).content.decode()
+    assert "icon-yes" in row_buttons(admin, theme)
+    assert "icon-no" in row_buttons(admin, other)
+
+
+# Second round (#273 review fixes)
+
+
+def test_the_status_says_when_a_schedule_shows_another_theme(admin, theme, user):
+    publish(theme, user=user)
+    activate(theme)
+    sale = Theme.objects.create(name="Sale", slug="sale")
+    publish(sale, user=user)
+    running_schedule(sale)
+    content = admin.get(change_url(theme)).content.decode()
+    assert "<dt>Default theme</dt><dd>Yes</dd>" in content
+    assert "<dt>Showing now</dt><dd>“Sale”, because a theme schedule is running</dd>" in content
+    sale_page = admin.get(change_url(sale)).content.decode()
+    assert "No (the default is “Main”)" in sale_page
+    assert 'name="_capy_publish_activate"' in sale_page  # Sale can still be made the default
+
+
+def test_publishing_buttons_ask_first_and_save_draft_doesnt(admin, theme):
+    content = admin.get(change_url(theme)).content.decode()
+    save = content[content.index('name="_capy_save"') - 120 : content.index('name="_capy_save"')]
+    assert "data-capy-confirm" not in save
+    assert content.count("data-capy-confirm=") == 2  # Save and publish; ... and activate
+    assert "capy_theme/admin/confirm.js" in content
+    listing = admin.get(CHANGELIST).content.decode()
+    assert "capy_theme/admin/confirm.js" in listing
+    assert 'data-capy-confirm="Publish “Main”? Visitors will see it."' in row_buttons(admin, theme)
+
+
+def test_the_buttons_look_like_admin_buttons(admin, theme):
+    content = admin.get(change_url(theme)).content.decode()
+    assert 'class="button default" name="_capy_save"' in content
+    assert 'class="button" name="_capy_publish"' in content
+
+
+def test_the_note_is_above_the_buttons_and_a_draft_save_says_its_not_kept(admin, theme):
+    content = admin.get(change_url(theme)).content.decode()
+    assert content.index('name="_capy_note"') < content.index('name="_capy_save"')
+    press(admin, theme, "_capy_save", _capy_note="For later")
+    page = admin.get(change_url(theme)).content.decode()
+    assert "The note wasn&#x27;t kept: notes are only kept when you publish." in page
+    assert not ThemeRevision.objects.exists()
+
+
+def test_a_popup_has_no_activate_button(admin):
+    content = admin.get(ADD + "?_popup=1").content.decode()
+    assert 'name="_capy_publish"' in content
+    assert 'name="_capy_publish_activate"' not in content
+
+
+def test_view_only_users_get_a_close_link(client, django_user_model, theme):
+    viewer = django_user_model.objects.create_user("viewer", password="pw", is_staff=True)
+    viewer.user_permissions.set(Permission.objects.filter(codename="view_theme"))
+    client.force_login(viewer)
+    content = client.get(change_url(theme)).content.decode()
+    assert 'class="closelink">Close</a>' in content
+
+
+def test_the_delete_link_keeps_the_lists_filters(admin, theme):
+    filters = "_changelist_filters=light_base%3Dlight"
+    content = admin.get(change_url(theme) + "?" + filters).content.decode()
+    assert re.search(r'href="[^"]*/delete/\?_changelist_filters=light_base%3Dlight"', content)
+
+
+def test_row_buttons_go_back_to_the_filtered_list(admin, theme):
+    listing = CHANGELIST + "?q=Main"
+    response = admin.post(row_url(theme, "publish_now"), HTTP_REFERER="http://testserver" + listing)
+    assert response.url == "http://testserver" + listing
+    elsewhere = admin.post(row_url(theme, "activate"), HTTP_REFERER="https://evil.example/")
+    assert elsewhere.url == CHANGELIST  # never back to another site

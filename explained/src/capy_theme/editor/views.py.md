@@ -8,10 +8,10 @@
 | `editor_preview` | `POST editor/<id>/preview/` | CSS and values for unsaved changes; writes nothing |
 | `editor_suggestions` | `POST editor/<id>/suggestions/` | Color suggestions |
 | `editor_save` | `POST editor/<id>/save/` | Save draft, return the new state |
-| `editor_publish` | `POST editor/<id>/publish/` | Publish (needs `publish_theme`), with an optional note |
+| `editor_publish` | `POST editor/<id>/publish/` | Publish (needs `publish_theme`), with an optional note; with `"activate": true` it also makes it the site's theme, even when there was nothing new to publish |
 | `editor_upload` | `POST editor/<id>/upload/` | Upload an image through the same checks as the admin (a dark image is refused for slots that only have a light one) |
 
 **Errors come back as JSON with clear messages:**
 
-- 400: bad input or invalid values
+- 400: bad input or invalid values, or activating a theme that was never published
 - 409: nothing to publish, or someone else just published

@@ -4,7 +4,7 @@
 
 **Code it covers:** `src/capy_theme/editor/ and the editor's static files`
 
-**Its 13 tests** (each name says what must hold):
+**Its 16 tests** (each name says what must hold):
 
 - save stores the draft and keeps other settings
 - saving doesnt publish
@@ -19,5 +19,8 @@
 - publish refuses an invalid saved draft
 - a real collision leaves the database clean
 - publishing at the same moment as someone else
+- editor publish can also activate
+- editor publish without activate doesnt activate
+- the editor has the three buttons with descriptions
 
 Run just this file with `uv run pytest tests/editor/test_editor_save_publish.py`.

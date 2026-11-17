@@ -51,4 +51,5 @@ section folded (each opens with a click).{% endcomment %}
 {% block admin_change_form_document_ready %}
   {{ block.super }}
   <script src="{% static 'capy_theme/admin/tabs.js' %}" defer {% csp_nonce_attr %}></script>
+  <script src="{% static 'capy_theme/admin/confirm.js' %}" defer {% csp_nonce_attr %}></script>
 {% endblock %}

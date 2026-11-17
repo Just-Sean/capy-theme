@@ -6,6 +6,7 @@ Publish, Publish and activate and Activate buttons on each row (admin/save_publi
 {% block extrastyle %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'capy_theme/admin/save_publish.css' %}" {% csp_nonce_attr %}>
+  <script src="{% static 'capy_theme/admin/confirm.js' %}" defer {% csp_nonce_attr %}></script>
 {% endblock %}
 
 {% block object-tools-items %}

@@ -13,7 +13,7 @@
 - `get_active_theme(request)`: the theme to show, with its live revision.
 - `get_site_theme(request)`: the same but ignoring the visitor's choice.
 - `offered_themes()`
-- `activate(theme, site)`: the Activate action; the theme must be published.
+- `activate(theme, site)`: the admin's Activate buttons and `publish_and_activate`; the theme must be published.
 - `theme_at(when, site)`: uncached; the admin's schedule page uses it.
 - `scheduled_assignments(site)`
 

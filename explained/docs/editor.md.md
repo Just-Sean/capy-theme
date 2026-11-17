@@ -3,7 +3,7 @@
 **Covers:** the live theme editor, the panel staff open with "Edit theme" on any page.
 
 - what each section does
-- Save draft and Publish
+- Save draft, Revert, Save and publish, and Save, publish and activate
 - how the page makes room for the panel
 - `?edit=<id>`
 - the JSON endpoints it uses

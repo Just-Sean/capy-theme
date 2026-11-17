@@ -106,7 +106,12 @@
 .capy-editor-swatch { display: inline-block; width: 1.5rem; height: 1.5rem; border-radius: 0.25rem; border: 1px solid rgba(0, 0, 0, 0.15); }
 
 /* Save and publish */
-.capy-editor-actions { position: sticky; bottom: -1rem; background: #ffffff; padding-bottom: 1rem; }
+.capy-editor-actions { background: #ffffff; padding-bottom: 1rem; }
+/* Pinned to the bottom only where there's room: on short screens (a phone held
+   sideways, zoom) it would cover the controls above it and hide keyboard focus. */
+@media (min-height: 48rem) {
+  .capy-editor-actions { position: sticky; bottom: -1rem; }
+}
 .capy-editor-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .capy-editor-publish { display: flex; flex-direction: column; margin-top: 0.5rem; }
 

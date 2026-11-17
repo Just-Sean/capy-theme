@@ -12,8 +12,14 @@ from ..images.assets import asset_data
 from ..images.slots import SLOT_MODES
 from ..images.uploads import add_asset
 from ..models import Theme
-from ..themes.active import NotPublished
-from ..themes.publishing import NOTHING_TO_PUBLISH, NothingToPublish, publish, publish_and_activate
+from ..themes.active import NotPublished, get_active_theme
+from ..themes.publishing import (
+    NOTE_MAX,
+    NOTHING_TO_PUBLISH,
+    NothingToPublish,
+    publish,
+    publish_and_activate,
+)
 from .access import can_edit, can_publish
 from .preview import preview
 from .saving import save_draft, suggestions
@@ -96,6 +102,12 @@ def editor_save(request, pk):
     return JsonResponse({"saved": True, "state": draft_state(theme, request.user)})
 
 
+def _showing_instead(theme):
+    """The theme the site shows right now if it isn't `theme` (a schedule), else None."""
+    showing = get_active_theme()
+    return str(showing) if showing is not None and showing.pk != theme.pk else None
+
+
 @require_POST
 def editor_publish(request, pk):
     """Publish the theme's saved draft from the editor. Needs publish_theme.
@@ -111,7 +123,7 @@ def editor_publish(request, pk):
         data = _json_body(request)
     except ValueError:
         return JsonResponse({"errors": ["The request must be a JSON object."]}, status=400)
-    note = str(data.get("note", "")).strip()[:2000]
+    note = str(data.get("note", "")).strip()[:NOTE_MAX]
     activate_too = data.get("activate") is True
     try:
         if activate_too:
@@ -137,6 +149,8 @@ def editor_publish(request, pk):
         {
             "published": revision.number if revision else None,
             "activated": activate_too,
+            # A running theme schedule can show another theme for now (#273).
+            "showing": _showing_instead(theme) if activate_too else None,
             "state": draft_state(theme, request.user),
         }
     )

@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 NOTHING_TO_PUBLISH = "Nothing to publish: the draft matches the live revision."
 
+# The longest note kept with a revision.
+NOTE_MAX = 2000
+
 
 class NothingToPublish(Exception):
     """Raised when the draft's look already matches the live revision."""

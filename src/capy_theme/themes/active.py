@@ -155,6 +155,17 @@ def scheduled_assignments(site=""):
     )
 
 
+def default_theme():
+    """The theme activated for every site (the default when no schedule is running
+    and a domain has no site theme of its own), or None. Read from the database."""
+    assignment = (
+        ThemeAssignment.objects.select_related("theme")
+        .filter(site="", starts_at=None, ends_at=None)
+        .first()
+    )
+    return assignment.theme if assignment else None
+
+
 def activate(theme, site=""):
     """Make `theme` the active theme, for every site or for one domain.
 

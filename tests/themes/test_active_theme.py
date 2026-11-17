@@ -139,7 +139,7 @@ def run_activate(admin, theme):
 def test_admin_activate_button(admin):
     theme = published_theme("Main")
     response = run_activate(admin, theme)
-    assert "“Main” is now the site&#x27;s theme." in response.content.decode()
+    assert "“Main” is now the default theme." in response.content.decode()
     assert get_active_theme() == theme
 
 
@@ -153,5 +153,5 @@ def test_admin_refuses_unpublished_theme(admin):
 def test_admin_list_shows_which_theme_is_active(admin):
     activate(published_theme("Main"))
     response = admin.get(reverse("admin:capy_theme_theme_changelist"))
-    assert b"Active" in response.content
+    assert b"Showing now" in response.content  # the column (#273: was "Active")
     assert b"icon-yes.svg" in response.content

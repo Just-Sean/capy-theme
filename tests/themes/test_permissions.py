@@ -140,7 +140,7 @@ def test_designer_sees_only_save_draft(designer, theme):
     content = designer.get(change_url(theme)).content.decode()
     assert 'name="_capy_save"' in content
     assert 'name="_capy_publish"' not in content and 'name="_capy_publish_activate"' not in content
-    assert "Publishing and activating need the" in content
+    assert "You can save drafts. To publish, ask someone who can publish themes" in content
 
 
 def test_designer_direct_publish_requests_are_refused(designer, theme):

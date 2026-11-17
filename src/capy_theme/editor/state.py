@@ -15,7 +15,7 @@ from ..images.logos import HEIGHTS
 from ..images.slot_text import empty_text, help_text
 from ..images.slots import NO_SVG, SLOT_MODES, SLOTS
 from ..images.uploads import byte_limit
-from ..themes.active import get_active_theme
+from ..themes.active import default_theme
 from ..themes.catalog import get_builtin_themes
 from .access import can_publish
 from .preview import preview
@@ -45,8 +45,8 @@ def draft_state(theme, user):
         "live_revision": theme.live_revision.number if theme.live_revision else None,
         "has_unpublished_changes": theme.has_unpublished_changes,
         "can_publish": can_publish(user),
-        # Whether it's the site's theme already (then there's no Activate button, #273).
-        "is_site_theme": getattr(get_active_theme(), "pk", None) == theme.pk,
+        # Whether it's the default theme already (then there's no activate button, #273).
+        "is_site_theme": getattr(default_theme(), "pk", None) == theme.pk,
         "urls": editor_urls(theme),
         "assets": [asset_data(a) for a in theme.assets.all()],
         "controls": controls(),

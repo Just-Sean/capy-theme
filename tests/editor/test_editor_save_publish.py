@@ -252,7 +252,85 @@ def test_the_editor_has_the_three_buttons_with_descriptions():
         '"Save, publish and activate"',
         "Visitors see nothing until you publish.",
         "makes this version of the theme live",
-        "makes this the site's theme",
+        "makes this the default theme",
+        "Note for the history (optional, kept when you publish)",  # a visible label
+        "This is already the default theme",
     ):
         assert words in script, words
-    assert "if (!state.is_site_theme)" in script  # no activate button when it already is
+    # No activate button when it already is the default theme, with a note saying so.
+    assert "if (state.is_site_theme) {" in script
+    assert "All of the above" not in script  # each description makes sense on its own
+
+
+def test_editor_publish_and_activate_says_when_a_schedule_shows_another_theme(
+    client, django_user_model
+):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from capy_theme.models import ThemeAssignment
+
+    login(client, django_user_model, "change_theme", "publish_theme")
+    main = Theme.objects.create(name="Main", slug="main")
+    sale = Theme.objects.create(name="Sale", slug="sale")
+    publish(sale)
+    now = timezone.now()
+    ThemeAssignment.objects.create(
+        theme=sale, starts_at=now - timedelta(days=1), ends_at=now + timedelta(days=1)
+    )
+    reply = post(client, "publish", main, {"activate": True}).json()
+    assert reply["activated"] is True and reply["showing"] == "Sale"
+    # It's the default theme now (no more activate button), though Sale shows for now.
+    assert reply["state"]["is_site_theme"] is True
+    assert get_active_theme().pk == sale.pk
+    assert "a theme schedule is showing" in STATIC_ACTIONS.read_text()
+
+
+def test_the_editor_save_area_is_only_pinned_on_tall_screens():
+    css = (STATIC_ACTIONS.parents[1] / "editor.css").read_text()
+    assert "@media (min-height: 48rem) {\n  .capy-editor-actions { position: sticky;" in css
+    assert ".capy-editor-actions { background: #ffffff; padding-bottom: 1rem; }" in css
+
+
+# QA for #273: the editor's publish with "activate"
+
+
+@pytest.mark.parametrize("value", ["true", 1, "1", None, False])
+def test_only_a_json_true_activates(client, django_user_model, theme, value):
+    login(client, django_user_model, "change_theme", "publish_theme")
+    response = post(client, "publish", theme, {"activate": value})
+    assert response.status_code == 200 and response.json()["activated"] is False
+    assert theme.revisions.count() == 1 and get_active_theme() is None
+
+
+def test_activate_needs_the_publish_permission(client, django_user_model, theme):
+    login(client, django_user_model, "change_theme")
+    assert post(client, "publish", theme, {"activate": True}).status_code == 403
+    assert not ThemeRevision.objects.exists() and get_active_theme() is None
+
+
+def test_activate_an_invalid_draft_activates_nothing(client, django_user_model, theme, settings):
+    Theme.objects.filter(pk=theme.pk).update(light_base="cupcake")
+    settings.CAPY_THEME_BUILTIN_THEMES = ["light", "dark"]
+    login(client, django_user_model, "change_theme", "publish_theme")
+    response = post(client, "publish", theme, {"activate": True})
+    assert response.status_code == 400 and "Can't publish" in response.json()["errors"][0]
+    assert get_active_theme() is None
+
+
+def test_activate_the_site_theme_with_nothing_new(client, django_user_model, theme):
+    publish(theme)
+    activate(theme)
+    login(client, django_user_model, "change_theme", "publish_theme")
+    reply = post(client, "publish", theme, {"activate": True}).json()
+    assert (reply["published"], reply["activated"]) == (None, True)
+    assert reply["state"]["is_site_theme"] is True and theme.revisions.count() == 1
+
+
+def test_publish_for_a_missing_theme_is_not_found(client, django_user_model):
+    login(client, django_user_model, "change_theme", "publish_theme")
+    response = client.post(
+        reverse("capy_theme:editor_publish", args=[999]), "{}", content_type="application/json"
+    )
+    assert response.status_code == 404

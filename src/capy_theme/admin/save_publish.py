@@ -3,39 +3,44 @@
 The theme page has Save draft, Save and publish, and Save, publish and activate
 (with a status line and a note for the history); the theme list has Publish,
 Publish and activate, and Activate buttons on each row. Publishing and activating
-need the publish_theme permission. Activating makes a theme the site's theme for
-every site that has no site theme of its own (themes.active.activate).
+need the publish_theme permission. Activating makes a theme the default theme: the
+one every site uses unless a schedule is running or a domain has its own site
+theme (themes.active.activate).
 """
 
+from urllib.parse import urlsplit
+
 from django.contrib import admin, messages
+from django.contrib.admin.options import IS_POPUP_VAR
+from django.contrib.admin.utils import unquote
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError
-from django.shortcuts import get_object_or_404, redirect
+from django.http import Http404
+from django.shortcuts import redirect
 from django.urls import path, reverse
 from django.utils.html import format_html_join
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from ..models import Theme
-from ..themes.active import NotPublished, activate, get_active_theme
-from ..themes.publishing import NOTHING_TO_PUBLISH, NothingToPublish, publish, publish_and_activate
+from ..themes.active import NotPublished, activate, default_theme, get_active_theme
+from ..themes.publishing import (
+    NOTE_MAX,
+    NOTHING_TO_PUBLISH,
+    NothingToPublish,
+    publish,
+    publish_and_activate,
+)
 
 # The theme page's buttons (names of the submit buttons) and the note box.
 SAVE = "_capy_save"
 PUBLISH = "_capy_publish"
 PUBLISH_ACTIVATE = "_capy_publish_activate"
 NOTE = "_capy_note"
-NOTE_MAX = 2000
 
 SIMULTANEOUS = (
     "Someone else just published this theme at the same moment, so yours wasn't "
     "published. Check its revisions, then publish again if needed."
 )
-
-
-def site_theme_id():
-    """The id of the site's theme (for every site), or None."""
-    theme = get_active_theme()
-    return theme.pk if theme is not None else None
 
 
 def publish_status(theme):
@@ -44,23 +49,38 @@ def publish_status(theme):
         return [("Draft", "New theme, not saved yet")]
     live = theme.live_revision
     if live is None:
-        draft = "Not published yet: visitors don't see it"
+        draft = "Not published yet, so visitors don't see it"
     elif theme.has_unpublished_changes:
         draft = "Has changes visitors don't see yet"
     else:
         draft = "Matches the published version"
-    site = get_active_theme()
-    if site is None:
-        using = "No: no theme is active yet"
-    elif site.pk == theme.pk:
-        using = "Yes"
+    default = default_theme()
+    if default is None:
+        default_text = "No (there's no default theme yet)"
+    elif default.pk == theme.pk:
+        default_text = "Yes"
     else:
-        using = f"No: the site uses “{site}”"
-    return [
+        default_text = f"No (the default is “{default}”)"
+    status = [
         ("Draft", draft),
         ("Published", f"revision {live.number}" if live else "never"),
-        ("Site's theme", using),
+        ("Default theme", default_text),
     ]
+    showing = get_active_theme()
+    if showing is not None and (default is None or showing.pk != default.pk):
+        status.append(("Showing now", f"“{showing}”, because a theme schedule is running"))
+    return status
+
+
+def activated_message(theme):
+    """What activating did: the default theme, and whether a schedule hides it."""
+    showing = get_active_theme()
+    if showing is not None and showing.pk != theme.pk:
+        return messages.WARNING, (
+            f"“{theme}” is now the default theme, but a theme schedule is showing "
+            f"“{showing}” right now."
+        )
+    return messages.SUCCESS, f"“{theme}” is now the default theme."
 
 
 def run_publish(request, theme, activate_too):
@@ -81,13 +101,16 @@ def run_publish(request, theme, activate_too):
     except IntegrityError:
         messages.warning(request, SIMULTANEOUS)
     else:
-        if revision is None:
-            text = f"Nothing new to publish; “{theme}” is now the site's theme."
-        elif activate_too:
-            text = f"Published “{theme}” as revision {revision.number}; it's now the site's theme."
-        else:
-            text = f"Published “{theme}” as revision {revision.number}."
-        messages.success(request, text)
+        done = (
+            f"Published “{theme}” as revision {revision.number}."
+            if revision
+            else "Nothing new to publish."
+        )
+        if not activate_too:
+            messages.success(request, done)
+            return
+        level, activated = activated_message(theme)
+        messages.add_message(request, level, f"{done} {activated}")
 
 
 class SavePublishMixin:
@@ -126,25 +149,34 @@ class SavePublishMixin:
 
     def _after_save(self, request, theme):
         """After a save from one of the three buttons: publish and activate if asked,
-        and stay on the theme page. None for anything else (Django's own buttons)."""
+        and stay on the theme page. None for anything else, and after publishing in
+        a popup or for someone who can't open the theme page: then Django answers as
+        usual (a popup closes and fills in the field it was opened from)."""
         asked = [name for name in (SAVE, PUBLISH, PUBLISH_ACTIVATE) if name in request.POST]
         if not asked:
             return None
         if asked[0] == SAVE:
-            messages.success(
-                request, f"Draft of “{theme}” saved. Visitors won't see it until it's published."
-            )
+            text = f"Draft of “{theme}” saved. Visitors won't see it until it's published."
+            if request.POST.get(NOTE, "").strip():
+                text += " The note wasn't kept: notes are only kept when you publish."
+            messages.success(request, text)
         elif not self.has_publish_permission(request, theme):
             messages.error(request, "The draft was saved, but you can't publish themes.")
         else:
             run_publish(request, theme, activate_too=asked[0] == PUBLISH_ACTIVATE)
+        if IS_POPUP_VAR in request.POST or not self.has_view_or_change_permission(request, theme):
+            return None
         return redirect(reverse("admin:capy_theme_theme_change", args=[theme.pk]))
 
     def save_publish_context(self, request, theme):
+        default = default_theme()
         return {
             "capy_status": publish_status(theme),
-            "capy_is_site_theme": theme is not None and theme.pk == site_theme_id(),
+            "capy_is_default": theme is not None and default is not None and default.pk == theme.pk,
             "capy_note_max": NOTE_MAX,
+            # What was typed, kept if the page comes back with errors.
+            "capy_note": request.POST.get(NOTE, "") if request.method == "POST" else "",
+            "can_publish": self.has_publish_permission(request),
         }
 
     # The theme list: buttons on each row
@@ -155,45 +187,74 @@ class SavePublishMixin:
             columns.append("publish_buttons")
         return columns
 
-    @admin.display(description="Publish")
+    @admin.display(description="Publish or activate")
     def publish_buttons(self, theme):
-        site_id = site_theme_id()
+        default = default_theme()
+        is_default = default is not None and default.pk == theme.pk
         buttons = []
         if theme.has_unpublished_changes:
-            buttons.append(("capy_theme_theme_publish_now", "Publish"))
-            if theme.pk != site_id:
-                buttons.append(("capy_theme_theme_publish_activate", "Publish and activate"))
-        if theme.live_revision_id is not None and theme.pk != site_id:
-            buttons.append(("capy_theme_theme_activate", "Activate"))
+            buttons.append(
+                ("capy_theme_theme_publish_now", "Publish", "Publish “{}”? Visitors will see it.")
+            )
+            if not is_default:
+                buttons.append(
+                    (
+                        "capy_theme_theme_publish_activate",
+                        "Publish and activate",
+                        "Publish “{}” and make it the default theme? Visitors will see it.",
+                    )
+                )
+        if theme.live_revision_id is not None and not is_default:
+            buttons.append(
+                (
+                    "capy_theme_theme_activate",
+                    "Activate",
+                    "Make the published version of “{}” the default theme? Visitors will see it.",
+                )
+            )
         if not buttons:
             return "—"
-        # Buttons of the list's own form (it has the CSRF token), sent to this row's view.
+        # Buttons of the list's own form (it has the CSRF token), sent to this row's
+        # view. admin/confirm.js asks first; without JavaScript they just go.
         return format_html_join(
             " ",
-            '<button type="submit" class="button" form="changelist-form" formmethod="post" '
-            'formaction="{}" aria-label="{} {}">{}</button>',
+            '<button type="submit" class="button capy-row-button" form="changelist-form" '
+            'formmethod="post" formaction="{}" aria-label="{} {}" data-capy-confirm="{}">'
+            "{}</button>",
             (
-                (reverse(f"admin:{name}", args=[theme.pk]), text, theme, text)
-                for name, text in buttons
+                (reverse(f"admin:{name}", args=[theme.pk]), text, theme, ask.format(theme), text)
+                for name, text, ask in buttons
             ),
         )
 
     def _row_theme(self, request, object_id):
-        theme = get_object_or_404(Theme.objects.select_related("live_revision"), pk=object_id)
+        # get_object returns None for an id that's missing or malformed (e.g. "abc").
+        theme = self.get_object(request, unquote(object_id))
+        if theme is None:
+            raise Http404("No such theme.")
         if not self.has_publish_permission(request, theme):
             raise PermissionDenied
         return theme
 
-    def _back_to_list(self):
-        return redirect(reverse("admin:capy_theme_theme_changelist"))
+    def _back_to_list(self, request):
+        """Back to the list as it was (its filters, search and page), if the request
+        came from it; otherwise to the plain list."""
+        changelist = reverse("admin:capy_theme_theme_changelist")
+        came_from = request.META.get("HTTP_REFERER", "")
+        safe = url_has_allowed_host_and_scheme(
+            came_from, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+        )
+        if safe and urlsplit(came_from).path == changelist:
+            return redirect(came_from)
+        return redirect(changelist)
 
     def row_publish_view(self, request, object_id):
         run_publish(request, self._row_theme(request, object_id), activate_too=False)
-        return self._back_to_list()
+        return self._back_to_list(request)
 
     def row_publish_activate_view(self, request, object_id):
         run_publish(request, self._row_theme(request, object_id), activate_too=True)
-        return self._back_to_list()
+        return self._back_to_list(request)
 
     def row_activate_view(self, request, object_id):
         theme = self._row_theme(request, object_id)
@@ -202,5 +263,6 @@ class SavePublishMixin:
         except NotPublished as error:
             messages.error(request, str(error))
         else:
-            messages.success(request, f"“{theme}” is now the site's theme.")
-        return self._back_to_list()
+            level, text = activated_message(theme)
+            messages.add_message(request, level, text)
+        return self._back_to_list(request)

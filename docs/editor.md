@@ -107,7 +107,7 @@ Every change shows on the page straight away (in your browser only).
   (it asks first). Nothing on the server changes.
 - **Save and publish** (needs `publish_theme`) saves any unsaved changes first,
   then publishes, with an optional note, through the same revisions as the
-  admin's buttons. **Save, publish and activate** also makes it the site's theme
+  admin's buttons. **Save, publish and activate** also makes it the default theme
   (not shown when it already is). Each button says what it does, as on the
   admin's theme page.
 - With unsaved changes, the panel says so, and closing it or leaving the page
