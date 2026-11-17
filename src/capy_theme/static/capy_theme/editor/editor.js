@@ -181,6 +181,7 @@
     if (editor.banner) editor.banner.hidden = true;
     if (editor.launch) editor.launch.hidden = false;
     document.documentElement.classList.remove("capy-editor-open");
+    document.dispatchEvent(new CustomEvent("capy-editor:closed")); // e.g. page-images.js
     coverPage();
     returnFocus();
   };

@@ -16,6 +16,7 @@
     scheme: "light", // the color tab being edited
     latest: null, // the latest values, CSS and contrast from the server
     saved: null, // the state as last loaded or saved, which Revert goes back to
+    assets: [], // the theme's uploaded images (image-slot.js adds new uploads)
     sections: [], // {order, build(state) -> element, fill()} from each section file
   });
 
@@ -95,6 +96,7 @@
       light_base: state.light_base,
       dark_base: state.dark_base,
       settings: {},
+      alts: {}, // edited alt text: {image id: text}, saved with the draft (#271)
     };
     ["colors", "shape", "fonts", "type", "images", "logo", "icon"].forEach(function (key) {
       ui.changes.settings[key] = copy(state.settings[key]);
@@ -103,6 +105,7 @@
     ui.baseline = JSON.stringify(editor.changes);
     ui.latest = state;
     ui.saved = state;
+    ui.assets = state.assets || [];
     var container = editor.panel.querySelector(".capy-editor-controls");
     // Every fold keeps how you left it, open or folded, when the panel is rebuilt
     // (Save draft, Publish, Revert).
