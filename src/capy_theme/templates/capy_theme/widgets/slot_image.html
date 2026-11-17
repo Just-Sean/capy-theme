@@ -1,0 +1,18 @@
+{% comment %}
+  One image slot and mode on the theme page (admin/slot_image.py, #271): the
+  current image, a choice of this slot's earlier uploads, a new upload and the alt
+  text. The field's label (e.g. "Main logo (light)") is for the choice; each other
+  input has its own label. No inline styles: admin/images.css.
+{% endcomment %}<div class="capy-slot-image">
+  <div class="capy-slot-current">
+    {% if widget.current %}<img class="capy-slot-preview" src="{{ widget.current.original.url }}" alt="{{ widget.current.alt_text }}">
+    <span class="capy-slot-details">{{ widget.current.width }} × {{ widget.current.height }} px, {{ widget.current.size|filesizeformat }}</span>{% else %}<span class="capy-slot-empty">{{ widget.empty_text }}</span>{% endif %}
+  </div>
+  <div class="capy-slot-inputs">
+    <span class="capy-slot-row"><select name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>{% for value, text, selected in widget.options %}<option value="{{ value }}"{% if selected %} selected{% endif %}>{{ text }}</option>{% endfor %}</select></span>
+    <label class="capy-slot-row" for="{{ widget.attrs.id }}_upload">Upload a new image
+      <input type="file" name="{{ widget.name }}_upload" id="{{ widget.attrs.id }}_upload" accept="{{ widget.accept }}"></label>
+    <label class="capy-slot-row" for="{{ widget.attrs.id }}_alt">Alt text (describes the image for screen readers)
+      <input type="text" name="{{ widget.name }}_alt" id="{{ widget.attrs.id }}_alt" maxlength="200" value="{{ widget.alt }}"></label>
+  </div>
+</div>

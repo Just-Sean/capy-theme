@@ -100,6 +100,7 @@ class ThemeForm(forms.ModelForm):
         for part in PARTS:
             part.clean(self, cleaned, settings)
         self.instance.settings = settings
+        form_images.ask_to_choose_again(self)
         return cleaned
 
 

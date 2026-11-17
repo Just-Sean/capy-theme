@@ -5,7 +5,9 @@ from ..css.typography import TYPE_SETTINGS
 from ..fonts.library import ROLES
 from ..images.logos import HEIGHTS, LOGO_SLOTS
 from .form_colors import color_fieldsets
-from .form_images import image_field_name
+from .form_images import CHOOSABLE, image_field_name
+
+MORE_LOGOS = "More logo versions (optional)"
 
 THEME_FIELDSETS = [
     (
@@ -36,19 +38,35 @@ THEME_FIELDSETS = [
                 "icon_background",
                 "icon_padding",
             ],
-            "description": "One square image (at least 512 × 512 px is best): the browser "
-            "tab icon, home-screen and app icons are all made from it when you publish.",
+            "description": "Upload a new image or pick an earlier one right here. The icons "
+            "are made from it when you publish.",
         },
     ),
     (
         "Logos",
         {
             "fields": [
-                *[image_field_name(s, m) for s in LOGO_SLOTS for m in ("light", "dark")],
+                image_field_name("logo_main", "light"),
+                image_field_name("logo_main", "dark"),
                 *[f"logo_{name}" for name in HEIGHTS],
             ],
-            "description": "Upload images in the Images section (Images tab) or in the "
-            "live editor, save, then choose them here. Slots left empty use the main logo.",
+            "description": "Upload a new image or pick an earlier one right here, then save. "
+            "Visitors see it once you publish. Most sites only need the main logo; other "
+            "versions are under More logo versions.",
+        },
+    ),
+    (
+        MORE_LOGOS,
+        {
+            "fields": [
+                image_field_name(slot, mode)
+                for slot in LOGO_SLOTS
+                if slot != "logo_main"
+                for mode in CHOOSABLE[slot]
+            ],
+            "description": "Optional versions of your logo for particular places. Each one "
+            "says what it's for. Any you leave empty use the main logo, so you only need "
+            "these if your logo should look different there.",
         },
     ),
     ("Fonts", {"fields": [f"font_{role}" for role in ROLES]}),
@@ -77,9 +95,8 @@ THEME_FIELDSETS = [
                 for mode in ("light", "dark")
             ],
             "classes": ["collapse"],
-            "description": "Optional. They show where the project's templates use them: "
-            'class="capy-bg-login" or "capy-bg-pattern", or the CSS variables '
-            "--capy-bg-login and --capy-bg-pattern.",
+            "description": "Optional. Upload a new image or pick an earlier one right here. "
+            "Each one says where it shows.",
         },
     ),
     (
@@ -87,9 +104,9 @@ THEME_FIELDSETS = [
         {
             "fields": ["image_social_light"],
             "classes": ["collapse"],
-            "description": "An image for link previews, cropped to 1200 × 630 from its "
-            "center. capy-theme makes it available (see Theme artifacts in the README); "
-            "the project's own templates or another module add the preview tags.",
+            "description": "Optional. Upload a new image or pick an earlier one right here. "
+            "capy-theme makes it available (see Theme artifacts in the README); the "
+            "project's own templates or another module add the preview tags.",
         },
     ),
     (

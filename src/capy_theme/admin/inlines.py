@@ -1,14 +1,11 @@
-"""The theme edit page's lists: uploaded images and published revisions."""
+"""The theme edit page's lists: Media (uploaded images) and published revisions."""
 
 from django import forms
 from django.contrib import admin
-from django.core.exceptions import ValidationError
 from django.utils.html import format_html
 
+from ..images.assets import where_used
 from ..images.models import ThemeAsset
-from ..images.sharing import make_sharing_image
-from ..images.uploads import byte_limit, prepare_image
-from ..images.variants import make_variants
 from ..models import ThemeRevision
 
 
@@ -39,74 +36,62 @@ class ThemeRevisionInline(admin.TabularInline):
         return revision.theme.live_revision_id == revision.pk
 
 
-class ThemeAssetForm(forms.ModelForm):
-    """Upload an image: checked by content, size-limited per slot, metadata removed."""
-
-    class Meta:
-        model = ThemeAsset
-        fields = ["slot", "mode", "original", "alt_text"]
-        labels = {"original": "Image"}
-        help_texts = {
-            "original": "PNG, JPEG, WebP, GIF or SVG. Location and camera details are removed; "
-            "SVGs are cleaned of scripts and links."
-        }
+class ThemeAssetFormSet(forms.BaseInlineFormSet):
+    """Refuses to delete an image that's in use (#271)."""
 
     def clean(self):
-        cleaned = super().clean()
-        upload = cleaned.get("original")
-        slot = cleaned.get("slot")
-        if upload and slot and self.instance.pk is None:
-            limit = byte_limit(slot)
-            if upload.size is not None and upload.size > limit:  # before reading it (#253)
-                self.add_error(
-                    "original", f"The image is too big (the limit is {limit // 1024} KB)."
+        super().clean()
+        for form in self.deleted_forms:
+            asset = form.instance
+            if asset.pk is None:
+                continue
+            uses = where_used(self.instance, self.instance.settings, asset)
+            if uses:
+                # Not deleted after all, and an error on the row: Django skips errors on
+                # rows being deleted, and an error on a row shows the Media list unfolded.
+                form.cleaned_data["DELETE"] = False
+                form.add_error(
+                    None,
+                    f"This image can't be deleted: it's used as {' and '.join(uses)}. "
+                    "Upload a new image for that slot, or set it to None, and save; "
+                    "then delete this one.",
                 )
-                return cleaned
-            try:
-                upload.seek(0)
-                self.clean_image = prepare_image(upload.read(), upload.name, slot)
-            except ValidationError as error:
-                self.add_error("original", error)
-        return cleaned
-
-    def save(self, commit=True):
-        asset = super().save(commit=False)
-        clean = getattr(self, "clean_image", None)
-        if clean:
-            asset.original = clean["file"]
-            asset.width, asset.height = clean["width"], clean["height"]
-            asset.size, asset.content_type = clean["size"], clean["content_type"]
-        if commit:
-            asset.save()
-            if clean:  # the same copies an editor upload gets (#254)
-                make_variants(asset)
-                if asset.slot == "social":
-                    make_sharing_image(asset)
-        return asset
 
 
 class ThemeAssetInline(admin.TabularInline):
-    """A theme's images. An image is never changed once uploaded: to replace one,
-    upload a new image (and delete the old one if nothing needs it)."""
+    """Media: every image uploaded for the theme (#271). Images are uploaded and
+    chosen where they're used (Logos, Icon, Backgrounds, Sharing image); here their
+    alt text can be edited, and unused ones deleted. The image itself never
+    changes, so older revisions keep showing theirs."""
 
     model = ThemeAsset
+    formset = ThemeAssetFormSet
     classes = ["collapse"]  # foldable like every section; starts folded
-    form = ThemeAssetForm
     extra = 0
-    fields = ["preview", "slot", "mode", "original", "alt_text", "details"]
-    readonly_fields = ["preview", "details"]
+    fields = ["preview", "slot", "mode", "alt_text", "details", "used"]
+    readonly_fields = ["preview", "slot", "mode", "details", "used"]
     verbose_name = "image"
-    verbose_name_plural = "Images"
+    verbose_name_plural = "Media"
+
+    # Managing a theme's images is part of editing the theme.
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("theme__live_revision")
 
     def has_change_permission(self, request, obj=None):
-        return False
+        return request.user.has_perm("capy_theme.change_theme")
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.has_perm("capy_theme.change_theme")
 
     @admin.display(description="Preview")
     def preview(self, asset):
         if not asset.pk:
             return ""
         return format_html(
-            '<img src="{}" alt="{}" style="max-width: 120px; max-height: 60px">',
+            '<img class="capy-media-preview" src="{}" alt="{}">',
             asset.original.url,
             asset.alt_text,
         )
@@ -115,4 +100,14 @@ class ThemeAssetInline(admin.TabularInline):
     def details(self, asset):
         if not asset.pk:
             return ""
-        return f"{asset.width} × {asset.height}, {asset.size // 1024} KB, {asset.content_type}"
+        name = asset.original.name.rsplit("/", 1)[-1]
+        return (
+            f"{name}: {asset.width} × {asset.height}, {asset.size // 1024} KB, {asset.content_type}"
+        )
+
+    @admin.display(description="Used as")
+    def used(self, asset):
+        if not asset.pk:
+            return ""
+        uses = where_used(asset.theme, asset.theme.settings, asset)
+        return "; ".join(uses) if uses else "Not used: can be deleted"
