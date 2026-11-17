@@ -1,6 +1,7 @@
 """The live edit page at /theme/live-edit/ (issue #229): capy-theme's own page for
 building a theme, the same in every project."""
 
+import re
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,9 @@ from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
 URL = "/theme/live-edit/"
+SRC = Path(__file__).resolve().parents[2] / "src/capy_theme"
+STATIC = SRC / "static/capy_theme/editor"
+TEMPLATES = SRC / "templates/capy_theme"
 
 
 @pytest.fixture(autouse=True)
@@ -218,26 +222,40 @@ def test_switch_theme_lists_every_theme_and_opens_the_editor_on_it(
     # Not the visitors' theme picker: it switches the theme being edited (#269).
     draft = Theme.objects.create(name="Autumn <draft>", slug="autumn", offered_to_visitors=False)
     log_in(client, django_user_model, "change_theme")
-    html = client.get(f"{URL}?edit={active.pk}").content.decode()
+    html = " ".join(client.get(f"{URL}?edit={active.pk}").content.decode().split())
     assert ">Switch theme</summary>" in html
     assert "/theme/choose/" not in html
     assert (
         f'<a href="{URL}?edit={active.pk}" data-capy-edit-switch="Main" class="menu-active"'
-        ' aria-current="page">Main</a>'
+        ' aria-current="page" >Main</a>'
     ) in html
     assert (
-        f'<a href="{URL}?edit={draft.pk}" data-capy-edit-switch="Autumn &lt;draft&gt;">'
+        f'<a href="{URL}?edit={draft.pk}" data-capy-edit-switch="Autumn &lt;draft&gt;" >'
         "Autumn &lt;draft&gt; (not published)</a>"
     ) in html
     assert html.index("Autumn &lt;draft&gt; (not") < html.index(">Main</a>")  # by name
 
 
+def test_the_switch_theme_menus_classes_are_in_the_bundled_stylesheet():
+    # The page's stylesheet only has the classes its build found, so a class added to
+    # the template without rebuilding it does nothing (#269).
+    template = (TEMPLATES / "editor/live_edit.html").read_text()
+    menu = template[template.index('<details class="dropdown') : template.index("</details>")]
+    classes = set()
+    for value in re.findall(r'class="([^"]+)"', menu):
+        classes.update(value.split())
+    css = (STATIC / "components.css").read_text()
+    for name in classes:
+        selector = "." + re.sub(r"([\[\]])", r"\\\1", name)
+        assert selector + "{" in css or selector + ":" in css or selector + "," in css, name
+
+
 def test_switching_with_unsaved_changes_asks_first():
-    script = (
-        Path(__file__).resolve().parents[2] / "src/capy_theme/static/capy_theme/editor/editor.js"
-    ).read_text()
+    script = (STATIC / "editor.js").read_text()
     handler = script[script.index('closest("[data-capy-edit-switch]")') :]
     assert "editor.isDirty()" in handler and "window.confirm(" in handler
     assert "event.preventDefault();" in handler  # Cancel stays on the page
-    # After saying yes, the browser's own "leave site?" warning doesn't ask again.
-    assert "if (!switching && editor.panel" in script
+    assert "event.altKey" in handler  # a download doesn't leave the page
+    assert 'link.getAttribute("aria-current") === "page"' in handler  # a reload: browser warns
+    # After a yes, the browser's own "leave site?" warning skips just that one time.
+    assert "if (switching) {\n      switching = false;" in script

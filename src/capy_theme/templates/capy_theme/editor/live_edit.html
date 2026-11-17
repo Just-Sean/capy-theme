@@ -33,8 +33,14 @@
         {# Switches the theme being edited, not the visitor's theme (#269); editor.js asks first if there are unsaved changes. #}
         <details class="dropdown dropdown-end">
           <summary class="btn btn-ghost btn-sm">Switch theme</summary>
-          <ul class="menu dropdown-content z-10 mt-2 w-56 rounded-box bg-base-100 shadow">
-            {% for choice in edit_choices %}<li><a href="{% url 'capy_theme:live_edit' %}?edit={{ choice.pk }}" data-capy-edit-switch="{{ choice.name }}"{% if editing and choice.pk == editing.pk %} class="menu-active" aria-current="page"{% endif %}>{{ choice.name }}{% if not choice.live_revision_id %} (not published){% endif %}</a></li>{% endfor %}
+          <ul class="menu dropdown-content z-10 mt-2 max-h-[60vh] w-56 flex-nowrap overflow-y-auto rounded-box bg-base-100 shadow">
+            {% for choice in edit_choices %}
+              <li>
+                <a href="{% url 'capy_theme:live_edit' %}?edit={{ choice.pk }}" data-capy-edit-switch="{{ choice.name }}"
+                  {% if editing and choice.pk == editing.pk %}class="menu-active" aria-current="page"{% endif %}
+                >{{ choice.name }}{% if not choice.live_revision_id %} (not published){% endif %}</a>
+              </li>
+            {% endfor %}
           </ul>
         </details>
       {% endif %}

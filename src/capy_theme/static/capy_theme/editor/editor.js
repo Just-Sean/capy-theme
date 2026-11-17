@@ -214,9 +214,12 @@
   var switching = false;
   document.addEventListener("click", function (event) {
     var link = event.target.closest && event.target.closest("[data-capy-edit-switch]");
-    // A new tab or window (Ctrl, Cmd, Shift, middle click) loses nothing here.
-    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey) return;
-    if (!link || !editor.panel || editor.panel.hidden || !editor.isDirty()) return;
+    // A new tab or window (Ctrl, Cmd, Shift, middle click) or a download (Alt) loses
+    // nothing here. The theme already being edited is a reload: the browser's own
+    // warning covers it.
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    if (!link || link.getAttribute("aria-current") === "page") return;
+    if (!editor.panel || editor.panel.hidden || !editor.isDirty()) return;
     var name = link.getAttribute("data-capy-edit-switch");
     if (window.confirm("You have unsaved changes. Switch to " + name + " and lose them? Choose Cancel, then Save draft, to keep them.")) {
       switching = true;
@@ -226,7 +229,11 @@
   });
 
   window.addEventListener("beforeunload", function (event) {
-    if (!switching && editor.panel && !editor.panel.hidden && editor.isDirty()) {
+    if (switching) {
+      switching = false; // skips this one warning only: if the switch stops, it's back
+      return;
+    }
+    if (editor.panel && !editor.panel.hidden && editor.isDirty()) {
       event.preventDefault();
       event.returnValue = "";
     }
