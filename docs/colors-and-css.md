@@ -7,11 +7,11 @@ Code: `src/capy_theme/colors/` (color math, values, suggestions) and `src/capy_t
 On a theme's admin page, the color sections let you override any of daisyUI's
 20 colors, separately for light and dark mode:
 
-- **Basic** (shown open): primary, secondary, accent, neutral, background and
+- **Basic**: primary, secondary, accent, neutral, background and
   text on background.
-- **Advanced** (folded): info, success, warning, error, and the two darker
+- **Advanced**: info, success, warning, error, and the two darker
   background shades.
-- **Expert** (folded): the text color on each colored element.
+- **Expert**: the text color on each colored element.
 
 Leave a field blank to use the base theme's color, which is shown grayed out
 in the empty field. Only the colors you set are stored, in `settings["colors"]`;

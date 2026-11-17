@@ -2,9 +2,13 @@
 
 ## Unreleased
 
+- **Every fold starts closed,** in the live editor and on the theme admin page,
+  including Basic colors. Click a title to open it. In the editor, folds stay as
+  you left them after Save draft, Publish or Revert, as before. In the admin, a
+  section with errors opens, and on the Add page focus goes to the first section's
+  title (#267).
 - **Every section of the live editor can be folded** (click its title), like the
-  admin page. All start open, Shape and effects included; Save and publish stays
-  open. Every fold, including the ones inside Colors, stays as you left it after
+  admin page; Save and publish stays open. Every fold, including the ones inside Colors, stays as you left it after
   Save draft, Publish or Revert (#265).
 - **Live editor: Revert, and no more "See it as a visitor":** a **Revert** button
   next to Save draft throws away the unsaved changes and goes back to the saved
@@ -12,8 +16,7 @@
   endpoint are removed: the page shows the draft as you edit, which is what
   visitors get once it's published (#261).
 - **Every section of the theme admin page can be folded,** including the image and
-  revision lists. They still open when their tab is shown (the colors' Advanced and
-  Expert sections stay folded, as before). The first section is now titled "Name".
+  revision lists. The first section is now titled "Name".
 - **Docs:** Python 3.14+ and `USE_TZ = True` are required; SQLite and PostgreSQL
   are the supported databases; run `collectstatic` on install and after updates;
   fonts on another media origin need `Access-Control-Allow-Origin`; the

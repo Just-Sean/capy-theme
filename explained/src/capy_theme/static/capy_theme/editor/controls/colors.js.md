@@ -1,6 +1,6 @@
 # src/capy_theme/static/capy_theme/editor/controls/colors.js
 
-The **Colors** section, with **Light** and **Dark** tabs. The groups are Basic (open), and Advanced and Expert (folded). Each color has:
+The **Colors** section, with **Light** and **Dark** tabs. The groups are Basic, Advanced and Expert, all folded to start with. Each color has:
 
 - the browser's color picker
 - a text box that accepts any format

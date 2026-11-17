@@ -112,7 +112,6 @@ THEME_FIELDSETS = [
     ),
 ]
 
-# Every section can be folded. They still open when their tab is shown, except
-# the colors' Advanced and Expert sections (admin/tabs.py).
+# Every section can be folded, and starts folded (tabs.js opens any with errors).
 for _name, _options in THEME_FIELDSETS:
     _options["classes"] = sorted({*_options.get("classes", []), "collapse"})

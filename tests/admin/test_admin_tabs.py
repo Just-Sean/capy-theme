@@ -8,7 +8,7 @@ from django.contrib.staticfiles import finders
 from django.urls import reverse
 
 from capy_theme.admin.fieldsets import THEME_FIELDSETS
-from capy_theme.admin.tabs import LEFTOVER_TAB, STAY_FOLDED, THEME_TABS, theme_tabs
+from capy_theme.admin.tabs import LEFTOVER_TAB, THEME_TABS, theme_tabs
 from capy_theme.admin.theme_admin import ThemeAdmin
 from capy_theme.models import Theme
 
@@ -37,15 +37,6 @@ def change_page(client, theme=None):
 def test_every_section_has_a_tab():
     in_tabs = {item for _, items in THEME_TABS for item in items}
     assert {name for name, _ in THEME_FIELDSETS} <= in_tabs
-
-
-def test_only_the_color_advanced_and_expert_groups_stay_folded():
-    assert STAY_FOLDED == {
-        "Light colors: Advanced",
-        "Light colors: Expert",
-        "Dark colors: Advanced",
-        "Dark colors: Expert",
-    }
 
 
 def test_the_page_has_its_tabs_in_order(admin_client):
@@ -77,17 +68,6 @@ def test_sections_are_in_their_tabs(admin_client):
     assert ">Advanced<" in by_label["Advanced"]
 
 
-def test_folded_sections_open_in_their_tab_except_color_groups(admin_client):
-    sections = re.findall(
-        r"<div( data-capy-unfold)?>\s*<fieldset[^>]*>\s*(?:<details><summary>)?\s*"
-        r'<h2 id="[^"]+" class="fieldset-heading">([^<]+)<',
-        change_page(admin_client),
-    )
-    unfold = {name: bool(flag) for flag, name in sections}
-    assert unfold["Contrast"] and unfold["Shape and effects"] and unfold["Backgrounds"]
-    assert not unfold["Light colors: Expert"] and not unfold["Dark colors: Advanced"]
-
-
 def test_the_tab_script_and_stylesheet_are_loaded(admin_client):
     html = change_page(admin_client)
     assert "capy_theme/admin/tabs.js" in html
@@ -115,19 +95,27 @@ def test_empty_tabs_are_left_out():
     assert [tab["label"] for tab in tabs] == ["Fonts"]
 
 
-def test_every_section_and_list_renders_foldable_and_opens_with_its_tab(admin_client):
+def test_every_section_and_list_renders_foldable_and_starts_folded(admin_client):
     html = change_page(admin_client)
     sections = len(THEME_FIELDSETS) + len(ThemeAdmin.inlines)
-    assert html.count("<details>") == sections  # every section and list can be folded
-    # tabs.js opens each one when its tab is shown, except the colors' Advanced and
-    # Expert sections, which stay folded.
-    assert html.count("data-capy-unfold") == sections - len(STAY_FOLDED)
+    assert html.count("<details>") == sections  # every section and list, all folded
+    assert "<details open" not in html
+    assert "data-capy-unfold" not in html  # tabs.js no longer opens them (#267)
+
+
+def test_tabs_script_opens_only_sections_with_errors():
+    script = finders.find("capy_theme/admin/tabs.js")
+    with open(script, encoding="utf-8") as file:
+        text = file.read()
+    assert 'if (d.querySelector(".errorlist")) d.open = true;' in text
+    assert "d.open = true; });" not in text  # nothing else is opened
 
 
 def test_tabs_script_moves_focus_off_the_save_button_on_load():
-    # If Django focused Save while every section was still folded (add page), the
-    # first field of the open tab gets focus instead (#259). Runs in the browser.
+    # If Django focused Save because every section is folded (add page), the title of
+    # the open tab's first section gets focus instead (#259, #267). Runs in the browser.
     script = finders.find("capy_theme/admin/tabs.js")
     with open(script, encoding="utf-8") as file:
         text = file.read()
     assert 'closest(".submit-row")' in text and "(first || start.button).focus()" in text
+    assert 'start.panels[0].querySelector("summary")' in text

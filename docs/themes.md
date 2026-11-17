@@ -21,18 +21,19 @@ uv run python demo/manage.py migrate
 
 ## The theme's admin page
 
-The admin page is the plain fallback to the live editor. Its sections, top to
-bottom:
+The admin page is the plain fallback to the live editor. Every section starts
+folded (click its title to open it); a section with errors opens. Its sections, top
+to bottom:
 
 1. Name and slug
 2. Publishing status
 3. Base themes
 4. Branding
-5. Colors (light and dark; Basic open, Advanced and Expert folded)
-6. Contrast (folded)
-7. Shape and effects (folded)
+5. Colors (light and dark; Basic, Advanced and Expert)
+6. Contrast
+7. Shape and effects
 8. Mode
-9. Advanced (folded: stored settings, ID and dates)
+9. Advanced (stored settings, ID and dates)
 
 At the top right: **Edit live** opens the theme in the live editor, on
 capy-theme's live edit page (`/theme/live-edit/`, see [the editor](editor.md)), next to

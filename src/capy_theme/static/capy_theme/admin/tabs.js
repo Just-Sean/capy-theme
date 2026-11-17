@@ -50,7 +50,10 @@
     tab.panels.forEach(function (panel) {
       panel.setAttribute("role", "tabpanel");
       panel.setAttribute("aria-labelledby", button.id);
-      panel.querySelectorAll("[data-capy-unfold] details").forEach(function (d) { d.open = true; });
+      // Every section starts folded; one with errors opens so they can be seen.
+      panel.querySelectorAll("details").forEach(function (d) {
+        if (d.querySelector(".errorlist")) d.open = true;
+      });
     });
     button.addEventListener("click", function () { select(tab, false); });
     tab.button = button;
@@ -89,12 +92,10 @@
   if (focused && panels.some(function (p) { return p.hidden && p.contains(focused); })) {
     start.button.focus();
   } else if (focused && focused.closest && focused.closest(".submit-row")) {
-    // On the add page Django focuses the first visible field. If it ran while every
-    // section was still folded, that was the Save button at the bottom (#259), so
-    // focus the first field of the open tab instead.
-    var first = start.panels[0].querySelector(
-      "input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled])"
-    );
+    // On the add page Django focuses the first visible field. With every section
+    // folded, that's the Save button at the bottom, so focus the title of the open
+    // tab's first section instead: Enter opens it (#267).
+    var first = start.panels[0].querySelector("summary");
     (first || start.button).focus();
   }
 })();
