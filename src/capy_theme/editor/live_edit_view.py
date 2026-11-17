@@ -1,6 +1,7 @@
 """The live edit page (issue #229): capy-theme's own page for building a theme.
 
-It shows the header (logo, site name, tagline, Light / Dark / Auto, theme picker)
+It shows the header (logo, site name, tagline, Light / Dark / Auto, a menu to switch
+the theme being edited)
 and every daisyUI component, with the live editor open on it. It's part of the
 module, with its own template and bundled daisyUI stylesheet, so it looks and works
 the same in every project, whatever the project's own pages, base template or
@@ -53,5 +54,7 @@ def live_edit(request):
         "editing": editing,
         "no_theme": not Theme.objects.exists(),
         "missing_theme": requested is not None and editing is None,
+        # Every theme, for the menu that switches the theme being edited (#269).
+        "edit_choices": Theme.objects.only("pk", "name", "live_revision"),
     }
     return render(request, "capy_theme/editor/live_edit.html", context)

@@ -7,6 +7,7 @@
   Nothing inline (no style or script attributes), so a strict Content Security
   Policy never blocks anything here. The header shows the published theme visitors
   see (as on any page); the editor previews the draft of the theme being edited.
+  Switch theme opens the editor on another theme.
 {% endcomment %}
 <html lang="en" {% theme_html_attrs %}>
 <head>
@@ -28,10 +29,19 @@
     </div>
     <nav class="flex flex-none flex-wrap items-center gap-2">
       {% theme_mode_toggle %}
-      {% theme_picker as picker %}{% if picker %}
+      {% if edit_choices %}
+        {# Switches the theme being edited, not the visitor's theme (#269); editor.js asks first if there are unsaved changes. #}
         <details class="dropdown dropdown-end">
-          <summary class="btn btn-ghost btn-sm">Theme</summary>
-          <div class="dropdown-content z-10 mt-2 w-48 shadow">{{ picker }}</div>
+          <summary class="btn btn-ghost btn-sm">Switch theme</summary>
+          <ul class="menu dropdown-content z-10 mt-2 max-h-[60vh] w-56 flex-nowrap overflow-y-auto rounded-box bg-base-100 shadow">
+            {% for choice in edit_choices %}
+              <li>
+                <a href="{% url 'capy_theme:live_edit' %}?edit={{ choice.pk }}" data-capy-edit-switch="{{ choice.name }}"
+                  {% if editing and choice.pk == editing.pk %}class="menu-active" aria-current="page"{% endif %}
+                >{{ choice.name }}{% if not choice.live_revision_id %} (not published){% endif %}</a>
+              </li>
+            {% endfor %}
+          </ul>
         </details>
       {% endif %}
       <a href="{% url 'admin:index' %}" class="btn btn-ghost btn-sm">Admin</a>
