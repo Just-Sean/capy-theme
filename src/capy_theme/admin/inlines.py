@@ -16,7 +16,7 @@ class ThemeRevisionInline(admin.TabularInline):
     """The theme's published revisions. They can be viewed, never edited or deleted."""
 
     model = ThemeRevision
-    classes = ["collapse"]  # foldable like every section; opened when its tab is shown
+    classes = ["collapse"]  # foldable like every section; starts folded
     fields = ["number", "published_at", "published_by", "note", "is_live"]
     readonly_fields = fields
     extra = 0
@@ -90,7 +90,7 @@ class ThemeAssetInline(admin.TabularInline):
     upload a new image (and delete the old one if nothing needs it)."""
 
     model = ThemeAsset
-    classes = ["collapse"]  # foldable like every section; opened when its tab is shown
+    classes = ["collapse"]  # foldable like every section; starts folded
     form = ThemeAssetForm
     extra = 0
     fields = ["preview", "slot", "mode", "original", "alt_text", "details"]

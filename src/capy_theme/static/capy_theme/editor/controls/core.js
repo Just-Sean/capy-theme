@@ -31,9 +31,9 @@
     return node;
   };
 
-  // A panel section that folds: its title is a heading inside <summary>. Starts open.
+  // A panel section that folds: its title is a heading inside <summary>. Starts folded.
   ui.section = function (title, children) {
-    var fold = ui.el("details", { class: "capy-editor-fold", "data-capy-fold": title, open: "" }, [
+    var fold = ui.el("details", { class: "capy-editor-fold", "data-capy-fold": title }, [
       ui.el("summary", {}, [ui.el("h3", { text: title })]),
     ].concat(children));
     return ui.el("section", { class: "capy-editor-section" }, [fold]);

@@ -51,13 +51,13 @@ example, to put your own link to `?edit=<id>` somewhere), set
 `CAPY_THEME_EDITOR_BUTTON = False`.
 
 Every section of the panel except **Save and publish** folds (click its title),
-and all start open. Every fold, including Suggestions,
-Basic, Advanced and Expert inside Colors, stays as you left it after Save
-draft, Publish or Revert. The panel has:
+and every fold starts folded, including Suggestions, Basic, Advanced and Expert
+inside Colors. Each stays as you left it after Save draft, Publish or Revert;
+reloading the page starts them folded again. The panel has:
 
 - **Base themes:** the light and dark base.
-- **Colors:** Light and Dark tabs, with Basic open and Advanced and Expert
-  folded. Each color has the browser's color picker, a text box (any format),
+- **Colors:** Light and Dark tabs, with Basic, Advanced and Expert groups.
+  Each color has the browser's color picker, a text box (any format),
   **Reset** (back to the base color) and its contrast rating, e.g. "AA 5.19" or
   "⚠ fail 2.1". Overridden colors are shown in bold with a dot.
 - **Shape and effects:** the radii, sizes and border width, plus depth and noise.

@@ -4,6 +4,7 @@ The controls themselves are JavaScript (editor/controls/*.js), checked in headle
 Chrome while building. These tests cover the data the server gives them.
 """
 
+import re
 from pathlib import Path
 
 import pytest
@@ -126,8 +127,8 @@ def test_every_shape_size_has_a_real_step():
 def test_every_editor_section_folds_except_save():
     controls_dir = STATIC / "controls"
     core = (controls_dir / "core.js").read_text()
-    # One helper builds every foldable section, open to start with.
-    assert 'el("details", { class: "capy-editor-fold", "data-capy-fold": title, open: "" }' in core
+    # One helper builds every foldable section, folded to start with (#267).
+    assert 'el("details", { class: "capy-editor-fold", "data-capy-fold": title }' in core
     assert 'ui.el("summary", {}, [ui.el("h3", { text: title })])' in core
     for name, title in [
         ("bases.js", "Base themes"),
@@ -165,3 +166,10 @@ def test_closing_the_components_view_opens_its_folded_section():
         < components.index("if (fold) fold.open = true;")
         < components.index("toggle.focus();", fold)
     )
+
+
+def test_every_editor_fold_starts_folded():
+    # Nothing in the panel is built open: sections, color groups and Suggestions (#267).
+    for script in (STATIC / "controls").glob("*.js"):
+        text = script.read_text()
+        assert not re.search(r"\bopen:|attrs\.open|setAttribute\(\s*\"open", text), script.name

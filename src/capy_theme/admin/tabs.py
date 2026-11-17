@@ -1,9 +1,9 @@
 """How the theme admin page's sections are grouped into tabs.
 
 Presentation only: the page renders every section inside its tab's panel, and
-`static/capy_theme/admin/tabs.js` turns the panels into tabs and opens the sections
-(every section can be folded, #259). Without JavaScript the panels simply follow each
-other, every section folded; each opens with a click.
+`static/capy_theme/admin/tabs.js` turns the panels into tabs. Every section can be
+folded (#259) and starts folded (#267); Django shows one with errors unfolded. Without
+JavaScript the panels simply follow each other, and each section opens with a click.
 """
 
 from django.utils.text import slugify
@@ -24,9 +24,6 @@ THEME_TABS = [
     ("Advanced", ["Custom CSS", "Advanced"]),
 ]
 
-# Folded sections that stay folded inside their tab; every other section opens.
-STAY_FOLDED = {name for name, _ in color_fieldsets() if name.endswith((": Advanced", ": Expert"))}
-
 LEFTOVER_TAB = "More"
 
 
@@ -43,7 +40,7 @@ def theme_tabs(adminform, inline_formsets):
     home = {item: label for label, items in THEME_TABS for item in items}
 
     for index, fieldset in enumerate(adminform):
-        entry = {"fieldset": fieldset, "index": index, "unfold": fieldset.name not in STAY_FOLDED}
+        entry = {"fieldset": fieldset, "index": index}
         tabs[home.get(fieldset.name, LEFTOVER_TAB)]["fieldsets"].append(entry)
     for formset in inline_formsets:
         tabs[home.get(formset.opts.model._meta.model_name, LEFTOVER_TAB)]["inlines"].append(formset)
