@@ -4,7 +4,8 @@
 
 - **Every section of the live editor can be folded** (click its title), like the
   admin page. All start open, Shape and effects included; Save and publish stays
-  open. A folded section stays folded after Save draft or Revert (#265).
+  open. Every fold, including the ones inside Colors, stays as you left it after
+  Save draft, Publish or Revert (#265).
 - **Live editor: Revert, and no more "See it as a visitor":** a **Revert** button
   next to Save draft throws away the unsaved changes and goes back to the saved
   draft (it asks first). "See it as a visitor" and its `/theme/editor/visitor-view/`

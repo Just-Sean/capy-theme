@@ -66,7 +66,9 @@
 
   function build() {
     var groups = ui.spec.color_groups.map(function (group, index) {
-      var details = el("details", index === 0 ? { open: "" } : {}, [el("summary", { text: group.name })]);
+      var attrs = { "data-capy-fold": "Colors: " + group.name };
+      if (index === 0) attrs.open = "";
+      var details = el("details", attrs, [el("summary", { text: group.name })]);
       group.colors.forEach(function (color) {
         details.appendChild(colorRow(color));
       });

@@ -104,11 +104,12 @@
     ui.latest = state;
     ui.saved = state;
     var container = editor.panel.querySelector(".capy-editor-controls");
-    // Sections folded before a rebuild (Save, Revert) stay folded after it.
-    var folded = Array.prototype.map.call(
-      container.querySelectorAll("[data-capy-fold]:not([open])"),
-      function (fold) { return fold.getAttribute("data-capy-fold"); }
-    );
+    // Every fold keeps how you left it, open or folded, when the panel is rebuilt
+    // (Save draft, Publish, Revert).
+    var wasOpen = {};
+    container.querySelectorAll("[data-capy-fold]").forEach(function (fold) {
+      wasOpen[fold.getAttribute("data-capy-fold")] = fold.open;
+    });
     container.textContent = "";
     ui.sections
       .slice()
@@ -117,7 +118,8 @@
         container.appendChild(section.build(state));
       });
     container.querySelectorAll("[data-capy-fold]").forEach(function (fold) {
-      if (folded.indexOf(fold.getAttribute("data-capy-fold")) !== -1) fold.removeAttribute("open");
+      var name = fold.getAttribute("data-capy-fold");
+      if (name in wasOpen) fold.open = wasOpen[name];
     });
     ui.fill();
     ui.showDirty();

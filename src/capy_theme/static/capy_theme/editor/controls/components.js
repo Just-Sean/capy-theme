@@ -93,6 +93,9 @@
     if (view) view.hidden = true;
     if (toggle) {
       toggle.setAttribute("aria-expanded", "false");
+      // A folded Components section would hide the button, so open it first.
+      var fold = toggle.closest("details");
+      if (fold) fold.open = true;
       toggle.focus();
     }
   }

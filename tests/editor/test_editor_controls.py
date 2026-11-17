@@ -145,7 +145,23 @@ def test_every_editor_section_folds_except_save():
     assert "ui.section(" not in actions and 'el("h3", { text: "Save and publish" })' in actions
 
 
-def test_folded_sections_stay_folded_after_save_or_revert():
-    core = (STATIC / "controls" / "core.js").read_text()
-    assert '"[data-capy-fold]:not([open])"' in core
-    assert 'fold.removeAttribute("open")' in core
+def test_every_fold_keeps_its_state_when_the_panel_is_rebuilt():
+    controls_dir = STATIC / "controls"
+    core = (controls_dir / "core.js").read_text()
+    assert 'wasOpen[fold.getAttribute("data-capy-fold")] = fold.open;' in core
+    assert "if (name in wasOpen) fold.open = wasOpen[name];" in core
+    # The folds inside Colors take part too.
+    colors = (controls_dir / "colors.js").read_text()
+    assert '{ "data-capy-fold": "Colors: " + group.name }' in colors
+    suggestions = (controls_dir / "suggestions.js").read_text()
+    assert '"data-capy-fold": "Colors: Suggestions"' in suggestions
+
+
+def test_closing_the_components_view_opens_its_folded_section():
+    components = (STATIC / "controls" / "components.js").read_text()
+    fold = components.index('var fold = toggle.closest("details");')
+    assert (
+        fold
+        < components.index("if (fold) fold.open = true;")
+        < components.index("toggle.focus();", fold)
+    )

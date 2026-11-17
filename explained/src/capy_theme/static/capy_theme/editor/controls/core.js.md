@@ -11,7 +11,7 @@
 - **`ui.el()`:** a small helper to create elements.
 - **`ui.section(title, children)`:** a section that folds (its title is a heading inside `<summary>`), open to start with.
 - **`ui.update()`:** previews the changes and updates the "Unsaved changes" note.
-- **`ui.build(state)`:** (re)builds the whole panel from the server's state, section by section in order. Sections you folded stay folded.
+- **`ui.build(state)`:** (re)builds the whole panel from the server's state, section by section in order. Every fold (`data-capy-fold`) stays open or folded as you left it, after Save draft, Publish or Revert.
 - **`ui.fill()`:** shows the latest values in every section.
 
 It listens for `capy-editor:loaded` and `capy-editor:preview`.

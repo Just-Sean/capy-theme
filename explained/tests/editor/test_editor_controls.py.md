@@ -6,7 +6,7 @@ The controls themselves are JavaScript (editor/controls/*.js), checked in headle
 
 **Code it covers:** `src/capy_theme/editor/ and the editor's static files`
 
-**Its 10 tests** (each name says what must hold):
+**Its 13 tests** (each name says what must hold):
 
 - controls list bases colors and shape
 - bases follow the project setting
@@ -18,5 +18,8 @@ The controls themselves are JavaScript (editor/controls/*.js), checked in headle
 - the components frame only loads a path on this site
 - the file chooser looks like a button
 - every shape size has a real step
+- every editor section folds except save
+- every fold keeps its state when the panel is rebuilt
+- closing the components view opens its folded section
 
 Run just this file with `uv run pytest tests/editor/test_editor_controls.py`.

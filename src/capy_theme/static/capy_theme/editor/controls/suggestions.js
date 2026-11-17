@@ -62,7 +62,7 @@
           list.textContent = error.message;
         });
     });
-    return el("details", { class: "capy-editor-suggest" }, [
+    return el("details", { class: "capy-editor-suggest", "data-capy-fold": "Colors: Suggestions" }, [
       el("summary", { text: "Suggestions" }),
       el("p", { class: "capy-editor-note", text: "Colors that go with your primary color, or from your logo. Click one to try it on this mode; nothing is saved." }),
       button,
