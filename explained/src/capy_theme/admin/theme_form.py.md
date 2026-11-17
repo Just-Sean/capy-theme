@@ -12,4 +12,4 @@
 
 **The area files** (`PARTS`: colors, type, shape, images, custom CSS) add the rest.
 
-**Saving:** `clean()` writes everything back into the theme's `settings`, storing only values that differ from the defaults. Blank means "use the base", so it's removed. Then each part writes its own area.
+**Saving:** `clean()` writes everything back into the theme's `settings`, storing only values that differ from the defaults. Blank means "use the base", so it's removed. Then each part writes its own area, and `form_images.ask_to_choose_again` flags slots whose new file must be chosen again after an error.

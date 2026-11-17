@@ -4,18 +4,20 @@
 
 Each image goes in a **slot**:
 
-- six logos: main, stacked, mark, wordmark, email, print
+- six logos: main, stacked, mark, wordmark, email, print (email and print have no dark version)
 - the icon
 - the social sharing image
 - the login background and the background pattern
 
-Each slot has light and dark versions. Uploading never changes what visitors see. An image is used only once it's chosen for its slot and the theme is published. Uploaded files are never changed, so older revisions keep theirs.
+Most slots have light and dark versions. Images are uploaded and chosen where they're used: in the admin's Branding tab or the live editor. Uploading never changes what visitors see. An image is used only once it's chosen for its slot and the theme is published. Uploaded files are never changed, so older revisions keep theirs.
 
 | File | Job |
 | --- | --- |
-| `slots.py` + `slots.json` | The slots, their size limits and which can't be SVG |
+| `slots.py` + `slots.json` | The slots, their size limits, help, modes and which can't be SVG |
+| `slot_text.py` | How each slot is described in the admin and the editor |
 | `models.py` | `ThemeAsset` (an upload) and `ThemeAssetVariant` (a generated copy) |
-| `uploads.py` | Checking and cleaning an upload, storing it |
+| `uploads.py` | Checking and cleaning an upload |
+| `assets.py` | Storing a checked image, where an image is used, an image as JSON |
 | `gif_frames.py` | Reading a GIF's frame structure without decoding pixels |
 | `svg.py` + `svg_allowlist.json` | Sanitizing SVGs |
 | `logos.py` | Logo slots, fallbacks, copying chosen images into revisions |

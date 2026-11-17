@@ -7,6 +7,8 @@
   - `baseline`: the values as last saved, to tell whether anything changed
   - `spec`: what the panel offers
   - `latest`: the latest server values
+  - `assets`: the theme's uploaded images (`image-slot.js` adds new uploads)
+  - `changes.alts`: edited alt text, `{image id: text}`, saved with the draft (#271)
   - the current color tab
 - **`ui.el()`:** a small helper to create elements.
 - **`ui.section(title, children)`:** a section that folds (its title is a heading inside `<summary>`), folded to start with.

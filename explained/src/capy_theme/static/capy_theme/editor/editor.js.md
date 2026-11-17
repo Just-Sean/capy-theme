@@ -12,5 +12,5 @@
 - **`schedulePreview()`:** waits until changes pause (e.g. while dragging a color picker), so the server gets one request instead of dozens.
 - **`post(url, data)`:** JSON POST with the CSRF token. It rejects with the server's error messages.
 - **`status()`:** messages in a live region, so screen readers announce them.
-- **`close()`:** asks first if there are unsaved changes, then removes the draft CSS so the page goes back to the published look. A `beforeunload` warning covers leaving the page. On the live edit page, **Switch theme** asks with its own message, naming the theme, when there are unsaved changes; after a yes the `beforeunload` warning skips that one time. New-tab clicks and the theme already being edited aren't asked about here.
+- **`close()`:** asks first if there are unsaved changes, then removes the draft CSS so the page goes back to the published look, and fires `capy-editor:closed` (so `page-images.js` puts the published logos and icon back). A `beforeunload` warning covers leaving the page. On the live edit page, **Switch theme** asks with its own message, naming the theme, when there are unsaved changes; after a yes the `beforeunload` warning skips that one time. New-tab clicks and the theme already being edited aren't asked about here.
 - **`?edit=<id>`** in the URL opens it straight away.

@@ -13,9 +13,11 @@
 - With no themes, the page links to the admin to add one.
 - For an id that doesn't exist, the page says so.
 
+**The header** shows the theme being edited, from its draft (#271): `draft_header(theme)` gives its logo, site name and tagline. The logo carries the editor's marker, so logo changes preview there too.
+
 **Other rules:**
 
-- **Self-contained:** it passes `theme` (the published theme, for the header), `request` and `editing` (the theme being edited, for the title) itself, plus `edit_choices` (every theme, for **Switch theme**, #269). So the project doesn't need capy-theme's or Django's request context processor.
+- **Self-contained:** it passes `theme` (the published theme), `request`, `editing` (the theme being edited, for the title) and `header` (its draft header) itself, plus `edit_choices` (every theme, for **Switch theme**, #269). So the project doesn't need capy-theme's or Django's request context processor.
 - **`X-Frame-Options: DENY`** comes from the view itself, so no site can frame the editor and trick a click on Save or Publish, even in a project without the clickjacking middleware.
 - **Only GET, never cached.** It needs Django's admin at its usual `admin` namespace.
 - **Linked from the admin:** the admin's **Edit live** (`admin/theme_admin.py`) links here.

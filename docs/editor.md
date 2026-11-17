@@ -18,10 +18,10 @@ says so and links to the active theme and the theme list.
 and opens the editor on the one you pick. It doesn't change the theme you see as a
 visitor. With unsaved changes it asks first: Cancel, then **Save draft**, keeps them.
 
-The tab title names the theme being edited. The header shows the published theme
-visitors see (its logo, site name and tagline, and its Light / Dark / Auto
-setting), as on any page; the editor previews the edited theme's draft colors,
-shape and fonts on everything. The sample headings have no size or weight
+The tab title names the theme being edited. The header shows the theme being
+edited, from its draft (its logo, site name and tagline), and the editor previews
+the draft's colors, shape, fonts and logo on everything, so the whole page is what
+visitors will see once it's published. (Light / Dark / Auto is your own setting.) The sample headings have no size or weight
 classes, so the theme's heading scale and weight show on them. There's a skip
 link to the components, and the header wraps on narrow screens.
 
@@ -64,7 +64,28 @@ reloading the page starts them folded again. The panel has:
   Each color has the browser's color picker, a text box (any format),
   **Reset** (back to the base color) and its contrast rating, e.g. "AA 5.19" or
   "⚠ fail 2.1". Overridden colors are shown in bold with a dot.
+- **Logos:** the main logo in light and dark, and the header logo heights; the
+  other logo versions are folded under **More logo versions (optional)**.
+- **Icon:** the icon in light and dark, its background and padding, and a preview
+  of them.
+- **Backgrounds** and **Sharing image**.
 - **Shape and effects:** the radii, sizes and border width, plus depth and noise.
+
+Each image slot says what it's for, its limits and what an empty slot does, and
+shows its current image with its alt text (which can be edited). Pick an earlier
+upload, or open **Upload a new image**, choose a file and its alt text, and click
+**Upload and use**: the image is checked and stored straight away, and chosen in
+your unsaved changes (the button is off while it uploads, so it can't be sent
+twice). **Save draft** keeps the choice and any alt text you changed; **Revert**
+drops them (an uploaded image stays in the theme's list). See
+[images](images.md).
+
+While the editor is open, the draft's logos show wherever the page has a
+`{% theme_logo %}` (in light and dark), and the browser tab shows the draft's
+icon. That's only in your browser; closing the editor puts the published ones
+back. (For staff who can edit themes, `{% theme_logo %}` marks each logo with
+`data-capy-logo-slot` so the editor can find it; visitors get the same HTML as
+always.) The generated favicons and app icons are made when you publish.
 - **Suggestions** (in the Colors section): click **Suggest colors** for colors
   that go with the current primary (analogous, complementary, triadic) and, if the
   theme has a logo, the logo's main colors. Clicking a suggestion fills in those
@@ -73,8 +94,9 @@ reloading the page starts them folded again. The panel has:
 Every change shows on the page straight away (in your browser only).
 
 - **Save draft** stores the panel's values in the theme's draft (needs the
-  change permission). Visitors don't see it until it's published. Only the bases,
-  colors and shape are changed; the name, branding and mode stay as they are.
+  change permission). Visitors don't see it until it's published. Only the
+  panel's settings and the images' alt text are changed; the name, site name,
+  tagline and mode stay as they are.
 - **Revert** throws away the unsaved changes and goes back to the saved draft
   (it asks first). Nothing on the server changes.
 - **Publish** (needs `publish_theme`) saves any unsaved changes first, then

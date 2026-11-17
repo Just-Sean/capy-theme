@@ -13,3 +13,4 @@
   - the contrast report
   - the settings and bases
   - any external font stylesheets the page must link
+  - **`page_images`:** the draft's logos and icon, so the editor can show them on the page (`page_images.py`, #271)

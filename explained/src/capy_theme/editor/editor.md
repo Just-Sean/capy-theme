@@ -18,6 +18,7 @@ Every endpoint requires staff with the change-theme permission (publishing also 
 | `state.py` | Everything the panel needs: the draft, the controls, the URLs |
 | `preview.py` | Applies unsaved values and previews them (writes nothing) |
 | `saving.py` | Save draft; color suggestions |
+| `page_images.py` | The draft's logos and icon, for previewing them on the page |
 | `views.py` | The JSON endpoints |
 | `live_edit_view.py` | The live edit page at `/theme/live-edit/` (the header and every component, with the editor open) |
 | `components_view.py` | The Components view page and icon preview |

@@ -28,12 +28,14 @@ unfolded. Its sections, top to bottom:
 1. Name and slug
 2. Publishing status
 3. Base themes
-4. Branding
+4. Branding (site name and tagline, then Icon, Logos, More logo versions,
+   Backgrounds and Sharing image, each uploaded and chosen in place)
 5. Colors (light and dark; Basic, Advanced and Expert)
 6. Contrast
 7. Shape and effects
 8. Mode
 9. Advanced (stored settings, ID and dates)
+10. Media (every uploaded image: edit its alt text, or delete one nothing uses)
 
 At the top right: **Edit live** opens the theme in the live editor, on
 capy-theme's live edit page (`/theme/live-edit/`, see [the editor](editor.md)), next to
@@ -46,8 +48,8 @@ They're edited through the fields above or the live editor, not typed by hand.
 ## Branding
 
 On a theme's admin page, the **Branding** section has the site name, tagline
-and logo alt text, stored in the theme's `settings`. Logos are chosen in the
-**Logos** section (see [Logos](images.md#logos)).
+and logo alt text, stored in the theme's `settings`. Logos are uploaded and
+chosen in the **Logos** section (see [Logos](images.md#logos)).
 
 Like everything else, branding changes show on the site only after publishing.
 
@@ -166,6 +168,10 @@ theme). capy-theme adds three more, given to users or groups in the admin under
 | `capy_theme.publish_theme` | Publishing a theme, activating it, restoring old revisions, scheduling, Site themes, and **Offer to visitors**. Without it, those buttons and actions are hidden, and direct requests are refused. |
 | `capy_theme.edit_custom_css` | Seeing and editing a theme's custom CSS. Without it, Export leaves the custom CSS out, Import leaves it out, and Restore keeps the draft's current custom CSS. |
 | `capy_theme.import_theme` | Importing themes. An import that adds an external font also needs *Can add font*. |
+
+A theme's images are part of the theme: anyone who can change a theme can upload
+and choose its images, edit their alt text, and delete ones nothing uses (in
+**Media**). The image model's own permissions aren't used.
 
 *Can add font* also lets someone add an external font, whose stylesheet then
 loads on every page once a theme using it is published, so treat it like
