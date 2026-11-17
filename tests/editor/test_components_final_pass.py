@@ -122,7 +122,7 @@ def test_the_issue_check_every_editor_setting_changes_the_components_view(
     for item in spec["logo_heights"]:
         assert css_changes({"settings": {"logo": {item["name"]: 99}}}), item["name"]
         checked.append(item["name"])
-    for slot in spec["logo_slots"]:
+    for slot in spec["image_slots"]:
         for mode in slot["modes"]:
             asset = theme.assets.get(slot=slot["name"], mode=mode)
             changes = {"settings": {"images": {slot["name"]: {mode: asset.pk}}}}
@@ -135,9 +135,11 @@ def test_the_issue_check_every_editor_setting_changes_the_components_view(
         before = {"settings": {"images": {"icon": {"light": icon}}}}
         assert components(client, theme, changes) != components(client, theme, before)
         checked.append(f"icon {item['name']}")
+    # 17 image choices: every slot in light and dark, except the sharing image and the
+    # email and print logos, which only have a light one (#271).
     assert (
         len(checked)
-        == 2 + 40 + len(spec["sizes"]) + len(spec["effects"]) + 4 + len(spec["type"]) + 2 + 19 + 2
+        == 2 + 40 + len(spec["sizes"]) + len(spec["effects"]) + 4 + len(spec["type"]) + 2 + 17 + 2
     )
 
 

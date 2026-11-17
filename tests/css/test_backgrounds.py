@@ -139,7 +139,7 @@ def test_editor_preview_shows_backgrounds_straight_away(client, django_user_mode
     login = add_asset(theme, "background_login", "dark", png())
     state = client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()
     assert {"background_login", "background_pattern"} <= {
-        s["name"] for s in state["controls"]["logo_slots"]
+        s["name"] for s in state["controls"]["image_slots"]
     }
     url = reverse("capy_theme:editor_preview", args=[theme.pk])
     changes = {"settings": {"images": {"background_login": {"dark": login.pk}}}}

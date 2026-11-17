@@ -203,8 +203,8 @@ def test_revert_goes_back_to_the_saved_draft():
     assert revert_button in actions
     assert 'id: "capy-editor-revert-note"' in actions
     # Revert keeps images uploaded since the last save.
-    images = (STATIC / "controls" / "images.js").read_text()
-    assert "ui.saved.assets = body.assets" in images
+    images = (STATIC / "controls" / "image-slot.js").read_text()
+    assert "if (ui.saved) ui.saved.assets = assets;" in images
     assert "editor.isDirty()" in actions and "window.confirm(" in actions
     assert "ui.build(ui.saved)" in actions and "ui.saved = state;" in core
     # A preview still on its way can't put the discarded changes back.

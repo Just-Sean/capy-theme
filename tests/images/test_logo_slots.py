@@ -131,8 +131,10 @@ def test_admin_offers_every_slot_and_header_heights(client, django_user_model, t
     client.force_login(django_user_model.objects.create_superuser("sean", "s@e.com", "pw"))
     content = client.get(reverse("admin:capy_theme_theme_change", args=[theme.pk])).content
     for slot in ("main", "stacked", "mark", "wordmark", "email", "print"):
-        for mode in ("light", "dark"):
-            assert f'name="image_logo_{slot}_{mode}"'.encode() in content
+        assert f'name="image_logo_{slot}_light"'.encode() in content
+        # Email and print always use the light image, so they have no dark choice (#271).
+        dark = f'name="image_logo_{slot}_dark"'.encode() in content
+        assert dark == (slot not in ("email", "print")), slot
     assert b'name="logo_header_height_mobile"' in content
 
 

@@ -134,12 +134,15 @@ def test_every_editor_section_folds_except_save():
         ("bases.js", "Base themes"),
         ("colors.js", "Colors"),
         ("fonts.js", "Fonts and type"),
-        ("images.js", "Images"),
+        ("image-sections.js", "Logos"),
+        ("image-sections.js", "Icon"),
+        ("image-sections.js", "Backgrounds"),
+        ("image-sections.js", "Sharing image"),
         ("shape.js", "Shape and effects"),
         ("components.js", "Components"),
     ]:
         script = (controls_dir / name).read_text()
-        assert f'ui.section("{title}"' in script, name
+        assert re.search(r'ui\.section\(\s*"' + re.escape(title) + '"', script), (name, title)
         assert 'el("h3"' not in script, name
     # Save and publish stays open: it holds the "Unsaved changes" note.
     actions = (controls_dir / "actions.js").read_text()
