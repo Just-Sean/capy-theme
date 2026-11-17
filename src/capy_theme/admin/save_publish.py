@@ -12,9 +12,11 @@ from urllib.parse import urlsplit
 
 from django.contrib import admin, messages
 from django.contrib.admin.options import IS_POPUP_VAR
-from django.contrib.admin.utils import unquote
+from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
+from django.contrib.admin.utils import quote, unquote
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError
+from django.db.models import Exists, OuterRef
 from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import path, reverse
@@ -22,6 +24,7 @@ from django.utils.html import format_html_join
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from ..models import ThemeAssignment
 from ..themes.active import NotPublished, activate, default_theme, get_active_theme
 from ..themes.publishing import (
     NOTE_MAX,
@@ -83,8 +86,14 @@ def activated_message(theme):
     return messages.SUCCESS, f"“{theme}” is now the default theme."
 
 
-def run_publish(request, theme, activate_too):
-    """Publish (and activate), telling the user what happened in messages."""
+def run_publish(request, theme, activate_too, quiet=False):
+    """Publish (and activate), telling the user what happened in messages (none when
+    `quiet`: a popup closes straight away, so they'd show up on a later page)."""
+
+    def say(level, text):
+        if not quiet:
+            messages.add_message(request, level, text)
+
     user = request.user
     note = request.POST.get(NOTE, "").strip()[:NOTE_MAX]
     try:
@@ -93,13 +102,13 @@ def run_publish(request, theme, activate_too):
         else:
             revision = publish(theme, user=user, note=note)
     except NothingToPublish:
-        messages.warning(request, NOTHING_TO_PUBLISH)
+        say(messages.WARNING, NOTHING_TO_PUBLISH)
     except NotPublished as error:
-        messages.error(request, str(error))
+        say(messages.ERROR, str(error))
     except ValidationError as error:
-        messages.error(request, "Can't publish: " + " ".join(error.messages))
+        say(messages.ERROR, "Can't publish: " + " ".join(error.messages))
     except IntegrityError:
-        messages.warning(request, SIMULTANEOUS)
+        say(messages.WARNING, SIMULTANEOUS)
     else:
         done = (
             f"Published “{theme}” as revision {revision.number}."
@@ -107,10 +116,10 @@ def run_publish(request, theme, activate_too):
             else "Nothing new to publish."
         )
         if not activate_too:
-            messages.success(request, done)
+            say(messages.SUCCESS, done)
             return
         level, activated = activated_message(theme)
-        messages.add_message(request, level, f"{done} {activated}")
+        say(level, f"{done} {activated}")
 
 
 class SavePublishMixin:
@@ -149,26 +158,47 @@ class SavePublishMixin:
 
     def _after_save(self, request, theme):
         """After a save from one of the three buttons: publish and activate if asked,
-        and stay on the theme page. None for anything else, and after publishing in
-        a popup or for someone who can't open the theme page: then Django answers as
-        usual (a popup closes and fills in the field it was opened from)."""
+        and stay on the theme page (keeping the list's filters, as Django's own "Save
+        and continue editing" does). In a popup, or for someone who can't open the
+        theme page, Django answers as usual instead (a popup closes and fills in the
+        field it was opened from), and only Django's message is shown.
+
+        Note: Django treats a POST without its own button names as a change-form
+        action if the page has an action form. ThemeAdmin has no change-form actions;
+        adding one would need these buttons handled there too.
+        """
         asked = [name for name in (SAVE, PUBLISH, PUBLISH_ACTIVATE) if name in request.POST]
         if not asked:
             return None
+        django_answers = IS_POPUP_VAR in request.POST or not self.has_view_or_change_permission(
+            request, theme
+        )
         if asked[0] == SAVE:
-            text = f"Draft of “{theme}” saved. Visitors won't see it until it's published."
-            if request.POST.get(NOTE, "").strip():
-                text += " The note wasn't kept: notes are only kept when you publish."
-            messages.success(request, text)
+            if not django_answers:
+                text = f"Draft of “{theme}” saved. Visitors won't see it until it's published."
+                if request.POST.get(NOTE, "").strip():
+                    text += " The note wasn't kept: notes are only kept when you publish."
+                messages.success(request, text)
         elif not self.has_publish_permission(request, theme):
             messages.error(request, "The draft was saved, but you can't publish themes.")
         else:
-            run_publish(request, theme, activate_too=asked[0] == PUBLISH_ACTIVATE)
-        if IS_POPUP_VAR in request.POST or not self.has_view_or_change_permission(request, theme):
+            run_publish(
+                request,
+                theme,
+                activate_too=asked[0] == PUBLISH_ACTIVATE,
+                quiet=IS_POPUP_VAR in request.POST,
+            )
+        if django_answers:
             return None
-        return redirect(reverse("admin:capy_theme_theme_change", args=[theme.pk]))
+        url = reverse("admin:capy_theme_theme_change", args=[quote(theme.pk)])
+        filters = {"preserved_filters": self.get_preserved_filters(request), "opts": self.opts}
+        return redirect(add_preserved_filters(filters, url))
 
     def save_publish_context(self, request, theme):
+        if theme is not None and request.method == "POST":
+            # Shown again after a failed save: Django has put the unsaved values on
+            # `theme`, so describe the draft as saved.
+            theme = type(theme).objects.select_related("live_revision").get(pk=theme.pk)
         default = default_theme()
         return {
             "capy_status": publish_status(theme),
@@ -181,6 +211,21 @@ class SavePublishMixin:
 
     # The theme list: buttons on each row
 
+    def get_queryset(self, request):
+        # Whether each theme is the default theme, in the list's own query (not one
+        # query per row).
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(
+                capy_is_default=Exists(
+                    ThemeAssignment.objects.filter(
+                        theme=OuterRef("pk"), site="", starts_at=None, ends_at=None
+                    )
+                )
+            )
+        )
+
     def get_list_display(self, request):
         columns = list(super().get_list_display(request))
         if self.has_publish_permission(request):
@@ -189,19 +234,23 @@ class SavePublishMixin:
 
     @admin.display(description="Publish or activate")
     def publish_buttons(self, theme):
-        default = default_theme()
-        is_default = default is not None and default.pk == theme.pk
+        is_default = theme.capy_is_default
         buttons = []
         if theme.has_unpublished_changes:
             buttons.append(
-                ("capy_theme_theme_publish_now", "Publish", "Publish “{}”? Visitors will see it.")
+                (
+                    "capy_theme_theme_publish_now",
+                    "Publish",
+                    "Publish “{}”? Visitors will see it wherever it's used.",
+                )
             )
             if not is_default:
                 buttons.append(
                     (
                         "capy_theme_theme_publish_activate",
                         "Publish and activate",
-                        "Publish “{}” and make it the default theme? Visitors will see it.",
+                        "Publish “{}” and make it the default theme? Visitors will see it "
+                        "(unless a theme schedule is running).",
                     )
                 )
         if theme.live_revision_id is not None and not is_default:
@@ -209,7 +258,8 @@ class SavePublishMixin:
                 (
                     "capy_theme_theme_activate",
                     "Activate",
-                    "Make the published version of “{}” the default theme? Visitors will see it.",
+                    "Make the published version of “{}” the default theme? Visitors will "
+                    "see it (unless a theme schedule is running).",
                 )
             )
         if not buttons:
@@ -240,6 +290,8 @@ class SavePublishMixin:
         """Back to the list as it was (its filters, search and page), if the request
         came from it; otherwise to the plain list."""
         changelist = reverse("admin:capy_theme_theme_changelist")
+        if not self.has_view_or_change_permission(request):
+            return redirect(reverse("admin:index"))  # they can't open the list
         came_from = request.META.get("HTTP_REFERER", "")
         safe = url_has_allowed_host_and_scheme(
             came_from, allowed_hosts={request.get_host()}, require_https=request.is_secure()

@@ -6,7 +6,7 @@
 - **`draft_state(theme, user, request)`:**
   - the draft's bases and settings (without custom CSS, which the editor doesn't edit)
   - its CSS, the live revision number, and whether there are unpublished changes
-  - whether this user can publish, and whether it's already the site's theme (then there's no activate button, #273)
+  - whether this user can publish, and whether it's already the default theme (`is_site_theme`, from `active.default_theme()`; then there's no activate button, #273). A theme shown only by a schedule still gets the button
   - the theme's uploaded images
   - the current values and contrast
 - **`controls()`:** what the panel offers, built from the same data files the admin uses, so the two always agree:

@@ -105,7 +105,8 @@ schedule is running or a domain has a site theme of its own. To choose it, click
 **Activate** on its row in the admin's theme list, or **Save, publish and activate**
 on its page (both need the `publish_theme` permission). The list's "Showing now"
 column shows which theme the site is showing right now (the default, or a scheduled
-one). A theme must be published before it can be activated.
+one), on every domain without a site theme of its own. A theme must be published
+before it can be activated.
 
 From code: `from capy_theme.themes.active import get_active_theme` then
 `get_active_theme(request)` returns the active `Theme`, with its live revision

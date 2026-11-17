@@ -181,7 +181,7 @@ def test_save_and_publish_keep_focus_on_their_button():
     # Back to the button pressed; after activating, that button is gone (the theme is
     # now the site's theme), so focus goes to Save and publish (#273).
     assert (
-        'refocus(activate && !reply.state.is_site_theme ? "[data-capy-publish-activate]" '
+        'refocus(activate && !reply.state.is_default ? "[data-capy-publish-activate]" '
         ': "[data-capy-publish]")'
     ) in script
 

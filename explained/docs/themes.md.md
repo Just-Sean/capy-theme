@@ -6,7 +6,7 @@
 - the theme's admin page, section by section
 - branding
 - **drafts and publishing:** the theme page's Save and publish area (Save draft, Save and publish, Save, publish and activate), the theme list's Publish and Activate buttons, revisions, compare, restore
-- the active theme (activated with those buttons), scheduled themes and multiple sites (a theme per domain)
+- the default theme (activated with those buttons), the list's "Showing now" column, scheduled themes and multiple sites (a theme per domain)
 - the visitor theme picker
 - light and dark mode
 - the three extra permissions (`publish_theme`, `edit_custom_css`, `import_theme`)

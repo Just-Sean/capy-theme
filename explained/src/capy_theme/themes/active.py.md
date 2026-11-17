@@ -13,6 +13,7 @@
 - `get_active_theme(request)`: the theme to show, with its live revision.
 - `get_site_theme(request)`: the same but ignoring the visitor's choice.
 - `offered_themes()`
+- `default_theme()`: the theme activated for every site (the default when no schedule is running and a domain has no site theme of its own), or None. Read from the database, not the cache. The admin and the editor use it to decide whether to offer activating (#273).
 - `activate(theme, site)`: the admin's Activate buttons and `publish_and_activate`; the theme must be published.
 - `theme_at(when, site)`: uncached; the admin's schedule page uses it.
 - `scheduled_assignments(site)`

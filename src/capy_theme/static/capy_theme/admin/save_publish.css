@@ -13,7 +13,7 @@
 /* Like Django's own submit-row buttons ("form .button" alone would make them tiny). */
 .capy-save-publish-actions .button { min-width: 15rem; height: auto; margin: 0; padding: 10px 15px; line-height: 1.2; }
 .capy-save-publish-help { margin: 0 0 0.5rem; }
-.capy-save-publish-delete { margin: 0.75rem 0 0; }
+.capy-save-publish-links { margin-top: 0.75rem; }
 /* The theme list's Publish, Publish and activate and Activate buttons. */
 #result_list .field-publish_buttons { white-space: normal; }
 #result_list .capy-row-button { margin: 0.25rem 0.5rem 0.25rem 0; padding: 6px 10px; min-height: 2rem; }

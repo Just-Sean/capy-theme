@@ -51,7 +51,7 @@
   // saved first, then the draft is published (and the theme made the default theme).
   function publishTo(note, activate) {
     var question = activate
-      ? "Save, publish and make this the default theme? Visitors will see it."
+      ? "Save, publish and make this the default theme? Visitors will see it (unless a theme schedule is running)."
       : "Save and publish this theme? Visitors will see it wherever it's used.";
     if (!window.confirm(question)) return;
     (editor.isDirty() ? saveDraft() : Promise.resolve())
@@ -61,7 +61,7 @@
         return editor.post(editor.mount.getAttribute("data-publish-url"), data);
       })
       .then(function (reply) {
-        note.value = "";
+        ui.publishNote = ""; // used: start the next one empty
         ui.build(reply.state);
         editor.applyCss(reply.state.css);
         var done = reply.published ? "Published as revision " + reply.published + "." : "Nothing new to publish.";
@@ -72,7 +72,7 @@
             : " It's now the default theme.";
         }
         editor.status(done + after);
-        refocus(activate && !reply.state.is_site_theme ? "[data-capy-publish-activate]" : "[data-capy-publish]");
+        refocus(activate && !reply.state.is_default ? "[data-capy-publish-activate]" : "[data-capy-publish]");
         document.dispatchEvent(new CustomEvent("capy-editor:saved"));
       })
       .catch(function (error) {
@@ -87,7 +87,12 @@
   }
 
   function publishControls(state) {
-    var note = el("input", { type: "text", id: "capy-editor-publish-note", "data-capy-note": "", maxlength: "2000" });
+    var note = el("input", { type: "text", id: "capy-editor-publish-note", "data-capy-note": "", maxlength: String(state.note_max) });
+    // Kept across rebuilds (Save draft, a failed publish), until it's published.
+    note.value = ui.publishNote || "";
+    note.addEventListener("input", function () {
+      ui.publishNote = note.value;
+    });
     var publish = el("button", { type: "button", "data-capy-publish": "", text: "Save and publish" });
     publish.addEventListener("click", function () {
       publishTo(note, false);
@@ -97,8 +102,8 @@
       el("label", { class: "capy-editor-stack", for: "capy-editor-publish-note" }, [el("span", { text: "Note for the history (optional, kept when you publish)" }), note]),
       described(publish, "capy-editor-publish-help", "Saves, then makes this version of the theme live. Visitors see it wherever this theme is used."),
     ];
-    if (state.is_site_theme) {
-      parts.push(el("p", { class: "capy-editor-note", text: "This is already the default theme, so Save and publish updates what the site shows." }));
+    if (state.is_default) {
+      parts.push(el("p", { class: "capy-editor-note", text: "This is already the default theme, so Save and publish updates it." }));
     } else {
       var both = el("button", { type: "button", "data-capy-publish-activate": "", text: "Save, publish and activate" });
       both.addEventListener("click", function () {

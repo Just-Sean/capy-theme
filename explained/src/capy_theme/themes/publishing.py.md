@@ -11,4 +11,6 @@
 5. In one database transaction: creates the next numbered `ThemeRevision` with its stylesheet hash, records who published it, and points `live_revision` at it.
 6. Logs "Published theme 'x' as revision N (user ID 5)". It logs an ID, never a name.
 
-**`publish_and_activate(theme, user, note)`** (#273): publishes, then makes the theme the site's theme (`active.activate`). If there's nothing new to publish, it still activates and returns None. A theme that was never published raises `NotPublished`.
+**`publish_and_activate(theme, user, note)`** (#273): publishes, then makes the theme the default theme (`active.activate`). If there's nothing new to publish, it still activates and returns None. A theme that was never published raises `NotPublished`.
+
+**`NOTE_MAX`** (2,000): the longest note kept with a revision. The admin and the editor cut notes to it.

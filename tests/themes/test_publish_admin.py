@@ -438,7 +438,10 @@ def test_publishing_buttons_ask_first_and_save_draft_doesnt(admin, theme):
     assert "capy_theme/admin/confirm.js" in content
     listing = admin.get(CHANGELIST).content.decode()
     assert "capy_theme/admin/confirm.js" in listing
-    assert 'data-capy-confirm="Publish “Main”? Visitors will see it."' in row_buttons(admin, theme)
+    row = row_buttons(admin, theme)
+    assert (
+        'data-capy-confirm="Publish “Main”? Visitors will see it wherever it&#x27;s used."' in row
+    )
 
 
 def test_the_buttons_look_like_admin_buttons(admin, theme):
@@ -482,3 +485,109 @@ def test_row_buttons_go_back_to_the_filtered_list(admin, theme):
     assert response.url == "http://testserver" + listing
     elsewhere = admin.post(row_url(theme, "activate"), HTTP_REFERER="https://evil.example/")
     assert elsewhere.url == CHANGELIST  # never back to another site
+
+
+# Third round (#273 review fixes)
+
+FILTERS = "_changelist_filters=light_base%3Dlight"
+
+
+@pytest.mark.parametrize("button", ["_capy_save", "_capy_publish", "_capy_publish_activate"])
+def test_the_buttons_keep_the_lists_filters_like_save_and_continue(admin, theme, button):
+    url = change_url(theme) + "?" + FILTERS
+    data = _post_back(admin.get(url).content.decode())
+    data[button] = ""
+    response = admin.post(url, data)
+    assert response.status_code == 302
+    assert FILTERS in response.url
+
+
+def test_save_draft_on_add_keeps_the_lists_filters(admin):
+    url = ADD + "?" + FILTERS
+    data = _post_back(admin.get(url).content.decode())
+    data.update({"name": "New", "slug": "new", "_capy_save": ""})
+    response = admin.post(url, data)
+    assert response.status_code == 302 and FILTERS in response.url
+
+
+def test_the_delete_link_keeps_the_filters_after_save_draft(admin, theme):
+    url = change_url(theme) + "?" + FILTERS
+    data = _post_back(admin.get(url).content.decode())
+    data["_capy_save"] = ""
+    response = admin.post(url, data, follow=True)
+    assert f"/delete/?{FILTERS}" in response.content.decode()
+
+
+def test_the_status_after_a_form_error_describes_the_saved_draft(admin, theme, user):
+    publish(theme, user=user)
+    response = press(admin, theme, "_capy_publish", slug="", light_base="cupcake")
+    assert response.status_code == 200
+    theme.refresh_from_db()
+    assert not theme.has_unpublished_changes  # nothing was saved
+    assert "Matches the published version" in response.content.decode()
+
+
+def test_an_add_only_user_gets_one_success_message(client, django_user_model):
+    user = django_user_model.objects.create_user("adder", password="pw", is_staff=True)
+    user.user_permissions.set(Permission.objects.filter(codename="add_theme"))
+    client.force_login(user)
+    data = _post_back(client.get(ADD).content.decode())
+    data.update({"name": "New", "slug": "new", "_capy_save": ""})
+    content = client.post(ADD, data, follow=True).content.decode()
+    assert content.count("successfully") + content.count("Draft of “New” saved") == 1
+
+
+def test_a_popup_save_leaves_no_message_for_the_next_page(admin):
+    url = ADD + "?_to_field=id&_popup=1"
+    data = _post_back(admin.get(url).content.decode())
+    data.update({"name": "Pop", "slug": "pop", "_capy_save": "", "_popup": "1", "_to_field": "id"})
+    admin.post(url, data)
+    assert "Draft of “Pop” saved" not in admin.get(reverse("admin:index")).content.decode()
+
+
+def test_a_publisher_who_cant_view_themes_lands_somewhere_they_can_open(
+    client, django_user_model, theme
+):
+    user = django_user_model.objects.create_user("pub", password="pw", is_staff=True)
+    user.user_permissions.set(Permission.objects.filter(codename="publish_theme"))
+    client.force_login(user)
+    response = client.post(row_url(theme, "publish_now"))
+    assert response.status_code == 302
+    assert client.get(response.url).status_code == 200
+
+
+def test_the_list_doesnt_query_the_default_theme_for_every_row(
+    admin, user, django_assert_max_num_queries
+):
+    for number in range(8):
+        publish(Theme.objects.create(name=f"T{number}", slug=f"t{number}"), user=user)
+    admin.get(CHANGELIST)  # warm up (sessions, cache)
+    with django_assert_max_num_queries(60) as captured:
+        admin.get(CHANGELIST)
+    assignments = [q for q in captured.captured_queries if "themeassignment" in q["sql"].lower()]
+    assert len(assignments) <= 3, len(assignments)
+
+
+@pytest.mark.parametrize(("show_delete", "shown"), [(False, False), (True, True), (None, True)])
+def test_the_delete_link_honours_show_delete(rf, theme, show_delete, shown):
+    from django.template.loader import render_to_string
+
+    context = {
+        "change": True,
+        "has_delete_permission": True,
+        "has_change_permission": True,
+        "original": theme,
+        "opts": Theme._meta,
+        "preserved_filters": "",
+        "capy_status": [],
+    }
+    if show_delete is not None:  # None: not set at all, as usual
+        context["show_delete"] = show_delete
+    html = render_to_string("capy_theme/admin/save_publish.html", context, rf.get("/"))
+    assert ('class="deletelink"' in html) is shown
+
+
+def test_the_delete_and_close_links_get_djangos_button_look(admin, theme):
+    content = admin.get(change_url(theme)).content.decode()
+    link = content[content.index('class="deletelink"') - 200 : content.index('class="deletelink"')]
+    assert 'class="submit-row capy-save-publish-links"' in link

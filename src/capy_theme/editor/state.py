@@ -17,6 +17,7 @@ from ..images.slots import NO_SVG, SLOT_MODES, SLOTS
 from ..images.uploads import byte_limit
 from ..themes.active import default_theme
 from ..themes.catalog import get_builtin_themes
+from ..themes.publishing import NOTE_MAX
 from .access import can_publish
 from .preview import preview
 
@@ -46,7 +47,8 @@ def draft_state(theme, user):
         "has_unpublished_changes": theme.has_unpublished_changes,
         "can_publish": can_publish(user),
         # Whether it's the default theme already (then there's no activate button, #273).
-        "is_site_theme": getattr(default_theme(), "pk", None) == theme.pk,
+        "is_default": getattr(default_theme(), "pk", None) == theme.pk,
+        "note_max": NOTE_MAX,
         "urls": editor_urls(theme),
         "assets": [asset_data(a) for a in theme.assets.all()],
         "controls": controls(),

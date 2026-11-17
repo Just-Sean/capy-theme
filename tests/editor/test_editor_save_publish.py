@@ -215,10 +215,10 @@ def test_editor_publish_can_also_activate(client, django_user_model):
     client.force_login(user)
     url = reverse("capy_theme:editor_publish", args=[theme.pk])
     state = client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()
-    assert state["is_site_theme"] is False
+    assert state["is_default"] is False
     reply = client.post(url, {"activate": True}, content_type="application/json").json()
     assert (reply["published"], reply["activated"]) == (1, True)
-    assert reply["state"]["is_site_theme"] is True
+    assert reply["state"]["is_default"] is True
     assert get_active_theme().pk == theme.pk
     # Nothing new to publish: activating still works (no new revision).
     other = Theme.objects.create(name="Other", slug="other")
@@ -258,7 +258,7 @@ def test_the_editor_has_the_three_buttons_with_descriptions():
     ):
         assert words in script, words
     # No activate button when it already is the default theme, with a note saying so.
-    assert "if (state.is_site_theme) {" in script
+    assert "if (state.is_default) {" in script
     assert "All of the above" not in script  # each description makes sense on its own
 
 
@@ -282,15 +282,33 @@ def test_editor_publish_and_activate_says_when_a_schedule_shows_another_theme(
     reply = post(client, "publish", main, {"activate": True}).json()
     assert reply["activated"] is True and reply["showing"] == "Sale"
     # It's the default theme now (no more activate button), though Sale shows for now.
-    assert reply["state"]["is_site_theme"] is True
+    assert reply["state"]["is_default"] is True
     assert get_active_theme().pk == sale.pk
     assert "a theme schedule is showing" in STATIC_ACTIONS.read_text()
 
 
-def test_the_editor_save_area_is_only_pinned_on_tall_screens():
+def test_the_editor_save_area_isnt_pinned():
+    # Pinned, it covered the controls above it and could hide keyboard focus (#273).
     css = (STATIC_ACTIONS.parents[1] / "editor.css").read_text()
-    assert "@media (min-height: 48rem) {\n  .capy-editor-actions { position: sticky;" in css
-    assert ".capy-editor-actions { background: #ffffff; padding-bottom: 1rem; }" in css
+    actions = css[css.index(".capy-editor-actions {") :]
+    assert "sticky" not in actions[: actions.index("}")]
+
+
+def test_the_editor_keeps_the_publish_note_until_its_published():
+    script = STATIC_ACTIONS.read_text()
+    assert 'note.value = ui.publishNote || "";' in script  # back after a rebuild
+    assert "ui.publishNote = note.value;" in script
+    assert 'ui.publishNote = ""; // used' in script  # cleared once published
+    assert "maxlength: String(state.note_max)" in script
+
+
+def test_the_editor_state_has_the_note_limit(client, django_user_model):
+    from capy_theme.themes.publishing import NOTE_MAX
+
+    login(client, django_user_model, "change_theme")
+    theme = Theme.objects.create(name="N", slug="n")
+    state = client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()
+    assert state["note_max"] == NOTE_MAX and "is_site_theme" not in state
 
 
 # QA for #273: the editor's publish with "activate"
@@ -325,7 +343,7 @@ def test_activate_the_site_theme_with_nothing_new(client, django_user_model, the
     login(client, django_user_model, "change_theme", "publish_theme")
     reply = post(client, "publish", theme, {"activate": True}).json()
     assert (reply["published"], reply["activated"]) == (None, True)
-    assert reply["state"]["is_site_theme"] is True and theme.revisions.count() == 1
+    assert reply["state"]["is_default"] is True and theme.revisions.count() == 1
 
 
 def test_publish_for_a_missing_theme_is_not_found(client, django_user_model):

@@ -20,6 +20,6 @@
 - get active theme accepts a request
 - admin activate button
 - admin refuses unpublished theme
-- admin list shows which theme is active
+- admin list shows which theme is active (the "Showing now" column)
 
 Run just this file with `uv run pytest tests/themes/test_active_theme.py`.

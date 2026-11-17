@@ -29,7 +29,7 @@
         </li>
         {% if not capy_is_default and not is_popup %}
           <li>
-            <button type="submit" class="button" name="_capy_publish_activate" aria-describedby="capy-activate-help" data-capy-confirm="Save, publish and make this the default theme? Visitors will see it.">Save, publish and activate</button>
+            <button type="submit" class="button" name="_capy_publish_activate" aria-describedby="capy-activate-help" data-capy-confirm="Save, publish and make this the default theme? Visitors will see it (unless a theme schedule is running).">Save, publish and activate</button>
             <span id="capy-activate-help">Saves, publishes, then makes this the default theme: the one the site shows.</span>
           </li>
         {% endif %}
@@ -38,12 +38,15 @@
     {% if not can_publish %}
       <p class="capy-save-publish-help">You can save drafts. To publish, ask someone who can publish themes (permission “Can publish, activate and restore themes”).</p>
     {% elif capy_is_default %}
-      <p class="capy-save-publish-help">This is already the default theme, so Save and publish updates what the site shows.</p>
+      <p class="capy-save-publish-help">This is already the default theme, so Save and publish updates it.</p>
     {% endif %}
   {% endif %}
 </div>
-{% if change and has_delete_permission and not is_popup %}
-  <p class="deletelink-box capy-save-publish-delete">{% url opts|admin_urlname:'delete' original.pk|admin_urlquote as delete_url %}<a href="{% add_preserved_filters delete_url %}" class="deletelink">Delete</a></p>
+{% comment %}Delete (or Close for people who can only view) in a row of its own, styled
+  like Django's own (it styles them inside .submit-row). show_delete is Django's
+  switch for hiding Delete.{% endcomment %}
+{% if change and has_delete_permission and not is_popup and show_delete is not False %}
+  <div class="submit-row capy-save-publish-links">{% url opts|admin_urlname:'delete' original.pk|admin_urlquote as delete_url %}<a href="{% add_preserved_filters delete_url %}" class="deletelink">Delete</a></div>
 {% elif change and not has_change_permission and not is_popup %}
-  <p class="capy-save-publish-delete">{% url opts|admin_urlname:'changelist' as changelist_url %}<a href="{% add_preserved_filters changelist_url %}" class="closelink">Close</a></p>
+  <div class="submit-row capy-save-publish-links">{% url opts|admin_urlname:'changelist' as changelist_url %}<a href="{% add_preserved_filters changelist_url %}" class="closelink">Close</a></div>
 {% endif %}
