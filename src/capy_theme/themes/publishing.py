@@ -8,6 +8,7 @@ from django.db.models import Max
 from ..css.stylesheet import css_version
 from ..images.icons import make_icons
 from ..models import ThemeRevision
+from .active import activate
 from .validation import validate_settings
 
 logger = logging.getLogger(__name__)
@@ -52,4 +53,20 @@ def publish(theme, user=None, note=""):
         theme.save(update_fields=["live_revision"])
     publisher = f"user ID {revision.published_by_id}" if revision.published_by_id else "no user"
     logger.info("Published theme %r as revision %d (%s).", theme.slug, number, publisher)
+    return revision
+
+
+def publish_and_activate(theme, user=None, note=""):
+    """Publish the draft (if it changed since the last publish), then make the theme
+    the site's theme (for every site without a site theme of its own, #273).
+
+    Returns the new revision, or None if the draft already matched the live
+    revision (it's still activated). Raises ValidationError or IntegrityError as
+    publish() does, and NotPublished if the theme has never been published.
+    """
+    try:
+        revision = publish(theme, user=user, note=note)
+    except NothingToPublish:
+        revision = None
+    activate(theme)
     return revision

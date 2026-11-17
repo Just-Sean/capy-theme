@@ -39,8 +39,10 @@ unfolded. Its sections, top to bottom:
 
 At the top right: **Edit live** opens the theme in the live editor, on
 capy-theme's live edit page (`/theme/live-edit/`, see [the editor](editor.md)), next to
-**Revisions**, **Export**,
-**Publish** and Django's **History**.
+**Revisions**, **Export** and Django's **History**.
+
+At the bottom, **Save and publish** is the one place to save, publish and activate
+(see [Drafts and publishing](#drafts-and-publishing)).
 
 The **Advanced** section shows the theme's stored `settings` as read-only JSON.
 They're edited through the fields above or the live editor, not typed by hand.
@@ -58,11 +60,25 @@ Like everything else, branding changes show on the site only after publishing.
 Editing a theme in the admin changes only its **draft**. Pages will use the
 theme's **live revision**, which changes only when someone publishes:
 
-- On a theme's edit page, click **Publish** (needs the `publish_theme` permission). A confirmation page shows what's
-  live now and has an optional note box. Publishing copies the draft's look
-  (light base, dark base and `settings`) into a new numbered `ThemeRevision`,
-  recording who published it and when, and makes it the live revision.
-- If the draft matches the live revision, publishing is refused ("Nothing to publish").
+- At the bottom of a theme's edit page, **Save and publish** shows where the theme
+  stands (whether the draft has unpublished changes, the published revision, and
+  whether it's the site's theme) and has three buttons, each saying what it does:
+  - **Save draft:** saves your changes and stays on the page. Visitors see nothing
+    until you publish.
+  - **Save and publish:** saves, then publishes. Visitors see it wherever this
+    theme is used.
+  - **Save, publish and activate:** all of the above, and makes it the site's
+    theme (see [The active theme](#the-active-theme)). Not shown when it already is.
+
+  The two publishing buttons need the `publish_theme` permission (without it, only
+  **Save draft** shows), and there's an optional note for the history. The theme
+  list has the same on each row: **Publish**, **Publish and activate** and
+  **Activate**, shown when they apply. The live editor has the same three buttons.
+- Publishing copies the draft's look (light base, dark base and `settings`) into a
+  new numbered `ThemeRevision`, recording who published it and when, and makes it
+  the live revision.
+- If the draft matches the live revision, publishing is refused ("Nothing to
+  publish"); **Save, publish and activate** still activates it.
 - The name and slug aren't part of a revision, so renaming takes effect without publishing.
 - Revisions can't be edited or deleted. They're listed on the theme's edit page,
   and removed only if the theme itself is deleted.
@@ -73,13 +89,14 @@ theme's **live revision**, which changes only when someone publishes:
   publishes it **as a new revision**, noted "Restored revision N". Nothing in the
   history is deleted, and the site shows it straight away.
 
-From code: `from capy_theme.themes.publishing import publish` then `publish(theme, user=request.user, note="…")`.
+From code: `from capy_theme.themes.publishing import publish` then `publish(theme, user=request.user, note="…")`, or `publish_and_activate(theme, user=…, note="…")` to publish and make it the site's theme in one step.
 
 ## The active theme
 
-One theme is the site's **active** theme. To choose it, tick it in the admin's
-theme list and run the **Activate** action (needs the `publish_theme` permission). The list's "Active" column shows
-which one it is. A theme must be published before it can be activated.
+One theme is the site's **active** theme. To choose it, click **Activate** on its
+row in the admin's theme list, or **Save, publish and activate** on its page (both
+need the `publish_theme` permission). The list's "Active" column shows which one it
+is. A theme must be published before it can be activated.
 
 From code: `from capy_theme.themes.active import get_active_theme` then
 `get_active_theme(request)` returns the active `Theme`, with its live revision
@@ -105,8 +122,8 @@ even with a long `CAPY_THEME_CACHE_SECONDS`.
 One install can serve several domains (for example `shop.example.com` and
 `blog.example.com`), each with its own theme:
 
-1. Activate a theme as usual (the Activate action): it's the theme for **every
-   site**.
+1. Activate a theme as usual (**Activate** on the theme list, or **Save, publish and
+   activate**): it's the theme for **every site**.
 2. In **Admin → Capy Theme → Site themes → Add**, give a domain and the theme it
    should use. Only that domain uses it; every other domain uses the theme for
    every site. Needs the `publish_theme` permission.

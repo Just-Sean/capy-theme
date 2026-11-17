@@ -108,8 +108,7 @@
 /* Save and publish */
 .capy-editor-actions { position: sticky; bottom: -1rem; background: #ffffff; padding-bottom: 1rem; }
 .capy-editor-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.capy-editor-publish { display: flex; gap: 0.35rem; margin-top: 0.5rem; }
-.capy-editor-publish input { flex: 1; }
+.capy-editor-publish { display: flex; flex-direction: column; margin-top: 0.5rem; }
 
 /* The corner button and the banner, shown on any page */
 .capy-editor-launch {
@@ -203,3 +202,7 @@ html.capy-editor-open body { padding-top: var(--capy-editor-banner-height); }
 @media (min-width: 48rem) {
   html.capy-editor-open body { padding-right: var(--capy-editor-width); }
 }
+/* Save and publish (controls/actions.js, #273): each button with its description. */
+.capy-editor-described { margin: 0.5rem 0; }
+.capy-editor-described .capy-editor-note { margin: 0.2rem 0 0; }
+.capy-editor-publish input[data-capy-note] { width: 100%; margin-top: 0.25rem; }

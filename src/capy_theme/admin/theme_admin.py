@@ -2,7 +2,7 @@
 
 import json
 
-from django.contrib import admin, messages
+from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 
@@ -13,13 +13,14 @@ from ..css.custom import summary as custom_css_summary
 from ..css.stylesheet import stylesheet_url
 from ..editor.access import can_edit
 from ..models import Theme
-from ..themes.active import NotPublished, activate, get_active_theme
+from ..themes.active import get_active_theme
 from .fieldsets import THEME_FIELDSETS
 from .form_colors import _pair
 from .form_images import ask_to_choose_again, save_images
 from .import_export import ImportExportMixin
 from .inlines import ThemeAssetInline, ThemeRevisionInline
 from .publish_pages import PublishPagesMixin
+from .save_publish import SavePublishMixin
 from .tabs import theme_tabs
 from .theme_form import ThemeForm
 
@@ -30,7 +31,7 @@ def edit_live_url(theme_id):
 
 
 @admin.register(Theme)
-class ThemeAdmin(ImportExportMixin, PublishPagesMixin, admin.ModelAdmin):
+class ThemeAdmin(ImportExportMixin, PublishPagesMixin, SavePublishMixin, admin.ModelAdmin):
     form = ThemeForm
     change_form_template = "capy_theme/admin/theme_change_form.html"
     change_list_template = "capy_theme/admin/theme_change_list.html"
@@ -46,7 +47,6 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, admin.ModelAdmin):
         "base_changed_in_daisyui",
         "updated_at",
     ]
-    actions = ["activate_theme"]
     list_filter = ["light_base", "dark_base"]
     search_fields = ["name", "slug"]
     prepopulated_fields = {"slug": ["name"]}
@@ -136,35 +136,28 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, admin.ModelAdmin):
         save_images(form, obj)  # new uploads need the saved theme (#271)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
+        theme = Theme.objects.select_related("live_revision").filter(pk=object_id).first()
         extra_context = {
             **(extra_context or {}),
+            **self.save_publish_context(request, theme),
             "can_publish": self.has_publish_permission(request),
             "edit_live_url": edit_live_url(object_id) if can_edit(request.user) else None,
         }
         return super().change_view(request, object_id, form_url, extra_context)
+
+    def add_view(self, request, form_url="", extra_context=None):
+        extra_context = {
+            **(extra_context or {}),
+            **self.save_publish_context(request, None),
+            "can_publish": self.has_publish_permission(request),
+        }
+        return super().add_view(request, form_url, extra_context)
 
     def render_change_form(self, request, context, *args, **kwargs):
         if request.method == "POST":  # shown again after a failed save
             ask_to_choose_again(context["adminform"].form)
         context["capy_tabs"] = theme_tabs(context["adminform"], context["inline_admin_formsets"])
         return super().render_change_form(request, context, *args, **kwargs)
-
-    # Shown in the actions menu only to users with the publish_theme permission.
-    @admin.action(
-        description="Activate the selected theme (make it the site's theme)",
-        permissions=["publish"],
-    )
-    def activate_theme(self, request, queryset):
-        if queryset.count() != 1:
-            messages.error(request, "Select exactly one theme to activate.")
-            return
-        theme = queryset.select_related("live_revision").get()
-        try:
-            activate(theme)
-        except NotPublished as error:
-            messages.error(request, str(error))
-        else:
-            messages.success(request, f"“{theme}” is now the active theme.")
 
     @admin.display(description="Live revision", ordering="live_revision__number")
     def live_revision_number(self, theme):
@@ -202,5 +195,3 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, admin.ModelAdmin):
         for note in theme.base_changes():
             status += format_html('<p class="errornote">{}</p>', note)
         return status
-
-    # The Publish page

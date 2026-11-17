@@ -12,7 +12,8 @@ from ..images.assets import asset_data
 from ..images.slots import SLOT_MODES
 from ..images.uploads import add_asset
 from ..models import Theme
-from ..themes.publishing import NOTHING_TO_PUBLISH, NothingToPublish, publish
+from ..themes.active import NotPublished
+from ..themes.publishing import NOTHING_TO_PUBLISH, NothingToPublish, publish, publish_and_activate
 from .access import can_edit, can_publish
 from .preview import preview
 from .saving import save_draft, suggestions
@@ -99,8 +100,9 @@ def editor_save(request, pk):
 def editor_publish(request, pk):
     """Publish the theme's saved draft from the editor. Needs publish_theme.
 
-    Takes an optional {"note": "..."}; goes through the same publish() and
-    revisions as the admin's Publish page.
+    Takes an optional {"note": "...", "activate": true}; goes through the same
+    publish() and revisions as the admin's buttons. With "activate", the theme also
+    becomes the site's theme, even if there was nothing new to publish (#273).
     """
     if not can_publish(request.user):
         return JsonResponse({"error": "You can't publish themes."}, status=403)
@@ -109,10 +111,17 @@ def editor_publish(request, pk):
         data = _json_body(request)
     except ValueError:
         return JsonResponse({"errors": ["The request must be a JSON object."]}, status=400)
+    note = str(data.get("note", "")).strip()[:2000]
+    activate_too = data.get("activate") is True
     try:
-        revision = publish(theme, user=request.user, note=str(data.get("note", ""))[:2000])
+        if activate_too:
+            revision = publish_and_activate(theme, user=request.user, note=note)
+        else:
+            revision = publish(theme, user=request.user, note=note)
     except NothingToPublish:
         return JsonResponse({"errors": [NOTHING_TO_PUBLISH]}, status=409)
+    except NotPublished as error:
+        return JsonResponse({"errors": [str(error)]}, status=400)
     except ValidationError as error:
         return JsonResponse({"errors": ["Can't publish: " + " ".join(error.messages)]}, status=400)
     except IntegrityError:
@@ -124,7 +133,13 @@ def editor_publish(request, pk):
             },
             status=409,
         )
-    return JsonResponse({"published": revision.number, "state": draft_state(theme, request.user)})
+    return JsonResponse(
+        {
+            "published": revision.number if revision else None,
+            "activated": activate_too,
+            "state": draft_state(theme, request.user),
+        }
+    )
 
 
 @require_POST

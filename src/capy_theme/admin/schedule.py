@@ -25,7 +25,7 @@ class ScheduledThemeForm(forms.ModelForm):
         if not cleaned.get("starts_at") and not cleaned.get("ends_at"):
             raise ValidationError(
                 "Give a start or an end date. To change the site's default theme, use "
-                "the Activate action on the theme list instead."
+                "Activate on the theme list (or on the theme's page) instead."
             )
         return cleaned
 

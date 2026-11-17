@@ -1,0 +1,43 @@
+{% load admin_urls %}
+{% comment %}
+  The theme page's buttons, in one place (admin/save_publish.py, #273): where the
+  theme stands, then Save draft, Save and publish, and Save, publish and activate,
+  each with what it does. Publishing needs the publish_theme permission; Activate
+  is left out when the theme is already the site's theme. Save draft is first, so
+  pressing Enter saves the draft. No inline styles: admin/save_publish.css.
+{% endcomment %}
+<div class="submit-row capy-save-publish" role="group" aria-labelledby="capy-save-publish-title">
+  <h2 class="capy-save-publish-title" id="capy-save-publish-title">Save and publish</h2>
+  <dl class="capy-save-publish-status">
+    {% for label, text in capy_status %}<div><dt>{{ label }}</dt><dd>{{ text }}</dd></div>{% endfor %}
+  </dl>
+  {% if has_change_permission or add %}
+    <ul class="capy-save-publish-actions">
+      <li>
+        <button type="submit" class="default" name="_capy_save" aria-describedby="capy-save-help">Save draft</button>
+        <span id="capy-save-help">Saves your changes. Visitors see nothing until you publish.</span>
+      </li>
+      {% if can_publish %}
+        <li>
+          <button type="submit" name="_capy_publish" aria-describedby="capy-publish-help">Save and publish</button>
+          <span id="capy-publish-help">Saves, then makes this version of the theme live. Visitors see it wherever this theme is used.</span>
+        </li>
+        {% if not capy_is_site_theme %}
+          <li>
+            <button type="submit" name="_capy_publish_activate" aria-describedby="capy-activate-help">Save, publish and activate</button>
+            <span id="capy-activate-help">All of the above, and makes this the site's theme.</span>
+          </li>
+        {% endif %}
+      {% endif %}
+    </ul>
+    {% if can_publish %}
+      <label class="capy-save-publish-note" for="capy-publish-note">Note for the history (optional, used when you publish)
+        <input type="text" name="_capy_note" id="capy-publish-note" maxlength="{{ capy_note_max }}"></label>
+    {% else %}
+      <p class="capy-save-publish-help">Publishing and activating need the “Can publish, activate and restore themes” permission.</p>
+    {% endif %}
+  {% endif %}
+  {% if change and has_delete_permission and not is_popup %}
+    <p class="deletelink-box"><a href="{% url opts|admin_urlname:'delete' original.pk|admin_urlquote %}" class="deletelink">Delete</a></p>
+  {% endif %}
+</div>

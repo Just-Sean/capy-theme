@@ -178,7 +178,12 @@ def test_page_behind_a_full_width_panel_is_inert():
 def test_save_and_publish_keep_focus_on_their_button():
     script = (STATIC / "controls" / "actions.js").read_text()
     assert 'refocus("[data-capy-save]")' in script
-    assert 'refocus("[data-capy-publish]")' in script
+    # Back to the button pressed; after activating, that button is gone (the theme is
+    # now the site's theme), so focus goes to Save and publish (#273).
+    assert (
+        'refocus(activate && !reply.state.is_site_theme ? "[data-capy-publish-activate]" '
+        ': "[data-capy-publish]")'
+    ) in script
 
 
 # "See it as a visitor" is gone; Revert goes back to the saved draft (#261).

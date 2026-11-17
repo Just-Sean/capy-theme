@@ -1,6 +1,5 @@
-"""The theme admin's own pages: Publish, Revisions (with compare) and Restore."""
+"""The theme admin's own pages: Revisions (with compare) and Restore."""
 
-from django import forms
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError
@@ -12,28 +11,16 @@ from ..css.custom import can_edit_custom_css
 from ..models import Theme
 from ..themes.history import compare as compare_revisions
 from ..themes.history import restore as restore_revision
-from ..themes.publishing import NothingToPublish, publish
+from ..themes.publishing import NothingToPublish
 from .fonts import _int
 
 
-class PublishForm(forms.Form):
-    note = forms.CharField(
-        required=False,
-        widget=forms.Textarea(attrs={"rows": 3, "cols": 60}),
-        help_text="Optional: what changed or why, for the history.",
-    )
-
-
 class PublishPagesMixin:
-    """Adds the Publish, Revisions and Restore pages to ThemeAdmin."""
+    """Adds the Revisions and Restore pages to ThemeAdmin. (Publishing is done with the
+    theme page's and theme list's buttons: admin/save_publish.py.)"""
 
     def get_urls(self):
         return [
-            path(
-                "<path:object_id>/publish/",
-                self.admin_site.admin_view(self.publish_view),
-                name="capy_theme_theme_publish",
-            ),
             path(
                 "<path:object_id>/revisions/",
                 self.admin_site.admin_view(self.revisions_view),
@@ -46,43 +33,6 @@ class PublishPagesMixin:
             ),
             *super().get_urls(),
         ]
-
-    def publish_view(self, request, object_id):
-        theme = get_object_or_404(Theme.objects.select_related("live_revision"), pk=object_id)
-        if not self.has_publish_permission(request, theme):
-            raise PermissionDenied
-        change_url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
-
-        form = PublishForm(request.POST or None)
-        if request.method == "POST" and form.is_valid():
-            try:
-                revision = publish(theme, user=request.user, note=form.cleaned_data["note"])
-            except NothingToPublish as error:
-                messages.warning(request, str(error))
-            except ValidationError as error:
-                messages.error(request, "Can't publish: " + " ".join(error.messages))
-            except IntegrityError:
-                # Someone else published this theme at the same moment and took
-                # the next revision number. Nothing was saved for this request.
-                messages.warning(
-                    request,
-                    "Someone else just published this theme, so yours wasn't saved. "
-                    "Check the live revision below, then publish again if needed.",
-                )
-            else:
-                messages.success(request, f"Published “{theme}” as revision {revision.number}.")
-            return redirect(change_url)
-
-        context = {
-            **self.admin_site.each_context(request),
-            "title": f"Publish “{theme}”",
-            "opts": self.opts,
-            "theme": theme,
-            "form": form,
-            "change_url": change_url,
-            "has_changes": theme.has_unpublished_changes,
-        }
-        return TemplateResponse(request, "capy_theme/admin/publish_theme.html", context)
 
     # Revisions: list, compare and restore
 

@@ -57,8 +57,11 @@ def change_url(theme):
     return reverse("admin:capy_theme_theme_change", args=[theme.pk])
 
 
-def publish_url(theme):
-    return reverse("admin:capy_theme_theme_publish", args=[theme.pk])
+def row_url(theme, action):
+    return reverse(f"admin:capy_theme_theme_{action}", args=[theme.pk])
+
+
+ROW_ACTIONS = ("publish_now", "publish_activate", "activate")
 
 
 CHANGELIST = reverse("admin:capy_theme_theme_changelist")
@@ -133,46 +136,55 @@ def test_publisher_can_offer_a_theme_to_visitors(publisher, theme):
     assert theme.offered_to_visitors is True
 
 
-def test_designer_sees_no_publish_button(designer, theme):
+def test_designer_sees_only_save_draft(designer, theme):
     content = designer.get(change_url(theme)).content.decode()
-    assert publish_url(theme) not in content
+    assert 'name="_capy_save"' in content
+    assert 'name="_capy_publish"' not in content and 'name="_capy_publish_activate"' not in content
+    assert "Publishing and activating need the" in content
 
 
-def test_designer_direct_publish_request_is_refused(designer, theme):
-    assert designer.get(publish_url(theme)).status_code == 403
-    assert designer.post(publish_url(theme), {"note": ""}).status_code == 403
+def test_designer_direct_publish_requests_are_refused(designer, theme):
+    for action in ROW_ACTIONS:
+        assert designer.post(row_url(theme, action)).status_code == 403
     assert not ThemeRevision.objects.exists()
 
 
-def test_designer_sees_no_activate_action(designer, theme):
+def test_designer_pressing_publish_only_saves_the_draft(designer, theme):
+    response = designer.post(change_url(theme), draft_post(_capy_publish=""), follow=True)
+    assert "The draft was saved, but you can&#x27;t publish themes." in response.content.decode()
+    assert not ThemeRevision.objects.exists()
+
+
+def test_designer_sees_no_row_buttons(designer, theme):
     content = designer.get(CHANGELIST).content.decode()
-    assert "activate_theme" not in content
+    assert "publish-now" not in content and "activate_theme" not in content
 
 
 def test_designer_direct_activate_request_is_refused(designer, theme):
     publish(theme)
-    designer.post(CHANGELIST, {"action": "activate_theme", "_selected_action": [theme.pk]})
+    assert designer.post(row_url(theme, "activate")).status_code == 403
     assert get_active_theme() is None
 
 
 # A publisher can.
 
 
-def test_publisher_sees_the_publish_button_and_can_publish(publisher, theme):
-    assert publish_url(theme) in publisher.get(change_url(theme)).content.decode()
-    response = publisher.post(publish_url(theme), {"note": ""})
-    assert response.status_code == 302
+def test_publisher_sees_the_publish_buttons_and_can_publish(publisher, theme):
+    content = publisher.get(change_url(theme)).content.decode()
+    assert 'name="_capy_publish"' in content and 'name="_capy_publish_activate"' in content
+    response = publisher.post(change_url(theme), draft_post(_capy_publish=""))
+    assert response.status_code == 302, response.content
     theme.refresh_from_db()
     assert theme.live_revision is not None
 
 
 def test_publisher_can_activate(publisher, theme):
     publish(theme)
-    assert "activate_theme" in publisher.get(CHANGELIST).content.decode()
-    publisher.post(CHANGELIST, {"action": "activate_theme", "_selected_action": [theme.pk]})
+    assert row_url(theme, "activate") in publisher.get(CHANGELIST).content.decode()
+    publisher.post(row_url(theme, "activate"))
     assert get_active_theme() == theme
 
 
 def test_superusers_can_publish(client, django_user_model, theme):
     client.force_login(django_user_model.objects.create_superuser("root", "r@example.com", "pw"))
-    assert publish_url(theme) in client.get(change_url(theme)).content.decode()
+    assert 'name="_capy_publish"' in client.get(change_url(theme)).content.decode()

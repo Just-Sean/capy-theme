@@ -1,6 +1,7 @@
 """Tests for saving and publishing from the editor (issue #98)."""
 
 import json
+from pathlib import Path
 
 import pytest
 from django.contrib.auth.models import Permission
@@ -8,10 +9,14 @@ from django.core.cache import cache
 from django.urls import reverse
 
 from capy_theme.models import Theme, ThemeRevision
-from capy_theme.themes.active import activate
+from capy_theme.themes.active import activate, get_active_theme
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
+STATIC_ACTIONS = (
+    Path(__file__).resolve().parents[2]
+    / "src/capy_theme/static/capy_theme/editor/controls/actions.js"
+)
 PINK = "oklch(65% 0.24 350)"
 
 
@@ -196,3 +201,58 @@ def test_publishing_at_the_same_moment_as_someone_else(
     response = post(client, "publish", theme, {})
     assert response.status_code == 409
     assert "Someone else just published" in response.json()["errors"][0]
+
+
+# Save, publish and activate from the editor (#273)
+
+
+def test_editor_publish_can_also_activate(client, django_user_model):
+    theme = Theme.objects.create(name="Main", slug="main")
+    user = django_user_model.objects.create_user("pub", password="pw", is_staff=True)
+    user.user_permissions.set(
+        Permission.objects.filter(codename__in=["change_theme", "publish_theme"])
+    )
+    client.force_login(user)
+    url = reverse("capy_theme:editor_publish", args=[theme.pk])
+    state = client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()
+    assert state["is_site_theme"] is False
+    reply = client.post(url, {"activate": True}, content_type="application/json").json()
+    assert (reply["published"], reply["activated"]) == (1, True)
+    assert reply["state"]["is_site_theme"] is True
+    assert get_active_theme().pk == theme.pk
+    # Nothing new to publish: activating still works (no new revision).
+    other = Theme.objects.create(name="Other", slug="other")
+    client.post(
+        reverse("capy_theme:editor_publish", args=[other.pk]), {}, content_type="application/json"
+    )
+    reply = client.post(
+        reverse("capy_theme:editor_publish", args=[other.pk]),
+        {"activate": True},
+        content_type="application/json",
+    ).json()
+    assert (reply["published"], reply["activated"]) == (None, True)
+    assert get_active_theme().pk == other.pk and other.revisions.count() == 1
+
+
+def test_editor_publish_without_activate_doesnt_activate(client, django_user_model):
+    theme = Theme.objects.create(name="Main", slug="main")
+    client.force_login(django_user_model.objects.create_superuser("r", "r@e.com", "pw"))
+    url = reverse("capy_theme:editor_publish", args=[theme.pk])
+    for value in (None, "yes", 1):  # only a real true activates
+        body = {} if value is None else {"activate": value}
+        client.post(url, body, content_type="application/json")
+    assert theme.revisions.count() == 1 and get_active_theme() is None
+
+
+def test_the_editor_has_the_three_buttons_with_descriptions():
+    script = STATIC_ACTIONS.read_text()
+    for words in (
+        '"Save draft"',
+        '"Save and publish"',
+        '"Save, publish and activate"',
+        "Visitors see nothing until you publish.",
+        "makes this version of the theme live",
+        "makes this the site's theme",
+    ):
+        assert words in script, words
+    assert "if (!state.is_site_theme)" in script  # no activate button when it already is

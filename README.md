@@ -15,7 +15,7 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   `{% theme_head %}`), with color pickers, shape controls, contrast
   ratings and palette suggestions (from the primary color or the logo). Every
   change shows instantly, for that user only, until they **Save draft** or
-  **Publish**. The admin form stays as a plain fallback.
+  **Save and publish**. The admin form stays as a plain fallback.
 - **Live edit page** at `/theme/live-edit/`: capy-theme's own page for building a
   theme. It has the header (logo, tagline, Light / Dark / Auto) and every daisyUI
   component, with the editor open, and works the same in any project (the admin's
@@ -57,8 +57,9 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   saves a numbered revision, recording who published it and when, and the site
   shows that. Every revision is kept; any two can be compared, and an old one
   restored (as a new revision).
-- **One active theme** (or one per domain, see Multiple sites): pick it with the
-  admin's Activate action. It's cached, so pages don't query the database for it.
+- **One active theme** (or one per domain, see Multiple sites): pick it with
+  **Activate** on the admin's theme list, or **Save, publish and activate** on the
+  theme's page. It's cached, so pages don't query the database for it.
 - **On every page:** `{% theme_head %}` links the theme's stylesheet (with the
   browser address-bar color and a visible focus outline), `{% theme_logo %}`
   shows the logo or site name, and every template gets a `theme` variable
