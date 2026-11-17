@@ -22,8 +22,8 @@ shows:
 - the alt text of the image saved for the slot (named by its file), which can be
   changed at any time. It only ever changes that image: choosing another image in
   the same save leaves the other image's alt text as it was. If the same image is
-  used in two slots and its alt text is changed differently in each, the save asks
-  you to change it in one place only.
+  used for both light and dark mode of a slot and its alt text is changed
+  differently in each box, the save asks you to change it in one box only.
 
 An image stays with the slot it was uploaded for. For every upload:
 

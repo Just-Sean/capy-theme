@@ -4,7 +4,7 @@
 
 **Code it covers:** `src/capy_theme/admin/form_images.py`, `admin/slot_image.py`, `admin/inlines.py`, `images/assets.py`, `widgets/slot_image.html`
 
-**Its 62 tests** (each name says what must hold):
+**Its 73 tests** (each name says what must hold):
 
 - every slot explains what its for and its limits
 - the main logo is up front and the others are under more
@@ -64,9 +64,20 @@
 - an image only a dark revision choice uses cant be deleted
 - the refusal names draft live and older revision together
 - revisions of an unsaved theme and a theme without revisions
-- where used survives older revision snapshots
+- revisions of reads odd stored snapshots
+- where used ignores odd or impossible revision choices
+- revisions of finds a stored choice through the database
+- revisions of only reads this themes revisions
 - a legacy revision logo file isnt counted as in use
 - a legacy dark email choice in draft and live doesnt block delete
 - a light only slots label has no mode
+- draft only advice even when unrelated revisions exist
+- a saved id that no longer exists shows empty and saves
+- the shown twice error keeps both typed texts
+- same edit in both boxes after trimming is fine
+- clearing the alt in one box while the other is unchanged
+- the preview follows the saved image not the failed choice
+- alt kept after failed save even with a new choice
+- dark box aria label names the mode and light only doesnt
 
 Run just this file with `uv run pytest tests/admin/test_admin_images.py`.

@@ -942,21 +942,71 @@ def test_revisions_of_an_unsaved_theme_and_a_theme_without_revisions(theme):
     assert revisions_of(theme) == []
 
 
+def _revision(theme, number, snapshot):
+    from capy_theme.models import ThemeRevision
+
+    return ThemeRevision.objects.create(
+        theme=theme, number=number, snapshot=snapshot, css_version=f"qa{theme.pk}r{number}"
+    )
+
+
 @pytest.mark.parametrize(
     "snapshot",
     [
-        {},  # no settings at all
-        {"settings": {}},
-        {"settings": {"images": {}}},
-        {"logo": "capy_theme/logos/old.png", "settings": {}},  # before logo slots
-        {"settings": {"images": {"unknown_slot": {"light": 1}}}},
-        {"settings": {"images": {"logo_email": {"dark": 1}}}},  # dark email: ignored
+        {},
+        {"settings": None},
+        {"settings": "text"},
+        {"settings": [1, 2]},
+        {"settings": {"images": None}},
+        {"settings": {"images": []}},
+        {"settings": {"images": "logo_main"}},
+        {"settings": {"images": 7}},
+        {"settings": {"images": {"logo_main": None}}},
+        {"settings": {"images": {"logo_main": [1]}}},
+        {"settings": {"images": {"logo_main": "x"}}},
+        {"logo": "capy_theme/logos/old.png"},  # before logo slots
+        [],
+        "text",
     ],
 )
-def test_where_used_survives_older_revision_snapshots(theme, snapshot):
+def test_revisions_of_reads_odd_stored_snapshots(theme, snapshot):
+    """Through the database (the JSON path query), not a hand-built list."""
     asset = add_asset(theme, "logo_main", "light", png())
-    assert where_used(theme, {}, asset, [(1, snapshot, True)]) == []
-    assert refusal(theme, {}, asset, [(1, snapshot, False)]) == ""
+    _revision(theme, 1, snapshot)
+    revisions = revisions_of(theme)
+    assert [number for number, _images, _live in revisions] == [1]
+    assert where_used(theme, {}, asset, revisions) == []
+    assert refusal(theme, {}, asset) == ""
+
+
+@pytest.mark.parametrize(
+    "images",
+    [{}, None, {"unknown_slot": {"light": 1}}, {"logo_email": {"dark": 1}}, "not a dict"],
+)
+def test_where_used_ignores_odd_or_impossible_revision_choices(theme, images):
+    asset = add_asset(theme, "logo_main", "light", png())
+    if isinstance(images, dict):
+        images = {slot: {m: asset.pk for m in modes} for slot, modes in images.items()}
+    assert where_used(theme, {}, asset, [(1, images, True)]) == []
+
+
+def test_revisions_of_finds_a_stored_choice_through_the_database(theme):
+    asset = add_asset(theme, "logo_main", "dark", png())
+    _revision(theme, 1, {"settings": {"images": {"logo_main": {"dark": asset.pk}}}})
+    _revision(theme, 2, {"settings": {"images": {"logo_main": {"light": asset.pk}}}})
+    _revision(theme, 3, {"settings": {}})
+    revisions = revisions_of(theme)
+    assert [n for n, _i, _l in revisions] == [3, 2, 1]  # newest first
+    assert where_used(theme, {}, asset, revisions) == ["2 earlier revisions"]
+    assert "it stays in Media" in refusal(theme, {}, asset)
+
+
+def test_revisions_of_only_reads_this_themes_revisions(theme):
+    other = Theme.objects.create(name="Other", slug="other")
+    asset = add_asset(theme, "logo_main", "light", png())
+    _revision(other, 1, {"settings": {"images": {"logo_main": {"light": asset.pk}}}})
+    assert revisions_of(theme) == []
+    assert refusal(theme, {}, asset) == ""
 
 
 def test_a_legacy_revision_logo_file_isnt_counted_as_in_use(theme):
@@ -996,3 +1046,124 @@ def test_a_light_only_slots_label_has_no_mode(theme):
     assert where_used(theme, {"images": {"logo_print": {"light": asset.pk}}}, asset) == [
         "the draft's print logo"
     ]
+
+
+# QA, third round (#271 review fixes)
+
+
+def test_draft_only_advice_even_when_unrelated_revisions_exist(theme):
+    """Published revisions that don't use the image don't make it 'published'."""
+    asset = add_asset(theme, "logo_main", "light", png())
+    theme.settings = {"site_name": "x"}
+    theme.save()
+    publish(theme)
+    theme.settings = {"site_name": "y"}
+    theme.save()
+    publish(theme)
+    theme.refresh_from_db()
+    text = refusal(theme, {"images": {"logo_main": {"light": asset.pk}}}, asset)
+    assert text.endswith("and save; then delete it.")
+    assert "stays in Media" not in text
+
+
+def test_a_saved_id_that_no_longer_exists_shows_empty_and_saves(staff, theme):
+    Theme.objects.filter(pk=theme.pk).update(settings={"images": {"logo_main": {"light": 999999}}})
+    theme.refresh_from_db()
+    html = page(staff, theme)
+    assert "image_logo_main_light_alt_for" not in html
+    assert "Saved:" not in html
+    data = _post_back(html)
+    response = staff.post(url(theme), data)
+    assert response.status_code == 302, errors(response)
+    theme.refresh_from_db()
+    assert "images" not in theme.settings
+
+
+def test_the_shown_twice_error_keeps_both_typed_texts(staff, theme):
+    asset = add_asset(theme, "logo_main", "light", png(), "Old")
+    theme.settings = {"images": {"logo_main": {"light": asset.pk, "dark": asset.pk}}}
+    theme.save()
+    data = _post_back(page(staff, theme))
+    data["image_logo_main_light_alt"] = "A"
+    data["image_logo_main_dark_alt"] = "B"
+    response = staff.post(url(theme), data)
+    html = response.content.decode()
+    assert response.status_code == 200
+    assert "shown twice" in html
+    assert re.search(r'name="image_logo_main_light_alt"[^>]*value="A"', html)
+    assert re.search(r'name="image_logo_main_dark_alt"[^>]*value="B"', html)
+    asset.refresh_from_db()
+    assert asset.alt_text == "Old"
+
+
+def test_same_edit_in_both_boxes_after_trimming_is_fine(staff, theme):
+    asset = add_asset(theme, "logo_main", "light", png(), "Old")
+    theme.settings = {"images": {"logo_main": {"light": asset.pk, "dark": asset.pk}}}
+    theme.save()
+    data = _post_back(page(staff, theme))
+    data["image_logo_main_light_alt"] = "  New "
+    data["image_logo_main_dark_alt"] = "New"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 302, errors(response)
+    asset.refresh_from_db()
+    assert asset.alt_text == "New"
+
+
+def test_clearing_the_alt_in_one_box_while_the_other_is_unchanged(staff, theme):
+    asset = add_asset(theme, "logo_main", "light", png(), "Old")
+    theme.settings = {"images": {"logo_main": {"light": asset.pk, "dark": asset.pk}}}
+    theme.save()
+    data = _post_back(page(staff, theme))
+    data["image_logo_main_dark_alt"] = ""
+    response = staff.post(url(theme), data)
+    assert response.status_code == 302, errors(response)
+    asset.refresh_from_db()
+    assert asset.alt_text == ""
+
+
+def test_the_preview_follows_the_saved_image_not_the_failed_choice(staff, theme):
+    first = add_asset(theme, "logo_main", "light", png("first.png"), "First")
+    second = add_asset(theme, "logo_main", "light", png("second.png"), "Second")
+    theme.settings = {"images": {"logo_main": {"light": first.pk}}}
+    theme.save()
+    data = _post_back(page(staff, theme))
+    data["name"] = ""
+    data["image_logo_main_light"] = str(second.pk)
+    response = staff.post(url(theme), data)
+    html = response.content.decode()
+    field = html[html.index('class="capy-slot-image"') :]
+    field = field[: field.index('name="image_logo_main_light_upload"')]
+    assert "Saved: first.png" in field
+    assert f'name="image_logo_main_light_alt_for" value="{first.pk}"' in field
+    assert f'<option value="{second.pk}" selected>' in field
+    assert re.search(r'name="image_logo_main_light_alt"[^>]*value="First"', field)
+
+
+def test_alt_kept_after_failed_save_even_with_a_new_choice(staff, theme):
+    first = add_asset(theme, "logo_main", "light", png("first.png"), "First")
+    second = add_asset(theme, "logo_main", "light", png("second.png"), "Second")
+    theme.settings = {"images": {"logo_main": {"light": first.pk}}}
+    theme.save()
+    data = _post_back(page(staff, theme))
+    data["name"] = ""
+    data["image_logo_main_light"] = str(second.pk)
+    data["image_logo_main_light_alt"] = "First, typed"
+    response = staff.post(url(theme), data)
+    assert re.search(
+        r'name="image_logo_main_light_alt"[^>]*value="First, typed"', response.content.decode()
+    )
+    # Fix the name and send the page back as it is: both changes apply.
+    again = _post_back(response.content.decode())
+    again["name"] = "Main"
+    response = staff.post(url(theme), again)
+    assert response.status_code == 302, errors(response)
+    first.refresh_from_db()
+    theme.refresh_from_db()
+    assert first.alt_text == "First, typed"
+    assert theme.settings["images"]["logo_main"]["light"] == second.pk
+
+
+def test_dark_box_aria_label_names_the_mode_and_light_only_doesnt(staff, theme):
+    html = page(staff, theme)
+    assert 'aria-label="Main logo (dark): image to use"' in html
+    assert 'aria-label="Email logo: image to use"' in html

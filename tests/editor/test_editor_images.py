@@ -679,3 +679,35 @@ def test_theme_logo_with_no_active_theme_and_no_user(theme):
     request = RequestFactory().get("/")
     html = Template("{% load capy_theme %}{% theme_logo %}").render(Context({"request": request}))
     assert "data-capy-logo" not in html
+
+
+# QA, third round (#271 review fixes): odd modes reach add_asset's own message
+
+
+@pytest.mark.parametrize("slot", ["logo_email", "logo_print", "social", "logo_main"])
+@pytest.mark.parametrize("mode", ["", "Light", "DARK", " dark", "sepia", "light,dark"])
+def test_an_odd_mode_gets_add_assets_message(editor_client, theme, slot, mode):
+    reply = upload(editor_client, theme, slot=slot, mode=mode)
+    assert reply.status_code == 400
+    assert reply.json()["errors"] == ["Choose light or dark mode."]
+    assert not ThemeAsset.objects.exists()
+
+
+def test_a_dark_upload_for_a_light_only_slot_gets_its_own_message(editor_client, theme):
+    reply = upload(editor_client, theme, slot="logo_email", mode="dark")
+    assert reply.json()["errors"] == ["This image only has a light version."]
+
+
+def test_an_unknown_slot_with_dark_gets_the_slot_message(editor_client, theme):
+    reply = upload(editor_client, theme, slot="nope", mode="dark")
+    assert reply.status_code == 400
+    assert reply.json()["errors"] == ["Choose where the image goes."]
+
+
+def test_a_repeated_mode_field_uses_the_last_value(editor_client, theme):
+    url = reverse("capy_theme:editor_upload", args=[theme.pk])
+    reply = editor_client.post(
+        url, {"file": png(), "slot": "logo_email", "mode": ["light", "dark"]}
+    )
+    assert reply.status_code == 400
+    assert not ThemeAsset.objects.exists()

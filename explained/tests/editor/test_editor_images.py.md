@@ -4,7 +4,7 @@
 
 **Code it covers:** `src/capy_theme/editor/` (`state.py`, `saving.py`, `preview.py`, `page_images.py`, `live_edit_view.py`), `{% theme_logo %}`, and the editor's image scripts
 
-**Its 56 tests** (each name says what must hold):
+**Its 60 tests** (each name says what must hold):
 
 - every slot is described like in the admin
 - alt text is saved with the draft
@@ -62,6 +62,10 @@
 - theme logo takes any attribute value for editors
 - theme logo with a request whose user is none
 - theme logo with no active theme and no user
+- an odd mode gets add assets message
+- a dark upload for a light only slot gets its own message
+- an unknown slot with dark gets the slot message
+- a repeated mode field uses the last value
 
 The scripts can't run here, since the project has no browser test setup: the script tests only check their source.
 
