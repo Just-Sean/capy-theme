@@ -4,6 +4,7 @@ The controls themselves are JavaScript (editor/controls/*.js), checked in headle
 Chrome while building. These tests cover the data the server gives them.
 """
 
+import re
 from pathlib import Path
 
 import pytest
@@ -171,4 +172,4 @@ def test_every_editor_fold_starts_folded():
     # Nothing in the panel is built open: sections, color groups and Suggestions (#267).
     for script in (STATIC / "controls").glob("*.js"):
         text = script.read_text()
-        assert 'open: ""' not in text and "attrs.open" not in text, script.name
+        assert not re.search(r"\bopen:|attrs\.open|setAttribute\(\s*\"open", text), script.name

@@ -20,4 +20,4 @@
 16. Custom CSS (only for people who may edit it)
 17. Advanced (the stored settings, ID and dates)
 
-Every section can be folded (a loop at the end gives each one Django's `collapse` class, #259). On the page they're grouped into tabs (see `tabs.py`), and every section starts folded; one with errors opens (#267).
+Every section can be folded (a loop at the end gives each one Django's `collapse` class, #259). On the page they're grouped into tabs (see `tabs.py`), and every section starts folded (#267). Django shows a section with errors unfolded.

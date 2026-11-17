@@ -112,6 +112,7 @@ THEME_FIELDSETS = [
     ),
 ]
 
-# Every section can be folded, and starts folded (tabs.js opens any with errors).
+# Every section can be folded, and starts folded. Django shows a section with errors
+# unfolded.
 for _name, _options in THEME_FIELDSETS:
     _options["classes"] = sorted({*_options.get("classes", []), "collapse"})

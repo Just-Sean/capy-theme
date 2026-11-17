@@ -103,19 +103,50 @@ def test_every_section_and_list_renders_foldable_and_starts_folded(admin_client)
     assert "data-capy-unfold" not in html  # tabs.js no longer opens them (#267)
 
 
-def test_tabs_script_opens_only_sections_with_errors():
+def test_tabs_script_opens_no_sections():
+    # Every section starts folded; the script never opens one (#267).
     script = finders.find("capy_theme/admin/tabs.js")
     with open(script, encoding="utf-8") as file:
         text = file.read()
-    assert 'if (d.querySelector(".errorlist")) d.open = true;' in text
-    assert "d.open = true; });" not in text  # nothing else is opened
+    assert not re.search(r"\.open\s*=|setAttribute\(\s*[\"']open|toggleAttribute", text)
 
 
 def test_tabs_script_moves_focus_off_the_save_button_on_load():
-    # If Django focused Save because every section is folded (add page), the title of
-    # the open tab's first section gets focus instead (#259, #267). Runs in the browser.
+    # If Django focused Save because every section is folded (add page), the first
+    # field with an error gets focus, or else the title of the open tab's first
+    # section (#259, #267). Runs in the browser.
     script = finders.find("capy_theme/admin/tabs.js")
     with open(script, encoding="utf-8") as file:
         text = file.read()
-    assert 'closest(".submit-row")' in text and "(first || start.button).focus()" in text
-    assert 'start.panels[0].querySelector("summary")' in text
+    assert 'closest(".submit-row")' in text
+    assert (
+        '(firstErrorField(start) || start.panels[0].querySelector("summary") || start.button)'
+        ".focus()"
+    ) in text
+    assert 'closest(".errors, td")' in text
+
+
+def test_a_failed_save_shows_the_section_with_the_error(admin_client):
+    # Django renders a folding section that has errors unfolded (no <details>), so
+    # the error is visible; tabs.js marks its tab (#267).
+    data = {
+        "name": "",
+        "slug": "main",
+        "light_base": "light",
+        "dark_base": "dark",
+        "settings": "{}",
+        "assets-TOTAL_FORMS": "0",
+        "assets-INITIAL_FORMS": "0",
+        "revisions-TOTAL_FORMS": "0",
+        "revisions-INITIAL_FORMS": "0",
+        "revisions-MIN_NUM_FORMS": "0",
+        "revisions-MAX_NUM_FORMS": "1000",
+    }
+    response = admin_client.post(reverse("admin:capy_theme_theme_add"), data)
+    assert response.status_code == 200  # not saved: the page comes back with errors
+    html = response.content.decode()
+    heading = r'<h2 id="[^"]+" class="fieldset-heading">{}</h2>'
+    assert re.search(r"<fieldset[^>]*>\s*" + heading.format("Name"), html)  # unfolded
+    assert re.search(r"<details><summary>\s*" + heading.format("Base themes"), html)
+    name_panel = next(body for _, label, body in panels(html) if label == "General")
+    assert "errorlist" in name_panel

@@ -50,10 +50,6 @@
     tab.panels.forEach(function (panel) {
       panel.setAttribute("role", "tabpanel");
       panel.setAttribute("aria-labelledby", button.id);
-      // Every section starts folded; one with errors opens so they can be seen.
-      panel.querySelectorAll("details").forEach(function (d) {
-        if (d.querySelector(".errorlist")) d.open = true;
-      });
     });
     button.addEventListener("click", function () { select(tab, false); });
     tab.button = button;
@@ -93,9 +89,23 @@
     start.button.focus();
   } else if (focused && focused.closest && focused.closest(".submit-row")) {
     // On the add page Django focuses the first visible field. With every section
-    // folded, that's the Save button at the bottom, so focus the title of the open
-    // tab's first section instead: Enter opens it (#267).
-    var first = start.panels[0].querySelector("summary");
-    (first || start.button).focus();
+    // folded, that's the Save button at the bottom. After a failed save, focus the
+    // first field with an error instead; otherwise the title of the open tab's
+    // first section, where Enter opens it (#267).
+    (firstErrorField(start) || start.panels[0].querySelector("summary") || start.button).focus();
+  }
+
+  // The field next to the first error message in the tab (a section row or a list cell).
+  function firstErrorField(tab) {
+    var FIELD = "input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled])";
+    for (var i = 0; i < tab.panels.length; i++) {
+      var lists = tab.panels[i].querySelectorAll(".errorlist");
+      for (var j = 0; j < lists.length; j++) {
+        var box = lists[j].closest(".errors, td");
+        var field = box && box.querySelector(FIELD);
+        if (field) return field;
+      }
+    }
+    return null;
   }
 })();

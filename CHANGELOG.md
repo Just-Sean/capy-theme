@@ -5,11 +5,12 @@
 - **Every fold starts closed,** in the live editor and on the theme admin page,
   including Basic colors. Click a title to open it. In the editor, folds stay as
   you left them after Save draft, Publish or Revert, as before. In the admin, a
-  section with errors opens, and on the Add page focus goes to the first section's
-  title (#267).
+  section with errors is shown unfolded (Django does this), and on the Add page
+  focus goes to the first field with an error, or else the first section's title
+  (#267).
 - **Every section of the live editor can be folded** (click its title), like the
-  admin page; Save and publish stays open. Every fold, including the ones inside Colors, stays as you left it after
-  Save draft, Publish or Revert (#265).
+  admin page; Save and publish stays open. Every fold, including the ones inside
+  Colors, stays as you left it after Save draft, Publish or Revert (#265).
 - **Live editor: Revert, and no more "See it as a visitor":** a **Revert** button
   next to Save draft throws away the unsaved changes and goes back to the saved
   draft (it asks first). "See it as a visitor" and its `/theme/editor/visitor-view/`

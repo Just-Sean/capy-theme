@@ -22,8 +22,8 @@ uv run python demo/manage.py migrate
 ## The theme's admin page
 
 The admin page is the plain fallback to the live editor. Every section starts
-folded (click its title to open it); a section with errors opens. Its sections, top
-to bottom:
+folded (click its title to open it); Django shows a section with errors
+unfolded. Its sections, top to bottom:
 
 1. Name and slug
 2. Publishing status
