@@ -124,7 +124,9 @@ def _alt_edits(form, cleaned):
 
 
 def clean(form, cleaned, settings):
-    form.capy_alt_edits = _alt_edits(form, cleaned)
+    # Also on the (unsaved) theme, which the Media list gets, so it can refuse a
+    # different edit of the same image's alt text there (admin/inlines.py).
+    form.capy_alt_edits = form.instance.capy_alt_edits = _alt_edits(form, cleaned)
     images = {
         slot: {
             mode: cleaned[image_field_name(slot, mode)]["choice"]

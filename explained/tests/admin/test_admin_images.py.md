@@ -4,7 +4,7 @@
 
 **Code it covers:** `src/capy_theme/admin/form_images.py`, `admin/slot_image.py`, `admin/inlines.py`, `images/assets.py`, `widgets/slot_image.html`
 
-**Its 73 tests** (each name says what must hold):
+**Its 76 tests** (each name says what must hold):
 
 - every slot explains what its for and its limits
 - the main logo is up front and the others are under more
@@ -79,5 +79,8 @@
 - the preview follows the saved image not the failed choice
 - alt kept after failed save even with a new choice
 - dark box aria label names the mode and light only doesnt
+- conflicting alt edits in the slot and in media arent silently dropped
+- the same alt edit in the slot and in media is fine
+- a media alt edit of another image isnt affected by a slot edit
 
 Run just this file with `uv run pytest tests/admin/test_admin_images.py`.

@@ -23,7 +23,8 @@ shows:
   changed at any time. It only ever changes that image: choosing another image in
   the same save leaves the other image's alt text as it was. If the same image is
   used for both light and dark mode of a slot and its alt text is changed
-  differently in each box, the save asks you to change it in one box only.
+  differently in each box, the save asks you to change it in one box only. The
+  same goes for changing it in the slot and, differently, in **Media** in one save.
 
 An image stays with the slot it was uploaded for. For every upload:
 

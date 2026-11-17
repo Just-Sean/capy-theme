@@ -1167,3 +1167,62 @@ def test_dark_box_aria_label_names_the_mode_and_light_only_doesnt(staff, theme):
     html = page(staff, theme)
     assert 'aria-label="Main logo (dark): image to use"' in html
     assert 'aria-label="Email logo: image to use"' in html
+
+
+# Alt text changed in the slot and in Media in the same save
+
+
+def test_conflicting_alt_edits_in_the_slot_and_in_media_arent_silently_dropped(staff, theme):
+    asset = add_asset(theme, "logo_main", "light", png(), "Old")
+    theme.settings = {"images": {"logo_main": {"light": asset.pk}}}
+    theme.save()
+    html = page(staff, theme)
+    data = _post_back(html)
+    data["image_logo_main_light_alt"] = "From slot"
+    data[f"{stem(html)}-0-alt_text"] = "From media"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 200
+    page_html = response.content.decode()
+    assert 'class="errornote"' in page_html
+    media = media_panel(response)
+    assert "also changed in its slot (Branding tab)" in media
+    # Both typed texts are still there to choose from, and nothing was saved.
+    assert re.search(r'name="image_logo_main_light_alt"[^>]*value="From slot"', page_html)
+    assert re.search(rf'name="{stem(html)}-0-alt_text"[^>]*value="From media"', media)
+    asset.refresh_from_db()
+    assert asset.alt_text == "Old"
+
+
+def test_the_same_alt_edit_in_the_slot_and_in_media_is_fine(staff, theme):
+    asset = add_asset(theme, "logo_main", "light", png(), "Old")
+    theme.settings = {"images": {"logo_main": {"light": asset.pk}}}
+    theme.save()
+    html = page(staff, theme)
+    data = _post_back(html)
+    data["image_logo_main_light_alt"] = " Same "
+    data[f"{stem(html)}-0-alt_text"] = "Same"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 302, errors(response)
+    asset.refresh_from_db()
+    assert asset.alt_text == "Same"
+
+
+def test_a_media_alt_edit_of_another_image_isnt_affected_by_a_slot_edit(staff, theme):
+    shown = add_asset(theme, "logo_main", "light", png("shown.png"), "Shown")
+    spare = add_asset(theme, "logo_main", "light", png("spare.png"), "Spare")
+    theme.settings = {"images": {"logo_main": {"light": shown.pk}}}
+    theme.save()
+    html = page(staff, theme)
+    data = _post_back(html)
+    data["image_logo_main_light_alt"] = "Shown, new"
+    prefix = next(
+        p
+        for p, pk in re.findall(rf'name="({stem(html)}-\d+)-id" value="(\d+)"', html)
+        if pk == str(spare.pk)
+    )
+    data[f"{prefix}-alt_text"] = "Spare, new"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 302, errors(response)
+    shown.refresh_from_db()
+    spare.refresh_from_db()
+    assert (shown.alt_text, spare.alt_text) == ("Shown, new", "Spare, new")

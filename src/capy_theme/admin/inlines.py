@@ -36,8 +36,26 @@ class ThemeRevisionInline(admin.TabularInline):
         return revision.theme.live_revision_id == revision.pk
 
 
+ALT_CHANGED_TWICE = (
+    "This image's alt text was also changed in its slot (Branding tab), to something "
+    "different. Change it in one place only."
+)
+
+
 class ThemeAssetFormSet(forms.BaseInlineFormSet):
-    """Refuses to delete an image that's in use (#271)."""
+    """Refuses to delete an image that's in use, and an alt text edit that clashes
+    with one made in the image's slot in the same save (#271)."""
+
+    def clean(self):
+        super().clean()
+        in_slots = getattr(self.instance, "capy_alt_edits", {})
+        for form in self.forms:
+            if form.instance.pk not in in_slots or "alt_text" not in form.changed_data:
+                continue
+            if self._should_delete_form(form) or "alt_text" not in form.cleaned_data:
+                continue
+            if form.cleaned_data["alt_text"] != in_slots[form.instance.pk]:
+                form.add_error("alt_text", ALT_CHANGED_TWICE)
 
     def _should_delete_form(self, form):
         """A row marked for deletion whose image is in use isn't deleted: it gets an

@@ -13,7 +13,9 @@
   no longer offer a dark image (they always used the light one).
 - **Alt text can be edited after upload** (admin and live editor). In the admin,
   the alt text box belongs to the image saved for the slot (named by its file) and
-  only ever changes that image, and a new upload has its own alt text box.
+  only ever changes that image, and a new upload has its own alt text box. Changing
+  one image's alt text differently in two places in one save is refused with a
+  message, never silently dropped.
 - **Media** (admin) lists every uploaded image with where it's used. An image
   nobody uses can be deleted. One the draft uses can be deleted once another image
   is chosen; one that has been published can't be (restoring a published version
