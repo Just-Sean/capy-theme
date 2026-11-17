@@ -7,7 +7,7 @@
   - **Save and publish:** saves, then publishes the draft.
   - **Save, publish and activate:** the same, then makes it the default theme.
   - `response_add` and `response_change` handle them after Django saves the form (`_after_save`), then go back to the theme page, keeping the list's filters as Django's own "Save and continue editing" does. Without `publish_theme`, the draft is saved and a message says publishing was refused.
-  - In a popup, or for a user who can't open the theme page (say, one who may only add), Django answers as usual instead, so a popup closes and fills in the field it was opened from. Then only Django's own message is shown: no "Draft saved" message, and publishing in a popup is quiet.
+  - In a popup, or for a user who can't open the theme page (say, one who may only add), Django answers as usual instead, so a popup closes and fills in the field it was opened from. Then no "Draft saved" message is added, and publishing in a popup only says something if it was refused.
   - An optional note for the history (at most `NOTE_MAX`, 2,000 characters, from `themes/publishing.py`).
 - **`publish_status(theme)`:** the page's status line: whether the draft has unpublished changes, the published revision, and whether it's the default theme (or which one is). While a theme schedule is running, a **Showing now** item says which theme the site shows instead.
 - **`activated_message(theme)`:** what activating did. Normally "“x” is now the default theme." (a success); a warning when a running schedule is showing another theme right now.
