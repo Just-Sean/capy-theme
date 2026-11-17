@@ -8,6 +8,7 @@
   - `spec`: what the panel offers
   - `latest`: the latest server values
   - `assets`: the theme's uploaded images (`image-slot.js` adds new uploads)
+  - `publishNote`: the publish note being typed, kept across rebuilds until it's published (`actions.js`)
   - `changes.alts`: edited alt text, `{image id: text}`, saved with the draft (#271)
   - the current color tab
 - **`ui.el()`:** a small helper to create elements.

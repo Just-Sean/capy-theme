@@ -130,18 +130,16 @@ def admin(client, django_user_model):
     return client
 
 
-def run_activate(admin, *themes):
-    return admin.post(
-        reverse("admin:capy_theme_theme_changelist"),
-        {"action": "activate_theme", "_selected_action": [t.pk for t in themes]},
-        follow=True,
-    )
+def run_activate(admin, theme):
+    """The theme list's Activate button on the theme's row (#273)."""
+    url = reverse("admin:capy_theme_theme_activate", args=[theme.pk])
+    return admin.post(url, follow=True)
 
 
-def test_admin_activate_action(admin):
+def test_admin_activate_button(admin):
     theme = published_theme("Main")
     response = run_activate(admin, theme)
-    assert "“Main” is now the active theme." in response.content.decode()
+    assert "“Main” is now the default theme." in response.content.decode()
     assert get_active_theme() == theme
 
 
@@ -152,14 +150,8 @@ def test_admin_refuses_unpublished_theme(admin):
     assert get_active_theme() is None
 
 
-def test_admin_refuses_more_than_one_theme(admin):
-    response = run_activate(admin, published_theme("One"), published_theme("Two"))
-    assert "Select exactly one theme to activate." in response.content.decode()
-    assert get_active_theme() is None
-
-
 def test_admin_list_shows_which_theme_is_active(admin):
     activate(published_theme("Main"))
     response = admin.get(reverse("admin:capy_theme_theme_changelist"))
-    assert b"Active" in response.content
+    assert b"Showing now" in response.content  # the column (#273: was "Active")
     assert b"icon-yes.svg" in response.content

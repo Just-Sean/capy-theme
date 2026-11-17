@@ -6,7 +6,7 @@
 
 1. `{% theme_head %}` calls `mount.py`. For staff who can edit, it adds the editor's script and settings to the page.
 2. The script (`static/capy_theme/editor/`) loads the draft from `state/`, and sends every change to `preview/`, which returns CSS made by **the same code as publishing**.
-3. **Save draft** and **Publish** call `save/` and `publish/`; **Revert** goes back to the saved draft without a request. Uploads go to `upload/`.
+3. **Save draft** calls `save/`; **Save and publish** and **Save, publish and activate** call `publish/`; **Revert** goes back to the saved draft without a request. Uploads go to `upload/`.
 4. The **Components view** is its own page (`components/`) in an iframe.
 
 Every endpoint requires staff with the change-theme permission (publishing also needs `publish_theme`), uses Django's CSRF protection for POSTs, and never caches.

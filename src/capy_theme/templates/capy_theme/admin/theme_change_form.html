@@ -1,20 +1,19 @@
 {% extends "admin/change_form.html" %}
 {% load static %}
-{% comment %}The theme edit page: a Publish button next to History for users who may publish, and the
-sections grouped into tabs (capy_theme.admin.tabs). Without JavaScript the tab panels just
-follow each other, every section folded (each opens with a click).{% endcomment %}
+{% comment %}The theme edit page: the sections grouped into tabs (capy_theme.admin.tabs), and
+Save draft, Save and publish, and Save, publish and activate in one place at the bottom
+(save_publish.html, #273). Without JavaScript the tab panels just follow each other, every
+section folded (each opens with a click).{% endcomment %}
 
 {% block extrastyle %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'capy_theme/admin/tabs.css' %}" {% csp_nonce_attr %}>
+  <link rel="stylesheet" href="{% static 'capy_theme/admin/save_publish.css' %}" {% csp_nonce_attr %}>
 {% endblock %}
 
 {% block object-tools-items %}
   {% if original.pk and edit_live_url %}
     <li><a href="{{ edit_live_url }}">Edit live</a></li>
-  {% endif %}
-  {% if original.pk and can_publish %}
-    <li><a href="{% url 'admin:capy_theme_theme_publish' original.pk %}">Publish</a></li>
   {% endif %}
   {% if original.pk %}
     <li><a href="{% url 'admin:capy_theme_theme_revisions' original.pk %}">Revisions</a></li>
@@ -47,7 +46,10 @@ follow each other, every section folded (each opens with a click).{% endcomment 
   {% endfor %}
 {% endblock %}
 
+{% block submit_buttons_bottom %}{% include "capy_theme/admin/save_publish.html" %}{% endblock %}
+
 {% block admin_change_form_document_ready %}
   {{ block.super }}
   <script src="{% static 'capy_theme/admin/tabs.js' %}" defer {% csp_nonce_attr %}></script>
+  <script src="{% static 'capy_theme/admin/confirm.js' %}" defer {% csp_nonce_attr %}></script>
 {% endblock %}

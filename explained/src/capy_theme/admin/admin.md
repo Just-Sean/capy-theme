@@ -14,7 +14,8 @@ The big theme form is split into one file per area (`form_*.py`). Each has three
 | `fieldsets.py` | The page's sections and their order |
 | `tabs.py` | How those sections are grouped into tabs |
 | `inlines.py` | The Media list (uploaded images) and revisions list on the theme page |
-| `publish_pages.py` | The Publish, Revisions (compare) and Restore pages |
+| `save_publish.py` | Save draft, Save and publish, and Save, publish and activate on the theme page; Publish and Activate buttons on the theme list |
+| `publish_pages.py` | The Revisions (compare) and Restore pages |
 | `import_export.py` | Export button and Import theme page |
 | `fonts.py` | The font library admin and Google Fonts import |
 | `schedule.py` | Theme schedule |

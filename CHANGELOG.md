@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **Save, publish and activate in one place** (#273). At the bottom of a theme's
+  admin page, **Save and publish** shows where the theme stands (unpublished
+  changes, published revision, whether it's the default theme, and what a running
+  schedule shows instead) and has **Save
+  draft**, **Save and publish** and **Save, publish and activate**, each with a
+  line saying what it does, plus an optional note for the history. Save draft stays
+  on the page; Django's "Save and add another" and "Save and continue editing" are
+  gone, and so are the top-right Publish button and the separate publish page. The
+  theme list has **Publish**, **Publish and activate** and **Activate** buttons on
+  each row instead of the Activate action in the dropdown; publishing and
+  activating ask first. The live editor has the same three buttons. The list's
+  "Active" column is now "Showing now". For code: `publishing.publish_and_activate()`
+  and `active.default_theme()`.
 - **Images are uploaded and chosen where they're used** (#271), in the admin
   (Branding: Logos, More logo versions, Icon, Backgrounds, Sharing image) and the
   live editor (sections of the same names). The separate Images tab and the

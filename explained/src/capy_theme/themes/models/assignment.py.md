@@ -10,7 +10,7 @@
 
 **Kinds:**
 
-- **Default:** no dates. Only one per site (a database constraint). Set by `active.activate()`, the admin's Activate action.
+- **Default:** no dates. Only one per site (a database constraint). Set by `active.activate()`, the admin's Activate buttons.
 - **Scheduled:** has dates, and wins while running (start included, end not). Used for holiday themes, for example.
 - **Per site:** an assignment with a domain wins over the every-site ones on that domain.
 

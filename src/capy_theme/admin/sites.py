@@ -26,7 +26,7 @@ class SiteThemeForm(forms.ModelForm):
         site = self.cleaned_data["site"].strip().lower()
         if not site:
             raise forms.ValidationError(
-                "Give a domain. For every site, use the Activate action on the theme list."
+                "Give a domain. For every site, use Activate on the theme list."
             )
         return site
 

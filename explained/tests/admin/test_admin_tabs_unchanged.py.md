@@ -6,7 +6,7 @@
 
 **Its 13 tests** (each name says what must hold):
 
-- the same form controls as the stock admin page (change and add pages): the tabbed page has exactly the fields Django's normal edit page has
+- the same form controls as the stock admin page (change and add pages): the tabbed page has exactly the fields Django's normal edit page has (the save buttons and the publish note are capy-theme's own, so they aren't compared, #273)
 - no duplicate ids on the tabbed page
 - both inlines keep their management forms
 - the form is still multipart for image uploads

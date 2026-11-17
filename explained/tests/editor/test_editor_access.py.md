@@ -22,7 +22,7 @@
 - escape closes the editor
 - escape in the components view closes only the view
 - page behind a full width panel is inert
-- save and publish keep focus on their button
+- save and publish keep focus on their button (after activating, focus goes to Save and publish)
 - see it as a visitor is gone
 - revert goes back to the saved draft
 

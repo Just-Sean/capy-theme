@@ -17,6 +17,7 @@
     latest: null, // the latest values, CSS and contrast from the server
     saved: null, // the state as last loaded or saved, which Revert goes back to
     assets: [], // the theme's uploaded images (image-slot.js adds new uploads)
+    publishNote: "", // the publish note being typed, kept across rebuilds (actions.js)
     sections: [], // {order, build(state) -> element, fill()} from each section file
   });
 

@@ -105,9 +105,11 @@ Every change shows on the page straight away (in your browser only).
   tagline and mode stay as they are.
 - **Revert** throws away the unsaved changes and goes back to the saved draft
   (it asks first). Nothing on the server changes.
-- **Publish** (needs `publish_theme`) saves any unsaved changes first, then
-  publishes, with an optional note, through the same revisions as the admin's
-  Publish page.
+- **Save and publish** (needs `publish_theme`) saves any unsaved changes first,
+  then publishes, with an optional note, through the same revisions as the
+  admin's buttons. **Save, publish and activate** also makes it the default theme
+  (not shown when it already is). Each button says what it does, as on the
+  admin's theme page.
 - With unsaved changes, the panel says so, and closing it or leaving the page
   asks before throwing them away.
 
@@ -143,7 +145,7 @@ its own image, the light one, or what an empty slot falls back to, with its
 generated sizes; the generated icons at their real size (from the published
 theme, since they're made when publishing); the sharing image; and the
 backgrounds. It shows the saved draft and reloads after **Save draft** or
-**Publish**.
+publishing.
 
 Every editor setting shows there: colors, shape, fonts, the type scale (all six
 heading levels and the display font) and base themes through the draft CSS;

@@ -13,7 +13,8 @@
 - `get_active_theme(request)`: the theme to show, with its live revision.
 - `get_site_theme(request)`: the same but ignoring the visitor's choice.
 - `offered_themes()`
-- `activate(theme, site)`: the Activate action; the theme must be published.
+- `default_theme()`: the theme activated for every site (the default when no schedule is running and a domain has no site theme of its own), or None. Read from the database, not the cache. The admin and the editor use it to decide whether to offer activating (#273).
+- `activate(theme, site)`: the admin's Activate buttons and `publish_and_activate`; the theme must be published.
 - `theme_at(when, site)`: uncached; the admin's schedule page uses it.
 - `scheduled_assignments(site)`
 
@@ -21,3 +22,4 @@
 
 - The state per domain is cached for `CAPY_THEME_CACHE_SECONDS`, but expires early at the next schedule start or end, so schedules switch on time.
 - `clear_cache()` changes a "generation" key, which drops every domain's cache at once. `signals.py` calls it on every change.
+- **`not_published_message(theme)`:** the "Publish “X” before activating it." message, built from the theme. The admin and the editor show this, never the exception's own text (CodeQL: nothing else can leak into it).

@@ -1,0 +1,25 @@
+/* The theme page's save and publish area, and the theme list's row buttons (#273). */
+.capy-save-publish { display: block; }
+.capy-save-publish-title { margin: 0 0 0.5rem; font-size: 1rem; }
+.capy-save-publish-status { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; margin: 0 0 0.75rem; }
+.capy-save-publish-status div { display: flex; gap: 0.35rem; min-width: 0; }
+.capy-save-publish-status dt { font-weight: 600; }
+.capy-save-publish-status dt::after { content: ":"; }
+.capy-save-publish-status dd { margin: 0; overflow-wrap: anywhere; }
+.capy-save-publish-note { display: flex; flex-direction: column; gap: 0.25rem; margin: 0 0 0.75rem; }
+.capy-save-publish-note input { width: min(32rem, 100%); box-sizing: border-box; }
+.capy-save-publish-actions { list-style: none; margin: 0 0 0.75rem; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.capy-save-publish-actions li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
+/* Like Django's own submit-row buttons ("form .button" alone would make them tiny). */
+.capy-save-publish-actions .button { min-width: 15rem; height: auto; margin: 0; padding: 10px 15px; line-height: 1.2; }
+.capy-save-publish-help { margin: 0 0 0.5rem; }
+.capy-save-publish-links { margin-top: 0.75rem; }
+/* The theme list's Publish, Publish and activate and Activate buttons. */
+#result_list .field-publish_buttons { white-space: normal; }
+#result_list .capy-row-button { margin: 0.25rem 0.5rem 0.25rem 0; padding: 6px 10px; min-height: 2rem; }
+@media (pointer: coarse) {
+  #result_list .capy-row-button { min-height: 2.75rem; }
+}
+@media (max-width: 640px) {
+  .capy-save-publish-actions .button { min-width: 0; width: 100%; }
+}

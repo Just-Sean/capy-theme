@@ -6,7 +6,8 @@
 - **`draft_state(theme, user, request)`:**
   - the draft's bases and settings (without custom CSS, which the editor doesn't edit)
   - its CSS, the live revision number, and whether there are unpublished changes
-  - whether this user can publish
+  - whether this user can publish, and whether it's already the default theme (`is_default`, from `active.default_theme()`; then there's no activate button, #273). A theme shown only by a schedule still gets the button
+  - `note_max`: the longest publish note kept (`NOTE_MAX`, 2,000 characters), for the note box's limit
   - the theme's uploaded images
   - the current values and contrast
 - **`controls()`:** what the panel offers, built from the same data files the admin uses, so the two always agree:

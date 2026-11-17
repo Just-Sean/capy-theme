@@ -7,4 +7,5 @@
 - The banner, the controls and the file chooser all share the same button style (#223).
 - **The page makes room:** with `capy-editor-open` on `<html>`, the page moves down below the banner and, in windows at least 48 rem (768 px) wide, left of the panel. That keeps the page's own controls usable. On narrow screens the panel covers the page.
 - The image slots (#271): previews on a checkerboard, the stacked choice and alt text inputs, and the icon preview box.
+- Save and publish (#273): each button with its description under it, and a full-width note box. The area isn't pinned to the bottom of the panel: with each button's description it's tall enough to cover the controls above it and hide keyboard focus.
 - Visible focus outlines, and a Components view iframe area.

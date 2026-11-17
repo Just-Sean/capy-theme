@@ -76,7 +76,12 @@ def test_the_same_form_controls_as_the_stock_admin_page(admin_client, monkeypatc
         page_with(admin_client, url, "capy_theme/admin/theme_change_form.html", monkeypatch)
     )
     stock = controls(page_with(admin_client, url, STOCK_TEMPLATE, monkeypatch))
-    assert Counter(tabbed.controls) == Counter(stock.controls)
+    # The buttons are capy-theme's own (Save draft, Save and publish, ...; #273), so
+    # Django's save buttons and the publish note aren't compared; every field is.
+    buttons = {"_save", "_continue", "_addanother", "_capy_note"}
+    assert Counter(c for c in tabbed.controls if c[1] not in buttons) == Counter(
+        c for c in stock.controls if c[1] not in buttons
+    )
 
 
 def test_no_duplicate_ids_on_the_tabbed_page(admin_client):

@@ -4,7 +4,7 @@
 
 **Code it covers:** `src/capy_theme/editor/ and the editor's static files`
 
-**Its 13 tests** (each name says what must hold):
+**Its 26 tests** (each name says what must hold):
 
 - save stores the draft and keeps other settings
 - saving doesnt publish
@@ -19,5 +19,18 @@
 - publish refuses an invalid saved draft
 - a real collision leaves the database clean
 - publishing at the same moment as someone else
+- editor publish can also activate
+- editor publish without activate doesnt activate
+- the editor has the three buttons with descriptions
+- editor publish and activate says when a schedule shows another theme
+- the editor save area isnt pinned
+- the editor keeps the publish note until its published
+- the editor state has the note limit
+- only a json true activates
+- activate needs the publish permission
+- activate an invalid draft activates nothing
+- activate the site theme with nothing new
+- publish for a missing theme is not found
+- the not published message is built not copied from the error
 
 Run just this file with `uv run pytest tests/editor/test_editor_save_publish.py`.
