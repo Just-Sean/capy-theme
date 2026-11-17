@@ -668,7 +668,7 @@ each font. Both files ship in the package.
 ## Code layout
 
 One Django app, `capy_theme`, organized in sections. Each Python file does one
-job and stays under 200 lines.
+job and stays under about 300 lines.
 
 | Folder (in `src/capy_theme/`) | What's in it |
 | --- | --- |
@@ -676,15 +676,15 @@ job and stays under 200 lines.
 | `themes/` | The `Theme`, `ThemeRevision` and assignment models (`models/`), settings validation (+ `settings.schema.json`), daisyUI's built-in themes (`catalog.py`, `builtin_themes.json`, generated), which theme is live and the cache (`active.py`), publishing, history (compare and restore), light/dark mode, branding, signals, and the mode and theme-choice views |
 | `colors/` | Color names and groups, color math (OKLCH, contrast, readable text, shades), a theme's color values, palette suggestions, the color form field |
 | `css/` | Writing the theme stylesheet: `stylesheet.py` plus shape, type scale, backgrounds, accessibility; and the view that serves it |
-| `fonts/` | `Font` and `FontFile` models, the library (roles, stacks, `@font-face`), uploads, Google Fonts import, `curated.json` |
-| `images/` | `ThemeAsset` and `ThemeAssetVariant` models, image slots, upload checks, SVG cleaning, logo slots, logo copies, the `{% theme_logo %}` HTML, icons, the sharing image |
+| `fonts/` | `Font` and `FontFile` models, the library (roles, stacks, `@font-face`), uploads (with the unpacking check and fontTools in its own process with limits), Google Fonts import, `curated.json` |
+| `images/` | `ThemeAsset` and `ThemeAssetVariant` models, image slots and their explanations, upload checks, SVG cleaning, logo slots, logo copies, the `{% theme_logo %}` HTML, icons, the sharing image |
 | `editor/` | The live editor: who can use it, its state and controls, preview, saving, adding it to pages, its JSON views and the Components view |
 | `artifacts/` | `get_artifacts()`: everything other apps get, and the JSON API (plain Django and DRF views) |
-| `admin/` | The theme form (one file per area: colors, type, shape, images), the theme admin page and its fieldsets, the Publish/Revisions/Restore pages, inlines, fonts, the theme schedule |
+| `admin/` | The theme form (one file per area: colors, type, shape, images, custom CSS) and its tabs and fieldsets, the image slots and Media, the theme admin page, the Save and publish area and the theme list's row buttons, the Revisions and Restore pages, export and import, inlines, fonts, Site themes and the theme schedule |
 | `templatetags/capy_theme.py` | The template tags; each calls its section |
 | `models.py`, `urls.py`, `apps.py`, `context_processors.py` | Django's entry points |
 | `templates/capy_theme/`, `static/capy_theme/` | Templates and static files (the editor's JavaScript is one file per section in `static/capy_theme/editor/controls/`) |
-| `migrations/`, `management/commands/` | Database migrations and the `capy_theme_add_fonts` command |
+| `migrations/`, `management/commands/` | Database migrations and the management commands (`capy_theme_add_fonts`, `theme_export`, `theme_import`, `theme_publish`, `theme_rebuild_images`) |
 
 Outside the package: `tests/` (in the same sections), `demo/` (development only,
 never shipped), `scripts/` (generate daisyUI's themes, fetch the bundled fonts,
