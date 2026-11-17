@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 (2026-11-16)
+
+The first stable version. Custom CSS, multiple sites (a theme per domain),
+project settings, uploading images where they're used, saving, publishing and
+activating in one place, and a full round of security hardening from the
+pre-release reviews and the final audit.
 
 - **Final security audit fixes** (#275): the theme Revisions, Restore and Export admin pages answer a malformed id (such as `abc`) with "not found" instead of a server error, and the editor's draft custom CSS is only served to editors (active staff who can edit themes and custom CSS), like every other editor address.
 - **Save, publish and activate in one place** (#273). At the bottom of a theme's

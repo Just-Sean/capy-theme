@@ -16,6 +16,8 @@ A theme picks a font for each of four **roles**: body, headings, monospace and d
 | `library.py` | Roles, fallback stacks, copying chosen fonts into revisions, preloads |
 | `css.py` | The `@font-face` rules and role variables in the stylesheet |
 | `uploads.py` + `subsets.json` | Checking, converting to WOFF2 and trimming font files |
+| `unpacking.py` | Refusing WOFF/WOFF2 files that would unpack into far more data than a real font |
+| `converting.py` | The fontTools work, run in its own process with memory and time limits |
 | `google.py` | Importing a Google font |
 | `curated.json` | The list of bundled fonts (for `capy_theme_add_fonts`) |
 | `system_stacks.json` | The system font stacks |
