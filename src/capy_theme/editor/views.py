@@ -8,7 +8,8 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 
-from ..images.uploads import add_asset, asset_data
+from ..images.assets import asset_data
+from ..images.uploads import add_asset
 from ..models import Theme
 from ..themes.publishing import NOTHING_TO_PUBLISH, NothingToPublish, publish
 from .access import can_edit, can_publish

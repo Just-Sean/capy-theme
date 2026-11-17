@@ -18,9 +18,25 @@ from django.views.decorators.clickjacking import xframe_options_deny
 from django.views.decorators.http import require_GET
 
 from ..context_processors import theme as theme_context
+from ..images.logo_tag import logo_html
 from ..models import Theme
 from ..themes.active import get_active_theme
 from .access import can_edit, requested_theme_id
+
+
+def draft_header(theme):
+    """The header for the theme being edited, from its draft (#271): logo, site
+    name and tagline. The logo carries the editor's marker, so it previews too."""
+    settings = theme.settings
+    site_name = settings.get("site_name", "")
+    marker = {"data-capy-logo-slot": "logo_main", "data-capy-logo-attrs": "{}"}
+    return {
+        "logo": logo_html(
+            theme.snapshot(), "logo_main", settings.get("logo_alt") or site_name, {}, marker
+        ),
+        "site_name": site_name,
+        "tagline": settings.get("tagline", ""),
+    }
 
 
 def theme_to_edit(request):
@@ -54,6 +70,7 @@ def live_edit(request):
         "editing": editing,
         "no_theme": not Theme.objects.exists(),
         "missing_theme": requested is not None and editing is None,
+        "header": draft_header(editing) if editing else None,
         # Every theme, for the menu that switches the theme being edited (#269).
         "edit_choices": Theme.objects.only("pk", "name", "live_revision"),
     }

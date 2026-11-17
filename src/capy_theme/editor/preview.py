@@ -11,6 +11,7 @@ from ..css.custom import without_custom_css
 from ..css.stylesheet import snapshot_css
 from ..fonts.library import external_stylesheets
 from ..themes.validation import validate_base, validate_settings
+from .page_images import page_images
 
 # The settings the editor manages. Anything else in a theme's settings (site
 # name, mode and so on) is kept as it is.
@@ -104,4 +105,6 @@ def preview(theme, data):
         "dark_base": draft.dark_base,
         # External font stylesheets (e.g. Adobe Fonts) the page must link.
         "stylesheets": external_stylesheets(snapshot.get("fonts")),
+        # The draft's logos and icon, shown on the page before publishing (#271).
+        "page_images": page_images(snapshot),
     }
