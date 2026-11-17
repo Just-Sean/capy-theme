@@ -1,6 +1,8 @@
 """The live edit page at /theme/live-edit/ (issue #229): capy-theme's own page for
 building a theme, the same in every project."""
 
+from pathlib import Path
+
 import pytest
 from django.contrib.auth.models import Permission
 from django.core.cache import cache
@@ -208,3 +210,34 @@ def test_the_page_has_nothing_a_strict_csp_would_block(client, django_user_model
 def test_only_get(client, django_user_model, active):
     log_in(client, django_user_model, "change_theme")
     assert client.post(URL).status_code == 405
+
+
+def test_switch_theme_lists_every_theme_and_opens_the_editor_on_it(
+    client, django_user_model, active
+):
+    # Not the visitors' theme picker: it switches the theme being edited (#269).
+    draft = Theme.objects.create(name="Autumn <draft>", slug="autumn", offered_to_visitors=False)
+    log_in(client, django_user_model, "change_theme")
+    html = client.get(f"{URL}?edit={active.pk}").content.decode()
+    assert ">Switch theme</summary>" in html
+    assert "/theme/choose/" not in html
+    assert (
+        f'<a href="{URL}?edit={active.pk}" data-capy-edit-switch="Main" class="menu-active"'
+        ' aria-current="page">Main</a>'
+    ) in html
+    assert (
+        f'<a href="{URL}?edit={draft.pk}" data-capy-edit-switch="Autumn &lt;draft&gt;">'
+        "Autumn &lt;draft&gt; (not published)</a>"
+    ) in html
+    assert html.index("Autumn &lt;draft&gt; (not") < html.index(">Main</a>")  # by name
+
+
+def test_switching_with_unsaved_changes_asks_first():
+    script = (
+        Path(__file__).resolve().parents[2] / "src/capy_theme/static/capy_theme/editor/editor.js"
+    ).read_text()
+    handler = script[script.index('closest("[data-capy-edit-switch]")') :]
+    assert "editor.isDirty()" in handler and "window.confirm(" in handler
+    assert "event.preventDefault();" in handler  # Cancel stays on the page
+    # After saying yes, the browser's own "leave site?" warning doesn't ask again.
+    assert "if (!switching && editor.panel" in script

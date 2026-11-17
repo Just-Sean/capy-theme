@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Live edit page: Switch theme** replaces the visitors' theme picker in the
+  header. It lists every theme (unpublished ones marked) and opens the editor on
+  the one you pick, asking first if there are unsaved changes. Before, the menu
+  changed your visitor theme: the page flashed that theme's colors, then went
+  back to the draft being edited while the logo stayed changed (#269).
 - **Every fold starts closed,** in the live editor and on the theme admin page,
   including Basic colors. Click a title to open it. In the editor, folds stay as
   you left them after Save draft, Publish or Revert, as before. In the admin, a

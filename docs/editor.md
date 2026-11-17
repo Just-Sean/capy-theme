@@ -6,13 +6,17 @@ Code: `src/capy_theme/editor/` (Python) and `src/capy_theme/static/capy_theme/ed
 
 **`/theme/live-edit/`** is capy-theme's own page for building a theme, in every
 project that includes `capy_theme.urls`. It shows the header (the logo, or the site
-name, with the tagline, **Light / Dark / Auto**, the visitor theme picker and a link
-to the admin) and every daisyUI component (buttons, badges, a card, alerts, a
+name, with the tagline, **Light / Dark / Auto**, **Switch theme** and a link to the
+admin) and every daisyUI component (buttons, badges, a card, alerts, a
 table, form fields, headings), with the live editor open on it. The admin's **Edit
 live** button opens it on that theme (`?edit=<id>`). Without `?edit=`, it opens on
 the active theme (or the first theme, if none is active). With no themes yet, it
 links to the admin to add one; for a theme that doesn't exist (e.g. deleted), it
 says so and links to the active theme and the theme list.
+
+**Switch theme** lists every theme, unpublished ones too (marked "not published"),
+and opens the editor on the one you pick. It doesn't change the theme you see as a
+visitor. With unsaved changes it asks first: Cancel, then **Save draft**, keeps them.
 
 The tab title names the theme being edited. The header shows the published theme
 visitors see (its logo, site name and tagline, and its Light / Dark / Auto

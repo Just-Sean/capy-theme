@@ -209,8 +209,24 @@
     if (editor.panel) status(text, isError);
   };
 
+  // The live edit page's Switch theme menu (#269): with unsaved changes, ask first,
+  // naming the theme, instead of the browser's generic "leave site?" warning.
+  var switching = false;
+  document.addEventListener("click", function (event) {
+    var link = event.target.closest && event.target.closest("[data-capy-edit-switch]");
+    // A new tab or window (Ctrl, Cmd, Shift, middle click) loses nothing here.
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (!link || !editor.panel || editor.panel.hidden || !editor.isDirty()) return;
+    var name = link.getAttribute("data-capy-edit-switch");
+    if (window.confirm("You have unsaved changes. Switch to " + name + " and lose them? Choose Cancel, then Save draft, to keep them.")) {
+      switching = true;
+    } else {
+      event.preventDefault();
+    }
+  });
+
   window.addEventListener("beforeunload", function (event) {
-    if (editor.panel && !editor.panel.hidden && editor.isDirty()) {
+    if (!switching && editor.panel && !editor.panel.hidden && editor.isDirty()) {
       event.preventDefault();
       event.returnValue = "";
     }

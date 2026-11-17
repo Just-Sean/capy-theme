@@ -15,7 +15,7 @@
 
 **Other rules:**
 
-- **Self-contained:** it passes `theme` (the published theme, for the header), `request` and `editing` (the theme being edited, for the title) itself. So the project doesn't need capy-theme's or Django's request context processor.
+- **Self-contained:** it passes `theme` (the published theme, for the header), `request` and `editing` (the theme being edited, for the title) itself, plus `edit_choices` (every theme, for **Switch theme**, #269). So the project doesn't need capy-theme's or Django's request context processor.
 - **`X-Frame-Options: DENY`** comes from the view itself, so no site can frame the editor and trick a click on Save or Publish, even in a project without the clickjacking middleware.
 - **Only GET, never cached.** It needs Django's admin at its usual `admin` namespace.
 - **Linked from the admin:** the admin's **Edit live** (`admin/theme_admin.py`) links here.
