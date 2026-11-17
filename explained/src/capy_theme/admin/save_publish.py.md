@@ -21,3 +21,4 @@
   - The buttons use the list's own form, so they carry its CSRF token.
 - **`get_queryset`** marks each theme with `capy_is_default` (whether it's the default theme) in the list's own query, so the row buttons don't look up the default theme once per row.
 - Whether a theme is the default means the theme activated for every site, not the theme showing now, so a scheduled theme doesn't hide the activate buttons.
+- **`theme_or_404(model_admin, request, object_id)`:** the theme an admin URL names, or a 404 if it's missing or the id is malformed (such as `abc`), as Django's own pages answer, never a server error. Used by the row buttons and by the Revisions, Restore and Export pages (#275).

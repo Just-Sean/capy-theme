@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Final security audit fixes** (#275): the theme Revisions, Restore and Export admin pages answer a malformed id (such as `abc`) with "not found" instead of a server error, and the editor's draft custom CSS is only served to editors (active staff who can edit themes and custom CSS), like every other editor address.
 - **Save, publish and activate in one place** (#273). At the bottom of a theme's
   admin page, **Save and publish** shows where the theme stands (unpublished
   changes, published revision, whether it's the default theme, and what a running

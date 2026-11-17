@@ -52,6 +52,15 @@ SIMULTANEOUS = (
 )
 
 
+def theme_or_404(model_admin, request, object_id):
+    """The theme the admin URL names, or a 404 if it's missing or the id is
+    malformed (e.g. "abc"), as Django's own admin pages answer (not a 500)."""
+    theme = model_admin.get_object(request, unquote(object_id))
+    if theme is None:
+        raise Http404("No such theme.")
+    return theme
+
+
 def publish_status(theme):
     """[(label, text)] for the theme page's status line."""
     if theme is None or theme.pk is None:
@@ -289,10 +298,7 @@ class SavePublishMixin:
         )
 
     def _row_theme(self, request, object_id):
-        # get_object returns None for an id that's missing or malformed (e.g. "abc").
-        theme = self.get_object(request, unquote(object_id))
-        if theme is None:
-            raise Http404("No such theme.")
+        theme = theme_or_404(self, request, object_id)
         if not self.has_publish_permission(request, theme):
             raise PermissionDenied
         return theme
