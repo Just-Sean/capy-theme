@@ -4,7 +4,7 @@
 
 **Code it covers:** `src/capy_theme/editor/ and the editor's static files`
 
-**Its 23 tests** (each name says what must hold):
+**Its 25 tests** (each name says what must hold):
 
 - save stores the draft and keeps other settings
 - saving doesnt publish
@@ -23,7 +23,9 @@
 - editor publish without activate doesnt activate
 - the editor has the three buttons with descriptions
 - editor publish and activate says when a schedule shows another theme
-- the editor save area is only pinned on tall screens
+- the editor save area isnt pinned
+- the editor keeps the publish note until its published
+- the editor state has the note limit
 - only a JSON true activates
 - activate needs the publish permission
 - activate an invalid draft activates nothing

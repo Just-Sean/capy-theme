@@ -569,7 +569,7 @@ def test_the_list_doesnt_query_the_default_theme_for_every_row(
 
 
 @pytest.mark.parametrize(("show_delete", "shown"), [(False, False), (True, True), (None, True)])
-def test_the_delete_link_honours_show_delete(rf, theme, show_delete, shown):
+def test_the_delete_link_honors_show_delete(rf, theme, show_delete, shown):
     from django.template.loader import render_to_string
 
     context = {
@@ -591,3 +591,299 @@ def test_the_delete_and_close_links_get_djangos_button_look(admin, theme):
     content = admin.get(change_url(theme)).content.decode()
     link = content[content.index('class="deletelink"') - 200 : content.index('class="deletelink"')]
     assert 'class="submit-row capy-save-publish-links"' in link
+
+
+# QA, third round (#273): filters, popups, odd permissions, the list's annotation
+
+ODD = "_changelist_filters=" + "q%3D%C3%A9t%C3%A9%2B%2523%2520x%26light_base%3Dlight%26p%3D1"
+ODD_IN_LINKS = "q=%C3%A9t%C3%A9+%23+x&amp;light_base=light&amp;p=1"  # Django re-encodes
+
+
+def _messages(client):
+    """The messages waiting for the next page (the admin index shows them)."""
+    return [m.message for m in client.get(reverse("admin:index")).context["messages"]]
+
+
+def _template_names(response):
+    return [t.name for t in response.templates]
+
+
+@pytest.mark.parametrize("button", ["_capy_save", "_capy_publish", "_capy_publish_activate"])
+def test_qa_odd_filters_survive_each_button_and_the_next_page(admin, theme, button):
+    url = change_url(theme) + "?" + ODD
+    data = _post_back(admin.get(url).content.decode())
+    data[button] = ""
+    response = admin.post(url, data)
+    assert response.status_code == 302
+    assert response.url == change_url(theme) + "?" + ODD
+    page = admin.get(response.url)
+    assert page.status_code == 200
+    # The Delete link and the form itself keep them for the next round.
+    assert f"/delete/?{ODD}" in page.content.decode()
+    assert f'="?{ODD}"' in page.content.decode()
+
+
+@pytest.mark.parametrize("button", ["_capy_save", "_capy_publish", "_capy_publish_activate"])
+def test_qa_add_page_buttons_keep_odd_filters(admin, button):
+    url = ADD + "?" + ODD
+    data = _post_back(admin.get(url).content.decode())
+    data.update({"name": "New", "slug": "new", button: ""})
+    response = admin.post(url, data)
+    theme = Theme.objects.get(slug="new")
+    assert response.status_code == 302
+    assert response.url == change_url(theme) + "?" + ODD
+
+
+@pytest.mark.parametrize(
+    ("button", "published", "activated"),
+    [
+        ("_capy_save", False, False),
+        ("_capy_publish", True, False),
+        ("_capy_publish_activate", True, True),
+    ],
+)
+def test_qa_popup_add_answers_as_a_popup_and_leaves_no_message(admin, button, published, activated):
+    url = ADD + "?_to_field=id&_popup=1"
+    data = _post_back(admin.get(url).content.decode())
+    data.update({"name": "Pop", "slug": "pop", button: "", "_popup": "1", "_to_field": "id"})
+    response = admin.post(url, data)
+    theme = Theme.objects.get(slug="pop")
+    assert response.status_code == 200
+    assert "admin/popup_response.html" in _template_names(response)
+    assert (theme.live_revision is not None) is published
+    assert (getattr(get_active_theme(), "pk", None) == theme.pk) is activated
+    assert _messages(admin) == []
+
+
+@pytest.mark.parametrize("button", ["_capy_save", "_capy_publish", "_capy_publish_activate"])
+def test_qa_popup_change_answers_as_a_popup_and_leaves_no_message(admin, theme, button):
+    url = change_url(theme) + "?_to_field=id&_popup=1"
+    data = _post_back(admin.get(url).content.decode())
+    data.update({button: "", "_popup": "1", "_to_field": "id"})
+    response = admin.post(url, data)
+    assert response.status_code == 200
+    assert "admin/popup_response.html" in _template_names(response)
+    theme.refresh_from_db()
+    assert (theme.live_revision is not None) is (button != "_capy_save")
+    assert _messages(admin) == []
+
+
+def test_qa_popup_with_filters_still_answers_as_a_popup(admin, theme):
+    url = change_url(theme) + "?_popup=1&_to_field=id&" + ODD
+    data = _post_back(admin.get(url).content.decode())
+    data.update({"_capy_publish": "", "_popup": "1", "_to_field": "id"})
+    response = admin.post(url, data)
+    assert response.status_code == 200
+    assert "admin/popup_response.html" in _template_names(response)
+
+
+def test_qa_popup_for_a_non_publisher_keeps_the_refusal(client, django_user_model, theme):
+    # A user who can't publish has no publish button, but a stale page (permission
+    # removed after it was opened) can still send _capy_publish. The popup closes;
+    # the refusal is kept for the next page, so they learn nothing was published.
+    user = django_user_model.objects.create_user("ed", password="pw", is_staff=True)
+    user.user_permissions.set(
+        Permission.objects.filter(codename__in=["view_theme", "change_theme"])
+    )
+    client.force_login(user)
+    url = change_url(theme) + "?_to_field=id&_popup=1"
+    data = _post_back(client.get(url).content.decode())
+    data.update({"_capy_publish": "", "_popup": "1", "_to_field": "id"})
+    response = client.post(url, data)
+    assert response.status_code == 200
+    assert _messages(client) == ["The draft was saved, but you can't publish themes."]
+
+
+def test_qa_add_only_publisher_gets_a_page_they_can_open(client, django_user_model):
+    user = django_user_model.objects.create_user("adder", password="pw", is_staff=True)
+    user.user_permissions.set(
+        Permission.objects.filter(codename__in=["add_theme", "publish_theme"])
+    )
+    client.force_login(user)
+    data = _post_back(client.get(ADD).content.decode())
+    data.update({"name": "New", "slug": "new", "_capy_publish_activate": ""})
+    response = client.post(ADD, data)
+    assert response.status_code == 302
+    assert client.get(response.url).status_code == 200
+    assert Theme.objects.get(slug="new").live_revision is not None
+    assert get_active_theme().slug == "new"
+
+
+@pytest.mark.parametrize("action", ["publish_now", "publish_activate", "activate"])
+def test_qa_publisher_without_view_sees_the_message_where_they_land(
+    client, django_user_model, theme, user, action
+):
+    if action == "activate":
+        publish(theme, user=user)
+    pub = django_user_model.objects.create_user("pub", password="pw", is_staff=True)
+    pub.user_permissions.set(Permission.objects.filter(codename="publish_theme"))
+    client.force_login(pub)
+    response = client.post(row_url(theme, action), HTTP_REFERER="http://testserver" + CHANGELIST)
+    assert response.status_code == 302 and response.url == reverse("admin:index")
+    page = client.get(response.url)
+    assert page.status_code == 200
+    assert "Main" in " ".join(m.message for m in page.context["messages"])
+
+
+def test_qa_status_after_a_failed_post_for_the_default_theme(admin, theme, user):
+    publish(theme, user=user)
+    activate(theme)
+    response = press(admin, theme, "_capy_publish", slug="")
+    assert response.status_code == 200
+    content = response.content.decode()
+    status = content[content.index("capy-save-publish-status") :]
+    status = status[: status.index("</dl>")]
+    assert "Matches the published version" in status
+    assert "<dt>Default theme</dt><dd>Yes</dd>" in status
+    assert 'name="_capy_publish_activate"' not in content
+
+
+def test_qa_failed_post_keeps_what_was_typed_in_the_form(admin, theme):
+    response = press(admin, theme, "_capy_save", slug="", name="Typed name")
+    assert response.status_code == 200
+    assert 'value="Typed name"' in response.content.decode()
+
+
+def test_qa_post_for_a_theme_deleted_after_the_page_was_opened(admin, theme):
+    data = _post_back(admin.get(change_url(theme)).content.decode())
+    data["_capy_publish"] = ""
+    Theme.objects.filter(pk=theme.pk).delete()
+    response = admin.post(change_url(theme), data)
+    assert response.status_code == 302  # Django's "doesn't exist" redirect, not a crash
+
+
+def test_qa_theme_deleted_while_a_failed_post_is_checked(admin, theme, monkeypatch):
+    # Someone deletes the theme while this POST is being checked, and the form fails.
+    from capy_theme.admin.theme_form import ThemeForm
+
+    original = ThemeForm.clean
+
+    def clean(form):
+        Theme.objects.filter(pk=theme.pk).delete()
+        return original(form)
+
+    data = _post_back(admin.get(change_url(theme)).content.decode())
+    data.update({"_capy_save": "", "slug": ""})
+    monkeypatch.setattr(ThemeForm, "clean", clean)
+    response = admin.post(change_url(theme), data)
+    assert response.status_code in (200, 302, 404)
+
+
+def _published_themes(user, count):
+    themes = []
+    for number in range(count):
+        theme = Theme.objects.create(name=f"T{number:02}", slug=f"t{number:02}")
+        publish(theme, user=user)
+        themes.append(theme)
+    return themes
+
+
+def _row(content, theme):
+    row = content[content.index(f"/{theme.pk}/change/") :]
+    return row[: row.index("</tr>")]
+
+
+def test_qa_list_search_filter_order_and_count_with_the_annotation(admin, user):
+    themes = _published_themes(user, 5)
+    activate(themes[2])
+    for query in ("?q=T02", "?light_base__exact=light", "?o=1", "?o=-7", "?o=8.-1", "?all="):
+        response = admin.get(CHANGELIST + query)
+        assert response.status_code == 200, query
+    response = admin.get(CHANGELIST + "?q=T02")
+    assert response.context["cl"].result_count == 1
+    assert response.context["cl"].full_result_count == 5
+    assert ">Activate<" not in _row(response.content.decode(), themes[2])
+    assert ">Activate<" in row_buttons(admin, themes[1])
+
+
+def test_qa_list_pagination_marks_the_default_on_every_page(admin, user, monkeypatch):
+    from capy_theme.admin.theme_admin import ThemeAdmin
+
+    monkeypatch.setattr(ThemeAdmin, "list_per_page", 2)
+    themes = _published_themes(user, 5)
+    activate(themes[4])
+    last = admin.get(CHANGELIST + "?o=1&p=3")
+    assert last.context["cl"].result_count == 5
+    assert ">Activate<" not in _row(last.content.decode(), themes[4])
+    first = admin.get(CHANGELIST + "?o=1&p=1").content.decode()
+    assert ">Activate<" in _row(first, themes[0])
+
+
+def test_qa_delete_action_works_with_the_annotated_list(admin, user):
+    themes = _published_themes(user, 3)
+    activate(themes[0])
+    data = {"action": "delete_selected", "_selected_action": [str(t.pk) for t in themes]}
+    confirm = admin.post(CHANGELIST, data)
+    assert confirm.status_code == 200 and b"Are you sure" in confirm.content
+    done = admin.post(CHANGELIST, {**data, "post": "yes"})
+    assert done.status_code == 302
+    assert not Theme.objects.exists() and not ThemeAssignment.objects.exists()
+
+
+def test_qa_delete_and_history_pages_work_with_the_annotation(admin, theme, user):
+    publish(theme, user=user)
+    activate(theme)
+    for name in ("delete", "history"):
+        url = reverse(f"admin:capy_theme_theme_{name}", args=[theme.pk])
+        assert admin.get(url).status_code == 200, name
+    delete = reverse("admin:capy_theme_theme_delete", args=[theme.pk])
+    response = admin.post(delete, {"post": "yes"})
+    assert response.status_code == 302 and not Theme.objects.exists()
+
+
+def test_qa_import_and_export_pages_still_work(admin, theme):
+    assert admin.get(reverse("admin:capy_theme_theme_import")).status_code == 200
+    export = reverse("admin:capy_theme_theme_export", args=[theme.pk])
+    assert admin.get(export).status_code == 200
+
+
+def test_qa_close_link_for_a_viewer_keeps_odd_filters(client, django_user_model, theme):
+    viewer = django_user_model.objects.create_user("viewer", password="pw", is_staff=True)
+    viewer.user_permissions.set(Permission.objects.filter(codename="view_theme"))
+    client.force_login(viewer)
+    content = client.get(change_url(theme) + "?" + ODD).content.decode()
+    assert 'class="closelink"' in content and 'class="deletelink"' not in content
+    link = content[: content.index('class="closelink"')]
+    assert ODD_IN_LINKS in link[link.rindex("<a ") :]
+    assert 'name="_capy_save"' not in content
+
+
+def test_qa_show_delete_false_from_extra_context_hides_delete(rf, theme, user):
+    from django.contrib.admin.sites import site
+
+    request = rf.get(change_url(theme))
+    request.user = user
+    response = site._registry[Theme].change_view(
+        request, str(theme.pk), extra_context={"show_delete": False}
+    )
+    assert 'class="deletelink"' not in response.render().content.decode()
+
+
+def test_qa_no_delete_or_close_link_in_a_popup(admin, theme):
+    content = admin.get(change_url(theme) + "?_popup=1&_to_field=id").content.decode()
+    assert 'class="deletelink"' not in content and 'class="closelink"' not in content
+
+
+def test_qa_the_annotation_as_a_url_filter_isnt_a_server_error(admin, theme, user):
+    publish(theme, user=user)
+    activate(theme)
+    for query in ("?capy_is_default=1", "?capy_is_default=x", "?o=99"):
+        assert admin.get(CHANGELIST + query).status_code in (200, 302), query
+
+
+def test_qa_a_failed_publish_in_a_popup_still_closes_the_popup(admin, theme, monkeypatch):
+    from django.core.exceptions import ValidationError
+
+    def refuse(*args, **kwargs):
+        raise ValidationError("not allowed")
+
+    monkeypatch.setattr("capy_theme.admin.save_publish.publish", refuse)
+    url = change_url(theme) + "?_to_field=id&_popup=1"
+    data = _post_back(admin.get(url).content.decode())
+    data.update({"_capy_publish": "", "_popup": "1", "_to_field": "id"})
+    response = admin.post(url, data)
+    assert "admin/popup_response.html" in _template_names(response)
+    theme.refresh_from_db()
+    assert theme.live_revision is None
+    # Only success is left out in a popup; a refusal is kept for the next page.
+    assert _messages(admin) == ["Can't publish: not allowed"]

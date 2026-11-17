@@ -87,11 +87,12 @@ def activated_message(theme):
 
 
 def run_publish(request, theme, activate_too, quiet=False):
-    """Publish (and activate), telling the user what happened in messages (none when
-    `quiet`: a popup closes straight away, so they'd show up on a later page)."""
+    """Publish (and activate), telling the user what happened in messages. When
+    `quiet` (a popup, which closes straight away), success isn't said, as Django says
+    nothing for a popup either; a refusal still is, so it shows on the next page."""
 
     def say(level, text):
-        if not quiet:
+        if not (quiet and level == messages.SUCCESS):
             messages.add_message(request, level, text)
 
     user = request.user
@@ -198,7 +199,11 @@ class SavePublishMixin:
         if theme is not None and request.method == "POST":
             # Shown again after a failed save: Django has put the unsaved values on
             # `theme`, so describe the draft as saved.
-            theme = type(theme).objects.select_related("live_revision").get(pk=theme.pk)
+            # (If it was deleted meanwhile, describe the object Django still has.)
+            theme = (
+                type(theme).objects.select_related("live_revision").filter(pk=theme.pk).first()
+                or theme
+            )
         default = default_theme()
         return {
             "capy_status": publish_status(theme),

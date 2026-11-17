@@ -4,7 +4,7 @@
 
 **Code it covers:** `src/capy_theme/themes/`
 
-**Its 42 tests** (each name says what must hold):
+**Its 74 tests** (each name says what must hold):
 
 - edit page has the three buttons with descriptions and status
 - save draft stays on the page and doesnt publish
@@ -48,5 +48,37 @@
 - view only users get a close link
 - the delete link keeps the lists filters
 - row buttons go back to the filtered list
+- the buttons keep the lists filters like save and continue
+- save draft on add keeps the lists filters
+- the delete link keeps the filters after save draft
+- the status after a form error describes the saved draft
+- an add only user gets one success message
+- a popup save leaves no message for the next page
+- a publisher who cant view themes lands somewhere they can open
+- the list doesnt query the default theme for every row
+- the delete link honors show delete
+- the delete and close links get djangos button look
+- qa odd filters survive each button and the next page
+- qa add page buttons keep odd filters
+- qa popup add answers as a popup and leaves no message
+- qa popup change answers as a popup and leaves no message
+- qa popup with filters still answers as a popup
+- qa popup for a non publisher keeps the refusal
+- qa add only publisher gets a page they can open
+- qa publisher without view sees the message where they land
+- qa status after a failed post for the default theme
+- qa failed post keeps what was typed in the form
+- qa post for a theme deleted after the page was opened
+- qa theme deleted while a failed post is checked
+- qa list search filter order and count with the annotation
+- qa list pagination marks the default on every page
+- qa delete action works with the annotated list
+- qa delete and history pages work with the annotation
+- qa import and export pages still work
+- qa close link for a viewer keeps odd filters
+- qa show delete false from extra context hides delete
+- qa no delete or close link in a popup
+- qa the annotation as a url filter isnt a server error
+- qa a failed publish in a popup still closes the popup
 
 Run just this file with `uv run pytest tests/themes/test_publish_admin.py`.
