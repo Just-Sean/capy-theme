@@ -4,7 +4,7 @@
 
 **Code it covers:** `src/capy_theme/editor/ and the editor's static files`
 
-**Its 8 tests** (each name says what must hold):
+**Its 10 tests** (each name says what must hold):
 
 - the issue check every editor setting changes the components view
 - unsaved image choices show
@@ -14,5 +14,7 @@
 - custom css for editors who may edit it
 - others get only the published custom css
 - selectors
+- selectors keep an unclosed comment as text
+- selectors stay fast on crafted custom css
 
 Run just this file with `uv run pytest tests/editor/test_components_final_pass.py`.

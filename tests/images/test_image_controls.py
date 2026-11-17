@@ -61,39 +61,43 @@ def admin_client(client, django_user_model):
     return client
 
 
-def admin_data(**files):
+def admin_data(upload, slot="logo_main", mode="light", alt="Logo"):
+    """The theme page with a new image uploaded in a slot's own field (#271)."""
+    name = f"image_{slot}_{mode}"
     return {
         "name": "Main",
         "slug": "main",
         "light_base": "light",
         "dark_base": "dark",
         "visitors_can_switch": "on",
-        "assets-TOTAL_FORMS": "1",
+        f"{name}_upload": upload,
+        f"{name}_upload_alt": alt,  # the new image's own alt text box
+        "assets-TOTAL_FORMS": "0",
         "assets-INITIAL_FORMS": "0",
-        "assets-0-slot": "logo_main",
-        "assets-0-mode": "light",
-        "assets-0-alt_text": "Logo",
         "revisions-TOTAL_FORMS": "0",
         "revisions-INITIAL_FORMS": "0",
-    } | files
+    }
 
 
 def test_admin_upload_strips_gps(admin_client, theme):
     url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
     upload = SimpleUploadedFile("holiday.jpg", gps_photo(), content_type="image/jpeg")
-    response = admin_client.post(url, admin_data(**{"assets-0-original": upload}))
+    response = admin_client.post(url, admin_data(upload))
     assert response.status_code == 302
     asset = theme.assets.get()
     assert (asset.width, asset.height, asset.content_type) == (40, 20, "image/jpeg")
+    assert asset.alt_text == "Logo"
     with asset.original.open("rb") as f:
         assert not Image.open(f).getexif()
-    assert b"40 \xc3\x97 20" in admin_client.get(url).content  # details shown, read-only
+    theme.refresh_from_db()
+    assert theme.settings["images"] == {"logo_main": {"light": asset.pk}}  # chosen, no 2nd save
+    assert b"40 \xc3\x97 20" in admin_client.get(url).content  # details shown
 
 
 def test_admin_rejects_a_renamed_text_file(admin_client, theme):
     url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
     upload = SimpleUploadedFile("logo.png", b"not an image", content_type="image/png")
-    response = admin_client.post(url, admin_data(**{"assets-0-original": upload}))
+    response = admin_client.post(url, admin_data(upload))
     assert response.status_code == 200
     assert "supported image" in response.content.decode()
     assert not ThemeAsset.objects.exists()
@@ -156,12 +160,12 @@ def test_admin_refuses_an_oversized_upload_before_reading_it(
     def must_not_read(*args, **kwargs):
         raise AssertionError("the upload was read")
 
-    monkeypatch.setattr("capy_theme.admin.inlines.prepare_image", must_not_read)
+    monkeypatch.setattr("capy_theme.images.uploads.prepare_image", must_not_read)
     url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
     upload = SimpleUploadedFile("big.png", b"x" * 2048, content_type="image/png")
-    response = admin_client.post(url, admin_data(**{"assets-0-original": upload}))
+    response = admin_client.post(url, admin_data(upload))
     assert response.status_code == 200
-    assert "The image is too big (the limit is 1 KB)." in response.content.decode()
+    assert "The main logo is too big (2 KB; the limit is 1 KB)." in response.content.decode()
     assert not ThemeAsset.objects.exists()
 
 
@@ -176,7 +180,7 @@ def png_upload(size):
 
 def test_a_header_logo_uploaded_in_the_admin_gets_its_smaller_copies(admin_client, theme):
     url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
-    response = admin_client.post(url, admin_data(**{"assets-0-original": png_upload((300, 100))}))
+    response = admin_client.post(url, admin_data(png_upload((300, 100))))
     assert response.status_code == 302
     widths = set(theme.assets.get().variants.values_list("width", flat=True))
     assert {64, 128, 300} <= widths
@@ -184,9 +188,7 @@ def test_a_header_logo_uploaded_in_the_admin_gets_its_smaller_copies(admin_clien
 
 def test_a_sharing_image_uploaded_in_the_admin_gets_its_1200_by_630_copy(admin_client, theme):
     url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
-    data = admin_data(**{"assets-0-original": png_upload((1300, 700))}) | {
-        "assets-0-slot": "social"
-    }
+    data = admin_data(png_upload((1300, 700)), slot="social")
     assert admin_client.post(url, data).status_code == 302
     sharing = theme.assets.get().variants.get(purpose="social")
     assert (sharing.width, sharing.height) == (1200, 630)

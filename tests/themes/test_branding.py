@@ -98,8 +98,8 @@ def test_form_only_offers_this_themes_images_for_the_slot():
     mine = add_asset(theme, "logo_main", "light", png())
     add_asset(theme, "logo_mark", "light", png())
     add_asset(other, "logo_main", "light", png())
-    choices = ThemeForm(instance=theme).fields["image_logo_main_light"].choices
-    assert [value for value, _ in choices] == ["", str(mine.pk)]
+    choices = ThemeForm(instance=theme).fields["image_logo_main_light"].widget.choices
+    assert [str(value) for value, _ in choices] == ["", str(mine.pk)]
 
 
 # Publishing

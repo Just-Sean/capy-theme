@@ -16,6 +16,7 @@ from ..models import Theme
 from ..themes.active import NotPublished, activate, get_active_theme
 from .fieldsets import THEME_FIELDSETS
 from .form_colors import _pair
+from .form_images import ask_to_choose_again, save_images
 from .import_export import ImportExportMixin
 from .inlines import ThemeAssetInline, ThemeRevisionInline
 from .publish_pages import PublishPagesMixin
@@ -130,6 +131,10 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, admin.ModelAdmin):
         """Publishing, activating and (later) restoring need the publish_theme permission."""
         return request.user.has_perm("capy_theme.publish_theme")
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        save_images(form, obj)  # new uploads need the saved theme (#271)
+
     def change_view(self, request, object_id, form_url="", extra_context=None):
         extra_context = {
             **(extra_context or {}),
@@ -139,6 +144,8 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, admin.ModelAdmin):
         return super().change_view(request, object_id, form_url, extra_context)
 
     def render_change_form(self, request, context, *args, **kwargs):
+        if request.method == "POST":  # shown again after a failed save
+            ask_to_choose_again(context["adminform"].form)
         context["capy_tabs"] = theme_tabs(context["adminform"], context["inline_admin_formsets"])
         return super().render_change_form(request, context, *args, **kwargs)
 

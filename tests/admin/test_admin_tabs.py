@@ -47,7 +47,7 @@ def test_the_page_has_its_tabs_in_order(admin_client):
 
 def test_tab_ids_come_from_their_labels(admin_client):
     ids = {tab_id for tab_id, _, _ in panels(change_page(admin_client))}
-    assert {"capy-tab-general", "capy-tab-light-colors", "capy-tab-images"} <= ids
+    assert {"capy-tab-general", "capy-tab-light-colors", "capy-tab-media"} <= ids
 
 
 def test_every_section_is_still_on_the_page_with_its_old_id(admin_client):
@@ -62,8 +62,10 @@ def test_sections_are_in_their_tabs(admin_client):
     for _, label, body in panels(change_page(admin_client)):
         by_label[label] = by_label.get(label, "") + body
     assert ">Logos<" in by_label["Branding"]
+    assert ">More logo versions (optional)<" in by_label["Branding"]
     assert ">Light colors: Expert<" in by_label["Light colors"]
-    assert re.search(r'id="[^"]*asset[^"]*-group"', by_label["Images"])
+    assert re.search(r'id="[^"]*asset[^"]*-group"', by_label["Media"])
+    assert "Images" not in by_label  # images are uploaded where they're used (#271)
     assert "Published revisions" in by_label["Revisions"]
     assert ">Advanced<" in by_label["Advanced"]
 

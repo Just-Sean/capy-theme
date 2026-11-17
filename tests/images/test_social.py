@@ -118,7 +118,7 @@ def test_editor_offers_the_sharing_image_slot(client, django_user_model):
     client.force_login(user)
     theme = Theme.objects.create(name="T", slug="t")
     state = client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()
-    slots = {s["name"]: s["modes"] for s in state["controls"]["logo_slots"]}
+    slots = {s["name"]: s["modes"] for s in state["controls"]["image_slots"]}
     assert slots["social"] == ["light"]
     assert "social_settings" not in state["controls"]
     assert "app_settings" not in state["controls"]

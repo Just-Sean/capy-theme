@@ -4,7 +4,7 @@
 
 **Code it covers:** `src/capy_theme/editor/ and the editor's static files`
 
-**Its 12 tests** (each name says what must hold):
+**Its 19 tests** (each name says what must hold):
 
 - staff with change permission can edit
 - staff without change permission cant
@@ -18,5 +18,12 @@
 - viewing the state changes nothing
 - visitors dont get the editor
 - editor files are bundled
+- editor moves focus into the panel and back
+- escape closes the editor
+- escape in the components view closes only the view
+- page behind a full width panel is inert
+- save and publish keep focus on their button
+- see it as a visitor is gone
+- revert goes back to the saved draft
 
 Run just this file with `uv run pytest tests/editor/test_editor_access.py`.

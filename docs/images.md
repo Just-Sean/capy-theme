@@ -5,9 +5,28 @@ Code: `src/capy_theme/images/` (uploads, SVG cleaning, logo slots and copies, ic
 ## Images
 
 A theme's images (logos, the icon, the social sharing image, backgrounds) are
-uploaded in the live editor's **Images** section or in the **Images** list on
-the theme's admin page. Each upload goes in a slot, for light or dark mode,
-with alt text. For every upload:
+uploaded and chosen **where they're used**: on the theme's admin page under
+**Branding** (Logos, More logo versions, Icon, Backgrounds, Sharing image), and in
+the live editor's sections of the same names. Each slot, for light or dark mode,
+shows:
+
+- what it's for and its limits (size, largest width or height, whether SVG is
+  allowed), and what happens if it's left empty;
+- its current image, and a choice of the images uploaded for it earlier;
+- **Upload a new image**, with its own alt text box. In the admin, the new image is
+  stored and chosen when you save the page (several slots can get one in the same
+  save; if another part of the page has an error, choose the file again, since
+  browsers don't keep it). In the live editor it's stored straight away and
+  chosen in your unsaved changes: **Save draft** keeps the choice, **Revert**
+  drops it (the image stays in the theme's list);
+- the alt text of the image saved for the slot (named by its file), which can be
+  changed at any time. It only ever changes that image: choosing another image in
+  the same save leaves the other image's alt text as it was. If the same image is
+  used for both light and dark mode of a slot and its alt text is changed
+  differently in each box, the save asks you to change it in one box only. The
+  same goes for changing it in the slot and, differently, in **Media** in one save.
+
+An image stays with the slot it was uploaded for. For every upload:
 
 - The type is worked out from the file's content, not its name. Only PNG, JPEG,
   WebP, GIF and SVG are accepted, so a text file renamed `.png` is rejected.
@@ -49,23 +68,56 @@ with alt text. For every upload:
   social sharing image (social sites don't accept it) and the icon (favicons are
   made from it). They're listed under `no_svg` in `src/capy_theme/images/slots.json`.
 
-Files are stored under `MEDIA_ROOT/capy_theme/assets/<slot>/`. An image is never
-changed after upload: a new image is a new asset, so older revisions keep theirs.
-Uploading doesn't change what visitors see: an image is only used once it's
-chosen for its slot and the theme is published.
+Files are stored under `MEDIA_ROOT/capy_theme/assets/<slot>/`. The image itself
+is never changed after upload (only its alt text can be): a new image is a new
+asset, so older revisions keep theirs. Uploading doesn't change what visitors
+see: an image is only used once it's chosen for its slot and the theme is
+published. The live editor shows the draft's logos and tab icon on the page
+straight away, in your browser only (see [the editor](editor.md)).
+
+### Media
+
+The admin's **Media** tab lists every image uploaded for the theme, with a
+preview, its slot and mode, its size, where it's used, and its alt text (which can
+be changed there too). An image nothing uses can be deleted. An image that the
+draft, the published theme or any earlier revision uses can't: the save is
+refused, the page says so at the top, and the image's row says where it's used
+and what to do:
+
+- **Used only by the draft:** choose another image for that slot (or None; for
+  dark mode, Same as light) and save; then delete it. (Doing both in the same save
+  works too.)
+- **Used by the published theme or an earlier revision:** it can't be deleted.
+  Published versions of the theme are kept for good and keep their images, so that
+  restoring one keeps working: once an image has been published, it stays in Media.
+
+Managing images needs the same permission as editing the theme.
 
 ## Logos
 
-There are six logo slots: **main**, **stacked**, **mark**, **wordmark**,
-**email** and **print**. Each can have a light and a dark image. To set one:
+There are six logo slots. Most sites only need the **main** logo: it's shown up
+front under **Logos**, and the other five are folded away under **More logo
+versions (optional)**, each saying what it's for:
 
-1. Upload the image for that slot (live editor: **Images**; admin: the
-   **Images** list, then save).
-2. Choose it for the slot (live editor: **Images → Logos**; admin: **Logos**).
-3. Save the draft and publish.
+| Slot | What it's for |
+| --- | --- |
+| **Main** | The site header. The one capy-theme itself shows; every other slot uses it when empty. |
+| **Stacked** | Symbol above the name, for narrow spaces (a phone-width header, a sidebar). |
+| **Mark** | The symbol alone, for tight spots (an app bar, an avatar, a footer). |
+| **Wordmark** | The name alone, in lettering, without the symbol. |
+| **Email** | HTML emails. PNG or JPEG (email programs don't show SVG); light only. |
+| **Print** | High resolution, for printed pages, PDFs or invoices; light only. |
+
+The project's templates use the other five with `{% theme_logo slot="mark" %}` and
+so on, or through [theme artifacts](artifacts.md). To set one:
+
+1. In the slot (admin: **Branding → Logos** or **More logo versions**; live
+   editor: **Logos**), upload a new image, or pick an earlier one.
+2. Save (admin) or **Save draft** (live editor), then publish.
 
 Fallbacks: dark mode uses the slot's light image if there's no dark one, and a
-slot with no image uses the main logo.
+slot with no image uses the main logo. Email and print logos only have a light
+image (emails and print have no dark mode).
 
 `{% theme_logo slot="main" %}` (the default) outputs the logo for that slot:
 
@@ -94,12 +146,12 @@ the site name.
 Every browser and home-screen icon is made from one square image (at least
 512 × 512 px is best; SVG isn't accepted here). To set it:
 
-1. Upload it in the **icon** slot (live editor: **Images**; admin: the
-   **Images** list), optionally with a dark version.
-2. Choose it (live editor: **Images → Logos and icon**; admin: **Icon**), and set
-   the **Icon background** (a hex color; blank is transparent) and **Icon
-   padding** (0–25% on each side) if you want.
-3. Save and publish. The icons are made when you publish.
+1. In the **Icon** section (admin: **Branding → Icon**; live editor: **Icon**),
+   upload the image or pick an earlier one, optionally with a dark version, and
+   set the **Icon background** (a hex color; blank is transparent) and **Icon
+   padding** (0–25% on each side) if you want. The live editor shows a preview of
+   them, and the browser tab shows the draft's icon while the editor is open.
+2. Save and publish. The icons are made when you publish.
 
 The files are saved in `MEDIA_ROOT/capy_theme/icons/<id>/`, where the id comes
 from the icon image and its settings, so each revision keeps its icons:
@@ -120,8 +172,9 @@ project or PWA module gets them from [theme artifacts](artifacts.md).
 
 ## Sharing image
 
-Choose an image for the **social** slot (PNG or JPEG, not SVG) in the live
-editor (**Images**) or the admin (**Sharing image**), then publish. It's cropped
+Upload or pick an image (PNG or JPEG, not SVG) in the **Sharing image** section
+(admin: **Branding → Sharing image**; live editor: **Sharing image**), then
+publish. It's cropped
 from its center to 1200 × 630 when uploaded (transparent parts become white).
 capy-theme doesn't output link-preview tags (Open Graph, Twitter cards): the
 project or another module adds them, using the image from
@@ -130,9 +183,9 @@ project or another module adds them, using the image from
 ## Background images
 
 Two optional decorative images, each with a light and dark version: a **login
-background** and a **page background pattern** (SVG allowed). Choose them in
-the live editor (**Images**; they preview straight away) or the admin
-(**Backgrounds**), then publish. They show only where the project's templates
+background** and a **page background pattern** (SVG allowed). Upload or pick them
+in the **Backgrounds** section (admin: **Branding → Backgrounds**; live editor:
+**Backgrounds**, where they preview straight away), then publish. They show only where the project's templates
 use them:
 
 - **Classes**: `class="capy-bg-login"` (covers the element, centered) or

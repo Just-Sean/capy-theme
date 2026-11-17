@@ -5,6 +5,8 @@ page's <html> tag and `{% theme_head %}` inside <head>. `{% theme_logo %}` and
 `{% theme_mode_toggle %}` go wherever they should appear. The README shows a full example.
 """
 
+import json
+
 from django import template
 from django.middleware.csp import get_nonce
 from django.template import TemplateSyntaxError
@@ -15,6 +17,7 @@ from django.utils.safestring import mark_safe
 from ..artifacts import get_artifacts
 from ..css.custom import custom_css_url
 from ..css.stylesheet import stylesheet_url
+from ..editor.access import can_edit
 from ..editor.mount import mount as editor_mount
 from ..fonts.library import external_stylesheets, preload_urls
 from ..images.icons import head_links as icon_links
@@ -166,6 +169,11 @@ def theme_logo(context, slot="main", **attrs):
     small screens, and swaps with light and dark mode. Extra attributes go on the
     <img>, e.g. `{% theme_logo slot="mark" class="h-8" %}`. Outputs nothing if
     no theme is active, or it has neither a logo nor a site name.
+
+    For staff who can edit themes, each element also says which slot it is, so
+    the live editor can show the draft's logo there before it's published (#271).
+    Visitors get the same HTML as always. The preview keeps only the class, title
+    and aria-* attributes given here.
     """
     theme = get_active_theme(context.get("request"))
     if theme is None or theme.live_revision is None:
@@ -176,13 +184,24 @@ def theme_logo(context, slot="main", **attrs):
             f"theme_logo: unknown slot {slot!r}; use main, stacked, mark, wordmark, email or print."
         )
     brand = branding(theme.live_revision)
-    html = logo_html(theme.live_revision.snapshot, slot, brand["logo_alt"], attrs)
+    # The user is absent without Django's auth middleware (as in editor/mount.py).
+    user = getattr(context.get("request"), "user", None)
+    marker = (
+        {
+            "data-capy-logo-slot": slot,
+            # As text, like the HTML attributes themselves (any value works).
+            "data-capy-logo-attrs": json.dumps({k: str(v) for k, v in attrs.items()}),
+        }
+        if user is not None and can_edit(user)
+        else {}
+    )
+    html = logo_html(theme.live_revision.snapshot, slot, brand["logo_alt"], attrs, marker)
     if html:
         return html
-    extra = format_html_join("", ' {}="{}"', sorted(attrs.items()))
+    extra = format_html_join("", ' {}="{}"', sorted({**attrs, **marker}.items()))
     if brand["site_name"]:
         return format_html("<span{}>{}</span>", extra, brand["site_name"])
-    return ""
+    return format_html("<span{} hidden></span>", extra) if marker else ""
 
 
 @register.filter

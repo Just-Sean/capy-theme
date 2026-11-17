@@ -6,12 +6,13 @@ from django.utils.html import format_html, format_html_join
 from .logos import HEADER_SLOTS, HEIGHTS, MOBILE, resolve
 
 
-def logo_html(snapshot, slot, alt, attrs):
+def logo_html(snapshot, slot, alt, attrs, marker=None):
     """A <picture> for the slot, with a dark version if there is one. "" if no image.
 
     With light and dark versions, both are output and the stylesheet shows the one
     for the current mode. Both are loading="lazy", so the browser only downloads
-    the one that's shown.
+    the one that's shown. `marker` attributes go on each outermost element (the
+    live editor's, so it can swap the logo in a preview, #271).
     """
     light = resolve(snapshot, slot, "light")
     if light is None:
@@ -24,11 +25,12 @@ def logo_html(snapshot, slot, alt, attrs):
     else:
         dark = resolve(snapshot, slot, "dark")
     heights = _heights(snapshot)
+    marker = marker or {}
     if dark == light:
-        return _picture(light, slot, alt, attrs, heights, "", lazy=False)
-    return _picture(light, slot, alt, attrs, heights, "capy-logo-light", lazy=True) + _picture(
-        dark, slot, alt, attrs, heights, "capy-logo-dark", lazy=True
-    )
+        return _picture(light, slot, alt, attrs, heights, "", lazy=False, marker=marker)
+    return _picture(
+        light, slot, alt, attrs, heights, "capy-logo-light", lazy=True, marker=marker
+    ) + _picture(dark, slot, alt, attrs, heights, "capy-logo-dark", lazy=True, marker=marker)
 
 
 def _heights(snapshot):
@@ -36,7 +38,7 @@ def _heights(snapshot):
     return {name: chosen.get(name, default) for name, (_label, default) in HEIGHTS.items()}
 
 
-def _picture(image, slot, alt, attrs, heights, mode_class, lazy):
+def _picture(image, slot, alt, attrs, heights, mode_class, lazy, marker):
     url = default_storage.url
     classes = " ".join(
         c for c in ("capy-logo" if slot in HEADER_SLOTS else "", attrs.get("class", "")) if c
@@ -76,10 +78,19 @@ def _picture(image, slot, alt, attrs, heights, mode_class, lazy):
         format_html_join("", ' {}="{}"', sorted(img_attrs.items())),
     )
     if not sources and not mode_class:
+        if marker:
+            img_attrs.update(marker)
+            return format_html(
+                '<img src="{}" alt="{}"{}>',
+                url(image["file"]),
+                image.get("alt") or alt,
+                format_html_join("", ' {}="{}"', sorted(img_attrs.items())),
+            )
         return img
     return format_html(
-        "<picture{}>{}{}</picture>",
+        "<picture{}{}>{}{}</picture>",
         format_html(' class="{}"', mode_class) if mode_class else "",
+        format_html_join("", ' {}="{}"', sorted(marker.items())),
         format_html_join("", "{}", ((s,) for s in sources)),
         img,
     )

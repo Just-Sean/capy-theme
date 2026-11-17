@@ -34,9 +34,12 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   size, heading scale, line height, heading weight) and font preloading.
 - **Shape and effects:** corner radii, control sizes, border width, depth and noise.
 - **Branding and images:** a site name and tagline, and uploaded images (see
-  Safe uploads below):
-  - six logo slots (main, stacked, mark, wordmark, email, print) with dark
-    versions and fallbacks, served as responsive AVIF/WebP/PNG at the header height;
+  Safe uploads below), each uploaded and chosen right where it's used, in the
+  admin and the live editor, with what it's for explained beside it, editable alt
+  text, and a **Media** list to manage what's been uploaded:
+  - a main logo, plus five optional versions (stacked, mark, wordmark, email,
+    print) with dark versions and fallbacks, served as responsive AVIF/WebP/PNG at
+    the header height;
   - every favicon and app icon made from one square icon;
   - a 1200 × 630 sharing image for link previews;
   - optional login and page background images.

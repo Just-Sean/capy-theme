@@ -2,7 +2,8 @@
 
 **What it is:** the gatekeeper for every image upload: from the editor, the admin and theme imports. It's the most security-sensitive file in the app.
 
-**`add_asset(theme, slot, mode, upload, alt_text)`** checks the slot, mode and size, runs `prepare_image`, saves the asset, then makes logo variants or the sharing image.
+- **`add_asset(theme, slot, mode, upload, alt_text)`:** checks the slot and mode, runs `prepare_upload`, then stores it with `assets.store_asset` (which makes logo variants or the sharing image).
+- **`prepare_upload(upload, slot)`:** `prepare_image` for a Django upload. One that's too big is refused before it's read (#253). The admin's image slots use it too.
 
 **`prepare_image(data, name, slot)`:**
 
@@ -21,4 +22,4 @@
 
 A damaged file becomes "That file isn't a supported image". Anything else, like running out of memory, is left as a real server error so it gets logged and noticed.
 
-**`asset_data(asset)`:** an asset as JSON for the editor.
+Storing an image and `asset_data` moved to `assets.py` (#271).

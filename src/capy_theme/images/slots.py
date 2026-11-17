@@ -15,6 +15,10 @@ SLOTS = {
 }
 
 
+# The modes each slot can have its own image for.
+SLOT_MODES = {slot: tuple(s["modes"]) for slot, s in _DATA["slots"].items()}
+
+
 # Slots where SVG can't be used (a PNG, JPEG, WebP or GIF must be uploaded), and why.
 NO_SVG = _DATA["no_svg"]
 

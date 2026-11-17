@@ -9,10 +9,12 @@ from ..css.stylesheet import snapshot_css
 from ..css.typography import TYPE_SETTINGS
 from ..fonts.library import ROLES, preview_stack
 from ..fonts.models import Font
+from ..images.assets import asset_data
 from ..images.icons import SETTINGS as ICON_SETTINGS
-from ..images.logos import FALLBACK, HEIGHTS, LOGO_SLOTS
-from ..images.slots import NO_SVG, SLOTS
-from ..images.uploads import asset_data, byte_limit
+from ..images.logos import HEIGHTS
+from ..images.slot_text import empty_text, help_text
+from ..images.slots import NO_SVG, SLOT_MODES, SLOTS
+from ..images.uploads import byte_limit
 from ..themes.catalog import get_builtin_themes
 from .access import can_publish
 from .preview import preview
@@ -75,25 +77,18 @@ def controls():
         "effects": [
             {"name": name, "variable": v, "label": lab} for name, (v, lab, _help) in EFFECTS.items()
         ],
+        # Every image slot, described as in the admin (#271).
         "image_slots": [
             {
                 "name": name,
                 "label": lab,
                 "max_bytes": byte_limit(name),
-                "max_pixels": px,
-                "help": text,
                 "svg": name not in NO_SVG,
+                "modes": list(SLOT_MODES[name]),
+                "help": {mode: help_text(name, mode) for mode in SLOT_MODES[name]},
+                "empty": {mode: empty_text(name, mode) for mode in SLOT_MODES[name]},
             }
-            for name, (lab, _limit, px, text) in SLOTS.items()
-        ],
-        "logo_slots": [
-            {
-                "name": slot,
-                "label": SLOTS[slot][0],
-                "fallback": "Use the main logo" if slot in FALLBACK else "None",
-                "modes": ["light"] if slot == "social" else ["light", "dark"],
-            }
-            for slot in (*LOGO_SLOTS, "icon", "social", "background_login", "background_pattern")
+            for name, (lab, _limit, _px, _text) in SLOTS.items()
         ],
         "icon_settings": [
             {"name": name, "label": lab, "help": text}

@@ -6,7 +6,7 @@
 - **Title and heading:** both name the theme being edited. The heading is screen-reader only.
 - **Skip link:** a "Skip to the components" link that shows when focused.
 - **Header** (it wraps on narrow screens):
-  - the published logo, or the site name (or "Live edit"), as plain text, so it doesn't depend on the project's home page, with the tagline
+  - the theme being edited, from its draft (#271): its logo, or the site name (or "Live edit"), as plain text, so it doesn't depend on the project's home page, with the tagline. The logo is marked so the editor previews logo changes there. Without a theme to edit, it shows the published theme.
   - `{% theme_mode_toggle %}`
   - **Switch theme:** every theme (unpublished ones marked), each a link to `?edit=<id>`; the one being edited is marked `aria-current`. It isn't the visitors' theme picker, so it doesn't change the visitor's theme (#269)
   - a link to the admin

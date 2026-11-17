@@ -12,5 +12,6 @@
 - **`controls()`:** what the panel offers, built from the same data files the admin uses, so the two always agree:
   - the base theme lists and the color groups
   - shape sizes with their limits and steps, and effects
-  - image slots with their limits, logo slots with fallbacks, icon settings and logo heights
+  - every image slot with its limits, whether it takes SVG, its modes, and its help and empty text for each mode (the same text as the admin, from `images/slot_text.py`, #271)
+  - icon settings and logo heights
   - font roles, type settings and the library's fonts

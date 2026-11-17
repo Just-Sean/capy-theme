@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | `{% theme_html_attrs %}` | inside `<html ...>` | `data-theme="capy-light"` or `"capy-dark"` when a mode is forced |
 | `{% theme_head %}` | inside `<head>` | font preloads, external font stylesheets, the theme stylesheet, custom CSS, browser-color tags, icons, the light/dark script (with the CSP nonce if Django's CSP is on), and the live editor for staff |
-| `{% theme_logo slot="main" %}` | anywhere | the logo `<picture>`, or the site name if there's no logo; extra attributes go on the image |
+| `{% theme_logo slot="main" %}` | anywhere | the logo `<picture>`, or the site name if there's no logo; extra attributes go on the image. For staff who can edit, each element also says which slot it is, so the live editor can show the draft's logo there (#271); visitors get the same HTML as always |
 | `{% theme_mode_toggle %}` | anywhere | Light / Dark / Auto buttons, if the theme allows switching |
 | `{% theme_picker %}` | anywhere | links to choose an offered theme, or nothing if none are offered |
 | `{% theme_artifacts as a %}` | anywhere | `get_artifacts()` for the template |

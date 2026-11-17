@@ -8,18 +8,19 @@ JavaScript the panels simply follow each other, and each section opens with a cl
 
 from django.utils.text import slugify
 
+from .fieldsets import MORE_LOGOS
 from .form_colors import color_fieldsets
 
 # (tab label, section names or inline model names). Sections not listed here land in
 # a final "More" tab, so a section added later is never lost.
 THEME_TABS = [
     ("General", ["Name", "Publishing", "Base themes", "Mode", "Visitors"]),
-    ("Branding", ["Branding", "Icon", "Logos", "Backgrounds", "Sharing image"]),
+    ("Branding", ["Branding", "Icon", "Logos", MORE_LOGOS, "Backgrounds", "Sharing image"]),
     ("Fonts", ["Fonts", "Type scale"]),
     ("Light colors", [name for name, _ in color_fieldsets() if name.startswith("Light")]),
     ("Dark colors", [name for name, _ in color_fieldsets() if name.startswith("Dark")]),
     ("Shape and contrast", ["Shape and effects", "Contrast"]),
-    ("Images", ["themeasset"]),
+    ("Media", ["themeasset"]),
     ("Revisions", ["themerevision"]),
     ("Advanced", ["Custom CSS", "Advanced"]),
 ]

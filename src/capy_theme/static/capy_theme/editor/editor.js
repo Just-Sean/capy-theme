@@ -176,11 +176,13 @@
 
   editor.close = function () {
     if (editor.isDirty() && !window.confirm("Discard your unsaved changes?")) return;
+    editor.cancelPreview(); // a preview still on its way mustn't bring the draft back
     removeCss();
     if (editor.panel) editor.panel.hidden = true;
     if (editor.banner) editor.banner.hidden = true;
     if (editor.launch) editor.launch.hidden = false;
     document.documentElement.classList.remove("capy-editor-open");
+    document.dispatchEvent(new CustomEvent("capy-editor:closed")); // e.g. page-images.js
     coverPage();
     returnFocus();
   };

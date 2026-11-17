@@ -94,7 +94,7 @@ def test_both_inlines_keep_their_management_forms(admin_client):
         reverse("admin:capy_theme_theme_change", args=[theme.pk])
     ).content.decode()
     by_label = {label: body for _, label, body in panels(html)}
-    for label in ("Images", "Revisions"):
+    for label in ("Media", "Revisions"):
         names = {name for _, name, _ in controls(by_label[label]).controls}
         # The prefix is whatever Django gives the inline; find it from the TOTAL_FORMS field.
         total = [n for n in names if n.endswith("-TOTAL_FORMS")]
@@ -140,48 +140,33 @@ def _post_back(html, extra=None, files=None):
     return data
 
 
-def test_an_image_uploaded_from_the_images_tab_is_saved(admin_client, settings, tmp_path):
+def test_an_image_uploaded_in_its_slot_is_saved_and_chosen(admin_client, settings, tmp_path):
+    # Uploaded where it's used (Branding > Logos), not in a separate list (#271).
     settings.MEDIA_ROOT = tmp_path
     theme = Theme.objects.create(name="Main", slug="main")
     url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
-    html = admin_client.get(url).content.decode()
-    stem = [s for s in re.findall(r'name="([^"]+)-TOTAL_FORMS"', html) if "asset" in s][0]
-    data = _post_back(html)
-    data.update(
-        {
-            f"{stem}-TOTAL_FORMS": "1",
-            f"{stem}-0-slot": "logo_main",
-            f"{stem}-0-mode": "light",
-            f"{stem}-0-alt_text": "Logo",
-            f"{stem}-0-original": png_upload(),
-        }
-    )
+    data = _post_back(admin_client.get(url).content.decode())
+    data.update({"image_logo_main_light_upload": png_upload(), "image_logo_main_light_alt": "Logo"})
     response = admin_client.post(url, data)
     assert response.status_code == 302, re.findall(
         r'<ul class="errorlist[^>]*>.*?</ul>', response.content.decode(), re.S
     )
-    assert ThemeAsset.objects.filter(theme=theme).count() == 1
+    asset = ThemeAsset.objects.get(theme=theme)
+    theme.refresh_from_db()
+    assert theme.settings["images"]["logo_main"] == {"light": asset.pk}
 
 
-def test_an_inline_error_is_inside_the_images_tab(admin_client, settings, tmp_path):
+def test_an_upload_error_is_inside_the_branding_tab(admin_client, settings, tmp_path):
     settings.MEDIA_ROOT = tmp_path
     theme = Theme.objects.create(name="Main", slug="main")
     url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
-    html = admin_client.get(url).content.decode()
-    stem = [s for s in re.findall(r'name="([^"]+)-TOTAL_FORMS"', html) if "asset" in s][0]
-    data = _post_back(html)
-    data.update(
-        {
-            f"{stem}-TOTAL_FORMS": "1",
-            f"{stem}-0-slot": "logo_main",
-            f"{stem}-0-alt_text": "Logo",
-            f"{stem}-0-original": SimpleUploadedFile("x.png", b"not an image"),
-        }
-    )
+    data = _post_back(admin_client.get(url).content.decode())
+    data["image_logo_main_light_upload"] = SimpleUploadedFile("x.png", b"not an image")
     response = admin_client.post(url, data).content.decode()
     by_label = {label: body for _, label, body in panels(response)}
-    assert "errorlist" in by_label["Images"]
-    assert all("errorlist" not in body for label, body in by_label.items() if label != "Images")
+    assert "supported image" in by_label["Branding"]
+    assert all("errorlist" not in body for label, body in by_label.items() if label != "Branding")
+    assert not ThemeAsset.objects.exists()
 
 
 def test_a_field_error_is_inside_its_own_tab(admin_client):

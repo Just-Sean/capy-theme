@@ -145,7 +145,7 @@ def editor_client(client, django_user_model):
 def test_editor_saves_logo_choices_and_heights(editor_client, theme):
     asset = add_asset(theme, "logo_main", "dark", image())
     state = editor_client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()
-    assert [s["name"] for s in state["controls"]["logo_slots"]][0] == "logo_main"
+    assert [s["name"] for s in state["controls"]["image_slots"]][0] == "logo_main"
     assert {h["name"] for h in state["controls"]["logo_heights"]} == {
         "header_height",
         "header_height_mobile",

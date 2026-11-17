@@ -194,7 +194,7 @@ def test_editor_offers_icon_controls(client, django_user_model, theme):
     user.user_permissions.add(Permission.objects.get(codename="change_theme"))
     client.force_login(user)
     state = client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()
-    assert "icon" in [s["name"] for s in state["controls"]["logo_slots"]]
+    assert "icon" in [s["name"] for s in state["controls"]["image_slots"]]
     assert [s["name"] for s in state["controls"]["icon_settings"]] == ["background", "padding"]
     asset = add_asset(theme, "icon", "light", square())
     changes = {"settings": {"images": {"icon": {"light": asset.pk}}, "icon": {"padding": 5}}}

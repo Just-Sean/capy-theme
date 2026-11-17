@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+- **Images are uploaded and chosen where they're used** (#271), in the admin
+  (Branding: Logos, More logo versions, Icon, Backgrounds, Sharing image) and the
+  live editor (sections of the same names). The separate Images tab and the
+  editor's upload form and "Where images are used" box are gone. Each slot says
+  what it's for, its limits and what happens when it's empty; shows its current
+  image and a choice of earlier uploads; and takes a new upload, which is chosen
+  straight away. Most sites only need the main logo, so the other five logo
+  versions are folded under "More logo versions (optional)". Email and print logos
+  no longer offer a dark image (they always used the light one).
+- **Alt text can be edited after upload** (admin and live editor). In the admin,
+  the alt text box belongs to the image saved for the slot (named by its file) and
+  only ever changes that image, and a new upload has its own alt text box. Changing
+  one image's alt text differently in two places in one save is refused with a
+  message, never silently dropped.
+- **Media** (admin) lists every uploaded image with where it's used. An image
+  nobody uses can be deleted. One the draft uses can be deleted once another image
+  is chosen; one that has been published can't be (restoring a published version
+  needs its images), and the message says so. Managing images now needs the
+  change-theme permission (as uploading did), not the image model's own
+  permissions.
+- **The live editor shows the draft's logos and tab icon** on the page before
+  publishing (only in your browser), and previews the icon's background and
+  padding. For staff who can edit themes, `{% theme_logo %}` marks each logo with
+  `data-capy-logo-slot` so the editor can find it; visitors get the same HTML.
+- **The live edit page header shows the theme being edited** (its draft logo,
+  site name and tagline), not the published site theme.
+- **The editor's Upload button can't send twice** (#222), and a dark image can't be
+  uploaded for a slot that only has a light one. Save draft drops such a choice
+  left in older themes, as the admin does.
 - **Live edit page: Switch theme** replaces the visitors' theme picker in the
   header. It lists every theme (unpublished ones marked) and opens the editor on
   the one you pick, asking first if there are unsaved changes. Before, the menu
