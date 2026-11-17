@@ -1,65 +1,102 @@
 {
-  "_about": "The image slots: label, size limit (MB), largest width or height (px) and help. no_svg lists the slots that can't take SVG, and why.",
+  "_about": "The image slots: label, size limit (MB), largest width or height (px), help, and the modes that can have their own image (email and print logos and the sharing image only have a light one). no_svg lists the slots that can't take SVG, and why.",
   "slots": {
     "logo_main": {
       "label": "Main logo",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "The logo in the site header."
+      "help": "Your logo in the site header, beside or instead of the site name. Most sites only need this one: every other logo version below uses it when left empty.",
+      "modes": [
+        "light",
+        "dark"
+      ]
     },
     "logo_stacked": {
       "label": "Stacked logo",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "Mark above the name, for narrow spaces."
+      "help": "Your symbol above your name, for narrow spaces such as a phone-width header or a sidebar. capy-theme doesn't show it on its own pages: your project's templates use it with {% theme_logo slot=\"stacked\" %}. Leave it empty to use the main logo.",
+      "modes": [
+        "light",
+        "dark"
+      ]
     },
     "logo_mark": {
       "label": "Logo mark",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "The symbol on its own."
+      "help": "Just the symbol, without the name, for tight spots such as an app bar, an avatar or a footer. Your project's templates use it with {% theme_logo slot=\"mark\" %}. Leave it empty to use the main logo.",
+      "modes": [
+        "light",
+        "dark"
+      ]
     },
     "logo_wordmark": {
       "label": "Wordmark",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "The name on its own."
+      "help": "Just the name in lettering, without the symbol, for places that already show the symbol. Your project's templates use it with {% theme_logo slot=\"wordmark\" %}. Leave it empty to use the main logo.",
+      "modes": [
+        "light",
+        "dark"
+      ]
     },
     "logo_email": {
       "label": "Email logo",
       "max_mb": 1,
       "max_pixels": 2000,
-      "help": "For HTML emails (PNG is safest)."
+      "help": "For the HTML emails your site sends. Email programs don't show SVG, so use a PNG or JPEG; and emails have no dark mode, so there's only a light version. Your project's email templates get it from the theme artifacts. Leave it empty to use the main logo.",
+      "modes": [
+        "light"
+      ]
     },
     "logo_print": {
       "label": "Print logo",
       "max_mb": 5,
       "max_pixels": 6000,
-      "help": "High resolution, for print."
+      "help": "A high-resolution version (up to 6000 px) for printed pages, PDFs or invoices. Print has no dark mode, so there's only a light version. Your project's templates use it with {% theme_logo slot=\"print\" %}. Leave it empty to use the main logo.",
+      "modes": [
+        "light"
+      ]
     },
     "icon": {
       "label": "Icon",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "One square image: favicons and app icons are made from it."
+      "help": "One square image (at least 512 × 512 px is best). The browser tab icon, home-screen and app icons are all made from it when you publish.",
+      "modes": [
+        "light",
+        "dark"
+      ]
     },
     "social": {
       "label": "Social sharing image",
       "max_mb": 5,
       "max_pixels": 6000,
-      "help": "Shown in link previews (cropped to 1200 × 630)."
+      "help": "Shown when someone shares a link to your site (link previews in chat apps and social sites). It's cropped to 1200 × 630 from its center. Your project's templates or another module add the preview tags.",
+      "modes": [
+        "light"
+      ]
     },
     "background_login": {
       "label": "Login background",
       "max_mb": 5,
       "max_pixels": 6000,
-      "help": "Behind the login page."
+      "help": "A picture behind the login page. It shows where your project's templates use class=\"capy-bg-login\" or the CSS variable --capy-bg-login.",
+      "modes": [
+        "light",
+        "dark"
+      ]
     },
     "background_pattern": {
       "label": "Page background pattern",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "A tiling pattern behind pages."
+      "help": "A small image repeated behind pages. It shows where your project's templates use class=\"capy-bg-pattern\" or the CSS variable --capy-bg-pattern.",
+      "modes": [
+        "light",
+        "dark"
+      ]
     }
   },
   "no_svg": {

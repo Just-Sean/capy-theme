@@ -8,6 +8,7 @@ from django.core.files.base import ContentFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .. import conf
+from .assets import store_asset
 from .gif_frames import BrokenGif, frame_disposals, frame_extent
 from .slots import MODES, NO_SVG, SLOTS
 from .svg import clean_svg
@@ -242,50 +243,21 @@ def add_asset(theme, slot, mode, upload, alt_text=""):
     `upload` is a Django UploadedFile. Raises ValidationError if the slot, mode
     or file isn't acceptable. Existing assets are never changed.
     """
-    from .models import ThemeAsset
-    from .sharing import make_sharing_image
-    from .variants import make_variants
-
     if slot not in SLOTS:
         raise ValidationError("Choose where the image goes.")
     if mode not in dict(MODES):
         raise ValidationError("Choose light or dark mode.")
+    return store_asset(theme, slot, mode, prepare_upload(upload, slot), alt_text)
+
+
+def prepare_upload(upload, slot):
+    """prepare_image() for a Django UploadedFile, refusing one that's too big
+    before reading it (#253)."""
     max_bytes = byte_limit(slot)
     if upload.size is not None and upload.size > max_bytes:
         raise ValidationError(
             f"The {SLOTS[slot][0].lower()} is too big ({upload.size // 1024} KB; the limit is "
             f"{max_bytes // 1024} KB)."
         )
-    clean = prepare_image(upload.read(), upload.name, slot)
-    asset = ThemeAsset(
-        theme=theme,
-        slot=slot,
-        mode=mode,
-        alt_text=alt_text[:200],
-        width=clean["width"],
-        height=clean["height"],
-        size=clean["size"],
-        content_type=clean["content_type"],
-    )
-    asset.original.save(clean["file"].name, clean["file"], save=False)
-    asset.save()
-    make_variants(asset)
-    if slot == "social":
-        make_sharing_image(asset)
-    return asset
-
-
-def asset_data(asset):
-    """An asset as JSON-ready data (for the editor)."""
-    return {
-        "id": asset.pk,
-        "slot": asset.slot,
-        "slot_label": SLOTS.get(asset.slot, (asset.slot,))[0],
-        "mode": asset.mode,
-        "url": asset.original.url,
-        "alt_text": asset.alt_text,
-        "width": asset.width,
-        "height": asset.height,
-        "size": asset.size,
-        "content_type": asset.content_type,
-    }
+    upload.seek(0)
+    return prepare_image(upload.read(), upload.name, slot)
