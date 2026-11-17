@@ -141,7 +141,7 @@ def editor_upload(request, pk):
     if upload is None:
         return JsonResponse({"errors": ["Choose an image to upload."]}, status=400)
     slot, mode = request.POST.get("slot", ""), request.POST.get("mode", "light")
-    if slot in SLOT_MODES and mode not in SLOT_MODES[slot]:
+    if slot in SLOT_MODES and mode in ("light", "dark") and mode not in SLOT_MODES[slot]:
         # Email and print logos and the sharing image only have a light one (#271).
         return JsonResponse({"errors": ["This image only has a light version."]}, status=400)
     try:

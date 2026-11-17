@@ -4,7 +4,7 @@
 
 **Code it covers:** `src/capy_theme/admin/form_images.py`, `admin/slot_image.py`, `admin/inlines.py`, `images/assets.py`, `widgets/slot_image.html`
 
-**Its 39 tests** (each name says what must hold):
+**Its 62 tests** (each name says what must hold):
 
 - every slot explains what its for and its limits
 - the main logo is up front and the others are under more
@@ -43,7 +43,30 @@
 - an image used in another slot mode cant be deleted
 - a user without change theme cant delete from media
 - an image an earlier revision uses cant be deleted
-- the advice says to publish when the published theme uses it
+- the advice never sends people in a circle
+- many revisions are counted not listed
 - an old dark email choice doesnt block deleting
+- editing the light alt isnt undone by the dark box showing the same image
+- editing the dark alt of an image also shown for light
+- two different alt edits for the same image arent silently dropped
+- changing the choice and editing the alt applies to the image shown
+- an upload and an alt edit of the current image both apply
+- garbage alt for is ignored without an error
+- alt for an image deleted in media in the same save
+- the add page ignores alt fields
+- a typed alt is kept when the page comes back with errors
+- choose again on the add page
+- choose again is said for every upload when media has an error
+- choose again isnt said for a slot without an upload
+- choose again with a bad media alt text
+- after a refused delete saving the page again works
+- two deletes one refused then the other alone works
+- an image only a dark revision choice uses cant be deleted
+- the refusal names draft live and older revision together
+- revisions of an unsaved theme and a theme without revisions
+- where used survives older revision snapshots
+- a legacy revision logo file isnt counted as in use
+- a legacy dark email choice in draft and live doesnt block delete
+- a light only slots label has no mode
 
 Run just this file with `uv run pytest tests/admin/test_admin_images.py`.

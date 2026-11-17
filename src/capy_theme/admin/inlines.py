@@ -85,7 +85,7 @@ class ThemeAssetInline(admin.TabularInline):
         return False
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related("theme__live_revision")
+        return super().get_queryset(request).select_related("theme")
 
     def has_change_permission(self, request, obj=None):
         return request.user.has_perm("capy_theme.change_theme")

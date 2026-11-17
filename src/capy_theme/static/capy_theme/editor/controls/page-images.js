@@ -10,11 +10,11 @@
   if (!editor || !editor.ui) return;
   var HEADER = ["logo_main", "logo_stacked", "logo_mark", "logo_wordmark"];
   // What {% theme_logo %} writes, and the only attributes copied from its
-  // data-capy-logo-attrs onto the draft's logo. Anything else (event handlers,
-  // style, src...) is ignored: a page could hold a forged marker, e.g. in content
-  // its users wrote.
+  // data-capy-logo-attrs onto the draft's logo: class, title and aria-*. Anything
+  // else (event handlers, style, src, id, data-*...) is left off the preview: a page
+  // could hold a forged marker, e.g. in content its users wrote.
   var MARKED = ["IMG", "PICTURE", "SPAN"];
-  var SAFE = /^(class|id|title|aria-[a-z-]+|data-(?!capy-logo)[a-z0-9-]+)$/;
+  var SAFE = /^(class|title|aria-[a-z-]+)$/;
   var spots = null; // [{slot, attrs, nodes, originals}]
   var icons = null; // [{link, href}] and whether we added the link
 

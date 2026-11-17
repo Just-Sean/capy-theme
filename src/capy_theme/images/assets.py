@@ -34,35 +34,46 @@ def store_asset(theme, slot, mode, clean, alt_text=""):
 
 
 def revisions_of(theme):
-    """(number, snapshot, is live) for each of the theme's revisions, newest first.
-    Load once and pass to where_used / refusal for many images."""
+    """(number, chosen images, is live) for each of the theme's revisions, newest
+    first. Only the images part of each snapshot is read. Load once and pass to
+    where_used / refusal for many images."""
     if theme.pk is None:
         return []
-    return [
-        (number, snapshot, pk == theme.live_revision_id)
-        for pk, number, snapshot in theme.revisions.order_by("-number").values_list(
-            "pk", "number", "snapshot"
-        )
-    ]
+    rows = theme.revisions.order_by("-number").values_list(
+        "pk", "number", "snapshot__settings__images"
+    )
+    return [(number, images or {}, pk == theme.live_revision_id) for pk, number, images in rows]
 
 
 def _uses(theme, settings, asset, revisions):
-    """[(kind, description)] for where an asset is chosen: kind is "draft", "live"
-    or "revision". Choices a slot can't have (e.g. an old dark email logo) don't count."""
-    uses = [("draft", f"the draft's {place}") for place in _places(settings, asset)]
-    for number, snapshot, live in revisions if revisions is not None else revisions_of(theme):
-        for place in _places(snapshot.get("settings", {}), asset):
-            if live:
-                uses.append(("live", f"the published theme's {place}"))
-            else:
-                uses.append(("revision", f"revision {number}'s {place}"))
-    return uses
+    """(kinds, descriptions) for where an asset is chosen: kinds holds "draft",
+    "live" and "earlier". Earlier revisions are counted, not listed one by one.
+    Choices a slot can't have (e.g. an old dark email logo) don't count."""
+    kinds, texts = set(), []
+    for place in _places(settings.get("images", {}), asset):
+        kinds.add("draft")
+        texts.append(f"the draft's {place}")
+    earlier = 0
+    for _number, images, live in revisions if revisions is not None else revisions_of(theme):
+        places = _places(images, asset)
+        if places and live:
+            kinds.add("live")
+            texts.extend(f"the published theme's {place}" for place in places)
+        elif places:
+            earlier += 1
+    if earlier:
+        kinds.add("earlier")
+        texts.append(f"{earlier} earlier revision{'s' if earlier > 1 else ''}")
+    return kinds, texts
 
 
-def _places(settings, asset):
+def _places(images, asset):
+    if not isinstance(images, dict):
+        return []
     return [
         _place(slot, mode)
-        for slot, modes in settings.get("images", {}).items()
+        for slot, modes in images.items()
+        if isinstance(modes, dict)
         for mode, pk in modes.items()
         if pk == asset.pk and mode in SLOT_MODES.get(slot, ())
     ]
@@ -74,29 +85,24 @@ def where_used(theme, settings, asset, revisions=None):
     In use means chosen in the draft (`settings`, which may be unsaved) or in any of
     the theme's revisions: restoring a revision needs its images (#271).
     """
-    return [text for _kind, text in _uses(theme, settings, asset, revisions)]
+    return _uses(theme, settings, asset, revisions)[1]
 
 
 def refusal(theme, settings, asset, revisions=None):
     """Why an asset can't be deleted and what to do instead, or "" if it can be."""
-    uses = _uses(theme, settings, asset, revisions)
-    if not uses:
+    kinds, texts = _uses(theme, settings, asset, revisions)
+    if not texts:
         return ""
-    kinds = {kind for kind, _text in uses}
-    steps = []
-    if kinds & {"draft", "live"}:
-        steps.append(
-            "To free it, choose another image for that slot (or None; for dark mode, "
-            "Same as light) and save" + (", then publish." if "live" in kinds else ".")
-        )
-    if "revision" in kinds:
-        steps.append(
-            "An earlier revision uses it, and restoring that revision needs it, so it "
-            "can't be deleted while that revision exists."
+    why = f"This image can't be deleted: it's used as {'; '.join(texts)}."
+    if kinds & {"live", "earlier"}:
+        # Published revisions are kept for good, so their images are too.
+        return (
+            f"{why} Published versions of the theme keep their images, so that restoring "
+            "one keeps working: once an image has been published, it stays in Media."
         )
     return (
-        f"This image can't be deleted: it's used as {'; '.join(t for _k, t in uses)}. "
-        + " ".join(steps)
+        f"{why} To delete it, choose another image for that slot (or None; for dark "
+        "mode, Same as light) and save; then delete it."
     )
 
 

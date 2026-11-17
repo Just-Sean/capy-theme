@@ -4,7 +4,7 @@
 
 **Code it covers:** `src/capy_theme/editor/` (`state.py`, `saving.py`, `preview.py`, `page_images.py`, `live_edit_view.py`), `{% theme_logo %}`, and the editor's image scripts
 
-**Its 45 tests** (each name says what must hold):
+**Its 56 tests** (each name says what must hold):
 
 - every slot is described like in the admin
 - alt text is saved with the draft
@@ -19,6 +19,7 @@
 - the editor loads the new image scripts and not the old ones
 - the upload button cant send twice
 - a late upload isnt chosen after the editor moved on
+- a new upload is listed in every box for its slot
 - closing cancels a preview on its way
 - closing the editor puts the published logos and icon back
 - the page preview only copies safe attributes
@@ -51,6 +52,16 @@
 - save draft drops a dark choice for a light only slot
 - the logo works without djangos auth middleware
 - any attribute value works for editors
+- valid uploads are still accepted
+- an upload without a mode is light
+- save drops a slot left with only a dark email choice
+- save with only a dark email choice removes images
+- an old dark email choice in the draft doesnt stop other edits
+- odd images values are refused not crashing
+- importing an export with an old dark email logo still works
+- theme logo takes any attribute value for editors
+- theme logo with a request whose user is none
+- theme logo with no active theme and no user
 
 The scripts can't run here, since the project has no browser test setup: the script tests only check their source.
 

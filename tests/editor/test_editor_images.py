@@ -12,11 +12,14 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template import Context, Template
 from django.test import RequestFactory
 from django.urls import reverse
+from django.utils.translation import gettext_lazy
 from PIL import Image
 
 from capy_theme.images.models import ThemeAsset
 from capy_theme.images.uploads import add_asset
 from capy_theme.models import Theme
+from capy_theme.portability.export import export_theme
+from capy_theme.portability.importing import import_theme
 from capy_theme.themes.active import activate
 from capy_theme.themes.publishing import publish
 
@@ -234,8 +237,19 @@ def test_a_late_upload_isnt_chosen_after_the_editor_moved_on():
     script = (STATIC / "controls/image-slot.js").read_text()
     upload = script[script.index("send(ui.saved.urls.upload") :]
     done = upload[upload.index(".then(function (body)") : upload.index(".catch(")]
-    guard = "if (!box.isConnected || !editor.panel || editor.panel.hidden) return;"
-    assert done.index("remember(body.assets);") < done.index(guard) < done.index("choose(")
+    guard = "if (!box.isConnected || !editor.panel || editor.panel.hidden) {"
+    late = done[done.index(guard) : done.index("return;")]
+    assert "remember(body.assets, spec.name);" in late  # listed, not chosen
+    assert "but not chosen" in late  # and the user is told
+    assert done.index(guard) < done.index("choose(")
+
+
+def test_a_new_upload_is_listed_in_every_box_for_its_slot():
+    script = (STATIC / "controls/image-slot.js").read_text()
+    remember = script[script.index("function remember(") : script.index("function fillOptions(")]
+    # Only the lists are refreshed, so a file chosen in another box isn't lost.
+    assert "box.capyRefreshList();" in remember and "draw" not in remember
+    assert "fillOptions(select, spec.name, mode, select.value);" in script
 
 
 def test_closing_cancels_a_preview_on_its_way():
@@ -261,7 +275,7 @@ def test_the_page_preview_only_copies_safe_attributes():
     page = (STATIC / "controls/page-images.js").read_text()
     # A forged marker (e.g. in content a site's users wrote) can't add event
     # handlers, styles or sources: only these names, with text values, are copied.
-    assert "var SAFE = /^(class|id|title|aria-[a-z-]+|data-(?!capy-logo)[a-z0-9-]+)$/;" in page
+    assert "var SAFE = /^(class|title|aria-[a-z-]+)$/;" in page
     assert 'SAFE.test(key) && typeof parsed[key] === "string"' in page
     assert 'var MARKED = ["IMG", "PICTURE", "SPAN"];' in page
     assert 'safeAttrs(node.getAttribute("data-capy-logo-attrs"))' in page
@@ -553,3 +567,115 @@ def test_any_attribute_value_works_for_editors(theme, editor):
     html = Template("{% load capy_theme %}{% theme_logo title=label %}").render(context)
     assert 'title="Main"' in html
     assert 'data-capy-logo-attrs="{&quot;title&quot;: &quot;Main&quot;}"' in html
+
+
+# QA, second round (#271 review fixes)
+
+
+@pytest.mark.parametrize(
+    ("slot", "mode"),
+    [
+        ("logo_email", "light"),
+        ("logo_print", "light"),
+        ("social", "light"),
+        ("logo_main", "dark"),
+        ("icon", "dark"),
+        ("background_login", "dark"),
+    ],
+)
+def test_valid_uploads_are_still_accepted(editor_client, theme, slot, mode):
+    size = {"icon": (64, 64), "social": (600, 315)}.get(slot, (60, 20))
+    url = reverse("capy_theme:editor_upload", args=[theme.pk])
+    reply = editor_client.post(url, {"file": png(size=size), "slot": slot, "mode": mode})
+    assert reply.status_code == 200, reply.content
+    assert ThemeAsset.objects.get().mode == mode
+
+
+def test_an_upload_without_a_mode_is_light(editor_client, theme):
+    url = reverse("capy_theme:editor_upload", args=[theme.pk])
+    reply = editor_client.post(url, {"file": png(), "slot": "logo_email"})
+    assert reply.status_code == 200, reply.content
+
+
+def test_save_drops_a_slot_left_with_only_a_dark_email_choice(editor_client, theme):
+    email = add_asset(theme, "logo_email", "light", png())
+    main = add_asset(theme, "logo_main", "light", png())
+    images = {"logo_email": {"dark": email.pk}, "logo_main": {"light": main.pk}}
+    reply = post(editor_client, "editor_save", theme, {"settings": {"images": images}})
+    assert reply.status_code == 200, reply.content
+    theme.refresh_from_db()
+    assert theme.settings["images"] == {"logo_main": {"light": main.pk}}
+
+
+def test_save_with_only_a_dark_email_choice_removes_images(editor_client, theme):
+    email = add_asset(theme, "logo_email", "light", png())
+    images = {"logo_email": {"dark": email.pk}}
+    reply = post(editor_client, "editor_save", theme, {"settings": {"images": images}})
+    assert reply.status_code == 200, reply.content
+    theme.refresh_from_db()
+    assert "images" not in theme.settings
+
+
+def test_an_old_dark_email_choice_in_the_draft_doesnt_stop_other_edits(editor_client, theme):
+    """The editor's change doesn't touch images; the draft has old data."""
+    email = add_asset(theme, "logo_email", "dark", png())
+    theme.settings = {**theme.settings, "images": {"logo_email": {"dark": email.pk}}}
+    theme.save()
+    reply = post(editor_client, "editor_save", theme, {"settings": {"shape": {"radius_box": 1}}})
+    assert reply.status_code == 200, reply.content
+    reply = post(editor_client, "editor_preview", theme, {})
+    assert reply.status_code == 200, reply.content
+
+
+@pytest.mark.parametrize("images", ["x", 5, {"logo_main": 5}, {"logo_main": []}])
+def test_odd_images_values_are_refused_not_crashing(editor_client, theme, images):
+    reply = post(editor_client, "editor_save", theme, {"settings": {"images": images}})
+    assert reply.status_code == 400, reply.content
+
+
+def test_importing_an_export_with_an_old_dark_email_logo_still_works(theme):
+    light = add_asset(theme, "logo_email", "light", png("l.png"))
+    dark = add_asset(theme, "logo_email", "dark", png("d.png"))
+    theme.settings = {
+        **theme.settings,
+        "images": {"logo_email": {"light": light.pk, "dark": dark.pk}},
+    }
+    theme.save()
+    data = export_theme(theme)
+    import io
+
+    imported = import_theme(io.BytesIO(data))
+    assert imported.pk != theme.pk
+    assert set(imported.settings["images"]["logo_email"]) >= {"light"}
+
+
+# {% theme_logo %} attribute values
+
+
+@pytest.mark.parametrize(
+    "value",
+    [None, 0, 3.5, True, ["a"], {"a": 1}, gettext_lazy("Logo"), "Capy 🐹", "x" * 5000],
+)
+def test_theme_logo_takes_any_attribute_value_for_editors(theme, editor, value):
+    published_with_logo(theme)
+    request = RequestFactory().get("/")
+    request.user = editor
+    html = Template("{% load capy_theme %}{% theme_logo title=v %}").render(
+        Context({"request": request, "v": value})
+    )
+    assert 'data-capy-logo-slot="logo_main"' in html
+
+
+def test_theme_logo_with_a_request_whose_user_is_none(theme):
+    published_with_logo(theme)
+    request = RequestFactory().get("/")
+    request.user = None
+    html = Template("{% load capy_theme %}{% theme_logo %}").render(Context({"request": request}))
+    assert "data-capy-logo" not in html
+
+
+def test_theme_logo_with_no_active_theme_and_no_user(theme):
+    Theme.objects.all().delete()
+    request = RequestFactory().get("/")
+    html = Template("{% load capy_theme %}{% theme_logo %}").render(Context({"request": request}))
+    assert "data-capy-logo" not in html

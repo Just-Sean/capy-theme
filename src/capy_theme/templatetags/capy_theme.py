@@ -172,7 +172,8 @@ def theme_logo(context, slot="main", **attrs):
 
     For staff who can edit themes, each element also says which slot it is, so
     the live editor can show the draft's logo there before it's published (#271).
-    Visitors get the same HTML as always.
+    Visitors get the same HTML as always. The preview keeps only the class, title
+    and aria-* attributes given here.
     """
     theme = get_active_theme(context.get("request"))
     if theme is None or theme.live_revision is None:

@@ -11,7 +11,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from PIL import Image
 
-from capy_theme.images.assets import where_used
+from capy_theme.images.assets import refusal, revisions_of, where_used
 from capy_theme.images.models import ThemeAsset
 from capy_theme.images.uploads import add_asset
 from capy_theme.models import Theme
@@ -592,7 +592,7 @@ def test_an_image_an_earlier_revision_uses_cant_be_deleted(staff, theme):
     theme.save()
     publish(theme)  # revision 2 (live) uses new
     theme.refresh_from_db()
-    assert where_used(theme, theme.settings, old) == ["revision 1's main logo (light)"]
+    assert where_used(theme, theme.settings, old) == ["1 earlier revision"]
     html = page(staff, theme)
     data = _post_back(html)
     row = [m for m in re.findall(rf'name="({stem(html)}-\d+)-id" value="(\d+)"', html)]
@@ -601,25 +601,398 @@ def test_an_image_an_earlier_revision_uses_cant_be_deleted(staff, theme):
     response = staff.post(url(theme), data)
     assert response.status_code == 200
     media = media_panel(response)
-    assert "restoring that revision needs it" in media
+    assert "once an image has been published, it stays in Media" in media
     assert ThemeAsset.objects.filter(pk=old.pk).exists()
 
 
-def test_the_advice_says_to_publish_when_the_published_theme_uses_it(theme):
+def test_the_advice_never_sends_people_in_a_circle(theme):
+    """Publishing makes the live revision an earlier one, which still keeps the image,
+    so "publish, then delete" could never work: a published image stays (#271)."""
     from capy_theme.images.assets import refusal
 
     asset = add_asset(theme, "logo_main", "light", png())
+    assert refusal(theme, {"images": {"logo_main": {"light": asset.pk}}}, asset).endswith(
+        "and save; then delete it."
+    )  # only the draft uses it: that can be undone
     theme.settings = {"images": {"logo_main": {"light": asset.pk}}}
     theme.save()
     publish(theme)
     theme.refresh_from_db()
     text = refusal(theme, {}, asset)  # unset in the draft, still published
     assert "the published theme's main logo (light)" in text
-    assert text.endswith("and save, then publish.")
+    assert "it stays in Media" in text and "then publish" not in text
     assert refusal(theme, {}, add_asset(theme, "logo_main", "light", png())) == ""
+
+
+def test_many_revisions_are_counted_not_listed(theme):
+    asset = add_asset(theme, "logo_main", "light", png())
+    for tagline in ("a", "b", "c"):
+        theme.settings = {"tagline": tagline, "images": {"logo_main": {"light": asset.pk}}}
+        theme.save()
+        publish(theme)
+    theme.refresh_from_db()
+    assert where_used(theme, {}, asset) == [
+        "the published theme's main logo (light)",
+        "2 earlier revisions",
+    ]
 
 
 def test_an_old_dark_email_choice_doesnt_block_deleting(theme):
     """Email logos have no dark choice any more; one left in old data doesn't count."""
     asset = add_asset(theme, "logo_email", "light", png())
     assert where_used(theme, {"images": {"logo_email": {"dark": asset.pk}}}, asset) == []
+
+
+# QA, second round (#271 review fixes)
+
+
+def row_prefix(html, asset):
+    rows = re.findall(rf'name="({stem(html)}-\d+)-id" value="(\d+)"', html)
+    return next(p for p, pk in rows if pk == str(asset.pk))
+
+
+# Alt text: the same image shown in light and dark
+
+
+def test_editing_the_light_alt_isnt_undone_by_the_dark_box_showing_the_same_image(staff, theme):
+    """Same image chosen for light and dark; only the light box is edited."""
+    asset = add_asset(theme, "logo_main", "light", png(), "Old")
+    theme.settings = {"images": {"logo_main": {"light": asset.pk, "dark": asset.pk}}}
+    theme.save()
+    data = _post_back(page(staff, theme))
+    assert data["image_logo_main_dark_alt_for"] == str(asset.pk)
+    data["image_logo_main_light_alt"] = "New"  # the dark box still says "Old"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 302, errors(response)
+    asset.refresh_from_db()
+    assert asset.alt_text == "New"
+
+
+def test_editing_the_dark_alt_of_an_image_also_shown_for_light(staff, theme):
+    asset = add_asset(theme, "logo_main", "light", png(), "Old")
+    theme.settings = {"images": {"logo_main": {"light": asset.pk, "dark": asset.pk}}}
+    theme.save()
+    data = _post_back(page(staff, theme))
+    data["image_logo_main_dark_alt"] = "New"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 302, errors(response)
+    asset.refresh_from_db()
+    assert asset.alt_text == "New"
+
+
+def test_two_different_alt_edits_for_the_same_image_arent_silently_dropped(staff, theme):
+    """Light box says "A", dark box says "B" for one image: one edit is lost with
+    no message. Expected: a form error (or at least not a silent 302)."""
+    asset = add_asset(theme, "logo_main", "light", png(), "Old")
+    theme.settings = {"images": {"logo_main": {"light": asset.pk, "dark": asset.pk}}}
+    theme.save()
+    data = _post_back(page(staff, theme))
+    data["image_logo_main_light_alt"] = "A"
+    data["image_logo_main_dark_alt"] = "B"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 200, "one of the two alt edits was silently dropped"
+
+
+# Alt text: choice changed, uploads, forged alt_for
+
+
+def test_changing_the_choice_and_editing_the_alt_applies_to_the_image_shown(staff, theme):
+    first = add_asset(theme, "logo_main", "light", png("a.png"), "First")
+    second = add_asset(theme, "logo_main", "light", png("b.png"), "Second")
+    theme.settings = {"images": {"logo_main": {"light": first.pk}}}
+    theme.save()
+    data = _post_back(page(staff, theme))
+    data["image_logo_main_light"] = str(second.pk)
+    data["image_logo_main_light_alt"] = "First, fixed"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 302, errors(response)
+    first.refresh_from_db()
+    second.refresh_from_db()
+    assert (first.alt_text, second.alt_text) == ("First, fixed", "Second")
+    theme.refresh_from_db()
+    assert theme.settings["images"]["logo_main"]["light"] == second.pk
+
+
+def test_an_upload_and_an_alt_edit_of_the_current_image_both_apply(staff, theme):
+    current = add_asset(theme, "logo_main", "light", png("old.png"), "Old")
+    theme.settings = {"images": {"logo_main": {"light": current.pk}}}
+    theme.save()
+    data = _post_back(page(staff, theme))
+    data["image_logo_main_light_alt"] = "Old, fixed"
+    data["image_logo_main_light_upload"] = png("new.png")
+    data["image_logo_main_light_upload_alt"] = "New"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 302, errors(response)
+    current.refresh_from_db()
+    new = ThemeAsset.objects.exclude(pk=current.pk).get()
+    assert (current.alt_text, new.alt_text) == ("Old, fixed", "New")
+
+
+@pytest.mark.parametrize("forged", ["abc", "-1", "1.0", " ", "999999", "other_theme", "dark"])
+def test_garbage_alt_for_is_ignored_without_an_error(staff, theme, forged):
+    current = add_asset(theme, "logo_main", "light", png(), "Main")
+    other = add_asset(Theme.objects.create(name="O", slug="o"), "logo_main", "light", png(), "O")
+    theme.settings = {"images": {"logo_main": {"light": current.pk}}}
+    theme.save()
+    value = {"other_theme": str(other.pk), "dark": "x" * 5000}.get(forged, forged)
+    data = _post_back(page(staff, theme))
+    data["image_logo_main_light_alt_for"] = value
+    data["image_logo_main_light_alt"] = "Hijacked"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 302, errors(response)
+    current.refresh_from_db()
+    other.refresh_from_db()
+    assert (current.alt_text, other.alt_text) == ("Main", "O")
+
+
+def test_alt_for_an_image_deleted_in_media_in_the_same_save(staff, theme):
+    """Choose another image, edit the old one's alt and delete the old one."""
+    old = add_asset(theme, "logo_main", "light", png("old.png"), "Old")
+    new = add_asset(theme, "logo_main", "light", png("new.png"), "New")
+    theme.settings = {"images": {"logo_main": {"light": old.pk}}}
+    theme.save()
+    html = page(staff, theme)
+    data = _post_back(html)
+    data["image_logo_main_light"] = str(new.pk)
+    data["image_logo_main_light_alt"] = "Old, edited"
+    data[f"{row_prefix(html, old)}-DELETE"] = "on"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 302, errors(response)
+    assert list(ThemeAsset.objects.values_list("pk", flat=True)) == [new.pk]
+
+
+def test_the_add_page_ignores_alt_fields(client, django_user_model):
+    from django.contrib.auth.models import Permission
+    from django.urls import reverse
+
+    other = add_asset(Theme.objects.create(name="O", slug="o"), "logo_main", "light", png(), "O")
+    user = django_user_model.objects.create_user("new", password="pw", is_staff=True)
+    user.user_permissions.set(
+        Permission.objects.filter(codename__in=["view_theme", "add_theme", "change_theme"])
+    )
+    client.force_login(user)
+    add = reverse("admin:capy_theme_theme_add")
+    html = client.get(add).content.decode()
+    assert "image_logo_main_light_alt_for" not in html  # no current image yet
+    data = _post_back(html)
+    data.update(
+        {
+            "name": "New",
+            "slug": "new",
+            "image_logo_main_light_alt_for": str(other.pk),
+            "image_logo_main_light_alt": "Hijacked",
+        }
+    )
+    response = client.post(add, data)
+    assert response.status_code == 302, errors(response)
+    other.refresh_from_db()
+    assert other.alt_text == "O"
+
+
+def test_a_typed_alt_is_kept_when_the_page_comes_back_with_errors(staff, theme):
+    asset = add_asset(theme, "logo_main", "light", png(), "Old")
+    theme.settings = {"images": {"logo_main": {"light": asset.pk}}}
+    theme.save()
+    data = _post_back(page(staff, theme))
+    data["name"] = ""
+    data["image_logo_main_light_alt"] = "Typed"
+    data["image_logo_main_light_upload_alt"] = "For the new one"
+    response = staff.post(url(theme), data)
+    html = response.content.decode()
+    assert response.status_code == 200
+    assert re.search(r'name="image_logo_main_light_alt"[^>]*value="Typed"', html)
+    assert re.search(r'name="image_logo_main_light_upload_alt"[^>]*value="For the new one"', html)
+
+
+# Choose the file again
+
+
+def test_choose_again_on_the_add_page(client, django_user_model):
+    from django.contrib.auth.models import Permission
+    from django.urls import reverse
+
+    user = django_user_model.objects.create_user("new", password="pw", is_staff=True)
+    user.user_permissions.set(
+        Permission.objects.filter(codename__in=["view_theme", "add_theme", "change_theme"])
+    )
+    client.force_login(user)
+    add = reverse("admin:capy_theme_theme_add")
+    data = _post_back(client.get(add).content.decode())
+    data.update({"name": "", "slug": "new", "image_logo_main_light_upload": png()})
+    response = client.post(add, data)
+    assert response.status_code == 200
+    assert "Choose the file again" in response.content.decode()
+    assert not ThemeAsset.objects.exists()
+
+
+def test_choose_again_is_said_for_every_upload_when_media_has_an_error(staff, theme):
+    used = add_asset(theme, "logo_main", "light", png("used.png"))
+    theme.settings = {"images": {"logo_main": {"light": used.pk}}}
+    theme.save()
+    html = page(staff, theme)
+    data = _post_back(html)
+    data[f"{stem(html)}-0-DELETE"] = "on"  # refused
+    data["image_logo_mark_light_upload"] = png("m.png")
+    data["image_icon_light_upload"] = png("i.png", (64, 64))
+    data["image_social_light_upload"] = png("s.png", (600, 315))
+    response = staff.post(url(theme), data)
+    assert response.status_code == 200
+    assert response.content.decode().count("Choose the file again") == 3
+    assert ThemeAsset.objects.count() == 1
+
+
+def test_choose_again_isnt_said_for_a_slot_without_an_upload(staff, theme):
+    data = _post_back(page(staff, theme))
+    data["name"] = ""
+    response = staff.post(url(theme), data)
+    assert "Choose the file again" not in response.content.decode()
+
+
+def test_choose_again_with_a_bad_media_alt_text(staff, theme):
+    """Another kind of Media row error (too long alt text in Media)."""
+    add_asset(theme, "logo_main", "light", png())
+    html = page(staff, theme)
+    data = _post_back(html)
+    data[f"{stem(html)}-0-alt_text"] = "x" * 300  # over the model's 200
+    data["image_logo_mark_light_upload"] = png("m.png")
+    response = staff.post(url(theme), data)
+    assert response.status_code == 200
+    assert "Choose the file again" in response.content.decode()
+    assert ThemeAsset.objects.count() == 1
+
+
+# Media delete refusal
+
+
+def test_after_a_refused_delete_saving_the_page_again_works(staff, theme):
+    used = add_asset(theme, "logo_main", "light", png())
+    theme.settings = {"images": {"logo_main": {"light": used.pk}}}
+    theme.save()
+    html = page(staff, theme)
+    data = _post_back(html)
+    data[f"{stem(html)}-0-DELETE"] = "on"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 200
+    again = _post_back(response.content.decode())
+    assert f"{stem(html)}-0-DELETE" not in again  # unticked
+    response = staff.post(url(theme), again)
+    assert response.status_code == 302, errors(response)
+    assert ThemeAsset.objects.filter(pk=used.pk).exists()
+
+
+def test_two_deletes_one_refused_then_the_other_alone_works(staff, theme):
+    used = add_asset(theme, "logo_main", "light", png("used.png"))
+    spare = add_asset(theme, "logo_main", "light", png("spare.png"))
+    theme.settings = {"images": {"logo_main": {"light": used.pk}}}
+    theme.save()
+    html = page(staff, theme)
+    data = _post_back(html)
+    data[f"{row_prefix(html, used)}-DELETE"] = "on"
+    data[f"{row_prefix(html, spare)}-DELETE"] = "on"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 200
+    back = response.content.decode()
+    again = _post_back(back)
+    assert f"{row_prefix(html, used)}-DELETE" not in again  # refused row unticked
+    assert again.get(f"{row_prefix(html, spare)}-DELETE") == "on"  # the other stays ticked
+    response = staff.post(url(theme), again)
+    assert response.status_code == 302, errors(response)
+    assert list(ThemeAsset.objects.values_list("pk", flat=True)) == [used.pk]
+
+
+def test_an_image_only_a_dark_revision_choice_uses_cant_be_deleted(staff, theme):
+    asset = add_asset(theme, "logo_main", "dark", png())
+    theme.settings = {"images": {"logo_main": {"dark": asset.pk}}}
+    theme.save()
+    publish(theme)
+    theme.settings = {}
+    theme.save()
+    publish(theme)  # revision 2 has no images; revision 1 used it for dark
+    theme.refresh_from_db()
+    assert where_used(theme, theme.settings, asset) == ["1 earlier revision"]
+    html = page(staff, theme)
+    data = _post_back(html)
+    data[f"{stem(html)}-0-DELETE"] = "on"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 200
+    assert "it stays in Media" in media_panel(response)
+
+
+def test_the_refusal_names_draft_live_and_older_revision_together(theme):
+    asset = add_asset(theme, "logo_main", "light", png())
+    theme.settings = {"images": {"logo_main": {"light": asset.pk}}}
+    theme.save()
+    publish(theme)  # revision 1
+    theme.settings = {"images": {"logo_main": {"light": asset.pk}}, "site_name": "x"}
+    theme.save()
+    publish(theme)  # revision 2, live
+    theme.refresh_from_db()
+    text = refusal(theme, theme.settings, asset)
+    assert "the draft's main logo (light)" in text
+    assert "the published theme's main logo (light)" in text
+    assert "1 earlier revision" in text
+    assert "then publish" not in text and "it stays in Media" in text
+
+
+# assets.py with older or odd data
+
+
+def test_revisions_of_an_unsaved_theme_and_a_theme_without_revisions(theme):
+    assert revisions_of(Theme(name="x", slug="x")) == []
+    assert revisions_of(theme) == []
+
+
+@pytest.mark.parametrize(
+    "snapshot",
+    [
+        {},  # no settings at all
+        {"settings": {}},
+        {"settings": {"images": {}}},
+        {"logo": "capy_theme/logos/old.png", "settings": {}},  # before logo slots
+        {"settings": {"images": {"unknown_slot": {"light": 1}}}},
+        {"settings": {"images": {"logo_email": {"dark": 1}}}},  # dark email: ignored
+    ],
+)
+def test_where_used_survives_older_revision_snapshots(theme, snapshot):
+    asset = add_asset(theme, "logo_main", "light", png())
+    assert where_used(theme, {}, asset, [(1, snapshot, True)]) == []
+    assert refusal(theme, {}, asset, [(1, snapshot, False)]) == ""
+
+
+def test_a_legacy_revision_logo_file_isnt_counted_as_in_use(theme):
+    """Documents current behavior: a revision from before logo slots shows its logo
+    by file name ("logo"), and the migrated asset has that same file. It's reported
+    as free to delete (the file itself stays, so the revision still shows it)."""
+    asset = add_asset(theme, "logo_main", "light", png())
+    snapshot = {"logo": asset.original.name, "settings": {}}
+    assert where_used(theme, {}, asset, [(1, snapshot, True)]) == []
+
+
+def test_a_legacy_dark_email_choice_in_draft_and_live_doesnt_block_delete(staff, theme):
+    """Old data: a dark email logo chosen and published before #271."""
+    from capy_theme.themes.history import restore
+
+    email = add_asset(theme, "logo_email", "dark", png())
+    theme.settings = {"images": {"logo_email": {"dark": email.pk}}}
+    theme.save()
+    first = publish(theme)
+    theme.refresh_from_db()
+    html = page(staff, theme)  # the page still loads
+    data = _post_back(html)
+    data[f"{stem(html)}-0-DELETE"] = "on"
+    response = staff.post(url(theme), data)
+    assert response.status_code == 302, errors(response)
+    assert not ThemeAsset.objects.exists()
+    theme.refresh_from_db()
+    assert "images" not in theme.settings
+    theme.settings = {"site_name": "changed"}
+    theme.save()
+    publish(theme)
+    restore(theme, first)  # restoring the old revision still works
+
+
+def test_a_light_only_slots_label_has_no_mode(theme):
+    asset = add_asset(theme, "logo_print", "light", png())
+    assert where_used(theme, {"images": {"logo_print": {"light": asset.pk}}}, asset) == [
+        "the draft's print logo"
+    ]

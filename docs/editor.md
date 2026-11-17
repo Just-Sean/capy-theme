@@ -88,8 +88,10 @@ back. (For staff who can edit themes, `{% theme_logo %}` marks each logo with
 always. If a project caches whole pages or template fragments with the logo in
 them, keep editors' pages out of that cache (or vary it by user): otherwise a
 visitor could be served the marked HTML, which is harmless, or an editor the
-unmarked HTML, where the preview can't swap the logo.) The generated favicons
-and app icons are made when you publish.
+unmarked HTML, where the preview can't swap the logo. Of the attributes given to
+`{% theme_logo %}`, the preview keeps only `class`, `title` and `aria-*`; others,
+such as `style`, `width` or `id`, only show on the published logo.) The generated
+favicons and app icons are made when you publish.
 - **Suggestions** (in the Colors section): click **Suggest colors** for colors
   that go with the current primary (analogous, complementary, triadic) and, if the
   theme has a logo, the logo's main colors. Clicking a suggestion fills in those

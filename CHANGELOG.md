@@ -12,12 +12,12 @@
   versions are folded under "More logo versions (optional)". Email and print logos
   no longer offer a dark image (they always used the light one).
 - **Alt text can be edited after upload** (admin and live editor). In the admin,
-  the current image's alt text box only ever changes that image, and a new upload
-  has its own alt text box.
+  the alt text box belongs to the image saved for the slot (named by its file) and
+  only ever changes that image, and a new upload has its own alt text box.
 - **Media** (admin) lists every uploaded image with where it's used. An image
-  nobody uses can be deleted; deleting one the draft, the published theme or an
-  earlier revision uses is refused with a message saying what to do (restoring a
-  revision needs its images). Managing images now needs the
+  nobody uses can be deleted. One the draft uses can be deleted once another image
+  is chosen; one that has been published can't be (restoring a published version
+  needs its images), and the message says so. Managing images now needs the
   change-theme permission (as uploading did), not the image model's own
   permissions.
 - **The live editor shows the draft's logos and tab icon** on the page before

@@ -15,6 +15,10 @@ from ..images.slot_text import empty_text, help_text
 from ..images.slots import SLOT_MODES, SLOTS
 from .slot_image import SlotImageField
 
+TWO_ALT_EDITS = (
+    "This image is shown twice on this page and its alt text was changed differently "
+    "in each box. Change it in one box only."
+)
 CHOOSE_AGAIN = (
     "Choose the file again: files aren't kept when another part of the page has an error."
 )
@@ -77,7 +81,7 @@ def set_initial(form):
         for mode in modes:
             widget = form.fields[image_field_name(slot, mode)].widget
             none = "Same as light" if mode == "dark" else "None"
-            widget.choices = [("", f"Current image: {none}")] + [
+            widget.choices = [("", f"Image to use: {none}")] + [
                 (
                     a.pk,
                     f"{a.original.name.rsplit('/', 1)[-1]} ({a.width} × {a.height}"
@@ -87,10 +91,10 @@ def set_initial(form):
             ]
             widget.assets = {str(a.pk): a for a in mine}
             widget.empty_text = empty_text(slot, mode)
-            widget.attrs["aria-label"] = f"{SLOTS[slot][0]} ({mode}): current image"
-            form.fields[image_field_name(slot, mode)].initial = str(
-                chosen.get(slot, {}).get(mode, "")
-            )
+            place = SLOTS[slot][0] if len(modes) == 1 else f"{SLOTS[slot][0]} ({mode})"
+            widget.attrs["aria-label"] = f"{place}: image to use"
+            widget.saved = str(chosen.get(slot, {}).get(mode, ""))
+            form.fields[image_field_name(slot, mode)].initial = widget.saved
     heights = form.instance.settings.get("logo", {})
     for name in HEIGHTS:
         form.fields[f"logo_{name}"].initial = heights.get(name)
@@ -99,7 +103,28 @@ def set_initial(form):
         form.fields[f"icon_{name}"].initial = icon.get(name)
 
 
+def _alt_edits(form, cleaned):
+    """{image id: new alt text} for the alt text boxes that were changed. An image
+    shown in two boxes (e.g. light and dark) is only changed by a box that differs
+    from its saved text; two different changes for one image are an error."""
+    edits = {}
+    for slot, modes in CHOOSABLE.items():
+        for mode in modes:
+            name = image_field_name(slot, mode)
+            value = cleaned.get(name) or {}
+            asset = form.fields[name].widget.assets.get(str(value.get("alt_for") or ""))
+            alt = value.get("alt")
+            if asset is None or alt is None or alt == asset.alt_text:
+                continue
+            if edits.get(asset.pk, alt) != alt:
+                form.add_error(name, TWO_ALT_EDITS)
+                continue
+            edits[asset.pk] = alt
+    return edits
+
+
 def clean(form, cleaned, settings):
+    form.capy_alt_edits = _alt_edits(form, cleaned)
     images = {
         slot: {
             mode: cleaned[image_field_name(slot, mode)]["choice"]
@@ -161,14 +186,11 @@ def save_images(form, theme):
                 asset = store_asset(theme, slot, mode, value["clean"], value["upload_alt"])
                 images.setdefault(slot, {})[mode] = asset.pk
                 changed = True
-            _save_alt(assets.get(value.get("alt_for")), value.get("alt"))
+    # Alt text typed for the images the page showed (never another one).
+    for pk, alt in getattr(form, "capy_alt_edits", {}).items():
+        if pk in assets:
+            assets[pk].alt_text = alt
+            assets[pk].save(update_fields=["alt_text"])
     if changed:
         theme.settings["images"] = images
         theme.save()
-
-
-def _save_alt(asset, alt):
-    """The alt text typed for the image the page showed (never another one)."""
-    if asset is not None and alt is not None and asset.alt_text != alt:
-        asset.alt_text = alt
-        asset.save(update_fields=["alt_text"])

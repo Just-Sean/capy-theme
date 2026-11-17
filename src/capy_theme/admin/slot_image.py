@@ -16,9 +16,10 @@ class SlotImageWidget(forms.Widget):
     """The current image's preview, a choice of this slot's uploads, the current
     image's alt text, and a file input with its own alt text for a new one.
 
-    Its value is {"choice", "upload", "alt", "alt_for", "upload_alt"}. "alt_for" (a
-    hidden input) is the image whose alt text the page showed, so an edit only ever
-    applies to that image, even if another one is chosen in the same save.
+    Its value is {"choice", "upload", "alt", "alt_for", "upload_alt"}. The preview
+    and the alt text box are for the image saved in the theme (`saved`), named by its
+    file; "alt_for" (a hidden input) says which image that is, so an alt text edit
+    only ever applies to it, even if another image is chosen in the same save.
     """
 
     template_name = "capy_theme/widgets/slot_image.html"
@@ -32,6 +33,7 @@ class SlotImageWidget(forms.Widget):
         self.slot = slot
         self.choices = []
         self.assets = {}  # this slot's uploads, by id (as text)
+        self.saved = ""  # the id of the image saved in the theme for this slot and mode
         self.empty_text = ""
 
     def value_from_datadict(self, data, files, name):
@@ -50,13 +52,14 @@ class SlotImageWidget(forms.Widget):
         context = super().get_context(name, value, attrs)
         sent = value if isinstance(value, dict) else {"choice": value or ""}
         chosen = str(sent.get("choice") or "")
-        current = self.assets.get(chosen)
+        current = self.assets.get(self.saved)
         # Keep what was typed for this image if the page comes back with errors.
-        typed = sent.get("alt") if str(sent.get("alt_for") or "") == chosen else None
+        typed = sent.get("alt") if str(sent.get("alt_for") or "") == self.saved else None
         context["widget"].update(
             {
                 "options": [(str(v), text, str(v) == chosen) for v, text in self.choices],
                 "current": current,
+                "current_name": current.original.name.rsplit("/", 1)[-1] if current else "",
                 "empty_text": self.empty_text,
                 "alt": typed if typed is not None else (current.alt_text if current else ""),
                 "upload_alt": sent.get("upload_alt") or "",

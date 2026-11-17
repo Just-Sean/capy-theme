@@ -19,9 +19,11 @@ shows:
   browsers don't keep it). In the live editor it's stored straight away and
   chosen in your unsaved changes: **Save draft** keeps the choice, **Revert**
   drops it (the image stays in the theme's list);
-- the alt text of the current image, which can be changed at any time. It only
-  ever changes that image: choosing another image in the same save leaves the
-  other image's alt text as it was.
+- the alt text of the image saved for the slot (named by its file), which can be
+  changed at any time. It only ever changes that image: choosing another image in
+  the same save leaves the other image's alt text as it was. If the same image is
+  used in two slots and its alt text is changed differently in each, the save asks
+  you to change it in one place only.
 
 An image stays with the slot it was uploaded for. For every upload:
 
@@ -81,12 +83,12 @@ draft, the published theme or any earlier revision uses can't: the save is
 refused, the page says so at the top, and the image's row says where it's used
 and what to do:
 
-- **Used by the draft:** choose another image for that slot (or None; for dark
-  mode, Same as light) and save; then delete it. (Doing both in the same save
+- **Used only by the draft:** choose another image for that slot (or None; for
+  dark mode, Same as light) and save; then delete it. (Doing both in the same save
   works too.)
-- **Used by the published theme:** the same, then publish.
-- **Used by an earlier revision:** it can't be deleted, because restoring that
-  revision needs it. (Revisions are kept for good, so such an image stays.)
+- **Used by the published theme or an earlier revision:** it can't be deleted.
+  Published versions of the theme are kept for good and keep their images, so that
+  restoring one keeps working: once an image has been published, it stays in Media.
 
 Managing images needs the same permission as editing the theme.
 

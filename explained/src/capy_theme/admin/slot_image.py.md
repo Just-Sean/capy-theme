@@ -5,7 +5,7 @@
 - **`SlotImageWidget`:** draws `widgets/slot_image.html`:
   - a preview of the current image with its size, or the slot's empty text
   - a dropdown of this slot's uploads
-  - the current image's alt text box, with a hidden `alt_for` saying which image it belongs to
+  - the alt text box of the image saved for the slot (`saved`, named by its file), with a hidden `alt_for` saying which image it belongs to; the preview is of that image too
   - a file input (it only offers SVG where the slot allows it) with its own alt text box
   - its value is `{"choice", "upload", "alt", "alt_for", "upload_alt"}`
   - it needs a multipart form, and loads `admin/images.css`
