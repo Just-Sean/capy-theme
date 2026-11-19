@@ -14,17 +14,16 @@ def images(theme):
     Each logo says which image it shows and why (its own, the light one, or the
     main logo it falls back to).
     """
-    from django.core.files.storage import default_storage
-
     from ..images.icons import FILES, icon_urls
     from ..images.logos import FALLBACK, HEADER_SLOTS, LOGO_SLOTS, resolve
     from ..images.sharing import SIZE, sharing_image
     from ..images.slots import SLOTS
+    from ..storage import theme_storage
 
     snapshot = theme.snapshot()
     settings = snapshot.get("settings", {})
     chosen = snapshot.get("images", {})
-    url = default_storage.url
+    url = theme_storage().url
     result = {}
     for mode in SCHEMES:
         logos = []

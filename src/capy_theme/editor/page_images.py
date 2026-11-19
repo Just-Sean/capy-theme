@@ -4,9 +4,8 @@ The editor (controls/page-images.js) swaps the logos that {% theme_logo %} put o
 the page, and the browser-tab icon, for these. Only in the editing user's browser.
 """
 
-from django.core.files.storage import default_storage
-
 from ..images.logos import HEADER_SLOTS, LOGO_SLOTS, resolve
+from ..storage import theme_storage
 
 
 def page_images(snapshot):
@@ -27,7 +26,7 @@ def page_images(snapshot):
     return {
         "logos": logos,
         "site_name": settings.get("site_name", ""),
-        "icon": {mode: default_storage.url(i["file"]) if i else "" for mode, i in icon.items()},
+        "icon": {mode: theme_storage().url(i["file"]) if i else "" for mode, i in icon.items()},
     }
 
 
@@ -35,7 +34,7 @@ def _image(image, alt):
     if image is None:
         return None
     return {
-        "src": default_storage.url(image["file"]),
+        "src": theme_storage().url(image["file"]),
         "alt": image.get("alt") or alt,
         "width": image["width"],
         "height": image["height"],

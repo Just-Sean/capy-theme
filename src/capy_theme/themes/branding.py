@@ -1,8 +1,7 @@
 """The published branding (site name, tagline, logo) of a revision."""
 
-from django.core.files.storage import default_storage
-
 from ..images.logos import resolve
+from ..storage import theme_storage
 
 
 def branding(revision):
@@ -18,6 +17,6 @@ def branding(revision):
     return {
         "site_name": site_name,
         "tagline": settings.get("tagline", ""),
-        "logo_url": default_storage.url(logo["file"]) if logo else "",
+        "logo_url": theme_storage().url(logo["file"]) if logo else "",
         "logo_alt": (logo or {}).get("alt") or settings.get("logo_alt") or site_name,
     }

@@ -16,10 +16,11 @@ import re
 from pathlib import Path
 
 from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 from PIL import Image, ImageOps
+
+from ..storage import theme_storage
 
 _DATA = json.loads(Path(__file__).with_name("icons.json").read_text(encoding="utf-8"))
 
@@ -47,7 +48,7 @@ def icon_folder(snapshot):
 def make_icons(snapshot):
     """Create the icon files for a snapshot, unless they already exist."""
     folder = icon_folder(snapshot)
-    if folder is None or default_storage.exists(f"{folder}/{list(FILES)[-1]}"):
+    if folder is None or theme_storage().exists(f"{folder}/{list(FILES)[-1]}"):
         return
     icon = snapshot["images"]["icon"]
     light = _open(icon.get("light") or icon["dark"])
@@ -70,7 +71,7 @@ def make_icons(snapshot):
     }
     # Written last-first, so the existence check above only passes once all are there.
     for name in reversed(FILES):
-        default_storage.save(f"{folder}/{name}", ContentFile(files[name]))
+        theme_storage().save(f"{folder}/{name}", ContentFile(files[name]))
 
 
 def head_links(snapshot):
@@ -78,7 +79,7 @@ def head_links(snapshot):
     folder = icon_folder(snapshot)
     if folder is None:
         return ""
-    url = default_storage.url
+    url = theme_storage().url
     links = [
         ("icon", url(f"{folder}/favicon.ico"), ' sizes="32x32"'),
         ("icon", url(f"{folder}/favicon.svg"), ' type="image/svg+xml"'),
@@ -97,11 +98,11 @@ def icon_urls(snapshot):
     folder = icon_folder(snapshot)
     if folder is None:
         return {}
-    return {name: default_storage.url(f"{folder}/{name}") for name in FILES}
+    return {name: theme_storage().url(f"{folder}/{name}") for name in FILES}
 
 
 def _open(image):
-    with default_storage.open(image["file"], "rb") as file:
+    with theme_storage().open(image["file"], "rb") as file:
         opened = Image.open(file)
         opened.load()
     return opened.convert("RGBA")

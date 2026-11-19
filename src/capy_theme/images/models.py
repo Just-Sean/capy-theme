@@ -2,6 +2,7 @@
 
 from django.db import models
 
+from ..storage import theme_storage
 from .slots import MODES, SLOT_CHOICES
 
 
@@ -19,7 +20,7 @@ class ThemeAsset(models.Model):
     theme = models.ForeignKey("capy_theme.Theme", on_delete=models.CASCADE, related_name="assets")
     slot = models.CharField(max_length=40, choices=SLOT_CHOICES)
     mode = models.CharField(max_length=10, choices=MODES, default="light")
-    original = models.FileField(upload_to=asset_path)
+    original = models.FileField(upload_to=asset_path, storage=theme_storage)
     alt_text = models.CharField(max_length=200, blank=True)
     width = models.PositiveIntegerField(default=0)
     height = models.PositiveIntegerField(default=0)
@@ -46,7 +47,7 @@ class ThemeAssetVariant(models.Model):
     height = models.PositiveIntegerField()
     format = models.CharField(max_length=10, help_text="png, webp, avif, ico or svg.")
     purpose = models.CharField(max_length=40, blank=True, help_text="e.g. favicon-32 or 2x.")
-    file = models.FileField(upload_to=variant_path)
+    file = models.FileField(upload_to=variant_path, storage=theme_storage)
 
     class Meta:
         ordering = ["asset", "format", "width"]

@@ -4,8 +4,7 @@ import json
 import re
 from pathlib import Path
 
-from django.core.files.storage import default_storage
-
+from ..storage import theme_storage
 from .models import FALLBACK_PATTERN, UNICODE_RANGE_PATTERN
 
 ROLES = {
@@ -55,7 +54,7 @@ def resolve(font):
 
 
 def file_url(name):
-    return default_storage.url(name)
+    return theme_storage().url(name)
 
 
 def font_file_url(entry):
