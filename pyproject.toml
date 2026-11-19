@@ -49,8 +49,13 @@ dev = [
 DJANGO_SETTINGS_MODULE = "tests.settings"
 pythonpath = ["."]
 addopts = "--strict-markers"
-# Fail on Django deprecation warnings, so Django upgrades never surprise you.
-filterwarnings = ["error::DeprecationWarning:django.*"]
+# Fail on Django's own deprecation warnings — removed in the next version and the
+# one after. The class names stay the same across releases; other libraries'
+# deprecations don't fail the tests (we can't fix their code).
+filterwarnings = [
+    "error::django.utils.deprecation.RemovedInNextVersionWarning",
+    "error::django.utils.deprecation.RemovedAfterNextVersionWarning",
+]
 
 [tool.ruff]
 line-length = 100
