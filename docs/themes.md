@@ -112,6 +112,9 @@ From code: `from capy_theme.themes.active import get_active_theme` then
 `get_active_theme(request)` returns the active `Theme`, with its live revision
 loaded, or `None` if no theme is active. It's cached (see
 `CAPY_THEME_CACHE_SECONDS`), so a normal page load doesn't query the database.
+If the cache is unreachable the theme is loaded straight from the database; if
+the database is unreachable too, it returns `None` and the page renders unthemed
+rather than erroring (the outage is logged — see the README's Logging section).
 
 ## Scheduled themes
 
