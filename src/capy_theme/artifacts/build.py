@@ -16,8 +16,6 @@ Everything comes from the published revision, never the draft. With a request,
 every URL is absolute (e.g. for emails and manifests).
 """
 
-from django.core.files.storage import default_storage
-
 from ..colors.color_math import to_hex
 from ..colors.names import COLOR_NAMES, SCHEMES
 from ..colors.values import effective_values
@@ -28,6 +26,7 @@ from ..fonts.library import ROLES, font_file_url, stack
 from ..images.icons import icon_urls
 from ..images.logos import HEADER_SLOTS, LOGO_SLOTS, resolve
 from ..images.sharing import sharing_image
+from ..storage import theme_storage
 from ..themes.active import get_active_theme
 from ..themes.branding import branding
 from ..themes.mode import mode_settings
@@ -126,7 +125,7 @@ def get_artifacts(request=None):
         },
         "icons": {name: url(path) for name, path in icon_urls(snapshot).items()},
         "sharing_image": {
-            "url": url(default_storage.url(share["file"])),
+            "url": url(theme_storage().url(share["file"])),
             "width": share["width"],
             "height": share["height"],
             "alt": share["alt"],
@@ -151,7 +150,7 @@ def _url_maker(request):
 
 
 def _file_url(image, url):
-    return url(default_storage.url(image["file"])) if image else None
+    return url(theme_storage().url(image["file"])) if image else None
 
 
 def _image(image, slot, url, alt):
@@ -159,13 +158,13 @@ def _image(image, slot, url, alt):
         return None
     variants = image.get("variants", []) if slot in HEADER_SLOTS else []
     return {
-        "url": url(default_storage.url(image["file"])),
+        "url": url(theme_storage().url(image["file"])),
         "width": image["width"],
         "height": image["height"],
         "alt": image.get("alt") or alt,
         "content_type": image.get("content_type", ""),
         "variants": [
-            {"url": url(default_storage.url(v["file"])), "width": v["width"], "format": v["format"]}
+            {"url": url(theme_storage().url(v["file"])), "width": v["width"], "format": v["format"]}
             for v in variants
             if not v.get("purpose")
         ],

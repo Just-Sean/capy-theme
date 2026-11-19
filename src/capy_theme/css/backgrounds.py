@@ -7,9 +7,8 @@ wants: `class="capy-bg-pattern"` on <body>, or
 their URLs (`theme.background_login_url`, `theme.background_pattern_url`).
 """
 
-from django.core.files.storage import default_storage
-
 from ..images.logos import resolve
+from ..storage import theme_storage
 
 # slot: CSS variable
 VARIABLES = {
@@ -27,7 +26,7 @@ def css_variables(snapshot, scheme):
     for slot, variable in VARIABLES.items():
         image = resolve(snapshot, slot, scheme)
         if image:
-            url = default_storage.url(image["file"]).replace("\\", "\\\\").replace('"', '\\"')
+            url = theme_storage().url(image["file"]).replace("\\", "\\\\").replace('"', '\\"')
             variables[variable] = f'url("{url}")'
     return variables
 
@@ -56,5 +55,5 @@ def template_values(snapshot):
     values = {}
     for slot in VARIABLES:
         image = resolve(snapshot, slot, "light")
-        values[f"{slot}_url"] = default_storage.url(image["file"]) if image else ""
+        values[f"{slot}_url"] = theme_storage().url(image["file"]) if image else ""
     return values

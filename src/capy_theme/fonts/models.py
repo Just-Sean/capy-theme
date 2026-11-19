@@ -4,6 +4,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 
+from ..storage import theme_storage
+
 # These values go into CSS (and the admin's font previews) as they are, so only
 # characters that can't end a string, a rule or a <style> block are allowed (#235).
 # The same patterns are in portability/theme_file.schema.json, for imports.
@@ -99,7 +101,9 @@ class FontFile(models.Model):
         validators=[unicode_range_validator],
         help_text="Optional CSS unicode-range for this subset.",
     )
-    file = models.FileField(upload_to="capy_theme/fonts/", help_text="A WOFF2 font file.")
+    file = models.FileField(
+        upload_to="capy_theme/fonts/", storage=theme_storage, help_text="A WOFF2 font file."
+    )
 
     class Meta:
         ordering = ["font", "weight", "style"]

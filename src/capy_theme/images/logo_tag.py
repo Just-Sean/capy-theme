@@ -1,8 +1,8 @@
 """The HTML and CSS for {% theme_logo %}: <picture>, srcset and light/dark switching."""
 
-from django.core.files.storage import default_storage
 from django.utils.html import format_html, format_html_join
 
+from ..storage import theme_storage
 from .logos import HEADER_SLOTS, HEIGHTS, MOBILE, resolve
 
 
@@ -39,7 +39,7 @@ def _heights(snapshot):
 
 
 def _picture(image, slot, alt, attrs, heights, mode_class, lazy, marker):
-    url = default_storage.url
+    url = theme_storage().url
     classes = " ".join(
         c for c in ("capy-logo" if slot in HEADER_SLOTS else "", attrs.get("class", "")) if c
     )
