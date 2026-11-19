@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.0.1 (2026-11-19)
+
+A polish release: the active theme now survives a cache or database outage, theme
+uploads can use a separate public storage, and the outage path logs lightly. No new
+required settings; the only migration is a no-op storage change.
+
+- **Survives a cache or database outage** (#278): if the cache is unreachable the
+  active theme loads straight from the database; if the database is unreachable too,
+  pages — even the error page — render unthemed instead of returning a 500. A cache
+  outage is logged once a minute at WARNING (not a traceback per request), and a
+  malformed cached value is treated as a miss (#282).
+- **`CAPY_THEME_STORAGE` setting** (#280): names the `STORAGES` entry capy-theme
+  saves and serves its uploads from (default `"default"`). Set it to a public storage
+  in a project whose default storage is private, so visitors can load theme images.
+  It must serve stable, public URLs, and is read at startup — set it before uploading.
+- **Pre-release hardening** (#282): throttled outage logging, a malformed-cache guard,
+  and an end-to-end storage-routing test, from a full all-agent review.
+
 ## 1.0.0 (2026-11-16)
 
 The first stable version. Custom CSS, multiple sites (a theme per domain),

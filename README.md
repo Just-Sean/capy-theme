@@ -136,27 +136,27 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
    ]
    ```
 
-5. Add the template tags to the project's base template. `{% theme_head %}` links
-   the active theme's stylesheet and adds a tiny script that applies light or dark
-   mode before the page draws. `{% theme_html_attrs %}` puts the forced mode
-   (`data-theme="capy-light"` or `"capy-dark"`) on `<html>`. `{% theme_mode_toggle %}`
-   shows Light / Dark / Auto buttons for visitors, wherever you put it.
+5. Add the template tags where your pages get their shell. In a project from
+   capy-project v1.1 or later this is `templates/layout.html`, which has the blocks
+   to fill:
 
-   ```html
-   {% load capy_theme %}<!doctype html>
-   <html lang="en" {% theme_html_attrs %}>
-   <head>
-     ...
-     <link rel="stylesheet" href="...">   <!-- the project's Tailwind/daisyUI CSS -->
-     {% theme_head %}
-   </head>
-   <body>
-     <nav>... {% theme_logo %} ... {% theme_mode_toggle %} ...</nav>
-   ```
+   - `{% block html_attrs %} {% theme_html_attrs %}{% endblock %}` — note the leading
+     space; this puts the forced mode (`data-theme="capy-light"` or `"capy-dark"`) on
+     `<html>`.
+   - `{% theme_head %}` in the `head` block (after `{{ block.super }}`) — links the
+     active theme's stylesheet and adds a tiny script that sets light or dark mode
+     before the page draws.
+   - `{% theme_logo %}` and `{% theme_mode_toggle %}` in the nav — the logo, and the
+     Light / Dark / Auto buttons for visitors.
+
+   In a plain Django project without that layout, put the same tags straight in your
+   base template instead: a leading space then `{% theme_html_attrs %}` on the
+   `<html>` tag, `{% theme_head %}` in `<head>` after your Tailwind/daisyUI
+   stylesheet, and the logo and toggle in your nav.
 
    The toggle uses daisyUI's `join` and `btn` classes. Tailwind only includes
-   classes it finds in scanned files, so add the module's templates to the
-   project's Tailwind source with an `@source` line pointing at the installed
+   classes it finds in scanned files, so add capy-theme's templates to the project's
+   Tailwind source with an `@source` line pointing at the installed
    `capy_theme/templates` folder. This prints where that is:
 
    ```bash

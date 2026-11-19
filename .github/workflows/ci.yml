@@ -49,7 +49,7 @@ jobs:
     services:
       postgres:
         # Only started for the Postgres run (an empty image means no service).
-        image: ${{ matrix.database == 'postgres' && 'postgres:17' || '' }}
+        image: ${{ matrix.database == 'postgres' && 'postgres:18' || '' }}
         env:
           POSTGRES_USER: app
           POSTGRES_PASSWORD: app  # a throwaway database that only exists for this job

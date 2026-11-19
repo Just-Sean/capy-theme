@@ -1,0 +1,12 @@
+# Dependabot keeps the Python packages and the GitHub Actions in step, one pull
+# request each, so security and version updates don't pile up.
+version: 2
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
