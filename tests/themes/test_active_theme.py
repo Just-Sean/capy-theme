@@ -194,3 +194,25 @@ def test_a_database_outage_serves_no_theme_instead_of_erroring(monkeypatch):
 
     monkeypatch.setattr(active, "_assignments", boom)
     assert get_active_theme() is None  # no theme, but no 500 either
+
+
+class _CorruptCache:
+    """Returns a wrong-shape value for the state key (e.g. a cache shared across
+    deployments or versions), to check a bad entry is treated as a miss, not a crash."""
+
+    def __init__(self, value):
+        self.value = value
+
+    def get(self, key, default=None):
+        return "gen" if key == active.GENERATION_KEY else self.value
+
+    def set(self, *args, **kwargs):
+        pass
+
+
+@pytest.mark.parametrize("bad", [{"theme": None}, "not-a-dict", 42, []])
+def test_a_malformed_cached_value_is_treated_as_a_miss(monkeypatch, bad):
+    theme = published_theme("Main")
+    activate(theme)
+    monkeypatch.setattr(active, "cache", _CorruptCache(bad))
+    assert get_active_theme() == theme  # fell through to the database, no 500

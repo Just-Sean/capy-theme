@@ -13,6 +13,7 @@ between processes.
 """
 
 import logging
+import time
 from uuid import uuid4
 
 from django.core.cache import cache
@@ -29,26 +30,45 @@ CACHE_KEY = "capy_theme:active_theme"
 # Changed by clear_cache(), so every site's cached state is dropped at once.
 GENERATION_KEY = "capy_theme:active_theme:generation"
 
+# A cache-backend outage is logged at most this often (seconds), so a sustained
+# outage under traffic can't flood the log with one line per cache operation.
+_CACHE_OUTAGE_LOG_INTERVAL = 60
+_last_cache_outage_log = 0.0
+
+
+def _log_cache_outage(exc):
+    """Log a cache-backend failure at WARNING, throttled and without a traceback.
+
+    The active-theme path falls back to the database, so a cache outage isn't an
+    error; it's logged so it stays visible, but at most once per interval and
+    without a full traceback, so it can't amplify the outage it's surviving.
+    """
+    global _last_cache_outage_log
+    now = time.monotonic()
+    if now - _last_cache_outage_log >= _CACHE_OUTAGE_LOG_INTERVAL:
+        _last_cache_outage_log = now
+        logger.warning("capy-theme: cache unavailable (%s); serving from the database", exc)
+
 
 def _cache_get(key):
     """cache.get(key), or None if the cache backend can't be reached.
 
-    A cache outage (e.g. Redis down) must not take a page down: the caller
-    falls back to the database. The error is logged so the outage stays visible.
+    A cache outage (e.g. Redis down) must not take a page down: the caller falls
+    back to the database. The outage is logged (throttled) so it stays visible.
     """
     try:
         return cache.get(key)
-    except Exception:
-        logger.exception("capy-theme: cache read failed; falling back to the database")
+    except Exception as exc:
+        _log_cache_outage(exc)
         return None
 
 
 def _cache_set(key, value, timeout):
-    """cache.set(...), skipped if the cache backend can't be reached (logged)."""
+    """cache.set(...), skipped if the cache backend can't be reached (logged, throttled)."""
     try:
         cache.set(key, value, timeout)
-    except Exception:
-        logger.exception("capy-theme: cache write failed; serving without caching")
+    except Exception as exc:
+        _log_cache_outage(exc)
 
 
 class NotPublished(Exception):
@@ -111,7 +131,13 @@ def _state(site):
     now = timezone.now()
     key = f"{CACHE_KEY}:{_generation()}:{site or '*'}"
     cached = _cache_get(key)
-    if cached is not None and (cached["valid_until"] is None or now < cached["valid_until"]):
+    # A malformed or old-shape cached value (e.g. a cache shared across deployments
+    # or versions) is treated as a miss, so it can't 500 the page (#282).
+    if (
+        isinstance(cached, dict)
+        and "valid_until" in cached
+        and (cached["valid_until"] is None or now < cached["valid_until"])
+    ):
         return cached
     try:
         state, timeout = _state_from_db(site, now)

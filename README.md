@@ -194,7 +194,8 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
 
    If the project's **default** storage is private (visitors can't read it), point
    capy-theme at a public one with `CAPY_THEME_STORAGE` (see [Settings](#settings)) —
-   otherwise theme images and fonts return 404 for visitors.
+   otherwise theme images and fonts won't be readable by visitors (typically a 403
+   or 404). Set it before uploading theme assets (see the setting's note).
 
 7. Create its database tables and, in production, collect its static files (the
    editor, admin and bundled font files):
@@ -339,7 +340,12 @@ WARNING).
 - **INFO:** a theme published (with the revision number and the publisher's user
   ID), restored to an earlier revision, activated (for every site or one domain)
   or imported, and a Google font imported.
-- **WARNING:** Google Fonts couldn't be reached.
+- **WARNING:** Google Fonts couldn't be reached; or the cache backend is
+  unavailable, so the active theme is served from the database instead (logged at
+  most once a minute, so an outage can't flood the log).
+- **ERROR:** the database couldn't be reached, so the page is served with no theme
+  (even the error page renders). capy-theme stays up and logs the outage so it
+  stays visible.
 
 Messages never include personal data such as names or email addresses. To see
 them, e.g. on the console:
@@ -363,7 +369,7 @@ Optional settings a project can add to its `settings.py` (all defaults are in
 | `CAPY_THEME_BUILTIN_THEMES` | all 35 | Which built-in daisyUI themes can be used as a theme's light or dark base, e.g. `["light", "dark"]`. Listing an unknown theme raises an error that names it. |
 | `CAPY_THEME_CACHE_SECONDS` | `300` | How long the active theme is cached, in seconds. Publishing or activating clears the cache straight away; this limit makes every server process catch up when the project's cache isn't shared between processes (e.g. Django's default in-memory cache). |
 | `CAPY_THEME_API` | `"auto"` | How `/theme/api.json` is served: `"auto"` (a DRF view if Django REST Framework is installed, so drf-spectacular documents it; otherwise a plain Django view), `"drf"` or `"django"`. See [docs/artifacts.md](docs/artifacts.md). |
-| `CAPY_THEME_STORAGE` | `"default"` | Which entry in the project's `STORAGES` setting capy-theme saves and serves its uploads (logos, icons, backgrounds, fonts) from. Set it to a public storage in a project whose default storage is private (e.g. staff-only media), so visitors can load theme images. The storage must serve **stable, public URLs**: capy-theme writes image URLs into the theme CSS, which is cached for a year, so a storage that returns signed, expiring URLs (such as S3's default) would break them. |
+| `CAPY_THEME_STORAGE` | `"default"` | Which entry in the project's `STORAGES` setting capy-theme saves and serves its uploads (logos, icons, backgrounds, fonts) from. Set it to a public storage in a project whose default storage is private (e.g. staff-only media), so visitors can load theme images. The storage must serve **stable, public URLs**: capy-theme writes image URLs into the theme CSS, which is cached for a year, so a storage that returns signed, expiring URLs (such as S3's default) would break them. It's read at startup, so set it before uploading theme assets; changing it later leaves existing files in the old storage (copy them, under `capy_theme/`, if you move it). |
 | `CAPY_THEME_CUSTOM_CSS` | `True` | Allow custom CSS. `False` switches it off for the whole project: no theme's custom CSS is loaded, and nobody (not even superusers) sees the Custom CSS section. See [docs/colors-and-css.md](docs/colors-and-css.md#custom-css). |
 | `CAPY_THEME_VISITOR_THEMES` | `True` | Let visitors choose among the themes offered to them with `{% theme_picker %}`. `False` turns the picker off and ignores visitors' choices. |
 | `CAPY_THEME_EDITOR_BUTTON` | `True` | Show the live editor's **Edit theme** button in the corner of every page, for staff who can edit. `False` hides it (the editor still opens with `?edit=<theme id>`, e.g. from **Edit live** in the admin). |
