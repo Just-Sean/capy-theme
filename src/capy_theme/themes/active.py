@@ -16,6 +16,7 @@ import logging
 from uuid import uuid4
 
 from django.core.cache import cache
+from django.db import Error as DatabaseError
 from django.http.request import split_domain_port
 from django.utils import timezone
 
@@ -27,6 +28,27 @@ logger = logging.getLogger(__name__)
 CACHE_KEY = "capy_theme:active_theme"
 # Changed by clear_cache(), so every site's cached state is dropped at once.
 GENERATION_KEY = "capy_theme:active_theme:generation"
+
+
+def _cache_get(key):
+    """cache.get(key), or None if the cache backend can't be reached.
+
+    A cache outage (e.g. Redis down) must not take a page down: the caller
+    falls back to the database. The error is logged so the outage stays visible.
+    """
+    try:
+        return cache.get(key)
+    except Exception:
+        logger.exception("capy-theme: cache read failed; falling back to the database")
+        return None
+
+
+def _cache_set(key, value, timeout):
+    """cache.set(...), skipped if the cache backend can't be reached (logged)."""
+    try:
+        cache.set(key, value, timeout)
+    except Exception:
+        logger.exception("capy-theme: cache write failed; serving without caching")
 
 
 class NotPublished(Exception):
@@ -81,12 +103,28 @@ def _state(site):
     it's the default assignment. The site's own assignments win over the ones
     for every site. The cached state also expires at the next scheduled start or
     end, so a schedule is never missed.
+
+    Resilient to outages (issue #278): a cache failure falls back to the
+    database, and a database failure falls back to "no theme", so a page — even
+    the 500 page — renders unthemed instead of raising.
     """
     now = timezone.now()
     key = f"{CACHE_KEY}:{_generation()}:{site or '*'}"
-    cached = cache.get(key)
+    cached = _cache_get(key)
     if cached is not None and (cached["valid_until"] is None or now < cached["valid_until"]):
         return cached
+    try:
+        state, timeout = _state_from_db(site, now)
+    except DatabaseError:
+        logger.exception("capy-theme: could not load the active theme; serving no theme")
+        return {"theme": None, "offered": {}, "valid_until": None}
+    # Stored in a dict so "no active theme" (None) is cached too.
+    _cache_set(key, state, timeout)
+    return state
+
+
+def _state_from_db(site, now):
+    """Build `site`'s state from the database, with the cache timeout to store it for."""
     assignments = list(_assignments(site))
     current = _for_site(assignments, site, now)
     boundaries = [
@@ -107,9 +145,7 @@ def _state(site):
     timeout = cache_seconds()
     if valid_until is not None:
         timeout = max(1, min(timeout, int((valid_until - now).total_seconds()) + 1))
-    # Stored in a dict so "no active theme" (None) is cached too.
-    cache.set(key, state, timeout)
-    return state
+    return state, timeout
 
 
 def _assignments(site):
@@ -187,15 +223,15 @@ def activate(theme, site=""):
 
 
 def clear_cache():
-    """Drop every site's cached state."""
-    cache.set(GENERATION_KEY, uuid4().hex, None)
+    """Drop every site's cached state (a no-op if the cache is unreachable)."""
+    _cache_set(GENERATION_KEY, uuid4().hex, None)
 
 
 def _generation():
-    generation = cache.get(GENERATION_KEY)
-    if generation is None:  # first use, or evicted: start a fresh generation
+    generation = _cache_get(GENERATION_KEY)
+    if generation is None:  # first use, evicted, or cache down: start a fresh generation
         generation = uuid4().hex
-        cache.set(GENERATION_KEY, generation, None)
+        _cache_set(GENERATION_KEY, generation, None)
     return generation
 
 
