@@ -2,7 +2,7 @@
 
 import pytest
 from django.core.cache import cache
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, OperationalError, transaction
 from django.urls import reverse
 
 from capy_theme.models import Theme, ThemeAssignment
@@ -155,3 +155,42 @@ def test_admin_list_shows_which_theme_is_active(admin):
     response = admin.get(reverse("admin:capy_theme_theme_changelist"))
     assert b"Showing now" in response.content  # the column (#273: was "Active")
     assert b"icon-yes.svg" in response.content
+
+
+# Resilience when the cache or database is unreachable (issue #278).
+
+
+class _BrokenCache:
+    """A cache whose every read and write raises, to stand in for the backend being down."""
+
+    def get(self, *args, **kwargs):
+        raise RuntimeError("cache down")
+
+    def set(self, *args, **kwargs):
+        raise RuntimeError("cache down")
+
+
+def test_a_cache_outage_falls_back_to_the_database(monkeypatch):
+    theme = published_theme("Main")
+    activate(theme)
+    monkeypatch.setattr(active, "cache", _BrokenCache())
+    assert get_active_theme() == theme  # served from the database instead of 500ing
+
+
+def test_saving_a_theme_works_when_the_cache_is_down(monkeypatch):
+    monkeypatch.setattr(active, "cache", _BrokenCache())
+    # Saving fires the signal that calls clear_cache(), which writes to the cache.
+    theme = published_theme("Main")  # creating and publishing must not raise
+    activate(theme)  # activating calls clear_cache(); must not raise
+    assert Theme.objects.filter(slug="main").exists()
+
+
+def test_a_database_outage_serves_no_theme_instead_of_erroring(monkeypatch):
+    activate(published_theme("Main"))
+    cache.clear()  # force the database path
+
+    def boom(*args, **kwargs):
+        raise OperationalError("database down")
+
+    monkeypatch.setattr(active, "_assignments", boom)
+    assert get_active_theme() is None  # no theme, but no 500 either
