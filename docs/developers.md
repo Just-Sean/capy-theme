@@ -109,6 +109,7 @@ In templates: `{% theme_artifacts as artifacts %}`.
 | `/theme/tokens.json` | W3C design tokens (format 2025.10), for design tools and native app builds ([details](artifacts.md#design-tokens)) |
 | `/theme/daisyui-theme.css` | daisyUI theme blocks (light and dark), to compile the theme into your own Tailwind CSS ([details](artifacts.md#daisyui-theme-blocks)) |
 
-All three hold the published theme, are public, and return `404` when no theme is
-published. They're under the prefix the project gave `capy_theme.urls` (`/theme/`
-in these docs).
+All are public and under the prefix the project gave `capy_theme.urls` (`/theme/` in
+these docs). `/theme/tokens.json` and `/theme/daisyui-theme.css` hold the published
+theme and return `404` when no theme is published; the catalog `/theme/themes.json`
+always returns `200` (an empty list `[]` when nothing is published).

@@ -29,7 +29,7 @@ from ..images.icons import icon_urls
 from ..images.logos import HEADER_SLOTS, LOGO_SLOTS, resolve
 from ..images.sharing import sharing_image
 from ..storage import theme_storage
-from ..themes.active import default_theme, get_active_theme, offered_themes
+from ..themes.active import get_active_theme, offered_themes
 from ..themes.branding import branding
 from ..themes.mode import mode_settings
 
@@ -159,15 +159,19 @@ def theme_catalog(request=None):
     Each entry: ``slug``, ``name``, ``default`` (the admin's default theme), ``light``
     and ``dark`` (each ``{"base", "swatch", "background"}`` — the daisyUI base and the
     primary/background colors as #rrggbb), and ``assets_url`` / ``stylesheet_url``. Lists
-    the themes offered to visitors, plus the default; ``[]`` if none is published. With a
-    request, every URL is absolute.
+    the themes offered to visitors, plus the **domain's** active (default/scheduled) theme,
+    which is the one flagged ``default``; ``[]`` if none is published. With a request,
+    every URL is absolute.
     """
     url = _url_maker(request)
-    default = default_theme()
-    default_slug = default.slug if default else None
+    active = get_active_theme(request)
+    default_slug = active.slug if active else None
     themes = list(offered_themes())
-    if default is not None and default.slug not in {theme.slug for theme in themes}:
-        themes.append(default)
+    if active is not None and active.slug not in {theme.slug for theme in themes}:
+        themes.append(active)
+    # Only published themes have a snapshot to read; skip any without one so a theme
+    # that somehow lost its live revision can't 500 the whole catalog.
+    themes = [theme for theme in themes if theme.live_revision_id is not None]
     themes.sort(key=lambda theme: theme.name)
     return [_catalog_entry(theme, url, default_slug) for theme in themes]
 

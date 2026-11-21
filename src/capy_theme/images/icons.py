@@ -16,8 +16,6 @@ import re
 from pathlib import Path
 
 from django.core.files.base import ContentFile
-from django.utils.html import format_html_join
-from django.utils.safestring import mark_safe
 from PIL import Image, ImageOps
 
 from ..storage import theme_storage
@@ -72,25 +70,6 @@ def make_icons(snapshot):
     # Written last-first, so the existence check above only passes once all are there.
     for name in reversed(FILES):
         theme_storage().save(f"{folder}/{name}", ContentFile(files[name]))
-
-
-def head_links(snapshot):
-    """The <link> tags for {% theme_head %}: tab icons and the Apple icon."""
-    folder = icon_folder(snapshot)
-    if folder is None:
-        return ""
-    url = theme_storage().url
-    links = [
-        ("icon", url(f"{folder}/favicon.ico"), ' sizes="32x32"'),
-        ("icon", url(f"{folder}/favicon.svg"), ' type="image/svg+xml"'),
-        ("icon", url(f"{folder}/icon-192.png"), ' type="image/png" sizes="192x192"'),
-        ("apple-touch-icon", url(f"{folder}/apple-touch-icon.png"), ""),
-    ]
-    return format_html_join(
-        "",
-        '<link rel="{}" href="{}"{}>\n',
-        ((r, h, mark_safe(e)) for r, h, e in links),  # noqa: S308 (fixed text above)
-    )
 
 
 def icon_urls(snapshot):

@@ -131,3 +131,47 @@ def test_both_modes_give_identical_json(client, themes, mode):
     mode("django")
     plain = client.get(CATALOG).json()
     assert drf == plain
+
+
+# --- Multi-site: the catalog follows the request's domain --------------------------
+
+
+def test_catalog_default_follows_the_request_domain(client, themes, settings):
+    settings.ALLOWED_HOSTS = ["testserver", "shop.example.com"]
+    # A domain with its own SiteTheme: that theme is the catalog's default there.
+    activate(themes["forest"], site="shop.example.com")
+    entries = {e["slug"]: e for e in client.get(CATALOG, HTTP_HOST="shop.example.com").json()}
+    assert entries["forest"]["default"] is True
+    assert entries["ocean"]["default"] is False
+    assert "site" not in entries  # Site is the default (and in the catalog) only on the main domain
+    # The main domain is unaffected: the global default (Site) is still flagged.
+    main = {e["slug"]: e for e in client.get(CATALOG).json()}
+    assert main["site"]["default"] is True and main["forest"]["default"] is False
+
+
+def test_default_json_serves_the_domains_theme(client, themes, settings):
+    settings.ALLOWED_HOSTS = ["testserver", "shop.example.com"]
+    activate(themes["forest"], site="shop.example.com")
+    on_shop = client.get("/theme/themes/default.json", HTTP_HOST="shop.example.com")
+    assert on_shop.json()["theme"]["slug"] == "forest"
+    assert client.get("/theme/themes/default.json").json()["theme"]["slug"] == "site"
+
+
+def test_a_domains_theme_is_reachable_even_if_not_globally_offered(client, themes, settings):
+    settings.ALLOWED_HOSTS = ["testserver", "shop.example.com"]
+    # "Secret" isn't offered globally, but as a domain's default it's reachable there.
+    activate(themes["secret"], site="shop.example.com")
+    assert "secret" in {e["slug"] for e in client.get(CATALOG, HTTP_HOST="shop.example.com").json()}
+    assert client.get("/theme/themes/secret.json", HTTP_HOST="shop.example.com").status_code == 200
+    # Still not reachable on the main domain.
+    assert client.get("/theme/themes/secret.json").status_code == 404
+
+
+def test_catalog_survives_a_default_without_a_live_revision(client, themes):
+    # Defensive: a null live_revision (e.g. a future "delete old revisions" feature) must
+    # not 500 the whole catalog — the theme is simply left out.
+    Theme.objects.filter(pk=themes["site"].pk).update(live_revision=None)
+    cache.clear()
+    response = client.get(CATALOG)
+    assert response.status_code == 200
+    assert "site" not in {e["slug"] for e in response.json()}

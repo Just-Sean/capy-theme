@@ -34,7 +34,7 @@ What's in it (all from the published revision; with a request, URLs are absolute
 | `theme` | `name`, `slug`, `revision` |
 | `branding` | `site_name`, `tagline`, `logo_alt` |
 | `colors`, `colors_hex` | The 20 colors per mode (`light`, `dark`), as OKLCH and as `#rrggbb` |
-| `fonts` | Per role the theme sets: `family`, `stack` (CSS `font-family`), `source` |
+| `fonts` | Per role the theme sets: `family`, `stack` (CSS `font-family`), `source`, `stylesheet` (external-font URL, else `""`), `files` (each `url`, `weight`, `style`, `unicode_range`) |
 | `logos` | The six logo slots, `light` and `dark`, after fallbacks: `url`, `width`, `height`, `alt`, `content_type`, `variants` (smaller copies: `url`, `width`, `format`) |
 | `icons` | File name → URL: `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `icon-monochrome-512.png` |
 | `sharing_image` | `url`, `width`, `height`, `alt` (1200 × 630), or `None` |
@@ -81,6 +81,21 @@ const assets = await (await fetch(chosen.assets_url)).json();
 In Python (another Django module): `from capy_theme.artifacts import theme_catalog,
 build_artifacts, get_artifacts` (`get_artifacts(request)` is the published default theme's
 assets).
+
+### Building an accessible control
+
+Since you render the mode toggle / theme picker yourself, make it accessible:
+
+- Put the control on a native `<button>` or `<a href>` — never a `<div>`/`<span>` — so
+  keyboard activation and focus come for free.
+- Give it an **accessible name that reflects the current state** (e.g. "Theme: dark"),
+  not just an icon, and expose the selected option (`aria-pressed` on a toggle button, or
+  a radio group for mutually-exclusive choices).
+- **Announce changes** to assistive tech via an `aria-live="polite"` region when you
+  switch with JavaScript (no reload).
+- The catalog's `light`/`dark` entries are **colors** (`swatch`/`background`); a color
+  swatch alone is not an accessible label, so each theme option must also carry the
+  theme's text `name` (WCAG 1.4.1).
 
 ### Django REST Framework and generated API docs (`CAPY_THEME_API`)
 

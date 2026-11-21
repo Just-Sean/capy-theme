@@ -135,8 +135,8 @@ consumer needs to render it:
 - **Light and dark**: the slot carries a light and (if set) a dark image; a consumer
   shows the one for the current mode (following the device setting or a forced
   `data-theme`). Use `loading="lazy"`, so only the one shown is downloaded.
-- **Email and print** slots give a plain `<img>` of the light image (email
-  programs don't handle `<picture>` or the light/dark CSS).
+- **Email and print** slots are a plain light image (a consumer renders a plain
+  `<img>`, since email programs don't handle `<picture>` or the light/dark CSS).
 
 Alt text comes from the image's alt text, then the theme's logo alt text, then
 the site name.

@@ -4,7 +4,7 @@ For projects that build their Tailwind CSS with the theme in it instead of
 loading capy-theme's stylesheet. Two blocks: "<slug>-light" (the default) and
 "<slug>-dark" (used when the device prefers dark). Only daisyUI's own variables
 (colors, radii, sizes, border, depth, noise) are included; fonts and capy-theme's
-extras need {% theme_head %}.
+extras come from the theme's assets (``get_artifacts`` / the per-theme API).
 """
 
 from ..colors.values import effective_values

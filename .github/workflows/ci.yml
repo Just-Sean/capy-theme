@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  UV_VERSION: "0.12.5"
+  UV_VERSION: "0.12.24"
   # Same image as the README's gitleaks commands (keep them in step).
   GITLEAKS_IMAGE: ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
   # The Tailwind CLI the demo downloads (TAILWIND_CLI_VERSION in demo/demo_site/settings.py)
