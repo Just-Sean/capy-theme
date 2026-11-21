@@ -1,5 +1,37 @@
 # Changelog
 
+## 2.0.0 (2026-11-20)
+
+A re-conception: capy-theme now **configures and exposes** only. Admins set up themes
+(and edit them in the live editor); capy-theme exposes them as data and files — it no
+longer switches modes, remembers a visitor's choice, or injects or applies anything into
+a consumer's page. A consumer links the theme stylesheet itself and builds its own chrome
+(a light/dark toggle, a theme picker) from the exposed data. This is a breaking change.
+
+### Breaking changes
+
+- **Removed the page-injecting and switching template tags:** `{% theme_head %}`,
+  `{% theme_html_attrs %}`, `{% theme_mode_toggle %}`, `{% theme_picker %}`,
+  `{% theme_logo %}`, `{% theme_mode_state %}`, `{% theme_picker_state %}`. A consumer
+  links the stylesheet (its URL is in the catalog / a theme's assets) and reads
+  `{% theme_artifacts %}` for the logo, colors and the rest.
+- **Removed the context processor** `capy_theme.context_processors.theme` (and the
+  per-template `theme` variable). Use `{% theme_artifacts %}` / `get_artifacts()`.
+- **Removed `/theme/api.json`** (the active theme), replaced by the catalog and per-theme
+  assets endpoints (below).
+- **Removed the visitor switching endpoints and cookies** (`set_mode`, `choose_theme`,
+  `capy_theme_mode`, `capy_theme_choice`): switching is the consumer's job.
+- **Removed the `CAPY_THEME_VISITOR_THEMES` setting** (it governed visitor switching).
+
+### Added
+
+- **Themes catalog** `GET /theme/themes.json` — the available themes (slug, name, which
+  is default, light/dark swatches, assets and stylesheet URLs) — and **per-theme assets**
+  `GET /theme/themes/<slug>.json` (`<slug>` may be `default`), both with ETags and DRF
+  views. A consumer lists themes, picks one, fetches its assets, and links its stylesheet.
+- **The live editor is self-contained:** it previews on its own page (`/theme/live-edit/`)
+  rather than injecting into consumer pages, so it keeps working without the removed tags.
+
 ## 1.0.1 (2026-11-19)
 
 A polish release: the active theme now survives a cache or database outage, theme
