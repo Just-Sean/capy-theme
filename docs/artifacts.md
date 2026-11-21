@@ -22,6 +22,11 @@ artifacts["sharing_image"]  # url, width, height, alt
 In templates: `{% theme_artifacts as artifacts %}`, then e.g.
 `{{ artifacts.logos.logo_email.light.url }}`.
 
+> **Rendering a control (mode toggle, theme picker, logo)?** capy-theme exposes the
+> data for it (below and in the table) but deliberately does **not** render the UI
+> widget — the app-shell or module renders its own, so the theme never dictates
+> another app's chrome. See "Mode and theme-picker controls" below.
+
 What's in it (all from the published revision; with a request, URLs are absolute):
 
 | Key | Contents |
@@ -36,6 +41,58 @@ What's in it (all from the published revision; with a request, URLs are absolute
 | `backgrounds` | `login` and `pattern`, each `light` and `dark` URL (or `None`) |
 | `mode` | `default`, `visitors_can_switch` |
 | `stylesheet_url` | The theme stylesheet |
+
+## Mode and theme-picker controls
+
+capy-theme owns *how* light/dark/auto and the theme choice work (the cookie, the
+before-paint script, the endpoints), but it does **not** render the buttons — an
+app-shell or any other module renders its own control from this data, so the theme
+never dictates another app's chrome.
+
+### Mode state — `{% theme_mode_state %}`
+
+`{% theme_mode_state as mode %}` gives the light/dark/auto state (`None` if no theme
+is active):
+
+| Key | Contents |
+| --- | --- |
+| `can_switch` | Whether the theme lets visitors switch |
+| `current` | The current mode: `light`, `dark` or `auto` |
+| `options` | One per mode: `value`, `label`, `url`, `current` |
+| `next` | The mode a single cycling button advances to: `value`, `label`, `url` |
+
+Each `url` sets that mode and returns to the current page, so a plain `<a>` works
+without JavaScript.
+
+### Theme-picker state — `{% theme_picker_state %}`
+
+`{% theme_picker_state as picker %}` gives the themes a visitor may choose (`None` if
+no theme is active):
+
+| Key | Contents |
+| --- | --- |
+| `allowed` | Whether visitors may choose a theme (`CAPY_THEME_VISITOR_THEMES`) |
+| `current` | The chosen theme's slug, or `default` for the site's own |
+| `options` | `default` ("Site default") then each offered theme: `value`, `label`, `url`, `current` |
+
+Show the picker only when there's more than one option.
+
+### The mode-switching protocol
+
+`{% theme_head %}` includes a tiny script that applies the mode before the page draws
+and enhances a consumer's control to switch with no reload. Any markup works, as long
+as it uses these hooks:
+
+- **`data-capy-mode="light|dark|auto"`** on a clickable element → clicking sets that
+  mode. The script marks the current one with `aria-current="true"` and `.btn-active`.
+- **`data-capy-mode-cycle`** on a clickable element → clicking advances to the next
+  mode (light → dark → auto → light). Point its `href` at `mode.next.url` so it still
+  works without JavaScript.
+- **`<html data-capy-color-mode="light|dark|auto">`** — set by the script (and
+  server-side by `{% theme_html_attrs %}`), so a consumer can show the matching icon
+  with CSS, e.g. `[data-capy-color-mode="dark"] .icon-sun { display: none }`.
+
+Use links (`<a href=…>`) so switching degrades to a full-page reload without JavaScript.
 
 ## The JSON API
 

@@ -7,7 +7,9 @@ stylesheet's [data-theme="capy-light"] / [data-theme="capy-dark"] rules on <html
 
 import json
 
+from django.urls import reverse
 from django.utils.html import format_html, format_html_join
+from django.utils.http import urlencode
 
 from ..colors.color_math import to_hex
 from ..colors.names import SCHEMES
@@ -39,11 +41,49 @@ def html_theme_value(mode):
     return f"capy-{mode}" if mode in ("light", "dark") else ""
 
 
+def mode_state(request, revision):
+    """The light/dark/auto state as plain data, for a consumer to render its own control.
+
+    Returns {"can_switch", "current", "options", "next"}. Each option is
+    {"value", "label", "url", "current"}, where "url" sets that mode and returns to the
+    current page (so a plain link works without JavaScript). "next" is the mode a single
+    cycling button advances to. The head script enhances any element carrying
+    ``data-capy-mode`` (set that mode) or ``data-capy-mode-cycle`` (advance to the next
+    mode) to switch without a reload. See docs/artifacts.md.
+    """
+    _default, can_switch = mode_settings(revision)
+    current = current_mode(request, revision)
+    back = request.get_full_path() if request is not None else "/"
+
+    def set_url(value):
+        return reverse("capy_theme:set_mode", args=[value]) + "?" + urlencode({"next": back})
+
+    options = [
+        {
+            "value": mode,
+            "label": MODE_LABELS[mode],
+            "url": set_url(mode),
+            "current": mode == current,
+        }
+        for mode in MODES
+    ]
+    order = list(MODES)
+    after = order[(order.index(current) + 1) % len(order)]
+    return {
+        "can_switch": can_switch,
+        "current": current,
+        "options": options,
+        "next": {"value": after, "label": MODE_LABELS[after], "url": set_url(after)},
+    }
+
+
 def head_script(revision):
     """Return the tiny script that applies the mode before the page draws.
 
-    It repeats the server's choice from the cookie (so cached pages are right
-    too), and makes {% theme_mode_toggle %} switch without reloading.
+    It repeats the server's choice from the cookie (so cached pages are right too) and
+    keeps ``<html data-capy-color-mode>`` in sync. It switches without reloading when a
+    visitor clicks any element carrying ``data-capy-mode`` (set that mode) or
+    ``data-capy-mode-cycle`` (advance light -> dark -> auto). See docs/artifacts.md.
     """
     default, can_switch = mode_settings(revision)
     return (
@@ -53,22 +93,27 @@ def head_script(revision):
         + json.dumps(default)
         + ",s="
         + json.dumps(bool(can_switch))
+        + ",O="
+        + json.dumps(list(MODES))
         + ";"
         "function cur(){var m=(document.cookie.match(new RegExp('(?:^|; )'+n+"
         "'=(light|dark|auto)(?:;|$)'))||[])[1];return s&&m?m:f}"
         "function apply(m){if(m==='auto')d.removeAttribute('data-theme');"
         "else d.setAttribute('data-theme','capy-'+m);"
+        "d.setAttribute('data-capy-color-mode',m);"
         "document.querySelectorAll('[data-capy-mode]').forEach(function(e){"
         "var on=e.getAttribute('data-capy-mode')===m;"
         "if(on)e.setAttribute('aria-current','true');else e.removeAttribute('aria-current');"
         "e.classList.toggle('btn-active',on)})}"
+        "function set(m){document.cookie=n+'='+m+';path=/;max-age="
+        + str(COOKIE_MAX_AGE)
+        + ";samesite=lax'+(location.protocol==='https:'?';secure':'');apply(m)}"
         "apply(cur());"
-        "document.addEventListener('click',function(e){"
-        "var a=e.target.closest&&e.target.closest('[data-capy-mode]');if(!a||!s)return;"
-        "e.preventDefault();var m=a.getAttribute('data-capy-mode');"
-        "document.cookie=n+'='+m+';path=/;max-age=" + str(COOKIE_MAX_AGE) + ";samesite=lax'"
-        "+(location.protocol==='https:'?';secure':'');"
-        "apply(m)})})();"
+        "document.addEventListener('click',function(e){if(!s)return;"
+        "var t=e.target.closest&&e.target.closest('[data-capy-mode],[data-capy-mode-cycle]');"
+        "if(!t)return;e.preventDefault();"
+        "if(t.hasAttribute('data-capy-mode-cycle'))set(O[(O.indexOf(cur())+1)%O.length]);"
+        "else set(t.getAttribute('data-capy-mode'))})})();"
     )
 
 

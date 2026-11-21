@@ -56,8 +56,10 @@ def test_theme_head_works_without_a_request(active_theme):
     assert "<link" in render("{% theme_head %}")
 
 
-def test_theme_html_attrs_outputs_nothing_yet(active_theme, rf):
-    assert render("<html{% theme_html_attrs %}>", rf.get("/")) == "<html>"
+def test_theme_html_attrs_exposes_the_mode(active_theme, rf):
+    # No data-theme in auto (the device decides), but the current mode is exposed.
+    out = render("<html {% theme_html_attrs %}>", rf.get("/"))
+    assert out == '<html data-capy-color-mode="auto">'
 
 
 def test_context_has_the_live_values(active_theme, rf):

@@ -7,7 +7,7 @@ from django.urls import reverse
 
 from capy_theme.admin.theme_form import ThemeForm
 from capy_theme.models import Theme
-from capy_theme.themes.active import CHOICE_COOKIE, activate, get_active_theme
+from capy_theme.themes.active import CHOICE_COOKIE, activate, get_active_theme, picker_state
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -167,3 +167,47 @@ def test_the_choice_cookie_is_secure_on_https(themes, client, secure):
     # #253
     response = client.get(reverse("capy_theme:choose_theme", args=["ocean"]), secure=secure)
     assert bool(response.cookies[CHOICE_COOKIE]["secure"]) is secure
+
+
+# --- The picker-state data interface (theme_picker_state) -----------------------------
+
+
+def test_picker_state_lists_default_then_offered_with_urls(themes, rf):
+    state = picker_state(request_with(rf, "ocean"))
+    assert state["allowed"] is True
+    assert state["current"] == "ocean"
+    # "Site default" first, then the offered themes by name (Forest, Ocean); "Secret" isn't offered.
+    assert [o["value"] for o in state["options"]] == ["default", "forest", "ocean"]
+    ocean = next(o for o in state["options"] if o["value"] == "ocean")
+    assert ocean["current"] is True and ocean["label"] == "Ocean"
+    assert ocean["url"] == reverse("capy_theme:choose_theme", args=["ocean"]) + "?next=%2F"
+
+
+def test_picker_state_falls_back_to_default_for_an_unknown_choice(themes, rf):
+    state = picker_state(request_with(rf, "nonsense"))
+    assert state["current"] == "default"
+    assert next(o for o in state["options"] if o["value"] == "default")["current"] is True
+
+
+def test_picker_state_when_visitor_themes_are_off(themes, rf, settings):
+    settings.CAPY_THEME_VISITOR_THEMES = False
+    state = picker_state(request_with(rf, "ocean"))
+    assert state["allowed"] is False
+    assert [o["value"] for o in state["options"]] == ["default"]
+
+
+def test_picker_state_tag_is_none_without_an_active_theme(rf):
+    assert (
+        Template("{% load capy_theme %}{% theme_picker_state as p %}[{{ p }}]")
+        .render(Context({"request": request_with(rf)}))
+        .strip()
+        == "[None]"
+    )
+
+
+def test_picker_state_tag_exposes_offered_themes(themes, rf):
+    out = Template(
+        "{% load capy_theme %}{% theme_picker_state as p %}"
+        "{% for o in p.options %}{{ o.label }},{% endfor %}"
+    ).render(Context({"request": request_with(rf, "ocean")}))
+    assert "Site default," in out and "Ocean," in out and "Secret," not in out

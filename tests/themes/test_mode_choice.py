@@ -115,9 +115,11 @@ def test_mode_settings_are_published_like_everything_else(rf):
     theme = live()
     theme.settings = {"default_mode": "dark"}
     theme.save()
-    assert render("{% theme_html_attrs %}", get(rf)) == ""  # not published yet
+    # Not published yet: still auto (the dark default isn't live).
+    assert render("{% theme_html_attrs %}", get(rf)) == 'data-capy-color-mode="auto"'
     publish(theme)
-    assert render("{% theme_html_attrs %}", get(rf)) == 'data-theme="capy-dark"'
+    forced = render("{% theme_html_attrs %}", get(rf))
+    assert forced == 'data-theme="capy-dark" data-capy-color-mode="dark"'
 
 
 # Secure cookies on HTTPS (#253).

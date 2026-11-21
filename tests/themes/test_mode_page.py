@@ -9,7 +9,7 @@ from django.urls import reverse
 
 from capy_theme.models import Theme
 from capy_theme.themes.active import activate
-from capy_theme.themes.mode import COOKIE_NAME
+from capy_theme.themes.mode import COOKIE_NAME, MODES, mode_state
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -42,29 +42,34 @@ def get(rf, cookie=None):
 
 def test_default_is_auto_and_follows_the_device(rf):
     live()
-    assert render("{% theme_html_attrs %}", get(rf)) == ""
+    # No data-theme (the device decides), but the current mode is still exposed.
+    assert render("{% theme_html_attrs %}", get(rf)) == 'data-capy-color-mode="auto"'
 
 
 @pytest.mark.parametrize("mode", ["light", "dark"])
 def test_theme_default_mode_forces_a_mode(rf, mode):
     live(default_mode=mode)
-    assert render("{% theme_html_attrs %}", get(rf)) == f'data-theme="capy-{mode}"'
+    expected = f'data-theme="capy-{mode}" data-capy-color-mode="{mode}"'
+    assert render("{% theme_html_attrs %}", get(rf)) == expected
 
 
 def test_visitor_choice_wins_over_the_default(rf):
     live(default_mode="dark")
-    assert render("{% theme_html_attrs %}", get(rf, "light")) == 'data-theme="capy-light"'
-    assert render("{% theme_html_attrs %}", get(rf, "auto")) == ""
+    light = render("{% theme_html_attrs %}", get(rf, "light"))
+    assert light == 'data-theme="capy-light" data-capy-color-mode="light"'
+    assert render("{% theme_html_attrs %}", get(rf, "auto")) == 'data-capy-color-mode="auto"'
 
 
 def test_visitor_choice_is_ignored_when_switching_is_off(rf):
     live(default_mode="dark", visitors_can_switch=False)
-    assert render("{% theme_html_attrs %}", get(rf, "light")) == 'data-theme="capy-dark"'
+    forced = render("{% theme_html_attrs %}", get(rf, "light"))
+    assert forced == 'data-theme="capy-dark" data-capy-color-mode="dark"'
 
 
 def test_unknown_cookie_value_is_ignored(rf):
     live(default_mode="dark")
-    assert render("{% theme_html_attrs %}", get(rf, "purple")) == 'data-theme="capy-dark"'
+    forced = render("{% theme_html_attrs %}", get(rf, "purple"))
+    assert forced == 'data-theme="capy-dark" data-capy-color-mode="dark"'
 
 
 def test_no_attributes_without_an_active_theme(rf):
@@ -109,6 +114,48 @@ def test_head_script_applies_the_mode_before_the_page_draws(rf):
 def test_head_script_knows_when_switching_is_off(rf):
     live(visitors_can_switch=False)
     assert "s=false" in render("{% theme_head %}", get(rf))
+
+
+def test_head_script_cycles_and_tracks_the_current_mode(rf):
+    live()
+    script = render("{% theme_head %}", get(rf))
+    # It keeps <html data-capy-color-mode> in sync for styling a consumer's icon,
+    assert "setAttribute('data-capy-color-mode',m)" in script
+    # reacts to a single cycling button as well as per-mode elements,
+    assert "data-capy-mode-cycle" in script
+    assert "[data-capy-mode],[data-capy-mode-cycle]" in script
+    # and advances through the modes in order.
+    assert 'O=["light", "dark", "auto"]' in script
+
+
+# --- The mode-state data interface (theme_mode_state) ---------------------------------
+
+
+def test_mode_state_lists_every_mode_with_the_set_url(rf):
+    theme = live()
+    state = mode_state(get(rf, "dark"), theme.live_revision)
+    assert state["can_switch"] is True
+    assert state["current"] == "dark"
+    assert [o["value"] for o in state["options"]] == list(MODES)
+    dark = next(o for o in state["options"] if o["value"] == "dark")
+    assert dark["current"] is True
+    assert dark["url"] == reverse("capy_theme:set_mode", args=["dark"]) + "?next=%2Fpage%2F"
+
+
+def test_mode_state_next_advances_in_order(rf):
+    theme = live()
+    assert mode_state(get(rf, "light"), theme.live_revision)["next"]["value"] == "dark"
+    assert mode_state(get(rf, "dark"), theme.live_revision)["next"]["value"] == "auto"
+    assert mode_state(get(rf, "auto"), theme.live_revision)["next"]["value"] == "light"
+
+
+def test_mode_state_tag_is_none_without_an_active_theme(rf):
+    assert render("{% theme_mode_state as m %}[{{ m }}]", get(rf)).strip() == "[None]"
+
+
+def test_mode_state_tag_exposes_the_current_mode(rf):
+    live(default_mode="dark")
+    assert render("{% theme_mode_state as m %}{{ m.current }}", get(rf)).strip() == "dark"
 
 
 def test_head_script_carries_the_csp_nonce(rf):
