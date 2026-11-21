@@ -22,7 +22,7 @@ from ..css.stylesheet import stylesheet_url
 from ..fonts.library import external_stylesheets
 from ..images.logo_tag import logo_html
 from ..models import Theme
-from ..themes.active import get_active_theme
+from ..themes.active import primary_theme
 from .access import can_edit, requested_theme_id
 from .state import editor_urls
 
@@ -43,8 +43,8 @@ def draft_header(theme):
 
 
 def theme_to_edit(request):
-    """The active theme, or else the first theme, or None if there are none."""
-    active = get_active_theme(request)
+    """The domain's primary theme, or else the first theme, or None if there are none."""
+    active = primary_theme(request)
     if active is not None:
         return active
     return Theme.objects.order_by("pk").first()

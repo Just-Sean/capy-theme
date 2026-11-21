@@ -32,12 +32,14 @@ def editor_client(client, django_user_model):
     return client
 
 
-def test_every_component_in_light_and_dark(editor_client, url):
+def test_every_component_in_the_drafts_scheme(editor_client, url):
     response = editor_client.get(url)
     assert response.status_code == 200
     content = response.content.decode()
+    # A theme is a single scheme now: the draft is a light theme, so only the light
+    # block renders.
     assert content.count('data-theme="capy-light"') >= 1
-    assert content.count('data-theme="capy-dark"') >= 1
+    assert 'data-theme="capy-dark"' not in content
     for heading in (
         "Text",
         "Buttons",
@@ -55,9 +57,10 @@ def test_every_component_in_light_and_dark(editor_client, url):
     assert "capy_theme/editor/components.css" in content
 
 
-def test_ids_differ_between_light_and_dark(editor_client, url):
+def test_ids_name_the_drafts_scheme(editor_client, url):
     content = editor_client.get(url).content.decode()
-    assert 'id="components-modal-light"' in content and 'id="components-modal-dark"' in content
+    # One scheme now: the light theme's modal has the light id, and there's no dark one.
+    assert 'id="components-modal-light"' in content and 'id="components-modal-dark"' not in content
 
 
 def test_only_framed_by_the_same_site(editor_client, url):
@@ -117,13 +120,10 @@ def test_images_section_shows_the_saved_drafts_logos(editor_client, theme, url, 
     settings.MEDIA_ROOT = tmp_path
     buffer = io.BytesIO()
     Image.new("RGB", (300, 100), "red").save(buffer, "PNG")
-    asset = add_asset(
-        theme, "logo_main", "light", SimpleUploadedFile("main.png", buffer.getvalue())
-    )
-    theme.settings = {**theme.settings, "images": {"logo_main": {"light": asset.pk}}}
+    asset = add_asset(theme, "logo_main", SimpleUploadedFile("main.png", buffer.getvalue()))
+    theme.settings = {**theme.settings, "images": {"logo_main": asset.pk}}
     theme.save()
     content = editor_client.get(url).content.decode()
     assert asset.original.name in content
     assert "Empty: falls back to the main logo" in content  # the stacked logo
-    assert "No dark version: uses the light one" in content
     assert "made from the icon image when the theme is published" in content  # no icons yet

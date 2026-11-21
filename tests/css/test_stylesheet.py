@@ -16,7 +16,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def theme():
-    return Theme.objects.create(name="Main", slug="main", light_base="cupcake", dark_base="dracula")
+    return Theme.objects.create(name="Main", slug="main", base="cupcake")
 
 
 def css_url(revision):
@@ -29,38 +29,43 @@ def test_stylesheet_url_is_under_theme(theme):
     assert len(revision.css_version) == 12
 
 
-def css_blocks(css):
-    """Return {selector: block text} for the stylesheet's four rule blocks."""
-    blocks = {}
-    for selector in (
-        ":root {",
-        "@media (prefers-color-scheme: dark)",
-        '[data-theme="capy-light"]',
-        '[data-theme="capy-dark"]',
-    ):
-        start = css.index(selector)
-        blocks[selector] = css[start : css.index("}", start)]
-    return blocks
+def block(css, selector):
+    """The rule block text that starts with `selector`."""
+    start = css.index(selector)
+    return css[start : css.index("}", start)]
 
 
-def test_stylesheet_has_variables_for_both_modes(client, theme):
+def test_light_stylesheet_has_the_light_scheme(client, theme):
+    # A light theme renders only the light scheme: the default (:root) and the
+    # forced light block ([data-theme="capy-light"]).
     revision = publish(theme)
     response = client.get(css_url(revision))
     assert response.status_code == 200
     assert response["Content-Type"] == "text/css; charset=utf-8"
+    css = response.content.decode()
     cupcake = THEMES["cupcake"]["values"]["--color-primary"]
+    assert "@media (prefers-color-scheme: dark)" not in css
+    assert '[data-theme="capy-dark"]' not in css
+    for selector in (":root {", '[data-theme="capy-light"]'):
+        rules = block(css, selector)
+        assert "color-scheme: light;" in rules, selector
+        assert f"--color-primary: {cupcake};" in rules, selector
+        assert rules.count("--") == 29, selector  # all 28 values, plus --capy-focus
+
+
+def test_dark_stylesheet_has_the_dark_scheme(client):
+    # A dark theme renders only the dark scheme: the device-dark media query and
+    # the forced dark block ([data-theme="capy-dark"]).
+    revision = publish(Theme.objects.create(name="Night", slug="night", base="dracula"))
+    css = client.get(css_url(revision)).content.decode()
     dracula = THEMES["dracula"]["values"]["--color-primary"]
-    expected = {
-        ":root {": ("light", cupcake),
-        "@media (prefers-color-scheme: dark)": ("dark", dracula),
-        '[data-theme="capy-light"]': ("light", cupcake),
-        '[data-theme="capy-dark"]': ("dark", dracula),
-    }
-    for selector, block in css_blocks(response.content.decode()).items():
-        scheme, primary = expected[selector]
-        assert f"color-scheme: {scheme};" in block, selector
-        assert f"--color-primary: {primary};" in block, selector
-        assert block.count("--") == 29, selector  # all 28 values, plus --capy-focus
+    assert "@media (prefers-color-scheme: dark) {" in css
+    assert ':root:not([data-theme="capy-light"]) {' in css
+    for selector in (':root:not([data-theme="capy-light"]) {', '[data-theme="capy-dark"]'):
+        rules = block(css, selector)
+        assert "color-scheme: dark;" in rules, selector
+        assert f"--color-primary: {dracula};" in rules, selector
+        assert rules.count("--") == 29, selector  # all 28 values, plus --capy-focus
 
 
 def test_stylesheet_is_cached_by_browsers_for_a_year(client, theme):
@@ -70,7 +75,7 @@ def test_stylesheet_is_cached_by_browsers_for_a_year(client, theme):
 
 def test_publishing_changes_the_url_and_the_old_url_still_works(client, theme):
     first = publish(theme)
-    theme.light_base = "emerald"
+    theme.base = "emerald"
     theme.save()
     second = publish(theme)
     assert first.css_version != second.css_version
@@ -92,7 +97,7 @@ def test_stylesheet_uses_the_saved_values_not_todays_daisyui(client, theme, monk
     monkeypatch.setitem(THEMES, "cupcake", {"scheme": "light", "values": changed})
     css = client.get(css_url(revision)).content.decode()
     assert "oklch(1% 0 0)" not in css
-    assert revision.snapshot["light_values"]["--color-primary"] in css
+    assert revision.snapshot["values"]["--color-primary"] in css
 
 
 def test_stylesheet_survives_a_removed_daisyui_theme(client, theme, monkeypatch):

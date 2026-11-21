@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from capy_theme.models import Theme, ThemeAssignment, ThemeRevision
-from capy_theme.themes.active import activate, get_active_theme
+from capy_theme.themes.active import activate, primary_theme
 from capy_theme.themes.publishing import publish
 
 from ..admin.test_admin_tabs_unchanged import _post_back
@@ -70,10 +70,10 @@ def test_edit_page_has_the_three_buttons_with_descriptions_and_status(admin, the
 
 
 def test_save_draft_stays_on_the_page_and_doesnt_publish(admin, theme):
-    response = press(admin, theme, "_capy_save", light_base="cupcake")
+    response = press(admin, theme, "_capy_save", base="cupcake")
     assert response.status_code == 302 and response.url == change_url(theme)
     theme.refresh_from_db()
-    assert theme.light_base == "cupcake" and theme.live_revision is None
+    assert theme.base == "cupcake" and theme.live_revision is None
     assert (
         "won&#x27;t see it until it&#x27;s published"
         in admin.get(change_url(theme)).content.decode()
@@ -81,13 +81,13 @@ def test_save_draft_stays_on_the_page_and_doesnt_publish(admin, theme):
 
 
 def test_save_and_publish_publishes_the_saved_draft_with_the_note(admin, theme, user):
-    response = press(admin, theme, "_capy_publish", light_base="cupcake", _capy_note=" Launch ")
+    response = press(admin, theme, "_capy_publish", base="cupcake", _capy_note=" Launch ")
     assert response.status_code == 302 and response.url == change_url(theme)
     theme.refresh_from_db()
     revision = theme.live_revision
     assert (revision.number, revision.note, revision.published_by) == (1, "Launch", user)
-    assert revision.snapshot["light_base"] == "cupcake"  # what was just saved
-    assert get_active_theme() is None  # not activated
+    assert revision.snapshot["base"] == "cupcake"  # what was just saved
+    assert primary_theme() is None  # not activated
 
 
 def test_save_publish_and_activate(admin, theme):
@@ -95,9 +95,9 @@ def test_save_publish_and_activate(admin, theme):
     assert response.status_code == 302
     theme.refresh_from_db()
     assert theme.live_revision.number == 1
-    assert get_active_theme().pk == theme.pk
+    assert primary_theme().pk == theme.pk
     content = admin.get(change_url(theme)).content.decode()
-    assert "“Main” is now the default theme." in content
+    assert "“Main” is now the default light theme." in content
     # Already the site's theme: no activate button.
     assert 'name="_capy_publish_activate"' not in content
 
@@ -114,7 +114,7 @@ def test_publish_and_activate_with_no_changes_still_activates(admin, theme, user
     publish(theme, user=user)
     press(admin, theme, "_capy_publish_activate")
     assert theme.revisions.count() == 1
-    assert get_active_theme().pk == theme.pk
+    assert primary_theme().pk == theme.pk
 
 
 def test_a_new_theme_can_be_saved_and_published_at_once(admin):
@@ -142,8 +142,7 @@ def test_saving_the_edit_form_doesnt_publish(admin, theme, user):
     data = {
         "name": "Main",
         "slug": "main",
-        "light_base": "cupcake",
-        "dark_base": "dark",
+        "base": "cupcake",
         "settings": "{}",
         "assets-TOTAL_FORMS": "0",
         "assets-INITIAL_FORMS": "0",
@@ -155,8 +154,8 @@ def test_saving_the_edit_form_doesnt_publish(admin, theme, user):
     response = admin.post(change_url(theme), data)
     assert response.status_code == 302, response.content
     theme.refresh_from_db()
-    assert theme.light_base == "cupcake"
-    assert theme.live_revision.snapshot["light_base"] == "light"
+    assert theme.base == "cupcake"
+    assert theme.live_revision.snapshot["base"] == "light"
     assert theme.has_unpublished_changes
 
 
@@ -198,12 +197,12 @@ def test_publishing_explains_an_invalid_draft(client, django_user_model, theme, 
         Permission.objects.filter(codename__in=["view_theme", "change_theme", "publish_theme"])
     )
     client.force_login(staff)
-    Theme.objects.filter(pk=theme.pk).update(light_base="cupcake")
+    Theme.objects.filter(pk=theme.pk).update(base="cupcake")
     settings.CAPY_THEME_BUILTIN_THEMES = ["light", "dark"]
     response = client.post(row_url(theme, "publish_now"), follow=True)
     content = response.content.decode()
     assert "Can&#x27;t publish:" in content
-    assert "&#x27;cupcake&#x27; is not an available light daisyUI theme." in content
+    assert "&#x27;cupcake&#x27; is not an available daisyUI theme." in content
     assert not ThemeRevision.objects.exists()
 
 
@@ -233,18 +232,18 @@ def test_the_row_buttons_publish_and_activate(admin, theme):
     response = admin.post(row_url(theme, "publish_now"))
     assert response.status_code == 302 and response.url == CHANGELIST
     theme.refresh_from_db()
-    assert theme.live_revision.number == 1 and get_active_theme() is None
+    assert theme.live_revision.number == 1 and primary_theme() is None
     other = Theme.objects.create(name="Other", slug="other")
     admin.post(row_url(other, "publish_activate"))
-    assert get_active_theme().pk == other.pk
+    assert primary_theme().pk == other.pk
     admin.post(row_url(theme, "activate"))
-    assert get_active_theme().pk == theme.pk
+    assert primary_theme().pk == theme.pk
 
 
 def test_activating_an_unpublished_theme_is_refused(admin, theme):
     response = admin.post(row_url(theme, "activate"), follow=True)
     assert "Publish “Main” before activating it." in response.content.decode()
-    assert get_active_theme() is None
+    assert primary_theme() is None
 
 
 def test_the_row_buttons_only_accept_post(admin, theme):
@@ -315,10 +314,11 @@ def test_activate_during_a_running_schedule_doesnt_claim_success(admin, theme, u
     publish(sale, user=user)
     running_schedule(sale)
     content = admin.post(row_url(theme, "activate"), follow=True).content.decode()
-    if "“Main” is now the default theme." in content:
-        assert get_active_theme().pk == theme.pk, "told it's showing; Sale still is"
+    if "“Main” is now the default light theme." in content:
+        assert primary_theme().pk == theme.pk, "told it's showing; Sale still is"
     # It says what happened instead: the default changed, the schedule still shows.
-    assert "“Main” is now the default theme, but a theme schedule is showing “Sale”" in content
+    both = "“Main” is now the default light theme, but a theme schedule is showing “Sale”"
+    assert both in content
 
 
 def test_the_default_theme_isnt_offered_activate_during_a_schedule(admin, theme, user):
@@ -342,7 +342,7 @@ def test_a_scheduled_theme_can_still_be_made_the_default(admin, user):
 
 def test_without_a_capy_button_django_buttons_still_work(admin, theme):
     for button, where in [("_save", CHANGELIST), ("_addanother", ADD), ("_continue", None)]:
-        response = press(admin, theme, button, light_base="cupcake")
+        response = press(admin, theme, button, base="cupcake")
         assert response.status_code == 302
         assert response.url == (where or change_url(theme))
     assert not ThemeRevision.objects.exists()
@@ -352,12 +352,12 @@ def test_several_buttons_at_once_do_the_first_one(admin, theme):
     data = _post_back(admin.get(change_url(theme)).content.decode())
     data.update({"_capy_save": "", "_capy_publish_activate": ""})
     admin.post(change_url(theme), data)
-    assert not ThemeRevision.objects.exists() and get_active_theme() is None
+    assert not ThemeRevision.objects.exists() and primary_theme() is None
     data = _post_back(admin.get(change_url(theme)).content.decode())
     data.update({"_capy_publish": "", "_capy_publish_activate": ""})
     admin.post(change_url(theme), data)
     theme.refresh_from_db()
-    assert theme.live_revision.number == 1 and get_active_theme() is None
+    assert theme.live_revision.number == 1 and primary_theme() is None
 
 
 def test_a_very_long_note_is_cut_to_2000_characters(admin, theme):
@@ -370,7 +370,7 @@ def test_a_form_error_publishes_and_activates_nothing(admin, theme):
     response = press(admin, theme, "_capy_publish_activate", slug="")
     assert response.status_code == 200
     assert "Not published yet" in response.content.decode()
-    assert not ThemeRevision.objects.exists() and get_active_theme() is None
+    assert not ThemeRevision.objects.exists() and primary_theme() is None
 
 
 def test_view_only_users_have_no_buttons_and_cant_post_them(client, django_user_model, theme):
@@ -397,7 +397,7 @@ def test_activating_the_site_theme_again_keeps_one_assignment(admin, theme, user
     publish(theme, user=user)
     activate(theme)
     assert admin.post(row_url(theme, "activate")).status_code == 302
-    assert ThemeAssignment.objects.count() == 1 and get_active_theme().pk == theme.pk
+    assert ThemeAssignment.objects.count() == 1 and primary_theme().pk == theme.pk
 
 
 def test_the_status_line_and_active_column_agree_after_activating(admin, theme, user):
@@ -408,7 +408,8 @@ def test_the_status_line_and_active_column_agree_after_activating(admin, theme, 
     admin.get(CHANGELIST)  # both pages seen while Other is the site's theme
     admin.get(change_url(theme))
     admin.post(row_url(theme, "activate"))
-    assert "<dt>Default theme</dt><dd>Yes</dd>" in admin.get(change_url(theme)).content.decode()
+    page = admin.get(change_url(theme)).content.decode()
+    assert "<dt>Default light theme</dt><dd>Yes</dd>" in page
     assert "icon-yes" in row_buttons(admin, theme)
     assert "icon-no" in row_buttons(admin, other)
 
@@ -423,7 +424,7 @@ def test_the_status_says_when_a_schedule_shows_another_theme(admin, theme, user)
     publish(sale, user=user)
     running_schedule(sale)
     content = admin.get(change_url(theme)).content.decode()
-    assert "<dt>Default theme</dt><dd>Yes</dd>" in content
+    assert "<dt>Default light theme</dt><dd>Yes</dd>" in content
     assert "<dt>Showing now</dt><dd>“Sale”, because a theme schedule is running</dd>" in content
     sale_page = admin.get(change_url(sale)).content.decode()
     assert "No (the default is “Main”)" in sale_page
@@ -474,9 +475,9 @@ def test_view_only_users_get_a_close_link(client, django_user_model, theme):
 
 
 def test_the_delete_link_keeps_the_lists_filters(admin, theme):
-    filters = "_changelist_filters=light_base%3Dlight"
+    filters = "_changelist_filters=base%3Dlight"
     content = admin.get(change_url(theme) + "?" + filters).content.decode()
-    assert re.search(r'href="[^"]*/delete/\?_changelist_filters=light_base%3Dlight"', content)
+    assert re.search(r'href="[^"]*/delete/\?_changelist_filters=base%3Dlight"', content)
 
 
 def test_row_buttons_go_back_to_the_filtered_list(admin, theme):
@@ -489,7 +490,7 @@ def test_row_buttons_go_back_to_the_filtered_list(admin, theme):
 
 # Third round (#273 review fixes)
 
-FILTERS = "_changelist_filters=light_base%3Dlight"
+FILTERS = "_changelist_filters=base%3Dlight"
 
 
 @pytest.mark.parametrize("button", ["_capy_save", "_capy_publish", "_capy_publish_activate"])
@@ -520,7 +521,7 @@ def test_the_delete_link_keeps_the_filters_after_save_draft(admin, theme):
 
 def test_the_status_after_a_form_error_describes_the_saved_draft(admin, theme, user):
     publish(theme, user=user)
-    response = press(admin, theme, "_capy_publish", slug="", light_base="cupcake")
+    response = press(admin, theme, "_capy_publish", slug="", base="cupcake")
     assert response.status_code == 200
     theme.refresh_from_db()
     assert not theme.has_unpublished_changes  # nothing was saved
@@ -595,8 +596,8 @@ def test_the_delete_and_close_links_get_djangos_button_look(admin, theme):
 
 # QA, third round (#273): filters, popups, odd permissions, the list's annotation
 
-ODD = "_changelist_filters=" + "q%3D%C3%A9t%C3%A9%2B%2523%2520x%26light_base%3Dlight%26p%3D1"
-ODD_IN_LINKS = "q=%C3%A9t%C3%A9+%23+x&amp;light_base=light&amp;p=1"  # Django re-encodes
+ODD = "_changelist_filters=" + "q%3D%C3%A9t%C3%A9%2B%2523%2520x%26base%3Dlight%26p%3D1"
+ODD_IN_LINKS = "q=%C3%A9t%C3%A9+%23+x&amp;base=light&amp;p=1"  # Django re-encodes
 
 
 def _messages(client):
@@ -651,7 +652,7 @@ def test_qa_popup_add_answers_as_a_popup_and_leaves_no_message(admin, button, pu
     assert response.status_code == 200
     assert "admin/popup_response.html" in _template_names(response)
     assert (theme.live_revision is not None) is published
-    assert (getattr(get_active_theme(), "pk", None) == theme.pk) is activated
+    assert (getattr(primary_theme(), "pk", None) == theme.pk) is activated
     assert _messages(admin) == []
 
 
@@ -706,7 +707,7 @@ def test_qa_add_only_publisher_gets_a_page_they_can_open(client, django_user_mod
     assert response.status_code == 302
     assert client.get(response.url).status_code == 200
     assert Theme.objects.get(slug="new").live_revision is not None
-    assert get_active_theme().slug == "new"
+    assert primary_theme().slug == "new"
 
 
 @pytest.mark.parametrize("action", ["publish_now", "publish_activate", "activate"])
@@ -734,7 +735,7 @@ def test_qa_status_after_a_failed_post_for_the_default_theme(admin, theme, user)
     status = content[content.index("capy-save-publish-status") :]
     status = status[: status.index("</dl>")]
     assert "Matches the published version" in status
-    assert "<dt>Default theme</dt><dd>Yes</dd>" in status
+    assert "<dt>Default light theme</dt><dd>Yes</dd>" in status
     assert 'name="_capy_publish_activate"' not in content
 
 
@@ -786,7 +787,7 @@ def _row(content, theme):
 def test_qa_list_search_filter_order_and_count_with_the_annotation(admin, user):
     themes = _published_themes(user, 5)
     activate(themes[2])
-    for query in ("?q=T02", "?light_base__exact=light", "?o=1", "?o=-7", "?o=8.-1", "?all="):
+    for query in ("?q=T02", "?base__exact=light", "?o=1", "?o=-7", "?o=8.-1", "?all="):
         response = admin.get(CHANGELIST + query)
         assert response.status_code == 200, query
     response = admin.get(CHANGELIST + "?q=T02")

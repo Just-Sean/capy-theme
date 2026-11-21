@@ -15,12 +15,11 @@ def test_sections_are_in_a_clear_order():
     names = [name for name, _ in ThemeAdmin.fieldsets]
     order = [
         "Publishing",
-        "Base themes",
+        "Base",
         "Branding",
-        "Light colors: Basic",
+        "Colors: Basic",
         "Contrast",
         "Shape and effects",
-        "Mode",
         "Advanced",
     ]
     assert [names.index(n) for n in order] == sorted(names.index(n) for n in order)
@@ -44,7 +43,7 @@ def test_every_section_can_be_folded():
 
 def test_advanced_parts_are_folded():
     options = dict(ThemeAdmin.fieldsets)
-    for name in ("Advanced", "Contrast", "Shape and effects", "Light colors: Expert"):
+    for name in ("Advanced", "Contrast", "Shape and effects", "Colors: Expert"):
         assert "collapse" in options[name]["classes"], name
 
 

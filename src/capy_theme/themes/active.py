@@ -1,9 +1,12 @@
-"""Which theme is active, cached so pages don't query the database each time.
+"""The domain's default themes, cached so pages don't query the database each time.
 
-The site's theme comes from its ThemeAssignment. With several sites (domains),
-an assignment for the request's domain wins over the one for every site (blank
-site); scheduled assignments work the same way per domain. capy-theme no longer tracks a
-per-visitor choice — a consumer picks a theme from the catalog and fetches its assets.
+A theme is a single scheme (light or dark), so a domain has up to two defaults: a
+default light theme and a default dark theme. A consumer switches between them (its
+own light/dark toggle). Each comes from a ThemeAssignment for that scheme: with
+several sites (domains), an assignment for the request's domain wins over the one
+for every site (blank site); scheduled assignments work the same way per domain.
+capy-theme no longer tracks a per-visitor choice — a consumer picks a theme from
+the catalog and fetches its assets.
 
 The cache is cleared whenever a theme, revision or assignment changes (see
 themes/signals.py). It also expires after CAPY_THEME_CACHE_SECONDS (default 300), so
@@ -24,6 +27,8 @@ from .. import conf
 from ..models import Theme, ThemeAssignment
 
 logger = logging.getLogger(__name__)
+
+SCHEMES = ("light", "dark")
 
 CACHE_KEY = "capy_theme:active_theme"
 # Changed by clear_cache(), so every site's cached state is dropped at once.
@@ -74,14 +79,22 @@ class NotPublished(Exception):
     """Raised when activating a theme that has never been published."""
 
 
-def get_active_theme(request=None):
-    """The theme to serve for the request's domain: the admin's default or scheduled
-    theme, with its live revision loaded (or None).
+def default_themes(request=None):
+    """The domain's default themes: ``{"light": theme or None, "dark": theme or None}``.
 
-    capy-theme doesn't track a per-visitor choice — a consumer picks a theme itself from
-    the catalog and fetches its assets.
+    Each is the admin's default (or scheduled) theme for that scheme on the request's
+    domain, with its live revision loaded. capy-theme doesn't track a per-visitor
+    choice — a consumer picks a theme itself from the catalog and fetches its assets.
     """
-    return _state(site_of(request))["theme"]
+    return _state(site_of(request))["themes"]
+
+
+def primary_theme(request=None):
+    """The domain's primary theme — its default light theme, or its default dark
+    theme if no light default is set, or None. For a single-theme consumer such as
+    an email or a PWA manifest (see artifacts.get_artifacts)."""
+    themes = default_themes(request)
+    return themes["light"] or themes["dark"]
 
 
 def offered_themes():
@@ -92,19 +105,19 @@ def offered_themes():
 def catalog_theme(slug, request=None):
     """A published theme a consumer may fetch by slug for this request, or None.
 
-    ``slug`` is a theme offered to visitors, or ``"default"`` / its own slug for the
-    **domain's** active theme (its default/scheduled theme — the one `get_active_theme`
-    serves for the request's host). Only those are reachable, so an unpublished or
-    not-offered theme can't be fetched.
+    ``slug`` is a theme offered to visitors, or ``"default"`` / its own slug for one
+    of the **domain's** default themes. Only those are reachable, so an unpublished or
+    not-offered theme can't be fetched. ``"default"`` gives the domain's primary theme.
     """
-    active = get_active_theme(request)
+    defaults = default_themes(request)
     if slug == "default":
-        return active
+        return defaults["light"] or defaults["dark"]
     offered = {theme.slug: theme for theme in offered_themes()}
     if slug in offered:
         return offered[slug]
-    if active is not None and active.slug == slug:
-        return active
+    for theme in defaults.values():
+        if theme is not None and theme.slug == slug:
+            return theme
     return None
 
 
@@ -117,7 +130,7 @@ def site_of(request):
 
 
 def _state(site):
-    """The theme for `site` and the offered themes, from the cache or the database.
+    """The default themes for `site` and the offered themes, from the cache or database.
 
     A scheduled assignment (one with dates) wins while it's running; otherwise
     it's the default assignment. The site's own assignments win over the ones
@@ -136,6 +149,7 @@ def _state(site):
     if (
         isinstance(cached, dict)
         and "valid_until" in cached
+        and "themes" in cached
         and (cached["valid_until"] is None or now < cached["valid_until"])
     ):
         return cached
@@ -143,8 +157,7 @@ def _state(site):
         state, timeout = _state_from_db(site, now)
     except DatabaseError:
         logger.exception("capy-theme: could not load the active theme; serving no theme")
-        return {"theme": None, "offered": {}, "valid_until": None}
-    # Stored in a dict so "no active theme" (None) is cached too.
+        return {"themes": {"light": None, "dark": None}, "offered": {}, "valid_until": None}
     _cache_set(key, state, timeout)
     return state
 
@@ -152,7 +165,10 @@ def _state(site):
 def _state_from_db(site, now):
     """Build `site`'s state from the database, with the cache timeout to store it for."""
     assignments = list(_assignments(site))
-    current = _for_site(assignments, site, now)
+    themes = {}
+    for scheme in SCHEMES:
+        current = _for_site([a for a in assignments if a.scheme == scheme], site, now)
+        themes[scheme] = current.theme if current else None
     boundaries = [
         moment
         for a in assignments
@@ -164,7 +180,7 @@ def _state_from_db(site, now):
         offered_to_visitors=True, live_revision__isnull=False
     ).select_related("live_revision")
     state = {
-        "theme": current.theme if current else None,
+        "themes": themes,
         "offered": {theme.slug: theme for theme in offered},
         "valid_until": valid_until,
     }
@@ -180,7 +196,7 @@ def _assignments(site):
 
 
 def _for_site(assignments, site, when):
-    """The site's own live assignment, else the one for every site."""
+    """The site's own live assignment, else the one for every site (for one scheme)."""
     if site:
         own = _current([a for a in assignments if a.site == site], when)
         if own is not None:
@@ -199,9 +215,10 @@ def _current(assignments, when):
     return next((a for a in assignments if not a.is_scheduled), None)
 
 
-def theme_at(when, site=""):
-    """The site's theme at a given moment (not cached; for previews)."""
-    current = _for_site(list(_assignments(site)), site, when)
+def theme_at(when, scheme, site=""):
+    """The site's theme for one scheme at a given moment (not cached; for previews)."""
+    assignments = [a for a in _assignments(site) if a.scheme == scheme]
+    current = _for_site(assignments, site, when)
     return current.theme if current else None
 
 
@@ -223,29 +240,39 @@ def not_published_message(theme):
     return f"Publish “{theme}” before activating it."
 
 
-def default_theme():
-    """The theme activated for every site (the default when no schedule is running
-    and a domain has no site theme of its own), or None. Read from the database."""
+def default_theme(scheme, site=""):
+    """The default theme for one scheme on `site` (the undated assignment), or None.
+    Read from the database."""
     assignment = (
         ThemeAssignment.objects.select_related("theme")
-        .filter(site="", starts_at=None, ends_at=None)
+        .filter(site=site.lower(), scheme=scheme, starts_at=None, ends_at=None)
         .first()
     )
     return assignment.theme if assignment else None
 
 
 def activate(theme, site=""):
-    """Make `theme` the active theme, for every site or for one domain.
+    """Make `theme` the default theme for its scheme, for every site or one domain.
 
-    Raises NotPublished if it has no live revision.
+    The scheme comes from the theme (a light theme becomes the light default, a
+    dark theme the dark default). Raises NotPublished if it has no live revision.
     """
     if theme.live_revision_id is None:
         raise NotPublished(not_published_message(theme))
     ThemeAssignment.objects.update_or_create(
-        site=site.lower(), starts_at=None, ends_at=None, defaults={"theme": theme}
+        site=site.lower(),
+        scheme=theme.scheme,
+        starts_at=None,
+        ends_at=None,
+        defaults={"theme": theme},
     )
     clear_cache()
-    logger.info("Activated theme %r for %s.", theme.slug, site.lower() or "every site")
+    logger.info(
+        "Activated theme %r as the %s default for %s.",
+        theme.slug,
+        theme.scheme,
+        site.lower() or "every site",
+    )
 
 
 def clear_cache():

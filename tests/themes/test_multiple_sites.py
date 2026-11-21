@@ -11,7 +11,7 @@ from django.utils import timezone
 from capy_theme.artifacts.build import get_artifacts
 from capy_theme.css.stylesheet import stylesheet_url
 from capy_theme.models import SiteTheme, Theme, ThemeAssignment
-from capy_theme.themes.active import activate, get_active_theme, site_of
+from capy_theme.themes.active import activate, primary_theme, site_of
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -34,7 +34,7 @@ def published(name, **fields):
 @pytest.fixture
 def themes():
     main = published("Main")
-    other = published("Other", light_base="cupcake")
+    other = published("Other", base="cupcake")
     activate(main)
     activate(other, site="127.0.0.1")
     return main, other
@@ -46,8 +46,8 @@ def on(rf, host):
 
 def test_the_issue_check_two_hostnames_show_different_themes(rf, themes):
     main, other = themes
-    assert get_active_theme(on(rf, "localhost")) == main
-    assert get_active_theme(on(rf, "127.0.0.1")) == other
+    assert primary_theme(on(rf, "localhost")) == main
+    assert primary_theme(on(rf, "127.0.0.1")) == other
     # The exposed stylesheet differs per host (a consumer links it itself).
     local = get_artifacts(on(rf, "localhost:8000"))["stylesheet_url"]
     ip = get_artifacts(on(rf, "127.0.0.1:8000"))["stylesheet_url"]
@@ -57,8 +57,8 @@ def test_the_issue_check_two_hostnames_show_different_themes(rf, themes):
 
 def test_other_domains_and_no_request_use_the_theme_for_every_site(rf, themes):
     main, _ = themes
-    assert get_active_theme(on(rf, "shop.example.com")) == main
-    assert get_active_theme() == main
+    assert primary_theme(on(rf, "shop.example.com")) == main
+    assert primary_theme() == main
 
 
 def test_port_and_case_dont_matter(rf, themes):
@@ -66,7 +66,7 @@ def test_port_and_case_dont_matter(rf, themes):
     assert site_of(on(rf, "127.0.0.1:8001")) == "127.0.0.1"
     SiteTheme.objects.filter(site="127.0.0.1").update(site="shop.example.com")
     cache.clear()
-    assert get_active_theme(on(rf, "SHOP.example.com:443")) == other
+    assert primary_theme(on(rf, "SHOP.example.com:443")) == other
 
 
 def test_a_sites_schedule_wins_on_that_site(rf, themes):
@@ -79,9 +79,9 @@ def test_a_sites_schedule_wins_on_that_site(rf, themes):
         starts_at=now - timedelta(days=1),
         ends_at=now + timedelta(days=1),
     )
-    assert get_active_theme(on(rf, "localhost")) == sale
-    assert get_active_theme(on(rf, "127.0.0.1")) == other
-    assert get_active_theme(on(rf, "shop.example.com")) == main
+    assert primary_theme(on(rf, "localhost")) == sale
+    assert primary_theme(on(rf, "127.0.0.1")) == other
+    assert primary_theme(on(rf, "shop.example.com")) == main
 
 
 def test_a_site_theme_wins_over_a_schedule_for_every_site(rf, themes):
@@ -89,15 +89,15 @@ def test_a_site_theme_wins_over_a_schedule_for_every_site(rf, themes):
     holiday = published("Holiday")
     now = timezone.now()
     ThemeAssignment.objects.create(theme=holiday, starts_at=now - timedelta(days=1))
-    assert get_active_theme(on(rf, "127.0.0.1")) == other  # its own theme
-    assert get_active_theme(on(rf, "localhost")) == holiday  # the schedule for every site
+    assert primary_theme(on(rf, "127.0.0.1")) == other  # its own theme
+    assert primary_theme(on(rf, "localhost")) == holiday  # the schedule for every site
 
 
 def test_changing_one_site_clears_every_sites_cache(rf, themes):
     main, other = themes
-    assert get_active_theme(on(rf, "127.0.0.1")) == other
+    assert primary_theme(on(rf, "127.0.0.1")) == other
     activate(main, site="127.0.0.1")
-    assert get_active_theme(on(rf, "127.0.0.1")) == main
+    assert primary_theme(on(rf, "127.0.0.1")) == main
 
 
 @pytest.mark.parametrize(

@@ -29,7 +29,7 @@ from ..themes.active import (
     NotPublished,
     activate,
     default_theme,
-    get_active_theme,
+    default_themes,
     not_published_message,
 )
 from ..themes.publishing import (
@@ -72,9 +72,10 @@ def publish_status(theme):
         draft = "Has changes visitors don't see yet"
     else:
         draft = "Matches the published version"
-    default = default_theme()
+    scheme = theme.scheme
+    default = default_theme(scheme) if scheme else None
     if default is None:
-        default_text = "No (there's no default theme yet)"
+        default_text = f"No (there's no default {scheme} theme yet)"
     elif default.pk == theme.pk:
         default_text = "Yes"
     else:
@@ -82,23 +83,24 @@ def publish_status(theme):
     status = [
         ("Draft", draft),
         ("Published", f"revision {live.number}" if live else "never"),
-        ("Default theme", default_text),
+        (f"Default {scheme} theme", default_text),
     ]
-    showing = get_active_theme()
+    showing = default_themes().get(scheme) if scheme else None
     if showing is not None and (default is None or showing.pk != default.pk):
         status.append(("Showing now", f"“{showing}”, because a theme schedule is running"))
     return status
 
 
 def activated_message(theme):
-    """What activating did: the default theme, and whether a schedule hides it."""
-    showing = get_active_theme()
+    """What activating did: the default theme for its scheme, and whether a schedule hides it."""
+    scheme = theme.scheme
+    showing = default_themes().get(scheme)
     if showing is not None and showing.pk != theme.pk:
         return messages.WARNING, (
-            f"“{theme}” is now the default theme, but a theme schedule is showing "
+            f"“{theme}” is now the default {scheme} theme, but a theme schedule is showing "
             f"“{showing}” right now."
         )
-    return messages.SUCCESS, f"“{theme}” is now the default theme."
+    return messages.SUCCESS, f"“{theme}” is now the default {scheme} theme."
 
 
 def run_publish(request, theme, activate_too, quiet=False):
@@ -219,7 +221,7 @@ class SavePublishMixin:
                 type(theme).objects.select_related("live_revision").filter(pk=theme.pk).first()
                 or theme
             )
-        default = default_theme()
+        default = default_theme(theme.scheme) if theme is not None and theme.scheme else None
         return {
             "capy_status": publish_status(theme),
             "capy_is_default": theme is not None and default is not None and default.pk == theme.pk,

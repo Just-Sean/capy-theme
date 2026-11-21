@@ -59,8 +59,8 @@ def themes():
     activate(site)
     return {
         "site": site,
-        "ocean": published("Ocean", offered=True, light_base="cupcake"),
-        "forest": published("Forest", offered=True, light_base="emerald"),
+        "ocean": published("Ocean", offered=True, base="cupcake"),
+        "forest": published("Forest", offered=True, base="emerald"),
         "secret": published("Secret"),  # published, but not offered and not default
     }
 
@@ -78,9 +78,9 @@ def test_catalog_lists_offered_and_default_with_swatches(client, themes, mode, w
     assert entries["ocean"]["default"] is False
     ocean = entries["ocean"]
     assert ocean["name"] == "Ocean"
-    assert ocean["light"]["base"] == "cupcake"
-    assert ocean["light"]["swatch"].startswith("#")
-    assert ocean["dark"]["background"].startswith("#")
+    assert ocean["scheme"] == "light"  # cupcake is a light base
+    assert ocean["swatch"].startswith("#")
+    assert ocean["background"].startswith("#")
     assert ocean["assets_url"].endswith("/theme/themes/ocean.json")
     assert ocean["stylesheet_url"].startswith("http://testserver/theme/")
     assert response["Cache-Control"] == "public, max-age=60"

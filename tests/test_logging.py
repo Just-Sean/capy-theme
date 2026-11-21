@@ -74,8 +74,11 @@ def test_activating_logs_for_which_sites(logs):
     activate(theme)
     activate(theme, site="Shop.Example.com")
     assert messages(logs) == [
-        ("capy_theme.themes.active", "Activated theme 'main' for every site."),
-        ("capy_theme.themes.active", "Activated theme 'main' for shop.example.com."),
+        ("capy_theme.themes.active", "Activated theme 'main' as the light default for every site."),
+        (
+            "capy_theme.themes.active",
+            "Activated theme 'main' as the light default for shop.example.com.",
+        ),
     ]
 
 

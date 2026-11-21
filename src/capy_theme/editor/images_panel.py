@@ -1,17 +1,14 @@
 """The Components view's images section: every image and icon the theme produces."""
 
-from ..colors.names import SCHEMES
-
 
 def images(theme):
-    """Data for the Components view's images section, per mode, from the saved draft.
+    """Data for the Components view's images section, from the saved draft.
 
     The icons come from the published revision, because they're made when
     publishing.
 
-    {mode: {"logos": [...], "icons": [...], "backgrounds": [...]}, plus
-    "sharing" (the sharing image)}.
-    Each logo says which image it shows and why (its own, the light one, or the
+    {"logos": [...], "backgrounds": [...], "icons": [...], "icon_preview": {...},
+    "sharing": {...}}. Each logo says which image it shows and why (its own, or the
     main logo it falls back to).
     """
     from ..images.icons import FILES, icon_urls
@@ -24,53 +21,43 @@ def images(theme):
     settings = snapshot.get("settings", {})
     chosen = snapshot.get("images", {})
     url = theme_storage().url
-    result = {}
-    for mode in SCHEMES:
-        logos = []
-        for slot in LOGO_SLOTS:
-            # Email and print logos always use the light version (see logos.logo_html).
-            header = slot in HEADER_SLOTS
-            image = resolve(snapshot, slot, mode if header else "light")
-            own = chosen.get(slot, {})
-            if not header and mode == "dark" and image:
-                source = "Always the light version (emails and print have no dark mode)"
-            elif mode in own:
-                source = "Its own image"
-            elif "light" in own:
-                source = "No dark version: uses the light one"
-            elif FALLBACK.get(slot) and image:
-                source = f"Empty: falls back to the {SLOTS[FALLBACK[slot]][0].lower()}"
-            elif image:
-                source = "From before logo slots"
-            else:
-                source = "Empty: shows the site name"
-            # Email and print logos are always the plain file (see logos.logo_html).
-            variants = image.get("variants", []) if image and slot in HEADER_SLOTS else []
-            logos.append(
-                {
-                    "slot": slot,
-                    "label": SLOTS[slot][0],
-                    "header": slot in HEADER_SLOTS,
-                    "url": url(image["file"]) if image else "",
-                    "width": image["width"] if image else 0,
-                    "height": image["height"] if image else 0,
-                    "alt": (image or {}).get("alt") or settings.get("site_name", ""),
-                    "source": source,
-                    "formats": sorted({v["format"].upper() for v in variants}),
-                    "widths": sorted({v["width"] for v in variants}),
-                }
-            )
-        backgrounds = [
+    logos = []
+    for slot in LOGO_SLOTS:
+        image = resolve(snapshot, slot)
+        if slot in chosen:
+            source = "Its own image"
+        elif FALLBACK.get(slot) and image:
+            source = f"Empty: falls back to the {SLOTS[FALLBACK[slot]][0].lower()}"
+        elif image:
+            source = "From before logo slots"
+        else:
+            source = "Empty: shows the site name"
+        # Email and print logos are always the plain file (see logos.logo_html).
+        variants = image.get("variants", []) if image and slot in HEADER_SLOTS else []
+        logos.append(
             {
+                "slot": slot,
                 "label": SLOTS[slot][0],
-                "class": f"capy-bg-{slot.removeprefix('background_')}",
-                "set": resolve(snapshot, slot, mode) is not None,
+                "header": slot in HEADER_SLOTS,
+                "url": url(image["file"]) if image else "",
+                "width": image["width"] if image else 0,
+                "height": image["height"] if image else 0,
+                "alt": (image or {}).get("alt") or settings.get("site_name", ""),
+                "source": source,
+                "formats": sorted({v["format"].upper() for v in variants}),
+                "widths": sorted({v["width"] for v in variants}),
             }
-            for slot in ("background_login", "background_pattern")
-        ]
-        result[mode] = {"logos": logos, "backgrounds": backgrounds}
+        )
+    backgrounds = [
+        {
+            "label": SLOTS[slot][0],
+            "class": f"capy-bg-{slot.removeprefix('background_')}",
+            "set": resolve(snapshot, slot) is not None,
+        }
+        for slot in ("background_login", "background_pattern")
+    ]
     urls = icon_urls(theme.live_revision.snapshot) if theme.live_revision else {}
-    result["icons"] = (
+    icons = (
         [
             {"name": name, "url": urls[name], "size": size, "label": text}
             for name, (size, text) in FILES.items()
@@ -80,17 +67,20 @@ def images(theme):
     )
     # The icon image chosen in the draft, for a live preview of its settings.
     icon_settings = theme.settings.get("icon", {})
-    result["icon_preview"] = {
-        "asset": theme.settings.get("images", {}).get("icon", {}).get("light"),
-        # The dark icon is only used by the browser-tab icon in dark mode.
-        "dark_asset": theme.settings.get("images", {}).get("icon", {}).get("dark"),
+    icon_preview = {
+        "asset": theme.settings.get("images", {}).get("icon"),
         "background": icon_settings.get("background", ""),
         "padding": icon_settings.get("padding", 0),
     }
     share = sharing_image(snapshot)
-    result["sharing"] = {
-        "image": url(share["file"]) if share else "",
-        "alt": share["alt"] if share else "",
-        "size": SIZE,
+    return {
+        "logos": logos,
+        "backgrounds": backgrounds,
+        "icons": icons,
+        "icon_preview": icon_preview,
+        "sharing": {
+            "image": url(share["file"]) if share else "",
+            "alt": share["alt"] if share else "",
+            "size": SIZE,
+        },
     }
-    return result

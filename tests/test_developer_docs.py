@@ -27,19 +27,15 @@ def everything(settings, tmp_path):
     theme = Theme.objects.create(name="All", slug="all")
     buffer = io.BytesIO()
     Image.new("RGB", (40, 40), "red").save(buffer, "PNG")
-    login = add_asset(
-        theme, "background_login", "light", SimpleUploadedFile("a.png", buffer.getvalue())
-    )
-    pattern = add_asset(
-        theme, "background_pattern", "light", SimpleUploadedFile("b.png", buffer.getvalue())
-    )
+    login = add_asset(theme, "background_login", SimpleUploadedFile("a.png", buffer.getvalue()))
+    pattern = add_asset(theme, "background_pattern", SimpleUploadedFile("b.png", buffer.getvalue()))
     sans = Font.objects.get(family="System sans").pk
     theme.settings = {
         "fonts": dict.fromkeys(("body", "heading", "mono", "display"), sans),
         "type": {"base_size": 18, "scale": 1.25, "line_height": 1.6, "heading_weight": 700},
         "images": {
-            "background_login": {"light": login.pk},
-            "background_pattern": {"light": pattern.pk},
+            "background_login": login.pk,
+            "background_pattern": pattern.pk,
         },
     }
     theme.save()

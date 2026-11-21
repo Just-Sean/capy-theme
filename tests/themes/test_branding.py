@@ -39,9 +39,7 @@ def form_data(**kwargs):
     data = {
         "name": "Main",
         "slug": "main",
-        "light_base": "light",
-        "dark_base": "dark",
-        "visitors_can_switch": "on",  # ticked by default in the real form
+        "base": "light",
     }
     return data | kwargs
 
@@ -73,27 +71,27 @@ def test_form_shows_current_values_and_blank_removes_them():
 
 def with_logo(theme, name="logo.png", color="red"):
     """Upload a main logo for the theme and choose it (in the draft)."""
-    asset = add_asset(theme, "logo_main", "light", png(name, color))
-    theme.settings = {**theme.settings, "images": {"logo_main": {"light": asset.pk}}}
+    asset = add_asset(theme, "logo_main", png(name, color))
+    theme.settings = {**theme.settings, "images": {"logo_main": asset.pk}}
     theme.save()
     return asset
 
 
 def test_form_chooses_the_main_logo():
     theme = Theme.objects.create(name="Main", slug="main")
-    asset = add_asset(theme, "logo_main", "light", png())
-    form = ThemeForm(data=form_data(image_logo_main_light=str(asset.pk)), instance=theme)
+    asset = add_asset(theme, "logo_main", png())
+    form = ThemeForm(data=form_data(image_logo_main=str(asset.pk)), instance=theme)
     assert form.is_valid(), form.errors
-    assert form.save().settings == {"images": {"logo_main": {"light": asset.pk}}}
+    assert form.save().settings == {"images": {"logo_main": asset.pk}}
 
 
 def test_form_only_offers_this_themes_images_for_the_slot():
     theme = Theme.objects.create(name="Main", slug="main")
     other = Theme.objects.create(name="Other", slug="other")
-    mine = add_asset(theme, "logo_main", "light", png())
-    add_asset(theme, "logo_mark", "light", png())
-    add_asset(other, "logo_main", "light", png())
-    choices = ThemeForm(instance=theme).fields["image_logo_main_light"].widget.choices
+    mine = add_asset(theme, "logo_main", png())
+    add_asset(theme, "logo_mark", png())
+    add_asset(other, "logo_main", png())
+    choices = ThemeForm(instance=theme).fields["image_logo_main"].widget.choices
     assert [str(value) for value, _ in choices] == ["", str(mine.pk)]
 
 
@@ -106,8 +104,8 @@ def test_revision_keeps_its_logo_after_the_logo_is_replaced():
     first = publish(theme)
     with_logo(theme, "second.png", "blue")
     second = publish(theme)
-    old = first.snapshot["images"]["logo_main"]["light"]["file"]
-    new = second.snapshot["images"]["logo_main"]["light"]["file"]
+    old = first.snapshot["images"]["logo_main"]["file"]
+    new = second.snapshot["images"]["logo_main"]["file"]
     assert old != new
     assert default_storage.exists(old)  # old file not overwritten
     assert default_storage.exists(new)
@@ -115,9 +113,9 @@ def test_revision_keeps_its_logo_after_the_logo_is_replaced():
 
 def test_a_theme_cant_choose_another_themes_image():
     other = Theme.objects.create(name="Other", slug="other")
-    asset = add_asset(other, "logo_main", "light", png())
+    asset = add_asset(other, "logo_main", png())
     theme = Theme.objects.create(name="Main", slug="main")
-    theme.settings = {"images": {"logo_main": {"light": asset.pk}}}
+    theme.settings = {"images": {"logo_main": asset.pk}}
     with pytest.raises(ValidationError, match="isn't one of this theme's"):
         theme.save()
 
@@ -140,7 +138,7 @@ def test_artifacts_have_branding(rf):
     assert artifacts["branding"]["site_name"] == "Capy Co"
     assert artifacts["branding"]["tagline"] == "Hello"
     assert artifacts["branding"]["logo_alt"] == "Capy Co"
-    assert artifacts["logos"]["logo_main"]["light"]["url"].endswith(f"/media/{asset.original.name}")
+    assert artifacts["logos"]["logo_main"]["url"].endswith(f"/media/{asset.original.name}")
 
 
 def test_admin_shows_branding_fields_and_read_only_settings(client, django_user_model):
@@ -149,6 +147,6 @@ def test_admin_shows_branding_fields_and_read_only_settings(client, django_user_
     theme = Theme.objects.create(name="Main", slug="main", settings={"site_name": "Capy Co"})
     content = client.get(reverse("admin:capy_theme_theme_change", args=[theme.pk])).content
     assert b'name="site_name"' in content
-    assert b'name="image_logo_main_light"' in content
+    assert b'name="image_logo_main"' in content
     assert b'name="settings"' not in content  # no raw JSON box
     assert b"Stored settings" in content

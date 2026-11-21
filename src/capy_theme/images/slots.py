@@ -1,4 +1,4 @@
-"""The image slots (logos, icon, sharing image, backgrounds), their limits and modes."""
+"""The image slots (logos, icon, sharing image, backgrounds) and their limits."""
 
 import json
 from pathlib import Path
@@ -15,15 +15,8 @@ SLOTS = {
 }
 
 
-# The modes each slot can have its own image for.
-SLOT_MODES = {slot: tuple(s["modes"]) for slot, s in _DATA["slots"].items()}
-
-
 # Slots where SVG can't be used (a PNG, JPEG, WebP or GIF must be uploaded), and why.
 NO_SVG = _DATA["no_svg"]
 
 
 SLOT_CHOICES = [(slot, spec[0]) for slot, spec in SLOTS.items()]
-
-
-MODES = [("light", "Light"), ("dark", "Dark")]

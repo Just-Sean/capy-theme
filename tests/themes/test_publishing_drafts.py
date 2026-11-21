@@ -33,35 +33,34 @@ def test_publish_creates_revision_with_who_and_when(theme, user):
     assert revision.published_by == user
     assert revision.published_at is not None
     assert revision.note == "First version"
-    assert revision.snapshot["light_base"] == "light"
-    assert revision.snapshot["dark_base"] == "dark"
+    assert revision.snapshot["base"] == "light"
+    assert revision.snapshot["scheme"] == "light"
     assert revision.snapshot["settings"] == {}
-    assert len(revision.snapshot["light_values"]) == 28
-    assert len(revision.snapshot["dark_values"]) == 28
+    assert len(revision.snapshot["values"]) == 28
     assert not theme.has_unpublished_changes
 
 
 def test_editing_changes_only_the_draft(theme, user):
     publish(theme, user=user)
-    theme.light_base = "cupcake"
+    theme.base = "cupcake"
     theme.save()
     theme.refresh_from_db()
-    assert theme.live_revision.snapshot["light_base"] == "light"
+    assert theme.live_revision.snapshot["base"] == "light"
     assert theme.has_unpublished_changes
 
 
 def test_each_publish_adds_a_numbered_revision(theme, user):
     publish(theme, user=user)
-    theme.light_base = "cupcake"
+    theme.base = "cupcake"
     theme.save()
     second = publish(theme, user=user)
     theme.refresh_from_db()
     assert second.number == 2
     assert theme.live_revision == second
-    assert second.snapshot["light_base"] == "cupcake"
+    assert second.snapshot["base"] == "cupcake"
     assert [r.number for r in theme.revisions.all()] == [2, 1]
     # The first revision is unchanged.
-    assert theme.revisions.get(number=1).snapshot["light_base"] == "light"
+    assert theme.revisions.get(number=1).snapshot["base"] == "light"
 
 
 def test_publishing_without_changes_is_refused(theme, user):
@@ -90,7 +89,7 @@ def test_invalid_draft_cant_be_published(theme, user, settings):
 def test_saving_a_stale_copy_doesnt_unpublish(theme, user):
     stale = Theme.objects.get(pk=theme.pk)  # e.g. an edit form opened before publishing
     publish(theme, user=user)
-    stale.light_base = "cupcake"
+    stale.base = "cupcake"
     stale.save()
     theme.refresh_from_db()
     assert theme.live_revision is not None

@@ -146,7 +146,7 @@ def test_image_max_bytes(settings, tmp_path):
     settings.CAPY_THEME_IMAGE_MAX_BYTES = len(data) - 1
     assert byte_limit("logo_main") == len(data) - 1
     with pytest.raises(ValidationError, match="too big"):
-        add_asset(theme, "logo_main", "light", SimpleUploadedFile("a.png", data))
+        add_asset(theme, "logo_main", SimpleUploadedFile("a.png", data))
     settings.CAPY_THEME_IMAGE_MAX_BYTES = 50 * 1024 * 1024  # higher than the slot's
     assert byte_limit("logo_main") == 2 * 1024 * 1024
 

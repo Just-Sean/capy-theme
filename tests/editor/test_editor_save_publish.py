@@ -9,7 +9,7 @@ from django.core.cache import cache
 from django.urls import reverse
 
 from capy_theme.models import Theme, ThemeRevision
-from capy_theme.themes.active import activate, get_active_theme
+from capy_theme.themes.active import activate, primary_theme
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -58,14 +58,14 @@ def test_save_stores_the_draft_and_keeps_other_settings(client, django_user_mode
         client,
         "save",
         theme,
-        {"light_base": "cupcake", "settings": {"colors": {"light": {"primary": "#3b82f6"}}}},
+        {"base": "cupcake", "settings": {"colors": {"primary": "#3b82f6"}}},
     )
     assert response.status_code == 200
     theme.refresh_from_db()
-    assert theme.light_base == "cupcake"
+    assert theme.base == "cupcake"
     assert theme.settings == {
         "site_name": "Capy",
-        "colors": {"light": {"primary": "oklch(62.31% 0.188 259.81)"}},
+        "colors": {"primary": "oklch(62.31% 0.188 259.81)"},
     }
     assert response.json()["state"]["has_unpublished_changes"] is True
 
@@ -74,7 +74,7 @@ def test_saving_doesnt_publish(client, django_user_model, theme):
     login(client, django_user_model, "change_theme")
     publish(theme)
     activate(theme)
-    post(client, "save", theme, {"settings": {"colors": {"light": {"primary": PINK}}}})
+    post(client, "save", theme, {"settings": {"colors": {"primary": PINK}}})
     theme.refresh_from_db()
     assert theme.live_revision.number == 1
     assert "colors" not in theme.live_revision.snapshot["settings"]
@@ -82,7 +82,7 @@ def test_saving_doesnt_publish(client, django_user_model, theme):
 
 def test_save_refuses_invalid_values_and_changes_nothing(client, django_user_model, theme):
     login(client, django_user_model, "change_theme")
-    response = post(client, "save", theme, {"settings": {"colors": {"light": {"primary": "nope"}}}})
+    response = post(client, "save", theme, {"settings": {"colors": {"primary": "nope"}}})
     assert response.status_code == 400
     theme.refresh_from_db()
     assert theme.settings == {"site_name": "Capy"}
@@ -154,7 +154,7 @@ def test_bad_json_is_refused_and_nothing_changes(client, django_user_model, them
 def test_publish_refuses_an_invalid_saved_draft(client, django_user_model, theme):
     # A draft can only be invalid if it was changed outside the app (e.g. in the
     # database directly); publishing it must fail cleanly, not make a revision.
-    Theme.objects.filter(pk=theme.pk).update(settings={"colors": {"light": {"primary": 5}}})
+    Theme.objects.filter(pk=theme.pk).update(settings={"colors": {"primary": 5}})
     login(client, django_user_model, "change_theme", "publish_theme")
     response = post(client, "publish", theme, {})
     assert response.status_code == 400
@@ -219,7 +219,7 @@ def test_editor_publish_can_also_activate(client, django_user_model):
     reply = client.post(url, {"activate": True}, content_type="application/json").json()
     assert (reply["published"], reply["activated"]) == (1, True)
     assert reply["state"]["is_default"] is True
-    assert get_active_theme().pk == theme.pk
+    assert primary_theme().pk == theme.pk
     # Nothing new to publish: activating still works (no new revision).
     other = Theme.objects.create(name="Other", slug="other")
     client.post(
@@ -231,7 +231,7 @@ def test_editor_publish_can_also_activate(client, django_user_model):
         content_type="application/json",
     ).json()
     assert (reply["published"], reply["activated"]) == (None, True)
-    assert get_active_theme().pk == other.pk and other.revisions.count() == 1
+    assert primary_theme().pk == other.pk and other.revisions.count() == 1
 
 
 def test_editor_publish_without_activate_doesnt_activate(client, django_user_model):
@@ -241,7 +241,7 @@ def test_editor_publish_without_activate_doesnt_activate(client, django_user_mod
     for value in (None, "yes", 1):  # only a real true activates
         body = {} if value is None else {"activate": value}
         client.post(url, body, content_type="application/json")
-    assert theme.revisions.count() == 1 and get_active_theme() is None
+    assert theme.revisions.count() == 1 and primary_theme() is None
 
 
 def test_the_editor_has_the_three_buttons_with_descriptions():
@@ -283,7 +283,7 @@ def test_editor_publish_and_activate_says_when_a_schedule_shows_another_theme(
     assert reply["activated"] is True and reply["showing"] == "Sale"
     # It's the default theme now (no more activate button), though Sale shows for now.
     assert reply["state"]["is_default"] is True
-    assert get_active_theme().pk == sale.pk
+    assert primary_theme().pk == sale.pk
     assert "a theme schedule is showing" in STATIC_ACTIONS.read_text()
 
 
@@ -319,22 +319,22 @@ def test_only_a_json_true_activates(client, django_user_model, theme, value):
     login(client, django_user_model, "change_theme", "publish_theme")
     response = post(client, "publish", theme, {"activate": value})
     assert response.status_code == 200 and response.json()["activated"] is False
-    assert theme.revisions.count() == 1 and get_active_theme() is None
+    assert theme.revisions.count() == 1 and primary_theme() is None
 
 
 def test_activate_needs_the_publish_permission(client, django_user_model, theme):
     login(client, django_user_model, "change_theme")
     assert post(client, "publish", theme, {"activate": True}).status_code == 403
-    assert not ThemeRevision.objects.exists() and get_active_theme() is None
+    assert not ThemeRevision.objects.exists() and primary_theme() is None
 
 
 def test_activate_an_invalid_draft_activates_nothing(client, django_user_model, theme, settings):
-    Theme.objects.filter(pk=theme.pk).update(light_base="cupcake")
+    Theme.objects.filter(pk=theme.pk).update(base="cupcake")
     settings.CAPY_THEME_BUILTIN_THEMES = ["light", "dark"]
     login(client, django_user_model, "change_theme", "publish_theme")
     response = post(client, "publish", theme, {"activate": True})
     assert response.status_code == 400 and "Can't publish" in response.json()["errors"][0]
-    assert get_active_theme() is None
+    assert primary_theme() is None
 
 
 def test_activate_the_site_theme_with_nothing_new(client, django_user_model, theme):

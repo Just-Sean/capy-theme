@@ -143,15 +143,14 @@ def _create(archive, manifest, stored):
     theme = Theme.objects.create(
         name=_free("name", data["name"]),
         slug=_free("slug", data["slug"]),
-        light_base=data["light_base"],
-        dark_base=data["dark_base"],
+        base=data["base"],
         settings=data["settings"],
     )
     fonts = {key: _font(archive, font, stored) for key, font in manifest["fonts"].items()}
     images = {}
     for key, image in manifest["images"].items():
         upload = SimpleUploadedFile(Path(image["path"]).name, _read(archive, image["path"]))
-        asset = add_asset(theme, image["slot"], image["mode"], upload, image.get("alt_text", ""))
+        asset = add_asset(theme, image["slot"], upload, image.get("alt_text", ""))
         stored.append(asset.original)
         stored.extend(variant.file for variant in asset.variants.all())
         images[key] = asset.pk
@@ -160,11 +159,10 @@ def _create(archive, manifest, stored):
         settings["fonts"] = {role: _known(fonts, key) for role, key in data["font_roles"].items()}
     if data.get("image_slots"):
         settings["images"] = {
-            slot: {mode: _known(images, key) for mode, key in modes.items()}
-            for slot, modes in data["image_slots"].items()
+            slot: _known(images, key) for slot, key in data["image_slots"].items()
         }
     theme.settings = settings
-    theme.save()  # validates the settings and bases like any theme
+    theme.save()  # validates the settings and base like any theme
     return theme
 
 

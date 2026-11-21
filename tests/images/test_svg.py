@@ -170,7 +170,7 @@ def test_an_uploaded_svg_is_stored_clean(settings, tmp_path):
     settings.MEDIA_ROOT = tmp_path
     theme = Theme.objects.create(name="Main", slug="main")
     upload = SimpleUploadedFile("logo.svg", svg("<script>alert(1)</script><rect width='4'/>"))
-    asset = add_asset(theme, "logo_main", "light", upload, "Logo")
+    asset = add_asset(theme, "logo_main", upload, "Logo")
     with asset.original.open("rb") as f:
         stored = f.read()
     assert b"script" not in stored and b"<rect" in stored

@@ -1695,3 +1695,35 @@ Before v1.0, capy-theme ran in a throwaway project generated from
 - Everything that isn't a security problem waits for v2, Sean's call. Planned:
   deleting old revisions so their images can be deleted (option C). Open issues
   for later: #231, #214, #206.
+
+## v2: A theme is a single scheme — light or dark (2026-11-21)
+
+- **Why:** a theme used to carry both a `light_base` and a `dark_base`, so one
+  theme spanned both color modes and the mode toggle switched within it. That
+  doesn't match daisyUI (where each theme is light *or* dark) and made the model
+  confusing: every theme had two of everything (two base themes, two color sets,
+  per-slot light/dark images, per-theme mode settings).
+- **Chosen:** a theme is one scheme now. It has a single `base`; its `scheme`
+  ("light"/"dark") is derived from that base. Colors are one set, images are one
+  per slot, and `ThemeAsset.mode`, `default_mode` and `visitors_can_switch` are
+  gone. The light/dark/auto toggle is no longer a theme's job — it belongs to the
+  consumer (e.g. capy-shell), which switches between a **default light theme** and
+  a **default dark theme**.
+- **Defaults:** a domain has up to two defaults, one per scheme (ThemeAssignment
+  gained a `scheme`, and the undated-unique constraint is now per `(site, scheme)`).
+  Activating a theme makes it the default for its scheme. A consumer resolves each
+  slot as: the user's custom pick → the admin default → the daisyUI default.
+- **Stylesheet:** each theme's stylesheet renders only its own scheme. A light
+  theme emits `:root` + `:root[data-theme="capy-light"]`; a dark theme emits the
+  `@media (prefers-color-scheme: dark)` default + `:root[data-theme="capy-dark"]`.
+  Loaded together (light slot + dark slot) they reproduce the old auto/forced
+  behavior, and the forced rules use `:root[data-theme=…]` (higher specificity than
+  `:root`) so the result doesn't depend on which sheet loads first.
+- **Exposed data:** `colors`, `colors_hex` and `shape` artifacts are flat; `logos`
+  is `{slot: image}`; `backgrounds` is `{login, pattern}`; the `mode` key is gone
+  and `theme` gained `scheme`. Catalog entries carry `scheme` + a `swatch`/
+  `background`, not separate light/dark sides. The daisyUI download is one block;
+  design tokens are flat.
+- **Data reset:** an old theme's two color sets and per-mode images can't be
+  collapsed to one without guessing, and v2 isn't released, so migration 0019
+  deletes all existing themes (Sean's call) rather than converting them.

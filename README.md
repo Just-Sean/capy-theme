@@ -20,9 +20,10 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   theme. It has the header (logo, tagline, Light / Dark / Auto) and every daisyUI
   component, with the editor open, and works the same in any project (the admin's
   **Edit live** opens it). Staff who can edit themes only.
-- **Themes** are based on any of daisyUI's 35 built-in themes: one light base and
-  one dark base. A project can limit which are offered.
-- **Colors:** override any of the 20 colors, separately for light and dark, in
+- **Themes** are based on any of daisyUI's 35 built-in themes: each theme is a
+  single scheme (light or dark), based on one of them. A project can limit which
+  are offered.
+- **Colors:** override any of the 20 colors (one set per theme), in
   any format (hex, rgb, hsl, oklch). Readable text colors and background shades
   are worked out automatically, and every color pair shows its WCAG contrast
   rating.
@@ -38,7 +39,7 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   admin and the live editor, with what it's for explained beside it, editable alt
   text, and a **Media** list to manage what's been uploaded:
   - a main logo, plus five optional versions (stacked, mark, wordmark, email,
-    print) with dark versions and fallbacks, served as responsive AVIF/WebP/PNG at
+    print) with fallbacks, served as responsive AVIF/WebP/PNG at
     the header height;
   - every favicon and app icon made from one square icon;
   - a 1200 × 630 sharing image for link previews;
@@ -59,22 +60,23 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   saves a numbered revision, recording who published it and when, and the site
   shows that. Every revision is kept; any two can be compared, and an old one
   restored (as a new revision).
-- **One active theme** (or one per domain, see Multiple sites): pick it with
-  **Activate** on the admin's theme list, or **Save, publish and activate** on the
-  theme's page. It's cached, so pages don't query the database for it.
+- **Default themes:** a default light theme and a default dark theme (and one pair
+  per domain, see Multiple sites). **Activate** on the admin's theme list, or **Save,
+  publish and activate** on the theme's page, makes a theme the default for its
+  scheme. They're cached, so pages don't query the database for them.
 - **Using it in a page:** a consumer links the theme's stylesheet (its URL comes from
   the catalog or a theme's assets) and reads `{% theme_artifacts %}` for the logo,
   colors (including hex for HTML emails) and the rest. capy-theme injects nothing into
   the page itself.
-- **Light and dark mode:** the stylesheet carries both; it follows the device, or a
-  consumer forces one by setting `data-theme` on `<html>` and builds its own toggle.
+- **Light and dark mode:** each theme is one scheme; a consumer loads a default light
+  theme and a default dark theme together (they compose — the device setting picks one)
+  and builds its own toggle that forces one with `data-theme` on `<html>`.
 - **Several themes and scheduling:** the admin offers themes for a consumer to let
   visitors pick among (via the catalog); themes can be scheduled between two dates
   (e.g. a holiday theme) and the default returns afterwards; visitors' "reduce motion"
   and "more contrast" device settings are respected.
 - **Components view** in the editor: every daisyUI component and the theme's
-  images and icons in the draft theme, light and dark side by side, updating as
-  you edit.
+  images and icons in the draft theme, updating as you edit.
 - **Custom CSS** for anything the settings don't cover, published with the theme
   and served as its own file after the theme stylesheet. Only people with the
   `edit_custom_css` permission see or change it, and a project can turn it off.
@@ -195,12 +197,12 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
    time zones.
 
 To show the theme's logo, read it from `{% theme_artifacts %}` — e.g.
-`artifacts.logos.logo_main.light`, or another logo slot (see
+`artifacts.logos.logo_main`, or another logo slot (see
 [Logos](docs/images.md#logos)), each with responsive `variants`. `{% theme_artifacts
-as artifacts %}` holds the active theme's published data: `stylesheet_url`,
-`branding` (`site_name`, `tagline`, `logo_alt`), `colors` (and `colors_hex` for HTML
-emails), `fonts`, `logos`, `icons`, `sharing_image`, `backgrounds`, and `mode`
-(`default`, `visitors_can_switch`) — or `None` if no theme is active (see
+as artifacts %}` holds the active theme's published data: `theme` (with its `scheme`),
+`stylesheet_url`, `branding` (`site_name`, `tagline`, `logo_alt`), `colors` (and
+`colors_hex` for HTML emails), `fonts`, `logos`, `icons`, `sharing_image` and
+`backgrounds` — or `None` if no theme is active (see
 [docs/artifacts.md](docs/artifacts.md)).
 
 Once you link the stylesheet, pages show the **active** theme's **published** colors.
@@ -352,7 +354,7 @@ Optional settings a project can add to its `settings.py` (all defaults are in
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `CAPY_THEME_BUILTIN_THEMES` | all 35 | Which built-in daisyUI themes can be used as a theme's light or dark base, e.g. `["light", "dark"]`. Listing an unknown theme raises an error that names it. |
+| `CAPY_THEME_BUILTIN_THEMES` | all 35 | Which built-in daisyUI themes can be used as a theme's base, e.g. `["light", "dark"]`. Listing an unknown theme raises an error that names it. |
 | `CAPY_THEME_CACHE_SECONDS` | `300` | How long the active theme is cached, in seconds. Publishing or activating clears the cache straight away; this limit makes every server process catch up when the project's cache isn't shared between processes (e.g. Django's default in-memory cache). |
 | `CAPY_THEME_API` | `"auto"` | How the themes catalog and per-theme assets endpoints are served: `"auto"` (DRF views if Django REST Framework is installed, so drf-spectacular documents them; otherwise plain Django views), `"drf"` or `"django"`. See [docs/artifacts.md](docs/artifacts.md). |
 | `CAPY_THEME_STORAGE` | `"default"` | Which entry in the project's `STORAGES` setting capy-theme saves and serves its uploads (logos, icons, backgrounds, fonts) from. Set it to a public storage in a project whose default storage is private (e.g. staff-only media), so visitors can load theme images. The storage must serve **stable, public URLs**: capy-theme writes image URLs into the theme CSS, which is cached for a year, so a storage that returns signed, expiring URLs (such as S3's default) would break them. It's read at startup, so set it before uploading theme assets; changing it later leaves existing files in the old storage (copy them, under `capy_theme/`, if you move it). |
@@ -685,7 +687,7 @@ job and stays under about 300 lines.
 | Folder (in `src/capy_theme/`) | What's in it |
 | --- | --- |
 | `portability/` | Exporting a theme to a zip and importing it as a draft (with the export file's schema) |
-| `themes/` | The `Theme`, `ThemeRevision` and assignment models (`models/`), settings validation (+ `settings.schema.json`), daisyUI's built-in themes (`catalog.py`, `builtin_themes.json`, generated), which theme is live and the cache (`active.py`), publishing, history (compare and restore), light/dark mode, branding, signals, and the mode and theme-choice views |
+| `themes/` | The `Theme`, `ThemeRevision` and assignment models (`models/`), settings validation (+ `settings.schema.json`), daisyUI's built-in themes (`catalog.py`, `builtin_themes.json`, generated), the per-scheme defaults and the cache (`active.py`), publishing, history (compare and restore), branding and signals |
 | `colors/` | Color names and groups, color math (OKLCH, contrast, readable text, shades), a theme's color values, palette suggestions, the color form field |
 | `css/` | Writing the theme stylesheet: `stylesheet.py` plus shape, type scale, backgrounds, accessibility; and the view that serves it |
 | `fonts/` | `Font` and `FontFile` models, the library (roles, stacks, `@font-face`), uploads (with the unpacking check and fontTools in its own process with limits), Google Fonts import, `curated.json` |

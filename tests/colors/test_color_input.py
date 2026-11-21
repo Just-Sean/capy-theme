@@ -49,9 +49,7 @@ def form_data(**kwargs):
     data = {
         "name": "Main",
         "slug": "main",
-        "light_base": "light",
-        "dark_base": "dark",
-        "visitors_can_switch": "on",
+        "base": "light",
     }
     return data | kwargs
 
@@ -59,20 +57,20 @@ def form_data(**kwargs):
 def test_the_issue_check_three_formats_save_and_show_as_oklch():
     form = ThemeForm(
         data=form_data(
-            color_light_primary="#3b82f6",
-            color_light_secondary="rgb(59 130 246)",
-            color_light_accent="oklch(62% 0.19 260)",
+            color_primary="#3b82f6",
+            color_secondary="rgb(59 130 246)",
+            color_accent="oklch(62% 0.19 260)",
         )
     )
     assert form.is_valid(), form.errors
     theme = form.save()
-    assert theme.settings["colors"]["light"] == {
+    assert theme.settings["colors"] == {
         "primary": "oklch(62.31% 0.188 259.81)",
         "secondary": "oklch(62.31% 0.188 259.81)",
         "accent": "oklch(62% 0.19 260)",
     }
     shown = ThemeForm(instance=theme)
-    assert shown.fields["color_light_primary"].initial == "oklch(62.31% 0.188 259.81)"
+    assert shown.fields["color_primary"].initial == "oklch(62.31% 0.188 259.81)"
 
 
 def test_widget_has_a_color_picker_matching_the_value():
@@ -82,10 +80,10 @@ def test_widget_has_a_color_picker_matching_the_value():
 
 
 def test_empty_picker_shows_the_base_color():
-    theme = Theme.objects.create(name="Main", slug="main", light_base="cupcake")
+    theme = Theme.objects.create(name="Main", slug="main", base="cupcake")
     form = ThemeForm(instance=theme)
-    html = str(form["color_light_primary"])
-    placeholder = form.fields["color_light_primary"].widget.attrs["placeholder"]
+    html = str(form["color_primary"])
+    placeholder = form.fields["color_primary"].widget.attrs["placeholder"]
     assert f'value="{to_hex(placeholder, alpha=False)}"' in html
 
 

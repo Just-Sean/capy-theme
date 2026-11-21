@@ -19,14 +19,9 @@
   }
 
   function controls(names) {
-    var nodes = [];
-    names.forEach(function (name) {
-      var s = spec(name);
-      s.modes.forEach(function (mode) {
-        nodes.push(ui.slotControl(s, mode));
-      });
+    return names.map(function (name) {
+      return ui.slotControl(spec(name));
     });
-    return nodes;
   }
 
   function field(text, input) {
@@ -70,7 +65,7 @@
     var box = el("div", { class: "capy-editor-icon-preview", "aria-hidden": "true" });
     function draw() {
       box.textContent = "";
-      var id = ((ui.changes.settings.images || {}).icon || {}).light;
+      var id = (ui.changes.settings.images || {}).icon;
       var image = ui.assets.find(function (a) { return a.id === id; });
       var settings = ui.changes.settings.icon || {};
       box.style.backgroundColor = /^#[0-9a-fA-F]{6}$/.test(settings.background || "") ? settings.background : "transparent";

@@ -1,7 +1,7 @@
 """Background images: an optional login-page background and page pattern.
 
 They're CSS variables (`--capy-bg-login`, `--capy-bg-pattern`) in the theme's
-stylesheet, set per mode, plus two helper classes. A project uses them where it
+stylesheet, plus two helper classes. A project uses them where it
 wants: `class="capy-bg-pattern"` on <body>, or
 `background-image: var(--capy-bg-login)` in its own CSS. Templates also get
 their URLs (`theme.background_login_url`, `theme.background_pattern_url`).
@@ -17,14 +17,11 @@ VARIABLES = {
 }
 
 
-def css_variables(snapshot, scheme):
-    """{variable: 'url("...")'} for the chosen backgrounds in a mode ({} if none).
-
-    Dark mode uses the light image if there's no dark one.
-    """
+def css_variables(snapshot):
+    """{variable: 'url("...")'} for the chosen backgrounds ({} if none)."""
     variables = {}
     for slot, variable in VARIABLES.items():
-        image = resolve(snapshot, slot, scheme)
+        image = resolve(snapshot, slot)
         if image:
             url = theme_storage().url(image["file"]).replace("\\", "\\\\").replace('"', '\\"')
             variables[variable] = f'url("{url}")'
@@ -51,9 +48,9 @@ def helper_css():
 
 
 def template_values(snapshot):
-    """The light-mode background URLs for templates ("" if not set)."""
+    """The background URLs for templates ("" if not set)."""
     values = {}
     for slot in VARIABLES:
-        image = resolve(snapshot, slot, "light")
+        image = resolve(snapshot, slot)
         values[f"{slot}_url"] = theme_storage().url(image["file"]) if image else ""
     return values

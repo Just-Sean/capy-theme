@@ -14,9 +14,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def theme():
-    theme = Theme.objects.create(
-        name="Main", slug="main", light_base="cupcake", dark_base="dracula"
-    )
+    theme = Theme.objects.create(name="Main", slug="main", base="cupcake")
     publish(theme)
     return theme
 
@@ -44,10 +42,10 @@ def test_note_when_daisyui_changed_a_base(theme, monkeypatch):
 
 
 def test_note_when_daisyui_removed_a_base(theme, monkeypatch):
-    monkeypatch.delitem(THEMES, "dracula")
+    monkeypatch.delitem(THEMES, "cupcake")
     assert theme.base_changes() == [
-        "“dracula” no longer exists in daisyUI. Your site keeps using the saved version. "
-        "Choose a new dark base to publish changes."
+        "“cupcake” no longer exists in daisyUI. Your site keeps using the saved version. "
+        "Choose a new base to publish changes."
     ]
 
 

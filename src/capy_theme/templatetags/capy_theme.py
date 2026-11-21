@@ -19,7 +19,7 @@ def theme_artifacts(context):
     """The active theme's artifacts (see capy_theme.artifacts), for templates.
 
     ``{% theme_artifacts as artifacts %}`` then e.g.
-    ``{{ artifacts.logos.logo_email.light.url }}`` or ``{{ artifacts.icons.icon-192.png }}``
+    ``{{ artifacts.logos.logo_email.url }}`` or ``{{ artifacts.icons.icon-192.png }}``
     (use ``artifacts.icons|capy_get:"icon-192.png"`` for names with dots).
     None if no theme is published. URLs are absolute.
     """
@@ -31,9 +31,9 @@ def theme_catalog(context):
     """The available themes as data, for a consumer to render its own picker.
 
     ``{% theme_catalog as themes %}`` then loop ``themes`` — each is
-    ``{slug, name, default, light, dark, assets_url, stylesheet_url}``. The same data as
-    the ``/theme/themes.json`` endpoint; an empty list when nothing is published.
-    See docs/artifacts.md.
+    ``{slug, name, scheme, default, swatch, background, assets_url, stylesheet_url}``. The
+    same data as the ``/theme/themes.json`` endpoint; an empty list when nothing is
+    published. See docs/artifacts.md.
     """
     return _theme_catalog(context.get("request"))
 

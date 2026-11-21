@@ -56,15 +56,14 @@ and every fold starts folded, including Suggestions, Basic, Advanced and Expert
 inside Colors. Each stays as you left it after Save draft, Publish or Revert;
 reloading the page starts them folded again. The panel has:
 
-- **Base themes:** the light and dark base.
-- **Colors:** Light and Dark tabs, with Basic, Advanced and Expert groups.
-  Each color has the browser's color picker, a text box (any format),
+- **Base:** the theme's base (one of daisyUI's themes), which sets its scheme.
+- **Colors:** Basic, Advanced and Expert groups (one set — a theme is a single
+  scheme). Each color has the browser's color picker, a text box (any format),
   **Reset** (back to the base color) and its contrast rating, e.g. "AA 5.19" or
   "⚠ fail 2.1". Overridden colors are shown in bold with a dot.
-- **Logos:** the main logo in light and dark, and the header logo heights; the
-  other logo versions are folded under **More logo versions (optional)**.
-- **Icon:** the icon in light and dark, its background and padding, and a preview
-  of them.
+- **Logos:** the main logo, and the header logo heights; the other logo versions
+  are folded under **More logo versions (optional)**.
+- **Icon:** the icon, its background and padding, and a preview.
 - **Backgrounds** and **Sharing image**.
 - **Shape and effects:** the radii, sizes and border width, plus depth and noise.
 
@@ -77,22 +76,22 @@ twice). **Save draft** keeps the choice and any alt text you changed; **Revert**
 drops them (an uploaded image stays in the theme's list). See
 [images](images.md).
 
-While the editor is open, the draft's logo shows in the live-edit page header (in light
-and dark), and the browser tab shows the draft's icon. That's only in your browser;
+While the editor is open, the draft's logo shows in the live-edit page header, and
+the browser tab shows the draft's icon. That's only in your browser;
 closing the editor puts the published ones back. (The header logo carries a
 `data-capy-logo-slot` marker so the editor can swap it as you edit.) The generated
 favicons and app icons are made when you publish.
 - **Suggestions** (in the Colors section): click **Suggest colors** for colors
   that go with the current primary (analogous, complementary, triadic) and, if the
   theme has a logo, the logo's main colors. Clicking a suggestion fills in those
-  colors for the current mode.
+  colors.
 
 Every change shows on the page straight away (in your browser only).
 
 - **Save draft** stores the panel's values in the theme's draft (needs the
   change permission). Visitors don't see it until it's published. Only the
-  panel's settings and the images' alt text are changed; the name, site name,
-  tagline and mode stay as they are.
+  panel's settings and the images' alt text are changed; the name, site name
+  and tagline stay as they are.
 - **Revert** throws away the unsaved changes and goes back to the saved draft
   (it asks first). Nothing on the server changes.
 - **Save and publish** (needs `publish_theme`) saves any unsaved changes first,
@@ -126,30 +125,29 @@ Every change shows on the page straight away (in your browser only).
 **Show all components** at the top of the editor panel opens every daisyUI
 component (buttons, badges, alerts, cards, tabs, a table, form fields, progress
 bars, a modal, headings and text) and the theme's **images and icons** in the
-**draft** theme, light and dark side by
-side, beside the panel. Every change in the editor shows on them straight away.
-**Close components** or Escape closes it.
+**draft** theme, beside the panel. Every change in the editor shows on them
+straight away. **Close components** or Escape closes it.
 
-The images section shows every logo slot in light and dark, saying whether it's
-its own image, the light one, or what an empty slot falls back to, with its
+The images section shows every logo slot, saying whether it's its own image or
+what an empty slot falls back to, with its
 generated sizes; the generated icons at their real size (from the published
 theme, since they're made when publishing); the sharing image; and the
 backgrounds. It shows the saved draft and reloads after **Save draft** or
 publishing.
 
 Every editor setting shows there: colors, shape, fonts, the type scale (all six
-heading levels and the display font) and base themes through the draft CSS;
+heading levels and the display font) and the base theme through the draft CSS;
 logo, icon, sharing-image and background choices, logo heights and the icon's
 background and padding through the page itself, including **unsaved** choices
 (the page gets them in its address and reloads when they change; nothing is
 saved). The icon is previewed with the draft's background and padding (made on
-the fly; the real icon files are made when publishing), and the dark icon too.
+the fly; the real icon files are made when publishing).
 A line at the top says which domain the view is for and which theme visitors on
 that domain see. Custom CSS: people who may edit it get the draft's custom CSS
 applied, with the selectors it styles listed; others get the published custom
 CSS.
 
-**Accessibility:** the view's own page passes Chrome's checks in light and dark
+**Accessibility:** the view's own page passes Chrome's checks
 (every control and image has a name, language and title set, unique ids, a main
 landmark). The component samples show the theme's own colors, so a color pair
 with too little contrast shows there too; the editor's contrast badges flag the
@@ -162,9 +160,9 @@ changes. The page may only be framed by the same site.
 
 Each sample is a template in
 `src/capy_theme/templates/capy_theme/editor/components/`, listed in `COMPONENTS`
-in `src/capy_theme/editor/components_view.py`. It's included once per mode, with `mode` set
-to `"light"` or `"dark"`, so use `{{ mode }}` in any `id` or `name` that must be
-unique.
+in `src/capy_theme/editor/components_view.py`. It's included once, with `mode` set to
+the theme's scheme (`"light"` or `"dark"`), so use `{{ mode }}` in any `id` or `name`
+that must be unique.
 
 The view brings its own stylesheet,
 `src/capy_theme/static/capy_theme/editor/components.css` (daisyUI plus the

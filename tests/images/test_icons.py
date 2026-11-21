@@ -44,12 +44,9 @@ def theme():
     return Theme.objects.create(name="Main", slug="main")
 
 
-def with_icon(theme, icon_settings=None, dark=False, **upload):
-    light = add_asset(theme, "icon", "light", square(**upload))
-    chosen = {"light": light.pk}
-    if dark:
-        chosen["dark"] = add_asset(theme, "icon", "dark", square((20, 20, 20, 255))).pk
-    theme.settings = {"images": {"icon": chosen}}
+def with_icon(theme, icon_settings=None, **upload):
+    icon = add_asset(theme, "icon", square(**upload))
+    theme.settings = {"images": {"icon": icon.pk}}
     if icon_settings:
         theme.settings["icon"] = icon_settings
     theme.save()
@@ -80,13 +77,10 @@ def test_publishing_makes_every_icon(theme):
     assert sorted(ico.info["sizes"]) == [(16, 16), (32, 32), (48, 48)]
 
 
-def test_favicon_svg_switches_with_a_dark_icon(theme):
-    svg = read(with_icon(theme, dark=True), "favicon.svg").decode()
-    assert svg.count("data:image/png;base64,") == 2
-    assert "prefers-color-scheme: dark" in svg
-    Theme.objects.all().delete()
-    other = Theme.objects.create(name="B", slug="b")
-    svg = read(with_icon(other), "favicon.svg").decode()
+def test_favicon_svg_has_one_inline_icon(theme):
+    # A theme is a single scheme now, so the SVG favicon holds one image and does
+    # no dark-mode switching.
+    svg = read(with_icon(theme), "favicon.svg").decode()
     assert svg.count("data:image/png;base64,") == 1
     assert "prefers-color-scheme" not in svg
 
@@ -160,21 +154,19 @@ def test_bad_icon_settings_are_rejected(theme, bad):
 
 
 def test_admin_icon_fields(theme):
-    asset = add_asset(theme, "icon", "light", square())
+    asset = add_asset(theme, "icon", square())
     data = {
         "name": "Main",
         "slug": "main",
-        "light_base": "light",
-        "dark_base": "dark",
-        "visitors_can_switch": "on",
-        "image_icon_light": str(asset.pk),
+        "base": "light",
+        "image_icon": str(asset.pk),
         "icon_background": "#FFFFFF",
         "icon_padding": "12",
     }
     form = ThemeForm(data=data, instance=theme)
     assert form.is_valid(), form.errors
     assert form.save().settings == {
-        "images": {"icon": {"light": asset.pk}},
+        "images": {"icon": asset.pk},
         "icon": {"background": "#ffffff", "padding": 12.0},
     }
     bad = ThemeForm(data=data | {"icon_background": "white"}, instance=theme)
@@ -190,8 +182,8 @@ def test_editor_offers_icon_controls(client, django_user_model, theme):
     state = client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()
     assert "icon" in [s["name"] for s in state["controls"]["image_slots"]]
     assert [s["name"] for s in state["controls"]["icon_settings"]] == ["background", "padding"]
-    asset = add_asset(theme, "icon", "light", square())
-    changes = {"settings": {"images": {"icon": {"light": asset.pk}}, "icon": {"padding": 5}}}
+    asset = add_asset(theme, "icon", square())
+    changes = {"settings": {"images": {"icon": asset.pk}, "icon": {"padding": 5}}}
     url = reverse("capy_theme:editor_save", args=[theme.pk])
     assert client.post(url, changes, content_type="application/json").status_code == 200
     theme.refresh_from_db()

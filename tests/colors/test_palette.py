@@ -87,8 +87,8 @@ def test_endpoint_gives_logo_and_primary_suggestions(editor_client, settings, tm
 
     theme = Theme.objects.create(name="Main", slug="main")
     upload = SimpleUploadedFile("logo.png", logo_bytes(), content_type="image/png")
-    asset = add_asset(theme, "logo_main", "light", upload)
-    theme.settings = {"images": {"logo_main": {"light": asset.pk}}}
+    asset = add_asset(theme, "logo_main", upload)
+    theme.settings = {"images": {"logo_main": asset.pk}}
     theme.save()
     response = post(editor_client, theme, {"primary": "#3b82f6"})
     assert response.status_code == 200

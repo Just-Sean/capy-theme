@@ -47,13 +47,12 @@ def theme():
 
     checked = prepare(ttf_bytes(), "brand.ttf")
     font_file.file.save(checked["file"].name, checked["file"], save=True)
-    theme = Theme.objects.create(name="Main", slug="main", light_base="cupcake")
-    light = add_asset(theme, "logo_main", "light", png(), "Our logo")
-    dark = add_asset(theme, "logo_main", "dark", png(color="white", name="dark.png"))
-    icon = add_asset(theme, "icon", "light", png((256, 256), name="icon.png"))
+    theme = Theme.objects.create(name="Main", slug="main", base="cupcake")
+    logo = add_asset(theme, "logo_main", png(), "Our logo")
+    icon = add_asset(theme, "icon", png((256, 256), name="icon.png"))
     theme.settings = {
         "site_name": "Capy",
-        "colors": {"light": {"primary": "oklch(65% 0.24 350)"}},
+        "colors": {"primary": "oklch(65% 0.24 350)"},
         "shape": {"radius_box": 1},
         "fonts": {
             "body": uploaded.pk,
@@ -61,8 +60,8 @@ def theme():
         },
         "type": {"base_size": 18},
         "images": {
-            "logo_main": {"light": light.pk, "dark": dark.pk},
-            "icon": {"light": icon.pk},
+            "logo_main": logo.pk,
+            "icon": icon.pk,
         },
     }
     theme.save()
@@ -87,7 +86,7 @@ def test_the_issue_check_same_look_after_a_reset_and_import(theme):
     revision = publish(imported)
     assert without_urls(render_css(revision).replace("Main", "THEME")) == original_css
     # The images went through the upload checks again (copies remade) and the font is back.
-    main = imported.assets.get(slot="logo_main", mode="light")
+    main = imported.assets.get(slot="logo_main")
     assert main.alt_text == "Our logo" and main.variants.exists()
     assert Font.objects.get(family="Brand Sans").files.count() == 1
     assert imported.settings["fonts"]["heading"] == Font.objects.get(family="System serif").pk
@@ -100,7 +99,7 @@ def test_export_contents(theme):
     assert manifest["exported_by"].startswith("capy-theme ")
     assert "fonts" not in manifest["theme"]["settings"]
     assert set(manifest["theme"]["font_roles"]) == {"body", "heading"}
-    assert len(manifest["images"]) == 3
+    assert len(manifest["images"]) == 2
     names = set(archive.namelist())
     assert {image["path"] for image in manifest["images"].values()} <= names
     brand = next(f for f in manifest["fonts"].values() if f["family"] == "Brand Sans")
@@ -141,8 +140,7 @@ def minimal(**theme):
         "theme": {
             "name": "T",
             "slug": "t",
-            "light_base": "light",
-            "dark_base": "dark",
+            "base": "light",
             "settings": {},
         }
         | theme,
@@ -156,7 +154,7 @@ def minimal(**theme):
     [
         (io.BytesIO(b"not a zip"), "isn't a zip file"),
         (zip_with({"format": "something-else"}), "isn't a capy-theme export"),
-        (zip_with(minimal(light_base="no-such-theme")), "no-such-theme"),
+        (zip_with(minimal(base="no-such-theme")), "no-such-theme"),
         (zip_with(minimal(settings={"colors": {"sepia": {}}})), "sepia"),
         (zip_with(minimal(font_roles={"body": "font-9"})), "font-9"),
     ],
@@ -169,17 +167,17 @@ def test_bad_exports_are_rejected_and_nothing_is_kept(upload, message, media):
 
 def test_paths_outside_the_zip_folders_are_rejected():
     manifest = minimal()
-    manifest["images"] = {"image-1": {"slot": "logo_main", "mode": "light", "path": "../x.png"}}
+    manifest["images"] = {"image-1": {"slot": "logo_main", "path": "../x.png"}}
     with pytest.raises(ValidationError, match="isn't a capy-theme export"):
         import_theme(zip_with(manifest))
 
 
 def test_a_bad_image_removes_everything_stored_so_far(media):
-    manifest = minimal(image_slots={"logo_main": {"light": "image-1", "dark": "image-2"}})
+    manifest = minimal(image_slots={"logo_main": "image-1", "icon": "image-2"})
     good = png().read()
     manifest["images"] = {
-        "image-1": {"slot": "logo_main", "mode": "light", "path": "images/1.png"},
-        "image-2": {"slot": "logo_main", "mode": "dark", "path": "images/2.png"},
+        "image-1": {"slot": "logo_main", "path": "images/1.png"},
+        "image-2": {"slot": "icon", "path": "images/2.png"},
     }
     upload = zip_with(manifest, {"images/1.png": good, "images/2.png": b"not an image"})
     with pytest.raises(ValidationError, match="supported image"):

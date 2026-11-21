@@ -20,19 +20,14 @@ def build_tokens(artifacts):
     tokens = {
         "$description": f"{artifacts['theme']['name']} (revision "
         f"{artifacts['theme']['revision']}), exported by capy-theme. Format: {FORMAT}",
+        "color": {
+            name: _color(value, artifacts["colors_hex"][name])
+            for name, value in artifacts["colors"].items()
+        },
+        "shape": {
+            name.replace("_", "-"): _shape(value) for name, value in artifacts["shape"].items()
+        },
     }
-    for mode in ("light", "dark"):
-        tokens[mode] = {
-            "$description": f"Values in {mode} mode.",
-            "color": {
-                name: _color(value, artifacts["colors_hex"][mode][name])
-                for name, value in artifacts["colors"][mode].items()
-            },
-            "shape": {
-                name.replace("_", "-"): _shape(value)
-                for name, value in artifacts["shape"][mode].items()
-            },
-        }
     fonts = {
         role: {"$type": "fontFamily", "$value": _families(font["stack"])}
         for role, font in artifacts["fonts"].items()

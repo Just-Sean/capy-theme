@@ -68,8 +68,7 @@ def minimal(fonts=None, **theme):
         "theme": {
             "name": "T",
             "slug": "t",
-            "light_base": "light",
-            "dark_base": "dark",
+            "base": "light",
             "settings": {},
         }
         | theme,

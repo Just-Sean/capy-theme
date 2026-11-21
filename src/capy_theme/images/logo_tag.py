@@ -1,4 +1,4 @@
-"""The HTML and CSS for a theme's logo: <picture>, srcset and light/dark switching.
+"""The HTML and CSS for a theme's logo: <picture> and srcset.
 
 Used by the live editor's header (editor.live_edit_view.draft_header); the logo URLs are
 also exposed as data in the theme's assets (``get_artifacts``), for a consumer to render.
@@ -11,30 +11,21 @@ from .logos import HEADER_SLOTS, HEIGHTS, MOBILE, resolve
 
 
 def logo_html(snapshot, slot, alt, attrs, marker=None):
-    """A <picture> for the slot, with a dark version if there is one. "" if no image.
+    """A <picture> (or <img>) for the slot, or "" if no image.
 
-    With light and dark versions, both are output and the stylesheet shows the one
-    for the current mode. Both are loading="lazy", so the browser only downloads
-    the one that's shown. `marker` attributes go on each outermost element (the
-    live editor's, so it can swap the logo in a preview, #271).
+    `marker` attributes go on the outermost element (the live editor's, so it can
+    swap the logo in a preview, #271).
     """
-    light = resolve(snapshot, slot, "light")
-    if light is None:
+    image = resolve(snapshot, slot)
+    if image is None:
         return ""
     # Email and print logos are a plain <img>: email programs don't handle
-    # <picture>, srcset or the light/dark CSS.
+    # <picture> or srcset.
     if slot not in HEADER_SLOTS:
-        light = {**light, "variants": []}
-        dark = light
-    else:
-        dark = resolve(snapshot, slot, "dark")
+        image = {**image, "variants": []}
     heights = _heights(snapshot)
     marker = marker or {}
-    if dark == light:
-        return _picture(light, slot, alt, attrs, heights, "", lazy=False, marker=marker)
-    return _picture(
-        light, slot, alt, attrs, heights, "capy-logo-light", lazy=True, marker=marker
-    ) + _picture(dark, slot, alt, attrs, heights, "capy-logo-dark", lazy=True, marker=marker)
+    return _picture(image, slot, alt, attrs, heights, "", lazy=False, marker=marker)
 
 
 def _heights(snapshot):
@@ -113,8 +104,8 @@ def _sizes(image, heights):
 
 
 def logo_css(snapshot):
-    """CSS for header logo heights and light/dark switching (in @layer base,
-    so a project's utility classes still win)."""
+    """CSS for header logo heights (in @layer base, so a project's utility
+    classes still win)."""
     heights = _heights(snapshot)
     return "\n".join(
         [
@@ -122,13 +113,6 @@ def logo_css(snapshot):
             f"  :root img.capy-logo {{ height: {heights['header_height']}px; width: auto; }}",
             f"  @media (max-width: {MOBILE}px) {{",
             f"    :root img.capy-logo {{ height: {heights['header_height_mobile']}px; }}",
-            "  }",
-            "  :root .capy-logo-dark { display: none; }",
-            '  :root[data-theme="capy-dark"] .capy-logo-light { display: none; }',
-            '  :root[data-theme="capy-dark"] .capy-logo-dark { display: inline; }',
-            "  @media (prefers-color-scheme: dark) {",
-            "    :root:not([data-theme]) .capy-logo-light { display: none; }",
-            "    :root:not([data-theme]) .capy-logo-dark { display: inline; }",
             "  }",
             "}",
         ]

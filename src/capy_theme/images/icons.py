@@ -1,7 +1,7 @@
 """Site icons: every favicon and app icon, made from the theme's one square icon.
 
-The icon image is chosen like a logo (`settings["images"]["icon"]`, light and
-optionally dark). `settings["icon"]` has the background color and padding.
+The icon image is chosen like a logo (`settings["images"]["icon"]`).
+`settings["icon"]` has the background color and padding.
 
 The files are made when the theme is published, in a folder named after the
 icon image and those settings, so each published revision keeps its own icons
@@ -33,11 +33,11 @@ VERSION = "1"  # change when the way icons are made changes, so they're remade
 
 def icon_folder(snapshot):
     """Where this revision's icon files are, or None if the theme has no icon."""
-    icon = snapshot.get("images", {}).get("icon", {})
-    if "light" not in icon and "dark" not in icon:
+    icon = snapshot.get("images", {}).get("icon")
+    if not icon:
         return None
     key = json.dumps(
-        [VERSION, {m: i["file"] for m, i in icon.items()}, snapshot["settings"].get("icon", {})],
+        [VERSION, icon["file"], snapshot["settings"].get("icon", {})],
         sort_keys=True,
     )
     return f"capy_theme/icons/{hashlib.sha256(key.encode()).hexdigest()[:16]}"
@@ -49,8 +49,8 @@ def make_icons(snapshot):
     if folder is None or theme_storage().exists(f"{folder}/{list(FILES)[-1]}"):
         return
     icon = snapshot["images"]["icon"]
-    light = _open(icon.get("light") or icon["dark"])
-    dark = _open(icon["dark"]) if "dark" in icon else None
+    light = _open(icon)
+    dark = None
     settings = snapshot["settings"].get("icon", {})
     background = settings.get("background") or None
     padding = settings.get("padding", 0) / 100

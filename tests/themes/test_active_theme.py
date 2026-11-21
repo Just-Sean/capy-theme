@@ -7,7 +7,7 @@ from django.urls import reverse
 
 from capy_theme.models import Theme, ThemeAssignment
 from capy_theme.themes import active
-from capy_theme.themes.active import NotPublished, activate, get_active_theme
+from capy_theme.themes.active import NotPublished, activate, primary_theme
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -27,71 +27,72 @@ def published_theme(name, **kwargs):
 
 
 def test_no_active_theme_by_default():
-    assert get_active_theme() is None
+    assert primary_theme() is None
 
 
 def test_activating_changes_the_active_theme():
     first = published_theme("First")
     second = published_theme("Second")
     activate(first)
-    assert get_active_theme() == first
+    assert primary_theme() == first
     activate(second)
-    assert get_active_theme() == second
-    assert ThemeAssignment.objects.count() == 1  # one default assignment, switched
+    assert primary_theme() == second
+    # One default light assignment, switched (both themes are light).
+    assert ThemeAssignment.objects.count() == 1
 
 
 def test_active_theme_comes_with_its_live_revision():
-    theme = published_theme("Main", light_base="cupcake")
+    theme = published_theme("Main", base="cupcake")
     activate(theme)
-    assert get_active_theme().live_revision.snapshot["light_base"] == "cupcake"
+    assert primary_theme().live_revision.snapshot["base"] == "cupcake"
 
 
 def test_second_call_makes_no_database_queries(django_assert_num_queries):
     activate(published_theme("Main"))
-    get_active_theme()
+    primary_theme()
     with django_assert_num_queries(0):
-        theme = get_active_theme()
+        theme = primary_theme()
         assert theme.live_revision.number == 1  # loaded with it, no extra query
 
 
 def test_no_active_theme_is_cached_too(django_assert_num_queries):
-    get_active_theme()
+    primary_theme()
     with django_assert_num_queries(0):
-        assert get_active_theme() is None
+        assert primary_theme() is None
 
 
 def test_unpublished_theme_cant_be_activated():
     theme = Theme.objects.create(name="Draft", slug="draft")
     with pytest.raises(NotPublished):
         activate(theme)
-    assert get_active_theme() is None
+    assert primary_theme() is None
 
 
 def test_publishing_clears_the_cache():
     theme = published_theme("Main")
     activate(theme)
-    assert get_active_theme().live_revision.number == 1
-    theme.light_base = "cupcake"
+    assert primary_theme().live_revision.number == 1
+    theme.base = "cupcake"
     theme.save()
     publish(theme)
-    assert get_active_theme().live_revision.number == 2
+    assert primary_theme().live_revision.number == 2
 
 
 def test_changing_the_assignment_clears_the_cache():
     first = published_theme("First")
     second = published_theme("Second")
     activate(first)
-    get_active_theme()
+    primary_theme()
     ThemeAssignment.objects.update_or_create(site="", defaults={"theme": second})
-    assert get_active_theme() == second
+    assert primary_theme() == second
 
 
 def test_deleting_the_active_theme_leaves_none_active():
     theme = published_theme("Main")
     activate(theme)
-    get_active_theme()
+    primary_theme()
     theme.delete()
-    assert get_active_theme() is None
+    assert primary_theme() is None
 
 
 def test_cache_time_defaults_to_5_minutes_and_follows_the_setting(settings, monkeypatch):
@@ -102,22 +103,22 @@ def test_cache_time_defaults_to_5_minutes_and_follows_the_setting(settings, monk
             timeouts.append(timeout)
 
     monkeypatch.setattr(active.cache, "set", record)
-    get_active_theme()
+    primary_theme()
     settings.CAPY_THEME_CACHE_SECONDS = 60
-    get_active_theme()
+    primary_theme()
     assert timeouts == [300, 60]
 
 
-def test_only_one_default_assignment_per_site():
+def test_only_one_default_assignment_per_site_and_scheme():
     theme = published_theme("Main")
-    ThemeAssignment.objects.create(theme=theme)
+    ThemeAssignment.objects.create(theme=theme)  # scheme defaults to light
     with pytest.raises(IntegrityError), transaction.atomic():
         ThemeAssignment.objects.create(theme=theme)
 
 
-def test_get_active_theme_accepts_a_request(rf):
+def test_primary_theme_accepts_a_request(rf):
     activate(published_theme("Main"))
-    assert get_active_theme(rf.get("/")).name == "Main"
+    assert primary_theme(rf.get("/")).name == "Main"
 
 
 # The admin
@@ -139,15 +140,15 @@ def run_activate(admin, theme):
 def test_admin_activate_button(admin):
     theme = published_theme("Main")
     response = run_activate(admin, theme)
-    assert "“Main” is now the default theme." in response.content.decode()
-    assert get_active_theme() == theme
+    assert "“Main” is now the default light theme." in response.content.decode()
+    assert primary_theme() == theme
 
 
 def test_admin_refuses_unpublished_theme(admin):
     theme = Theme.objects.create(name="Draft", slug="draft")
     response = run_activate(admin, theme)
     assert "Publish “Draft” before activating it." in response.content.decode()
-    assert get_active_theme() is None
+    assert primary_theme() is None
 
 
 def test_admin_list_shows_which_theme_is_active(admin):
@@ -174,7 +175,7 @@ def test_a_cache_outage_falls_back_to_the_database(monkeypatch):
     theme = published_theme("Main")
     activate(theme)
     monkeypatch.setattr(active, "cache", _BrokenCache())
-    assert get_active_theme() == theme  # served from the database instead of 500ing
+    assert primary_theme() == theme  # served from the database instead of 500ing
 
 
 def test_saving_a_theme_works_when_the_cache_is_down(monkeypatch):
@@ -193,7 +194,7 @@ def test_a_database_outage_serves_no_theme_instead_of_erroring(monkeypatch):
         raise OperationalError("database down")
 
     monkeypatch.setattr(active, "_assignments", boom)
-    assert get_active_theme() is None  # no theme, but no 500 either
+    assert primary_theme() is None  # no theme, but no 500 either
 
 
 class _CorruptCache:
@@ -215,4 +216,4 @@ def test_a_malformed_cached_value_is_treated_as_a_miss(monkeypatch, bad):
     theme = published_theme("Main")
     activate(theme)
     monkeypatch.setattr(active, "cache", _CorruptCache(bad))
-    assert get_active_theme() == theme  # fell through to the database, no 500
+    assert primary_theme() == theme  # fell through to the database, no 500

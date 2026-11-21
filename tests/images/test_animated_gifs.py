@@ -175,7 +175,7 @@ def test_animated_header_logos_get_no_still_copies(settings, tmp_path):
     settings.MEDIA_ROOT = tmp_path
     theme = Theme.objects.create(name="Main", slug="main")
     upload = SimpleUploadedFile("moving.gif", gif(frames=3), content_type="image/gif")
-    asset = add_asset(theme, "logo_main", "light", upload)
+    asset = add_asset(theme, "logo_main", upload)
     assert not asset.variants.exists()
     still = SimpleUploadedFile("still.gif", gif(frames=1), content_type="image/gif")
-    assert add_asset(theme, "logo_main", "dark", still).variants.exists()
+    assert add_asset(theme, "logo_main", still).variants.exists()

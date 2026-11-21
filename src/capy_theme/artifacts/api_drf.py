@@ -25,10 +25,6 @@ except ImportError:  # drf-spectacular is optional
         return lambda view: view
 
 
-def _modes(child):
-    return serializers.DictField(child=child, help_text='Keyed by mode: "light" and "dark".')
-
-
 class ImageVariantSerializer(serializers.Serializer):
     url = serializers.CharField()
     width = serializers.IntegerField()
@@ -42,11 +38,6 @@ class ImageSerializer(serializers.Serializer):
     alt = serializers.CharField(allow_blank=True)
     content_type = serializers.CharField(allow_blank=True)
     variants = ImageVariantSerializer(many=True, help_text="Smaller copies (header logos)")
-
-
-class LogoModesSerializer(serializers.Serializer):
-    light = ImageSerializer(allow_null=True)
-    dark = ImageSerializer(allow_null=True)
 
 
 class FontFileSerializer(serializers.Serializer):
@@ -64,45 +55,34 @@ class FontSerializer(serializers.Serializer):
     files = FontFileSerializer(many=True)
 
 
-class BackgroundSerializer(serializers.Serializer):
-    light = serializers.CharField(allow_null=True)
-    dark = serializers.CharField(allow_null=True)
-
-
 class ArtifactsSerializer(serializers.Serializer):
-    theme = serializers.DictField(help_text="name, slug and published revision number")
+    theme = serializers.DictField(help_text="name, slug, scheme and published revision number")
     branding = serializers.DictField(child=serializers.CharField(allow_blank=True))
-    colors = _modes(serializers.DictField(child=serializers.CharField()))
-    colors_hex = _modes(serializers.DictField(child=serializers.CharField()))
+    colors = serializers.DictField(child=serializers.CharField())
+    colors_hex = serializers.DictField(child=serializers.CharField())
     fonts = serializers.DictField(child=FontSerializer(), help_text="Keyed by role")
-    shape = _modes(serializers.DictField(child=serializers.CharField()))
+    shape = serializers.DictField(child=serializers.CharField())
     type = serializers.DictField(child=serializers.FloatField())
-    logos = serializers.DictField(child=LogoModesSerializer(), help_text="Keyed by slot")
+    logos = serializers.DictField(child=ImageSerializer(allow_null=True), help_text="Keyed by slot")
     icons = serializers.DictField(child=serializers.CharField(), help_text="File name: URL")
     sharing_image = serializers.DictField(allow_null=True)
-    backgrounds = serializers.DictField(child=BackgroundSerializer())
-    mode = serializers.DictField(help_text="default and visitors_can_switch")
+    backgrounds = serializers.DictField(child=serializers.CharField(allow_null=True))
     stylesheet_url = serializers.CharField()
-
-
-class CatalogSideSerializer(serializers.Serializer):
-    base = serializers.CharField(help_text="The daisyUI base theme")
-    swatch = serializers.CharField(help_text="Primary color, #rrggbb")
-    background = serializers.CharField(help_text="base-100 color, #rrggbb")
 
 
 class CatalogEntrySerializer(serializers.Serializer):
     slug = serializers.CharField()
     name = serializers.CharField()
-    default = serializers.BooleanField(help_text="The admin's default theme")
-    light = CatalogSideSerializer()
-    dark = CatalogSideSerializer()
+    scheme = serializers.CharField(help_text='"light" or "dark"')
+    default = serializers.BooleanField(help_text="The domain's default theme for its scheme")
+    swatch = serializers.CharField(help_text="Primary color, #rrggbb")
+    background = serializers.CharField(help_text="base-100 color, #rrggbb")
     assets_url = serializers.CharField()
     stylesheet_url = serializers.CharField()
 
 
 class ThemeCatalogAPIView(APIView):
-    """The available themes: slug, name, which is default, and light/dark swatches."""
+    """The available themes: slug, name, scheme, which is default, and a swatch."""
 
     authentication_classes = []
     permission_classes = [AllowAny]

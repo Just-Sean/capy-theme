@@ -1,11 +1,11 @@
 """Storing checked images as a theme's assets, and which assets are in use."""
 
-from .slots import SLOT_MODES, SLOTS
+from .slots import SLOTS
 
 ALT_MAX = 200
 
 
-def store_asset(theme, slot, mode, clean, alt_text=""):
+def store_asset(theme, slot, clean, alt_text=""):
     """Store an image already checked by uploads.prepare_image as a new ThemeAsset.
 
     Makes its smaller copies (header logos) and the 1200 × 630 copy (sharing
@@ -18,7 +18,6 @@ def store_asset(theme, slot, mode, clean, alt_text=""):
     asset = ThemeAsset(
         theme=theme,
         slot=slot,
-        mode=mode,
         alt_text=alt_text.strip()[:ALT_MAX],
         width=clean["width"],
         height=clean["height"],
@@ -47,8 +46,7 @@ def revisions_of(theme):
 
 def _uses(theme, settings, asset, revisions):
     """(kinds, descriptions) for where an asset is chosen: kinds holds "draft",
-    "live" and "earlier". Earlier revisions are counted, not listed one by one.
-    Choices a slot can't have (e.g. an old dark email logo) don't count."""
+    "live" and "earlier". Earlier revisions are counted, not listed one by one."""
     kinds, texts = set(), []
     for place in _places(settings.get("images", {}), asset):
         kinds.add("draft")
@@ -70,13 +68,7 @@ def _uses(theme, settings, asset, revisions):
 def _places(images, asset):
     if not isinstance(images, dict):
         return []
-    return [
-        _place(slot, mode)
-        for slot, modes in images.items()
-        if isinstance(modes, dict)
-        for mode, pk in modes.items()
-        if pk == asset.pk and mode in SLOT_MODES.get(slot, ())
-    ]
+    return [_place(slot) for slot, pk in images.items() if pk == asset.pk]
 
 
 def where_used(theme, settings, asset, revisions=None):
@@ -101,14 +93,13 @@ def refusal(theme, settings, asset, revisions=None):
             "one keeps working: once an image has been published, it stays in Media."
         )
     return (
-        f"{why} To delete it, choose another image for that slot (or None; for dark "
-        "mode, Same as light) and save; then delete it."
+        f"{why} To delete it, choose another image for that slot (or None) and save; "
+        "then delete it."
     )
 
 
-def _place(slot, mode):
-    label = SLOTS.get(slot, (slot,))[0].lower()
-    return label if len(SLOT_MODES.get(slot, ())) < 2 else f"{label} ({mode})"
+def _place(slot):
+    return SLOTS.get(slot, (slot,))[0].lower()
 
 
 def asset_data(asset):
@@ -117,7 +108,6 @@ def asset_data(asset):
         "id": asset.pk,
         "slot": asset.slot,
         "slot_label": SLOTS.get(asset.slot, (asset.slot,))[0],
-        "mode": asset.mode,
         "url": asset.original.url,
         "name": asset.original.name.rsplit("/", 1)[-1],
         "alt_text": asset.alt_text,

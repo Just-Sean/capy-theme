@@ -15,8 +15,8 @@
     <div class="flex-1">
       {# The logo's height comes from the theme's stylesheet (.capy-logo), so no size classes. #}
       <a href="{% url 'home' %}" class="flex items-center gap-3 text-xl font-bold">
-        {% if theme.logos.logo_main.light %}
-          {% with logo=theme.logos.logo_main.light %}
+        {% if theme.logos.logo_main %}
+          {% with logo=theme.logos.logo_main %}
             <img class="capy-logo" src="{{ logo.url }}" alt="{{ logo.alt }}"
                  width="{{ logo.width }}" height="{{ logo.height }}">
           {% endwith %}

@@ -50,18 +50,24 @@ def publish_with(shape):
 def test_the_issue_check_box_radius_0_makes_cards_square():
     revision = publish_with({"radius_box": 0})
     css = render_css(revision)
-    assert css.count("--radius-box: 0rem;") == 4  # light, dark, capy-light, capy-dark
+    # A light theme renders its two blocks: :root and capy-light.
+    assert css.count("--radius-box: 0rem;") == 2
 
 
-def test_shape_applies_to_both_modes():
-    revision = publish_with({"border": 2})
-    assert effective_values(revision.snapshot, "light")["--border"] == "2px"
-    assert effective_values(revision.snapshot, "dark")["--border"] == "2px"
+def test_shape_applies_whatever_the_scheme():
+    light = Theme.objects.create(
+        name="Light", slug="light-t", base="light", settings={"shape": {"border": 2}}
+    )
+    dark = Theme.objects.create(
+        name="Dark", slug="dark-t", base="dracula", settings={"shape": {"border": 2}}
+    )
+    assert effective_values(publish(light).snapshot)["--border"] == "2px"
+    assert effective_values(publish(dark).snapshot)["--border"] == "2px"
 
 
 def test_unset_shape_comes_from_the_base():
     revision = publish_with({"radius_box": 0})
-    values = effective_values(revision.snapshot, "light")
+    values = effective_values(revision.snapshot)
     assert values["--radius-field"] == THEMES["light"]["values"]["--radius-field"]
 
 
@@ -69,9 +75,7 @@ def form_data(**kwargs):
     data = {
         "name": "Main",
         "slug": "main",
-        "light_base": "light",
-        "dark_base": "dark",
-        "visitors_can_switch": "on",
+        "base": "light",
     }
     return data | kwargs
 
@@ -84,7 +88,7 @@ def test_form_stores_only_the_shape_values_set():
 
 def test_form_shows_current_values_and_base_hints():
     theme = Theme.objects.create(
-        name="Main", slug="main", light_base="cupcake", settings={"shape": {"depth": False}}
+        name="Main", slug="main", base="cupcake", settings={"shape": {"depth": False}}
     )
     form = ThemeForm(instance=theme)
     assert form.fields["shape_depth"].initial == "off"

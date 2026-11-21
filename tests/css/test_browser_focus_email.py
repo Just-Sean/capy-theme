@@ -41,7 +41,8 @@ def test_focus_outline_rule_is_in_the_stylesheet():
     css = render_css(publish(theme))
     assert ":focus-visible {" in css
     assert "outline: 2px solid var(--capy-focus);" in css
-    assert css.count("--capy-focus: ") == 4
+    # A light theme renders two blocks (:root and capy-light), each with the focus color.
+    assert css.count("--capy-focus: ") == 2
 
 
 def test_focus_uses_primary_when_it_stands_out():
@@ -67,6 +68,6 @@ def test_hex_colors_for_emails():
 
 
 def test_artifacts_have_email_colors(rf):
-    live(colors={"light": {"primary": "oklch(62.31% 0.188 259.81)"}})
-    colors = get_artifacts(rf.get("/"))["colors_hex"]["light"]
+    live(colors={"primary": "oklch(62.31% 0.188 259.81)"})
+    colors = get_artifacts(rf.get("/"))["colors_hex"]
     assert colors["primary"] == "#3b82f6"

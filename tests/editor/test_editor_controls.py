@@ -32,7 +32,8 @@ def editor_client(client, django_user_model):
 
 def test_controls_list_bases_colors_and_shape():
     spec = controls()
-    assert "cupcake" in spec["bases"]["light"] and "cupcake" not in spec["bases"]["dark"]
+    bases = {b["name"]: b["scheme"] for b in spec["bases"]}
+    assert bases["cupcake"] == "light" and bases["dracula"] == "dark"
     assert [g["name"] for g in spec["color_groups"]] == ["Basic", "Advanced", "Expert"]
     assert sum(len(g["colors"]) for g in spec["color_groups"]) == 20
     assert {s["name"] for s in spec["sizes"]} >= {"radius_box", "border"}
@@ -41,15 +42,18 @@ def test_controls_list_bases_colors_and_shape():
 
 def test_bases_follow_the_project_setting(settings):
     settings.CAPY_THEME_BUILTIN_THEMES = ["light", "dark"]
-    assert controls()["bases"] == {"light": ["light"], "dark": ["dark"]}
+    assert controls()["bases"] == [
+        {"name": "light", "scheme": "light"},
+        {"name": "dark", "scheme": "dark"},
+    ]
 
 
 def test_preview_gives_hex_for_every_color_picker():
     theme = Theme.objects.create(name="Main", slug="main")
-    result = preview(theme, {"settings": {"colors": {"light": {"primary": "#16a34a"}}}})
-    assert set(result["hex"]["light"]) == set(COLOR_NAMES)
-    assert result["hex"]["light"]["primary"] == "#16a34a"
-    assert result["light_base"] == "light"
+    result = preview(theme, {"settings": {"colors": {"primary": "#16a34a"}}})
+    assert set(result["hex"]) == set(COLOR_NAMES)
+    assert result["hex"]["primary"] == "#16a34a"
+    assert result["base"] == "light"
 
 
 def test_state_includes_controls_and_current_values(editor_client):
@@ -59,9 +63,9 @@ def test_state_includes_controls_and_current_values(editor_client):
         "name": "primary",
         "label": "Primary",
     }
-    assert data["values"]["light"]["--radius-box"] == "0rem"
-    assert data["hex"]["dark"]["base-100"].startswith("#")
-    assert len(data["contrast"]["light"]) == 11
+    assert data["values"]["--radius-box"] == "0rem"
+    assert data["hex"]["base-100"].startswith("#")
+    assert len(data["contrast"]) == 11
 
 
 def test_mount_loads_the_controls_script(editor_client):
@@ -131,7 +135,7 @@ def test_every_editor_section_folds_except_save():
     assert 'el("details", { class: "capy-editor-fold", "data-capy-fold": title }' in core
     assert 'ui.el("summary", {}, [ui.el("h3", { text: title })])' in core
     for name, title in [
-        ("bases.js", "Base themes"),
+        ("bases.js", "Base"),
         ("colors.js", "Colors"),
         ("fonts.js", "Fonts and type"),
         ("image-sections.js", "Logos"),

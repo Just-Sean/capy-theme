@@ -32,7 +32,7 @@ def add_fields(form_class):
 
 def set_initial(form):
     shape = form.instance.settings.get("shape", {})
-    base = builtin_values(form.instance.light_base) or {}
+    base = builtin_values(form.instance.base) or {}
     for name, (variable, unit, *_rest) in SIZES.items():
         field = form.fields[f"shape_{name}"]
         field.initial = shape.get(name)

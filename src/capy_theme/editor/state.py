@@ -2,7 +2,7 @@
 
 from django.urls import reverse
 
-from ..colors.names import COLOR_GROUPS, SCHEMES, label
+from ..colors.names import COLOR_GROUPS, label
 from ..css.custom import without_custom_css
 from ..css.shape import EFFECTS, SIZE_STEPS, SIZES
 from ..css.stylesheet import snapshot_css
@@ -13,7 +13,7 @@ from ..images.assets import asset_data
 from ..images.icons import SETTINGS as ICON_SETTINGS
 from ..images.logos import HEIGHTS
 from ..images.slot_text import empty_text, help_text
-from ..images.slots import NO_SVG, SLOT_MODES, SLOTS
+from ..images.slots import NO_SVG, SLOTS
 from ..images.uploads import byte_limit
 from ..themes.active import default_theme
 from ..themes.catalog import get_builtin_themes
@@ -39,15 +39,16 @@ def draft_state(theme, user):
     return {
         "id": theme.pk,
         "name": theme.name,
-        "light_base": theme.light_base,
-        "dark_base": theme.dark_base,
+        "base": theme.base,
+        "scheme": theme.scheme,
         "settings": without_custom_css(theme.settings),  # the editor doesn't edit it
         "css": snapshot_css(theme.snapshot(), f"capy-theme editor: draft of {theme.name}"),
         "live_revision": theme.live_revision.number if theme.live_revision else None,
         "has_unpublished_changes": theme.has_unpublished_changes,
         "can_publish": can_publish(user),
-        # Whether it's the default theme already (then there's no activate button, #273).
-        "is_default": getattr(default_theme(), "pk", None) == theme.pk,
+        # Whether it's the default theme for its scheme already (then no activate button, #273).
+        "is_default": bool(theme.scheme)
+        and getattr(default_theme(theme.scheme), "pk", None) == theme.pk,
         "note_max": NOTE_MAX,
         "urls": editor_urls(theme),
         "assets": [asset_data(a) for a in theme.assets.all()],
@@ -59,10 +60,7 @@ def draft_state(theme, user):
 def controls():
     """What the editor panel offers: bases, color groups and shape settings."""
     return {
-        "bases": {
-            scheme: [t.name for t in get_builtin_themes() if t.scheme == scheme]
-            for scheme in SCHEMES
-        },
+        "bases": [{"name": t.name, "scheme": t.scheme} for t in get_builtin_themes()],
         "color_groups": [
             {"name": group, "colors": [{"name": n, "label": label(n)} for n in names]}
             for group, names in COLOR_GROUPS.items()
@@ -89,9 +87,8 @@ def controls():
                 "label": lab,
                 "max_bytes": byte_limit(name),
                 "svg": name not in NO_SVG,
-                "modes": list(SLOT_MODES[name]),
-                "help": {mode: help_text(name, mode) for mode in SLOT_MODES[name]},
-                "empty": {mode: empty_text(name, mode) for mode in SLOT_MODES[name]},
+                "help": help_text(name),
+                "empty": empty_text(name),
             }
             for name, (lab, _limit, _px, _text) in SLOTS.items()
         ],

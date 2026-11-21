@@ -9,10 +9,9 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 
 from ..images.assets import asset_data
-from ..images.slots import SLOT_MODES
 from ..images.uploads import add_asset
 from ..models import Theme
-from ..themes.active import NotPublished, get_active_theme, not_published_message
+from ..themes.active import NotPublished, default_themes, not_published_message
 from ..themes.publishing import (
     NOTE_MAX,
     NOTHING_TO_PUBLISH,
@@ -103,8 +102,9 @@ def editor_save(request, pk):
 
 
 def _showing_instead(theme):
-    """The theme the site shows right now if it isn't `theme` (a schedule), else None."""
-    showing = get_active_theme()
+    """The theme the site shows right now for this scheme if it isn't `theme`
+    (a schedule), else None."""
+    showing = default_themes().get(theme.scheme)
     return str(showing) if showing is not None and showing.pk != theme.pk else None
 
 
@@ -158,7 +158,7 @@ def editor_publish(request, pk):
 
 @require_POST
 def editor_upload(request, pk):
-    """Upload an image from the editor (multipart: slot, mode, alt_text, file).
+    """Upload an image from the editor (multipart: slot, alt_text, file).
 
     The file is checked and cleaned by the same code as the admin and stored as a
     new asset. Returns the theme's images (JSON).
@@ -169,12 +169,9 @@ def editor_upload(request, pk):
     upload = request.FILES.get("file")
     if upload is None:
         return JsonResponse({"errors": ["Choose an image to upload."]}, status=400)
-    slot, mode = request.POST.get("slot", ""), request.POST.get("mode", "light")
-    if slot in SLOT_MODES and mode in ("light", "dark") and mode not in SLOT_MODES[slot]:
-        # Email and print logos and the sharing image only have a light one (#271).
-        return JsonResponse({"errors": ["This image only has a light version."]}, status=400)
+    slot = request.POST.get("slot", "")
     try:
-        asset = add_asset(theme, slot, mode, upload, request.POST.get("alt_text", ""))
+        asset = add_asset(theme, slot, upload, request.POST.get("alt_text", ""))
     except ValidationError as error:
         return JsonResponse({"errors": error.messages}, status=400)
     return JsonResponse(

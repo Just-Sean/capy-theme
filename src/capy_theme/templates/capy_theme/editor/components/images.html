@@ -1,7 +1,7 @@
 {% load capy_theme %}
 <div class="space-y-6" data-capy-components-images>
   <h3 class="text-xl font-semibold">Images and icons</h3>
-  {% with data=images_panel|capy_get:mode %}
+  {% with data=images_panel %}
 
   <div class="space-y-3">
     <h4 class="font-semibold">Logos</h4>
@@ -34,16 +34,10 @@
 
   <div class="space-y-3">
     <h4 class="font-semibold">Icon (draft)</h4>
-    {% if images_panel.icon_preview.asset or images_panel.icon_preview.dark_asset %}
-      {% if images_panel.icon_preview.asset %}
+    {% if images_panel.icon_preview.asset %}
       <img src="{% url 'capy_theme:editor_icon_preview' theme.pk %}?asset={{ images_panel.icon_preview.asset }}&amp;background={{ images_panel.icon_preview.background|urlencode }}&amp;padding={{ images_panel.icon_preview.padding }}"
            alt="The icon with the draft's background and padding" width="96" height="96" class="rounded-box border border-base-300" data-capy-icon-preview>
-      {% endif %}
-      {% if images_panel.icon_preview.dark_asset %}
-        <img src="{% url 'capy_theme:editor_icon_preview' theme.pk %}?asset={{ images_panel.icon_preview.dark_asset }}&amp;background={{ images_panel.icon_preview.background|urlencode }}&amp;padding={{ images_panel.icon_preview.padding }}"
-             alt="The dark-mode icon with the draft's background and padding" width="96" height="96" class="rounded-box border border-base-300 bg-neutral" data-capy-icon-preview-dark>
-      {% endif %}
-      <p class="text-xs opacity-70">With the draft's background and padding{% if images_panel.icon_preview.dark_asset %}; the second is used by the browser-tab icon in dark mode{% endif %}. The icon files below are made when you publish.</p>
+      <p class="text-xs opacity-70">With the draft's background and padding. The icon files below are made when you publish.</p>
     {% else %}
       <p class="text-sm opacity-70">No icon image chosen.</p>
     {% endif %}

@@ -9,10 +9,13 @@ catalog and per-theme assets below.
 ## CSS variables
 
 The theme stylesheet (`/theme/<version>.css`; its URL is in the catalog and each
-theme's assets) defines these variables on `:root`, with the light values by default,
-the dark values when the visitor's device prefers dark, and either set forced by
-`data-theme="capy-light"` or `"capy-dark"` on any element (your code sets that to force
-a mode). Use them in your own CSS, e.g. `color: var(--color-primary)`.
+theme's assets) defines these variables. Each theme is a single scheme: a **light**
+theme's sheet sets them on `:root` (and on `:root[data-theme="capy-light"]`); a **dark**
+theme's sheet sets them inside `@media (prefers-color-scheme: dark)` (and on
+`:root[data-theme="capy-dark"]`). Your code loads a light theme's sheet and a dark
+theme's sheet together, so the visitor's device setting picks one on its own, and
+`data-theme="capy-light"` or `"capy-dark"` on `<html>` forces one. Use the variables in
+your own CSS, e.g. `color: var(--color-primary)`.
 
 daisyUI's classes (`btn-primary`, `bg-base-200`…) already use the daisyUI
 variables, so most pages never name them directly.
@@ -75,19 +78,19 @@ variables, so most pages never name them directly.
 
 ## The JSON API
 
-- **`GET /theme/themes.json`** — the available themes: slug, name, which is the default,
-  and light/dark swatches, each with its assets and stylesheet URLs.
+- **`GET /theme/themes.json`** — the available themes: slug, name, scheme, which is the
+  default, and a swatch and background color, each with its assets and stylesheet URLs.
 - **`GET /theme/themes/<slug>.json`** — one theme's values and asset URLs (absolute):
-  colors (OKLCH and hex), fonts with file URLs, shape, type, every logo slot (after
-  fallbacks, with smaller copies), icons, the sharing image, backgrounds and mode
-  settings. `<slug>` may be `default`. Full details: [artifacts.md](artifacts.md#the-json-api).
+  scheme, colors (OKLCH and hex), fonts with file URLs, shape, type, every logo slot
+  (after fallbacks, with smaller copies), icons, the sharing image and backgrounds.
+  `<slug>` may be `default`. Full details: [artifacts.md](artifacts.md#the-json-api).
 
 ```js
 const themes = await (await fetch("https://example.com/theme/themes.json")).json();
 const chosen = themes.find((t) => t.default);
 const theme = await (await fetch(chosen.assets_url)).json();
-document.documentElement.style.setProperty("--brand", theme.colors.light.primary);
-const logo = theme.logos.logo_main.light; // { url, width, height, alt, variants }
+document.documentElement.style.setProperty("--brand", theme.colors.primary);
+const logo = theme.logos.logo_main; // { url, width, height, alt, variants }
 ```
 
 - **Caching:** send the `ETag` back in `If-None-Match` and you get `304` until the
@@ -107,7 +110,7 @@ In templates: `{% theme_artifacts as artifacts %}`.
 | --- | --- |
 | `/theme/themes.json` | The themes catalog (each theme's assets are at `/theme/themes/<slug>.json`) |
 | `/theme/tokens.json` | W3C design tokens (format 2025.10), for design tools and native app builds ([details](artifacts.md#design-tokens)) |
-| `/theme/daisyui-theme.css` | daisyUI theme blocks (light and dark), to compile the theme into your own Tailwind CSS ([details](artifacts.md#daisyui-theme-blocks)) |
+| `/theme/daisyui-theme.css` | A daisyUI theme block, to compile the theme into your own Tailwind CSS ([details](artifacts.md#daisyui-theme-blocks)) |
 
 All are public and under the prefix the project gave `capy_theme.urls` (`/theme/` in
 these docs). `/theme/tokens.json` and `/theme/daisyui-theme.css` hold the published

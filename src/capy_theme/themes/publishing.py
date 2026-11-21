@@ -26,7 +26,7 @@ class NothingToPublish(Exception):
 def publish(theme, user=None, note=""):
     """Publish the theme's draft and return the new ThemeRevision.
 
-    Copies the draft's look (light base, dark base, settings) into a new revision
+    Copies the draft's look (base, scheme, settings) into a new revision
     numbered one higher than the last, records who published it and when, and
     makes it the theme's live revision.
 

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Just-Sean/capy-theme/settings.schema.json",
   "title": "capy-theme Theme.settings",
-  "description": "Every override a theme makes on top of its light and dark base themes. Each phase adds its own keys here (colors, fonts, shape and so on). Keys not listed are rejected.",
+  "description": "Every override a theme makes on top of its base theme. A theme is a single scheme (light or dark), so overrides are one set, not split by mode. Each phase adds its own keys here (colors, fonts, shape and so on). Keys not listed are rejected.",
   "type": "object",
   "properties": {
     "site_name": {
@@ -20,160 +20,75 @@
       "type": "string",
       "maxLength": 200
     },
-    "default_mode": {
-      "description": "The color mode pages use: \"auto\" follows the visitor's device, \"light\" or \"dark\" forces one. Default \"auto\".",
-      "type": "string",
-      "enum": [
-        "auto",
-        "light",
-        "dark"
-      ]
-    },
-    "visitors_can_switch": {
-      "description": "Whether visitors may switch mode. Exposed in the theme's data so a consumer can offer a light/dark/auto toggle. Default true.",
-      "type": "boolean"
-    },
     "colors": {
-      "description": "Color overrides, separately for light and dark. Anything not set comes from the base theme.",
+      "description": "Color overrides. Anything not set comes from the base theme.",
       "type": "object",
       "properties": {
-        "light": {
-          "type": "object",
-          "properties": {
-            "primary": {
-              "$ref": "#/$defs/color"
-            },
-            "secondary": {
-              "$ref": "#/$defs/color"
-            },
-            "accent": {
-              "$ref": "#/$defs/color"
-            },
-            "neutral": {
-              "$ref": "#/$defs/color"
-            },
-            "base-100": {
-              "$ref": "#/$defs/color"
-            },
-            "base-content": {
-              "$ref": "#/$defs/color"
-            },
-            "info": {
-              "$ref": "#/$defs/color"
-            },
-            "success": {
-              "$ref": "#/$defs/color"
-            },
-            "warning": {
-              "$ref": "#/$defs/color"
-            },
-            "error": {
-              "$ref": "#/$defs/color"
-            },
-            "base-200": {
-              "$ref": "#/$defs/color"
-            },
-            "base-300": {
-              "$ref": "#/$defs/color"
-            },
-            "primary-content": {
-              "$ref": "#/$defs/color"
-            },
-            "secondary-content": {
-              "$ref": "#/$defs/color"
-            },
-            "accent-content": {
-              "$ref": "#/$defs/color"
-            },
-            "neutral-content": {
-              "$ref": "#/$defs/color"
-            },
-            "info-content": {
-              "$ref": "#/$defs/color"
-            },
-            "success-content": {
-              "$ref": "#/$defs/color"
-            },
-            "warning-content": {
-              "$ref": "#/$defs/color"
-            },
-            "error-content": {
-              "$ref": "#/$defs/color"
-            }
-          },
-          "additionalProperties": false
+        "primary": {
+          "$ref": "#/$defs/color"
         },
-        "dark": {
-          "type": "object",
-          "properties": {
-            "primary": {
-              "$ref": "#/$defs/color"
-            },
-            "secondary": {
-              "$ref": "#/$defs/color"
-            },
-            "accent": {
-              "$ref": "#/$defs/color"
-            },
-            "neutral": {
-              "$ref": "#/$defs/color"
-            },
-            "base-100": {
-              "$ref": "#/$defs/color"
-            },
-            "base-content": {
-              "$ref": "#/$defs/color"
-            },
-            "info": {
-              "$ref": "#/$defs/color"
-            },
-            "success": {
-              "$ref": "#/$defs/color"
-            },
-            "warning": {
-              "$ref": "#/$defs/color"
-            },
-            "error": {
-              "$ref": "#/$defs/color"
-            },
-            "base-200": {
-              "$ref": "#/$defs/color"
-            },
-            "base-300": {
-              "$ref": "#/$defs/color"
-            },
-            "primary-content": {
-              "$ref": "#/$defs/color"
-            },
-            "secondary-content": {
-              "$ref": "#/$defs/color"
-            },
-            "accent-content": {
-              "$ref": "#/$defs/color"
-            },
-            "neutral-content": {
-              "$ref": "#/$defs/color"
-            },
-            "info-content": {
-              "$ref": "#/$defs/color"
-            },
-            "success-content": {
-              "$ref": "#/$defs/color"
-            },
-            "warning-content": {
-              "$ref": "#/$defs/color"
-            },
-            "error-content": {
-              "$ref": "#/$defs/color"
-            }
-          },
-          "additionalProperties": false
+        "secondary": {
+          "$ref": "#/$defs/color"
+        },
+        "accent": {
+          "$ref": "#/$defs/color"
+        },
+        "neutral": {
+          "$ref": "#/$defs/color"
+        },
+        "base-100": {
+          "$ref": "#/$defs/color"
+        },
+        "base-content": {
+          "$ref": "#/$defs/color"
+        },
+        "info": {
+          "$ref": "#/$defs/color"
+        },
+        "success": {
+          "$ref": "#/$defs/color"
+        },
+        "warning": {
+          "$ref": "#/$defs/color"
+        },
+        "error": {
+          "$ref": "#/$defs/color"
+        },
+        "base-200": {
+          "$ref": "#/$defs/color"
+        },
+        "base-300": {
+          "$ref": "#/$defs/color"
+        },
+        "primary-content": {
+          "$ref": "#/$defs/color"
+        },
+        "secondary-content": {
+          "$ref": "#/$defs/color"
+        },
+        "accent-content": {
+          "$ref": "#/$defs/color"
+        },
+        "neutral-content": {
+          "$ref": "#/$defs/color"
+        },
+        "info-content": {
+          "$ref": "#/$defs/color"
+        },
+        "success-content": {
+          "$ref": "#/$defs/color"
+        },
+        "warning-content": {
+          "$ref": "#/$defs/color"
+        },
+        "error-content": {
+          "$ref": "#/$defs/color"
         }
       },
       "additionalProperties": false
     },
     "shape": {
-      "description": "Shape and effect overrides, for both light and dark. Anything not set comes from the base theme.",
+      "description": "Shape and effect overrides. Anything not set comes from the base theme.",
       "type": "object",
       "properties": {
         "radius_selector": {
@@ -195,13 +110,13 @@
           "maximum": 3
         },
         "size_selector": {
-          "description": "Small control size (--size-selector), in rem. Base size of checkboxes, toggles and badges (daisyUI uses 0.1875\u20130.3125).",
+          "description": "Small control size (--size-selector), in rem. Base size of checkboxes, toggles and badges (daisyUI uses 0.1875–0.3125).",
           "type": "number",
           "minimum": 0.125,
           "maximum": 0.5
         },
         "size_field": {
-          "description": "Field size (--size-field), in rem. Base size of buttons and inputs (daisyUI uses 0.1875\u20130.3125).",
+          "description": "Field size (--size-field), in rem. Base size of buttons and inputs (daisyUI uses 0.1875–0.3125).",
           "type": "number",
           "minimum": 0.125,
           "maximum": 0.5
@@ -257,13 +172,13 @@
           "maximum": 24
         },
         "scale": {
-          "description": "Heading scale (\u00d7). How much bigger each heading level is than the next (h6 is the base size). 1.25 is a common choice.",
+          "description": "Heading scale (×). How much bigger each heading level is than the next (h6 is the base size). 1.25 is a common choice.",
           "type": "number",
           "minimum": 1.05,
           "maximum": 1.6
         },
         "line_height": {
-          "description": "Line height (\u00d7). Space between lines of body text, e.g. 1.5.",
+          "description": "Line height (×). Space between lines of body text, e.g. 1.5.",
           "type": "number",
           "minimum": 1.1,
           "maximum": 2.2
@@ -278,7 +193,7 @@
       "additionalProperties": false
     },
     "images": {
-      "description": "The uploaded image (ThemeAsset id) used in each slot, for light and dark mode. Dark falls back to light; most logo slots fall back to the main logo.",
+      "description": "The uploaded image (ThemeAsset id) used in each slot. Most logo slots fall back to the main logo.",
       "type": "object",
       "propertyNames": {
         "enum": [
@@ -295,18 +210,8 @@
         ]
       },
       "additionalProperties": {
-        "type": "object",
-        "properties": {
-          "light": {
-            "type": "integer",
-            "minimum": 1
-          },
-          "dark": {
-            "type": "integer",
-            "minimum": 1
-          }
-        },
-        "additionalProperties": false
+        "type": "integer",
+        "minimum": 1
       }
     },
     "logo": {

@@ -1,4 +1,4 @@
-"""One image slot (and mode) on the theme page: its current image, earlier uploads,
+"""One image slot on the theme page: its current image, earlier uploads,
 a new upload and the alt text, all in one place (#271)."""
 
 from django import forms
@@ -33,7 +33,7 @@ class SlotImageWidget(forms.Widget):
         self.slot = slot
         self.choices = []
         self.assets = {}  # this slot's uploads, by id (as text)
-        self.saved = ""  # the id of the image saved in the theme for this slot and mode
+        self.saved = ""  # the id of the image saved in the theme for this slot
         self.empty_text = ""
 
     def value_from_datadict(self, data, files, name):
@@ -75,8 +75,8 @@ class SlotImageField(forms.Field):
     "upload_alt": its alt text, "alt_for": the image whose alt text was shown (or
     None), "alt": that alt text, or None if it wasn't sent}."""
 
-    def __init__(self, slot, mode, **kwargs):
-        self.slot, self.mode = slot, mode
+    def __init__(self, slot, **kwargs):
+        self.slot = slot
         kwargs.setdefault("required", False)
         super().__init__(widget=SlotImageWidget(slot), **kwargs)
 

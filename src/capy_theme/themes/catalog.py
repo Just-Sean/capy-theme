@@ -70,3 +70,10 @@ def builtin_values(name):
     """
     theme = THEMES.get(name)
     return dict(theme["values"]) if theme else None
+
+
+def builtin_scheme(name):
+    """Return a built-in theme's scheme ("light" or "dark"), or None if there's no
+    such theme."""
+    theme = THEMES.get(name)
+    return theme["scheme"] if theme else None

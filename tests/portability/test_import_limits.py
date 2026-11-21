@@ -31,8 +31,7 @@ def manifest(fonts=None):
         "theme": {
             "name": "Imported",
             "slug": "imported",
-            "light_base": "light",
-            "dark_base": "dark",
+            "base": "light",
             "settings": {},
         },
         "fonts": fonts or {},

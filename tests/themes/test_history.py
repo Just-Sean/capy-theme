@@ -7,7 +7,7 @@ from django.db import IntegrityError
 from django.urls import reverse
 
 from capy_theme.models import Theme
-from capy_theme.themes.active import activate, get_active_theme
+from capy_theme.themes.active import activate, primary_theme
 from capy_theme.themes.history import compare, describe, restore
 from capy_theme.themes.publishing import NothingToPublish, publish
 
@@ -27,10 +27,10 @@ def theme():
     """A theme with three revisions: plain, pink primary, then cupcake + square boxes."""
     theme = Theme.objects.create(name="Main", slug="main", settings={"site_name": "Capy"})
     publish(theme)
-    theme.settings = {"site_name": "Capy", "colors": {"light": {"primary": PINK}}}
+    theme.settings = {"site_name": "Capy", "colors": {"primary": PINK}}
     theme.save()
     publish(theme)
-    theme.light_base = "cupcake"
+    theme.base = "cupcake"
     theme.settings = {**theme.settings, "shape": {"radius_box": 0}}
     theme.save()
     publish(theme)
@@ -44,19 +44,19 @@ def rev(theme, number):
 
 def test_describe_names_every_value(theme):
     rows = describe(rev(theme, 3).snapshot)
-    assert rows["Light base"] == "cupcake"
-    assert rows["Light color: Primary"] == PINK
-    assert rows["Dark color: Primary"] is None
+    assert rows["Base"] == "cupcake"
+    assert rows["Scheme"] == "light"
+    assert rows["Color: Primary"] == PINK
     assert rows["Shape: Box corner radius"] == 0
     assert rows["Site name"] == "Capy"
 
 
 def test_compare_shows_exactly_what_changed(theme):
     assert compare(rev(theme, 1), rev(theme, 2)) == [
-        {"name": "Light color: Primary", "older": None, "newer": PINK}
+        {"name": "Color: Primary", "older": None, "newer": PINK}
     ]
     names = [row["name"] for row in compare(rev(theme, 2), rev(theme, 3))]
-    assert names == ["Light base", "Shape: Box corner radius"]
+    assert names == ["Base", "Shape: Box corner radius"]
 
 
 def test_compare_identical_revisions(theme):
@@ -70,9 +70,9 @@ def test_restore_publishes_the_old_revision_as_a_new_one(theme):
     assert compare(rev(theme, 1), new) == []
     theme.refresh_from_db()
     assert theme.live_revision == new
-    assert theme.light_base == "light" and "colors" not in theme.settings
+    assert theme.base == "light" and "colors" not in theme.settings
     assert theme.revisions.count() == 4  # nothing deleted
-    assert get_active_theme().live_revision.number == 4  # the site shows it
+    assert primary_theme().live_revision.number == 4  # the site shows it
 
 
 def test_restoring_the_live_revision_does_nothing(theme):
@@ -100,7 +100,7 @@ def test_a_restore_that_collides_keeps_the_unpublished_draft(theme, monkeypatch)
     with pytest.raises(IntegrityError):
         restore(theme, rev(theme, 1))
     theme.refresh_from_db()
-    assert theme.light_base == "cupcake"
+    assert theme.base == "cupcake"
     assert theme.settings["tagline"] == "An unpublished edit"
     assert theme.revisions.count() == 3
 
@@ -113,17 +113,17 @@ def test_restore_brings_back_the_old_logo(settings, tmp_path):
     from capy_theme.images.uploads import add_asset
 
     theme = Theme.objects.create(name="Logo", slug="logo")
-    one = add_asset(theme, "logo_main", "light", SimpleUploadedFile("one.png", png))
-    theme.settings = {"images": {"logo_main": {"light": one.pk}}}
+    one = add_asset(theme, "logo_main", SimpleUploadedFile("one.png", png))
+    theme.settings = {"images": {"logo_main": one.pk}}
     theme.save()
     first = publish(theme)
-    two = add_asset(theme, "logo_main", "light", SimpleUploadedFile("two.png", png))
-    theme.settings = {"images": {"logo_main": {"light": two.pk}}}
+    two = add_asset(theme, "logo_main", SimpleUploadedFile("two.png", png))
+    theme.settings = {"images": {"logo_main": two.pk}}
     theme.save()
     publish(theme)
     restore(theme, first)
     theme.refresh_from_db()
-    assert theme.settings["images"] == {"logo_main": {"light": one.pk}}
+    assert theme.settings["images"] == {"logo_main": one.pk}
     assert theme.live_revision.snapshot["images"] == first.snapshot["images"]
 
 
@@ -135,8 +135,8 @@ def test_restore_skips_images_deleted_since(settings, tmp_path):
     settings.MEDIA_ROOT = tmp_path
     theme = Theme.objects.create(name="Logo", slug="logo")
     upload = SimpleUploadedFile("one.png", _png_bytes())
-    one = add_asset(theme, "logo_main", "light", upload)
-    theme.settings = {"site_name": "A", "images": {"logo_main": {"light": one.pk}}}
+    one = add_asset(theme, "logo_main", upload)
+    theme.settings = {"site_name": "A", "images": {"logo_main": one.pk}}
     theme.save()
     first = publish(theme)
     theme.settings = {"site_name": "B"}
@@ -180,7 +180,7 @@ def restore_url(theme, number):
 def test_revisions_page_lists_and_compares(client, django_user_model, theme):
     login(client, django_user_model, "view_theme", "change_theme")
     content = client.get(revisions_url(theme) + "?a=1&b=2").content.decode()
-    assert "Light color: Primary" in content
+    assert "Color: Primary" in content
     assert PINK in content
     assert "1 value changed." in content
     assert "(live)" in content
@@ -243,11 +243,11 @@ def test_restore_explains_a_revision_that_can_no_longer_be_used(
     response = client.post(restore_url(theme, 3), follow=True)
     content = response.content.decode()
     assert "Can&#x27;t restore:" in content
-    assert "&#x27;cupcake&#x27; is not an available light daisyUI theme." in content
+    assert "&#x27;cupcake&#x27; is not an available daisyUI theme." in content
     theme.refresh_from_db()
     assert theme.live_revision.number == 4
     # The draft is checked before it's saved, so the unpublished edit is kept.
-    assert theme.light_base == "light"
+    assert theme.base == "light"
     assert theme.settings["tagline"] == "An unpublished edit"
 
 

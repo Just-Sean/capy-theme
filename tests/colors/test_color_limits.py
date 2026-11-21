@@ -39,9 +39,7 @@ def form_data(**kwargs):
     data = {
         "name": "Main",
         "slug": "main",
-        "light_base": "light",
-        "dark_base": "dark",
-        "visitors_can_switch": "on",
+        "base": "light",
     }
     return data | kwargs
 
@@ -108,16 +106,16 @@ def test_the_color_field_refuses_an_overflowing_color():
 
 @pytest.mark.parametrize("value", [HUGE, "oklch(1e400% 0 0)"])
 def test_the_admin_form_refuses_a_color_too_strong_to_render(value):
-    form = ThemeForm(data=form_data(color_light_primary=value))
+    form = ThemeForm(data=form_data(color_primary=value))
     assert not form.is_valid()
-    assert "color_light_primary" in form.errors
+    assert "color_primary" in form.errors
 
 
 def test_the_admin_form_saves_a_negative_hue():
-    form = ThemeForm(data=form_data(color_light_primary="oklch(50% 0.2 -30)"))
+    form = ThemeForm(data=form_data(color_primary="oklch(50% 0.2 -30)"))
     assert form.is_valid(), form.errors
     theme = form.save()
-    assert theme.settings["colors"]["light"]["primary"] == "oklch(50% 0.2 330)"
+    assert theme.settings["colors"]["primary"] == "oklch(50% 0.2 330)"
 
 
 @pytest.mark.parametrize("name", ["preview", "save"])
@@ -126,9 +124,7 @@ def test_the_editor_refuses_a_color_too_strong_to_render_and_stores_nothing(
 ):
     login(client, django_user_model)
     theme = Theme.objects.create(name="Main", slug="main")
-    response = editor_post(
-        client, name, theme, {"settings": {"colors": {"light": {"primary": HUGE}}}}
-    )
+    response = editor_post(client, name, theme, {"settings": {"colors": {"primary": HUGE}}})
     assert response.status_code == 400
     theme.refresh_from_db()
     assert "colors" not in theme.settings
@@ -137,7 +133,7 @@ def test_the_editor_refuses_a_color_too_strong_to_render_and_stores_nothing(
 def test_the_editor_saves_a_negative_hue(client, django_user_model):
     login(client, django_user_model)
     theme = Theme.objects.create(name="Main", slug="main")
-    body = {"settings": {"colors": {"light": {"primary": "oklch(50% 0.2 -30)"}}}}
+    body = {"settings": {"colors": {"primary": "oklch(50% 0.2 -30)"}}}
     assert editor_post(client, "save", theme, body).status_code == 200
 
 
@@ -151,15 +147,13 @@ def test_the_editor_saves_a_negative_hue(client, django_user_model):
 )
 def test_the_model_refuses_a_stored_color_that_would_break_pages(stored):
     with pytest.raises(ValidationError):
-        Theme.objects.create(
-            name="Main", slug="main", settings={"colors": {"light": {"primary": stored}}}
-        )
+        Theme.objects.create(name="Main", slug="main", settings={"colors": {"primary": stored}})
 
 
 def test_the_largest_color_the_model_accepts_still_renders_every_page(client):
     extreme = "oklch(999% 9.9999 999 / 999%)"
     theme = Theme.objects.create(
-        name="Main", slug="main", settings={"colors": {"light": {"primary": extreme}}}
+        name="Main", slug="main", settings={"colors": {"primary": extreme}}
     )
     activate(publish(theme).theme)
     assert client.get("/page/").status_code == 200
@@ -202,7 +196,7 @@ def test_the_editor_answers_400_for_nan_and_infinity(client, django_user_model, 
 def test_an_import_with_nan_is_refused():
     manifest = (
         '{"format": "capy-theme-export/1", "fonts": {}, "images": {}, "theme": {"name": "T",'
-        ' "slug": "t", "light_base": "light", "dark_base": "dark",'
+        ' "slug": "t", "base": "light",'
         ' "settings": {"shape": {"radius_box": NaN}}}}'
     )
     buffer = io.BytesIO()
@@ -223,9 +217,8 @@ def test_an_import_with_a_huge_color_is_refused():
             "theme": {
                 "name": "T",
                 "slug": "t",
-                "light_base": "light",
-                "dark_base": "dark",
-                "settings": {"colors": {"light": {"primary": "oklch(50% 1" + "0" * 300 + " 0)"}}},
+                "base": "light",
+                "settings": {"colors": {"primary": "oklch(50% 1" + "0" * 300 + " 0)"}},
             },
         }
     )

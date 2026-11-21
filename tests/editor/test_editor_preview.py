@@ -48,62 +48,60 @@ def post(client, theme, data):
 
 
 def test_preview_returns_css_values_and_contrast(editor_client, theme):
-    response = post(editor_client, theme, {"settings": {"colors": {"light": {"primary": PINK}}}})
+    response = post(editor_client, theme, {"settings": {"colors": {"primary": PINK}}})
     assert response.status_code == 200
     assert response["Cache-Control"] == "no-store"
     data = response.json()
     assert f"--color-primary: {PINK};" in data["css"]
-    assert data["values"]["light"]["--color-primary"] == PINK
-    assert len(data["contrast"]["light"]) == 11
+    assert data["values"]["--color-primary"] == PINK
+    assert len(data["contrast"]) == 11
     assert data["settings"]["site_name"] == "Capy"  # untouched settings are kept
 
 
 def test_derived_values_match_what_publishing_would_produce(editor_client, theme):
-    changes = {"settings": {"colors": {"light": {"primary": "oklch(25% 0.12 260)"}}}}
+    changes = {"settings": {"colors": {"primary": "oklch(25% 0.12 260)"}}}
     data = post(editor_client, theme, changes).json()
-    theme.settings = {"site_name": "Capy", "colors": {"light": {"primary": "oklch(25% 0.12 260)"}}}
+    theme.settings = {"site_name": "Capy", "colors": {"primary": "oklch(25% 0.12 260)"}}
     theme.save()
     revision = publish(theme)
-    published = effective_values(revision.snapshot, "light")
-    assert data["values"]["light"] == published
+    published = effective_values(revision.snapshot)
+    assert data["values"] == published
     assert data["css"].splitlines()[1:] == render_css(revision).splitlines()[1:]
 
 
 def test_any_color_format_is_accepted(editor_client, theme):
-    data = post(
-        editor_client, theme, {"settings": {"colors": {"light": {"primary": "#3b82f6"}}}}
-    ).json()
-    assert data["values"]["light"]["--color-primary"] == "oklch(62.31% 0.188 259.81)"
+    data = post(editor_client, theme, {"settings": {"colors": {"primary": "#3b82f6"}}}).json()
+    assert data["values"]["--color-primary"] == "oklch(62.31% 0.188 259.81)"
 
 
 def test_bases_and_shape_can_change(editor_client, theme):
     data = post(
         editor_client,
         theme,
-        {"light_base": "cupcake", "settings": {"shape": {"radius_box": 0}}},
+        {"base": "cupcake", "settings": {"shape": {"radius_box": 0}}},
     ).json()
     assert "--radius-box: 0rem;" in data["css"]
 
 
 def test_preview_writes_nothing(editor_client, theme):
-    before = (theme.light_base, dict(theme.settings), Theme.objects.get(pk=theme.pk).updated_at)
+    before = (theme.base, dict(theme.settings), Theme.objects.get(pk=theme.pk).updated_at)
     post(
         editor_client,
         theme,
-        {"light_base": "cupcake", "settings": {"colors": {"light": {"primary": PINK}}}},
+        {"base": "cupcake", "settings": {"colors": {"primary": PINK}}},
     )
     fresh = Theme.objects.get(pk=theme.pk)
-    assert (fresh.light_base, fresh.settings, fresh.updated_at) == before
+    assert (fresh.base, fresh.settings, fresh.updated_at) == before
     assert not ThemeRevision.objects.exists()
 
 
 @pytest.mark.parametrize(
     ("data", "message"),
     [
-        ({"settings": {"colors": {"light": {"primary": "bright pink"}}}}, "isn't a color"),
-        ({"light_base": "synthwave"}, "light daisyUI theme"),
+        ({"settings": {"colors": {"primary": "bright pink"}}}, "isn't a color"),
+        ({"base": "nonsense"}, "daisyUI theme"),
         ({"settings": {"shape": {"radius_box": 99}}}, "99"),
-        ({"settings": {"colors": {"light": {"sparkle": PINK}}}}, "sparkle"),
+        ({"settings": {"colors": {"sparkle": PINK}}}, "sparkle"),
     ],
 )
 def test_invalid_values_are_listed(editor_client, theme, data, message):
@@ -142,9 +140,9 @@ def test_csrf_is_required(django_user_model, theme):
 
 
 def test_apply_changes_leaves_the_theme_alone(theme):
-    draft = apply_changes(theme, {"light_base": "cupcake"})
-    assert draft.light_base == "cupcake"
-    assert theme.light_base == "light"
+    draft = apply_changes(theme, {"base": "cupcake"})
+    assert draft.base == "cupcake"
+    assert theme.base == "light"
 
 
 def test_mount_passes_the_preview_url_and_csrf_token(editor_client, theme):
