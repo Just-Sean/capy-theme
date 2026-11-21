@@ -211,3 +211,9 @@ def test_picker_state_tag_exposes_offered_themes(themes, rf):
         "{% for o in p.options %}{{ o.label }},{% endfor %}"
     ).render(Context({"request": request_with(rf, "ocean")}))
     assert "Site default," in out and "Ocean," in out and "Secret," not in out
+
+
+def test_picker_state_without_a_request_falls_back_to_the_home_page(themes):
+    state = picker_state(None)
+    assert state["current"] == "default"
+    assert state["options"][0]["url"].endswith("?next=%2F")

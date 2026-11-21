@@ -50,9 +50,16 @@ def mode_state(request, revision):
     cycling button advances to. The head script enhances any element carrying
     ``data-capy-mode`` (set that mode) or ``data-capy-mode-cycle`` (advance to the next
     mode) to switch without a reload. See docs/artifacts.md.
+
+    When the theme doesn't allow switching, ``can_switch`` is False, ``options`` is empty
+    and ``next`` is None (switching is a no-op server- and client-side), so a consumer
+    that loops ``options`` renders no control. Render the mode control only when
+    ``can_switch`` is true.
     """
     _default, can_switch = mode_settings(revision)
     current = current_mode(request, revision)
+    if not can_switch:
+        return {"can_switch": False, "current": current, "options": [], "next": None}
     back = request.get_full_path() if request is not None else "/"
 
     def set_url(value):
@@ -83,7 +90,9 @@ def head_script(revision):
     It repeats the server's choice from the cookie (so cached pages are right too) and
     keeps ``<html data-capy-color-mode>`` in sync. It switches without reloading when a
     visitor clicks any element carrying ``data-capy-mode`` (set that mode) or
-    ``data-capy-mode-cycle`` (advance light -> dark -> auto). See docs/artifacts.md.
+    ``data-capy-mode-cycle`` (advance light -> dark -> auto), and dispatches a
+    ``capy:modechange`` event (``detail: {mode}``) on ``document`` so a consumer can
+    announce the change to assistive technology. See docs/artifacts.md.
     """
     default, can_switch = mode_settings(revision)
     return (
@@ -107,7 +116,8 @@ def head_script(revision):
         "e.classList.toggle('btn-active',on)})}"
         "function set(m){document.cookie=n+'='+m+';path=/;max-age="
         + str(COOKIE_MAX_AGE)
-        + ";samesite=lax'+(location.protocol==='https:'?';secure':'');apply(m)}"
+        + ";samesite=lax'+(location.protocol==='https:'?';secure':'');apply(m);"
+        "document.dispatchEvent(new CustomEvent('capy:modechange',{detail:{mode:m}}))}"
         "apply(cur());"
         "document.addEventListener('click',function(e){if(!s)return;"
         "var t=e.target.closest&&e.target.closest('[data-capy-mode],[data-capy-mode-cycle]');"

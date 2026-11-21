@@ -4,6 +4,11 @@ What a developer using the theme from their own code needs: in their CSS, in a
 React, Vue or other front end, in a mobile app, or in another Django module.
 capy-theme owns the theme and makes it available; other code applies it.
 
+To build a **control** from the theme — a light/dark/auto toggle or a theme picker —
+render your own from `{% theme_mode_state %}` / `{% theme_picker_state %}` and the
+mode-switching protocol; see
+[artifacts.md → Mode and theme-picker controls](artifacts.md#mode-and-theme-picker-controls).
+
 ## CSS variables
 
 `{% theme_head %}` links the theme stylesheet (`/theme/<version>.css`). It

@@ -126,6 +126,8 @@ def test_head_script_cycles_and_tracks_the_current_mode(rf):
     assert "[data-capy-mode],[data-capy-mode-cycle]" in script
     # and advances through the modes in order.
     assert 'O=["light", "dark", "auto"]' in script
+    # It announces a switch so a consumer can update assistive tech.
+    assert "dispatchEvent(new CustomEvent('capy:modechange'" in script
 
 
 # --- The mode-state data interface (theme_mode_state) ---------------------------------
@@ -156,6 +158,20 @@ def test_mode_state_tag_is_none_without_an_active_theme(rf):
 def test_mode_state_tag_exposes_the_current_mode(rf):
     live(default_mode="dark")
     assert render("{% theme_mode_state as m %}{{ m.current }}", get(rf)).strip() == "dark"
+
+
+def test_mode_state_is_empty_when_switching_is_off(rf):
+    # No control to render: the forced mode is exposed, but there's nothing to switch to.
+    theme = live(default_mode="dark", visitors_can_switch=False)
+    state = mode_state(get(rf, "light"), theme.live_revision)
+    assert state == {"can_switch": False, "current": "dark", "options": [], "next": None}
+
+
+def test_mode_state_without_a_request_falls_back_to_the_home_page(rf):
+    theme = live()
+    state = mode_state(None, theme.live_revision)
+    assert state["current"] == "auto"
+    assert state["options"][0]["url"].endswith("?next=%2F")
 
 
 def test_head_script_carries_the_csp_nonce(rf):
