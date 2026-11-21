@@ -16,6 +16,8 @@ Everything comes from the published revision, never the draft. With a request,
 every URL is absolute (e.g. for emails and manifests).
 """
 
+from django.urls import reverse
+
 from ..colors.color_math import to_hex
 from ..colors.names import COLOR_NAMES, SCHEMES
 from ..colors.values import effective_values
@@ -27,7 +29,7 @@ from ..images.icons import icon_urls
 from ..images.logos import HEADER_SLOTS, LOGO_SLOTS, resolve
 from ..images.sharing import sharing_image
 from ..storage import theme_storage
-from ..themes.active import get_active_theme
+from ..themes.active import default_theme, get_active_theme, offered_themes
 from ..themes.branding import branding
 from ..themes.mode import mode_settings
 
@@ -64,6 +66,14 @@ def get_artifacts(request=None):
     theme = get_active_theme(request)
     if theme is None or theme.live_revision is None:
         return None
+    return build_artifacts(theme, request)
+
+
+def build_artifacts(theme, request=None):
+    """A published theme's artifacts as a dict, in the same shape as get_artifacts().
+
+    ``theme`` must have a live revision. With a request, every URL is absolute.
+    """
     revision = theme.live_revision
     snapshot = revision.snapshot
     url = _url_maker(request)
@@ -140,6 +150,48 @@ def get_artifacts(request=None):
         },
         "mode": {"default": default_mode, "visitors_can_switch": can_switch},
         "stylesheet_url": url(stylesheet_url(revision)),
+    }
+
+
+def theme_catalog(request=None):
+    """The available themes as plain data, for a consumer to render its own picker.
+
+    Each entry: ``slug``, ``name``, ``default`` (the admin's default theme), ``light``
+    and ``dark`` (each ``{"base", "swatch", "background"}`` — the daisyUI base and the
+    primary/background colors as #rrggbb), and ``assets_url`` / ``stylesheet_url``. Lists
+    the themes offered to visitors, plus the default; ``[]`` if none is published. With a
+    request, every URL is absolute.
+    """
+    url = _url_maker(request)
+    default = default_theme()
+    default_slug = default.slug if default else None
+    themes = list(offered_themes())
+    if default is not None and default.slug not in {theme.slug for theme in themes}:
+        themes.append(default)
+    themes.sort(key=lambda theme: theme.name)
+    return [_catalog_entry(theme, url, default_slug) for theme in themes]
+
+
+def _catalog_entry(theme, url, default_slug):
+    snapshot = theme.live_revision.snapshot
+    values = {scheme: effective_values(snapshot, scheme) for scheme in SCHEMES}
+
+    def side(scheme, base):
+        colors = values[scheme]
+        return {
+            "base": base,
+            "swatch": to_hex(colors["--color-primary"], alpha=False),
+            "background": to_hex(colors["--color-base-100"], alpha=False),
+        }
+
+    return {
+        "slug": theme.slug,
+        "name": theme.name,
+        "default": theme.slug == default_slug,
+        "light": side("light", snapshot["light_base"]),
+        "dark": side("dark", snapshot["dark_base"]),
+        "assets_url": url(reverse("capy_theme:theme_assets", args=[theme.slug])),
+        "stylesheet_url": url(stylesheet_url(theme.live_revision)),
     }
 
 
