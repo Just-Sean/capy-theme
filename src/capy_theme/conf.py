@@ -14,7 +14,6 @@ DEFAULTS = {
     "CAPY_THEME_CACHE_SECONDS": 300,
     "CAPY_THEME_API": "auto",
     "CAPY_THEME_STORAGE": "default",  # which STORAGES entry holds theme uploads
-    "CAPY_THEME_VISITOR_THEMES": True,
     "CAPY_THEME_CUSTOM_CSS": True,
     "CAPY_THEME_EDITOR_BUTTON": True,
     "CAPY_THEME_FONT_MAX_BYTES": 5 * MB,

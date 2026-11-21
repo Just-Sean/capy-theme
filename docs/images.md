@@ -108,8 +108,8 @@ versions (optional)**, each saying what it's for:
 | **Email** | HTML emails. PNG or JPEG (email programs don't show SVG); light only. |
 | **Print** | High resolution, for printed pages, PDFs or invoices; light only. |
 
-The project's templates use the other five with `{% theme_logo slot="mark" %}` and
-so on, or through [theme artifacts](artifacts.md). To set one:
+A consumer uses the other five from [theme artifacts](artifacts.md)
+(`artifacts.logos.logo_mark`, and so on). To set one:
 
 1. In the slot (admin: **Branding → Logos** or **More logo versions**; live
    editor: **Logos**), upload a new image, or pick an earlier one.
@@ -119,9 +119,10 @@ Fallbacks: dark mode uses the slot's light image if there's no dark one, and a
 slot with no image uses the main logo. Email and print logos only have a light
 image (emails and print have no dark mode).
 
-`{% theme_logo slot="main" %}` (the default) outputs the logo for that slot:
+Each logo slot's data (`artifacts.logos.<slot>`, with `light` and `dark`) gives what a
+consumer needs to render it:
 
-- **Header slots** (main, stacked, mark, wordmark) give a `<picture>` with AVIF
+- **Header slots** (main, stacked, mark, wordmark) carry responsive AVIF
   and WebP sources and a PNG or JPEG fallback. On upload, smaller copies are made
   at widths from 64 to 1280 px (and the image's own width, up to 2560), stored
   under `MEDIA_ROOT/capy_theme/assets/<slot>/variants/`. The `sizes` attribute
@@ -131,10 +132,9 @@ image (emails and print have no dark mode).
   phones** (default 32 px, for windows up to 640 px wide) are set in the same
   Logos section. The theme's stylesheet sizes `img.capy-logo` with them; a
   utility class on the tag (e.g. `class="h-12"`) still wins.
-- **Light and dark**: if the slot has a dark image, both are output and the
-  theme's stylesheet shows the one for the current mode (it follows the toggle
-  and the device setting). Both are `loading="lazy"`, so only the one shown is
-  downloaded.
+- **Light and dark**: the slot carries a light and (if set) a dark image; a consumer
+  shows the one for the current mode (following the device setting or a forced
+  `data-theme`). Use `loading="lazy"`, so only the one shown is downloaded.
 - **Email and print** slots give a plain `<img>` of the light image (email
   programs don't handle `<picture>` or the light/dark CSS).
 
@@ -165,8 +165,8 @@ from the icon image and its settings, so each revision keeps its icons:
 | `icon-maskable-512.png` | Android adaptive icons: the icon sits in the middle 80%, on a solid background |
 | `icon-monochrome-512.png` | Single-color icons: white in the icon's shape |
 
-`{% theme_head %}` links the ICO, SVG, 192 px and Apple icons (the tab and
-home-screen icon are part of the site's look). The 512 px, maskable and
+A consumer links the ICO, SVG, 192 px and Apple icons from a theme's assets
+(`artifacts.icons`) for the tab and home-screen icon. The 512 px, maskable and
 monochrome icons are for a web app manifest, which capy-theme doesn't serve: a
 project or PWA module gets them from [theme artifacts](artifacts.md).
 

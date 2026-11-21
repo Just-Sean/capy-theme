@@ -22,10 +22,10 @@ artifacts["sharing_image"]  # url, width, height, alt
 In templates: `{% theme_artifacts as artifacts %}`, then e.g.
 `{{ artifacts.logos.logo_email.light.url }}`.
 
-> **Rendering a control (mode toggle, theme picker, logo)?** capy-theme exposes the
-> data for it (below and in the table) but deliberately does **not** render the UI
-> widget — the app-shell or module renders its own, so the theme never dictates
-> another app's chrome. See "Mode and theme-picker controls" below.
+> **Building a control (a light/dark toggle, a theme picker, a logo)?** capy-theme
+> exposes the data for it but renders no widget and applies nothing to the page — the
+> app-shell or module builds its own chrome from this data (and the catalog / per-theme
+> endpoints below), so the theme never dictates another app's chrome.
 
 What's in it (all from the published revision; with a request, URLs are absolute):
 
@@ -42,129 +42,14 @@ What's in it (all from the published revision; with a request, URLs are absolute
 | `mode` | `default`, `visitors_can_switch` |
 | `stylesheet_url` | The theme stylesheet |
 
-## Mode and theme-picker controls
-
-capy-theme owns *how* light/dark/auto and the theme choice work (the cookie, the
-before-paint script, the endpoints), but it does **not** render the buttons — an
-app-shell or any other module renders its own control from this data, so the theme
-never dictates another app's chrome.
-
-### Mode state — `{% theme_mode_state %}`
-
-`{% theme_mode_state as mode %}` gives the light/dark/auto state (`None` if no theme
-is active):
-
-| Key | Contents |
-| --- | --- |
-| `can_switch` | Whether the theme lets visitors switch |
-| `current` | The current mode: `light`, `dark` or `auto` |
-| `options` | One per mode: `value`, `label`, `url`, `current` (empty when `can_switch` is `False`) |
-| `next` | The mode a single cycling button advances to: `value`, `label`, `url` (`None` when `can_switch` is `False`) |
-
-Each `url` sets that mode and returns to the current page, so a plain `<a>` works
-without JavaScript. **Render the mode control only when `can_switch` is `True`:** when the
-theme forbids switching, `options` is empty, `next` is `None`, and switching is a no-op
-both server-side and in the script, so a control would be inert.
-
-### Theme-picker state — `{% theme_picker_state %}`
-
-`{% theme_picker_state as picker %}` gives the themes a visitor may choose (`None` if
-no theme is active):
-
-| Key | Contents |
-| --- | --- |
-| `allowed` | Whether visitors may choose a theme (`CAPY_THEME_VISITOR_THEMES`) |
-| `current` | The chosen theme's slug, or `default` for the site's own |
-| `options` | `default` ("Site default") then each offered theme: `value`, `label`, `url`, `current` |
-
-Show the picker only when there's more than one option.
-
-### The mode-switching protocol
-
-`{% theme_head %}` includes a tiny script that applies the mode before the page draws
-and enhances a consumer's control to switch with no reload. Put the hooks on a **native
-`<a href>` or `<button>`** (never a `<div>`/`<span>`), so keyboard activation and focus
-come for free and the no-JS fallback works:
-
-- **`data-capy-mode="light|dark|auto"`** on a native control → clicking sets that mode,
-  and the script marks the current one with `aria-current="true"` and `.btn-active`.
-  Point its `href` at the option's `url`. These are link-style options tracked with
-  `aria-current`; a consumer that wants button / `aria-pressed` semantics manages that
-  state itself.
-- **`data-capy-mode-cycle`** on a native control → clicking advances to the next mode
-  (light → dark → auto → light). Point its `href` at `mode.next.url` so it still works
-  without JavaScript.
-- **`<html data-capy-color-mode="light|dark|auto">`** — set by the script (and
-  server-side by `{% theme_html_attrs %}`), so a consumer can show the matching icon
-  with CSS, e.g. `[data-capy-color-mode="dark"] .icon-sun { display: none }`.
-- **`capy:modechange` event** — the script dispatches it on `document` (`detail: {mode}`)
-  whenever a visitor switches, so a consumer can announce the change to assistive
-  technology (WCAG 2.2 §4.1.3) without reinventing a `MutationObserver`:
-
-  ```js
-  document.addEventListener("capy:modechange", (e) => {
-    liveRegion.textContent = e.detail.mode + " theme";  // an aria-live="polite" element
-  });
-  ```
-
-Use links (`<a href=…>`) so switching degrades to a full-page reload without JavaScript.
-
-**Make the current mode perceptible to assistive tech.** An icon swapped by CSS alone
-reaches sighted users only. Give the control an accessible name that reflects the current
-mode with visually-hidden, per-mode labels shown and hidden by the same
-`data-capy-color-mode` CSS (the hidden ones must use `display: none` so they drop out of
-the name), and announce changes with the `capy:modechange` event above.
-
-### Rendering a mode control (example)
-
-A single cycling button — gated on `can_switch`, with a no-JS fallback via `href`, and an
-icon and accessible name driven by `html[data-capy-color-mode]` (the consumer owns the CSS):
-
-```django
-{% theme_mode_state as mode %}
-{% if mode.can_switch %}
-  <a href="{{ mode.next.url }}" data-capy-mode-cycle class="btn btn-ghost">
-    <span class="capy-icon-light" aria-hidden="true">…</span>
-    <span class="capy-icon-dark" aria-hidden="true">…</span>
-    <span class="capy-icon-auto" aria-hidden="true">…</span>
-    <span class="sr-only capy-name-light">Light theme</span>
-    <span class="sr-only capy-name-dark">Dark theme</span>
-    <span class="sr-only capy-name-auto">Auto theme</span>
-  </a>
-{% endif %}
-```
-
-Per-mode options instead: loop `mode.options`, putting `o.value` on `data-capy-mode` and
-`o.url` on `href`.
-
 ## The JSON API
 
-`/theme/api.json` (under wherever the project includes `capy_theme.urls`) serves
-the same data as `get_artifacts()`, with absolute URLs, for React, Vue and other
-front ends, mobile apps and other services. It's public and read-only.
+A consumer reads these public, read-only JSON endpoints (under wherever the project
+includes `capy_theme.urls`) and does all the using itself — capy-theme decides nothing
+for it:
 
-- **Caching:** every response has an `ETag`. Send it back in `If-None-Match` and
-  you get `304 Not Modified` until the theme is published again. Responses may
-  be cached for 60 seconds (`Cache-Control: public, max-age=60`).
-- **No published theme:** `404` with `{"error": "No theme is published."}`.
-- **Other domains:** browsers only let apps on other domains read it if the
-  project allows it with CORS (for example with `django-cors-headers` in the
-  project's settings). capy-theme doesn't set CORS headers itself.
-
-```js
-const response = await fetch("https://example.com/theme/api.json");
-const theme = await response.json();
-document.title = theme.branding.site_name;
-const logo = theme.logos.logo_main.light;   // { url, width, height, alt, variants }
-```
-
-### Available themes and per-theme assets
-
-A consumer that lets a visitor **choose** a theme reads the catalog, then fetches the
-chosen theme's assets — capy-theme never decides for them:
-
-- **`GET /theme/themes.json`** — the available themes (the ones the admin offers to
-  visitors, plus the default). Each entry:
+- **`GET /theme/themes.json`** — the catalog of available themes (the ones the admin
+  offers to visitors, plus the default). Each entry:
 
   | Field | Contents |
   | --- | --- |
@@ -176,23 +61,26 @@ chosen theme's assets — capy-theme never decides for them:
 
   Always `200` (an empty list when nothing is published).
 
-- **`GET /theme/themes/<slug>.json`** — one theme's full assets (the same shape as
-  `/theme/api.json`), by slug. `<slug>` may be `default` for the admin's default theme.
-  `404` for an unknown, unpublished, or not-offered theme.
+- **`GET /theme/themes/<slug>.json`** — one theme's full assets: the same data as
+  `get_artifacts()` (the table above), by slug. `<slug>` may be `default` for the admin's
+  default theme. `404` for an unknown, unpublished, or not-offered theme.
 
-Both carry an `ETag` (send it in `If-None-Match` for `304`) and
-`Cache-Control: public, max-age=60`. Unlike `/theme/api.json`, they're keyed only by
-slug (no visitor cookie), so they cache cleanly for everyone.
+Both carry an `ETag` (send it back in `If-None-Match` for `304 Not Modified` until the
+theme changes) and `Cache-Control: public, max-age=60`. They're keyed only by slug (no
+visitor cookie), so they cache cleanly for everyone. Browsers only let apps on other
+domains read them if the project allows it with CORS (for example with
+`django-cors-headers`); capy-theme doesn't set CORS headers itself.
 
 ```js
 const themes = await (await fetch("/theme/themes.json")).json();
 const chosen = themes.find((t) => t.slug === mySavedChoice) ?? themes.find((t) => t.default);
 const assets = await (await fetch(chosen.assets_url)).json();
-// link chosen.stylesheet_url, set data-theme, etc. — all on the consumer's side.
+// link chosen.stylesheet_url, set data-theme on <html>, etc. — all on the consumer's side.
 ```
 
-In Python (another Django module): `from capy_theme.artifacts import theme_catalog` and
-`build_artifacts(theme)`.
+In Python (another Django module): `from capy_theme.artifacts import theme_catalog,
+build_artifacts, get_artifacts` (`get_artifacts(request)` is the published default theme's
+assets).
 
 ### Django REST Framework and generated API docs (`CAPY_THEME_API`)
 
@@ -200,18 +88,18 @@ In Python (another Django module): `from capy_theme.artifacts import theme_catal
 > uses Django REST Framework (DRF), and capy-theme decides this **by itself**
 > when the project starts. Set `CAPY_THEME_API` to choose explicitly.
 
-| `CAPY_THEME_API` | What serves `/theme/api.json` |
+| `CAPY_THEME_API` | What serves the catalog and per-theme endpoints |
 | --- | --- |
-| `"auto"` (default) | A DRF view if `rest_framework` is in `INSTALLED_APPS`, otherwise a plain Django view |
-| `"drf"` | Always the DRF view (an error at start-up if DRF isn't installed) |
-| `"django"` | Always the plain Django view, even in a DRF project |
+| `"auto"` (default) | DRF views if `rest_framework` is in `INSTALLED_APPS`, otherwise plain Django views |
+| `"drf"` | Always the DRF views (an error at start-up if DRF isn't installed) |
+| `"django"` | Always the plain Django views, even in a DRF project |
 
-- **With DRF and drf-spectacular** set up in the project, the endpoint appears in
+- **With DRF and drf-spectacular** set up in the project, the endpoints appear in
   the project's generated API docs (schema, Swagger or Redoc) automatically,
-  with its full response described. Nothing else to configure.
-- **The DRF view sets its own rules** (no login, no throttling, JSON only), so the
+  with their full responses described. Nothing else to configure.
+- **The DRF views set their own rules** (no login, no throttling, JSON only), so the
   project's DRF defaults, such as requiring login, don't change this public API.
-- **Both views return exactly the same JSON** and the same ETag.
+- **Both ways return exactly the same JSON** and the same ETag.
 - capy-theme never requires DRF or drf-spectacular; they're only used when the
   project has them.
 
@@ -251,6 +139,6 @@ daisyUI plugin:
 With daisyUI's standalone plugin files (no npm), change `"daisyui/theme"` to the
 path of your `daisyui-theme.mjs`. The blocks carry daisyUI's own variables only
 (colors, radii, sizes, border, depth, noise); fonts, the type scale, logos and
-the other extras need `{% theme_head %}` or the API. The download is a snapshot:
+the other extras come from the theme stylesheet or the API. The download is a snapshot:
 download it again after publishing changes.
 

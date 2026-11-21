@@ -42,17 +42,14 @@ capy-theme does. Code: `editor/live_edit_view.py` (issue #229).
 
 ## The live theme editor
 
-Staff who can change themes see an **Edit theme** button in
-the bottom-right corner of **every page** that uses `{% theme_head %}`. It opens
-a panel on the right and shows the theme's **draft** on the page you're on, in
-your browser only. Visitors keep seeing the published theme, and a banner at the
-top says so. **Close** (or **Exit** in the banner) puts the page back to the
-published look.
+Staff who can change themes edit a theme on capy-theme's own **live-edit page**
+(`/theme/live-edit/`), opened by **Edit live** in the admin (or the **Edit theme**
+button in the corner of that page). A panel on the right shows the theme's **draft**
+on the page, in your browser only; **Close** puts the page back to the published look.
 
-The editor is loaded by `{% theme_head %}` only for staff with the change-theme
-permission; visitors get none of its files. To hide the corner button (for
-example, to put your own link to `?edit=<id>` somewhere), set
-`CAPY_THEME_EDITOR_BUTTON = False`.
+The editor's files load on the live-edit page only for staff with the change-theme
+permission. To hide the corner button (for example, to link to `?edit=<id>` yourself),
+set `CAPY_THEME_EDITOR_BUTTON = False`.
 
 Every section of the panel except **Save and publish** folds (click its title),
 and every fold starts folded, including Suggestions, Basic, Advanced and Expert
@@ -80,17 +77,10 @@ twice). **Save draft** keeps the choice and any alt text you changed; **Revert**
 drops them (an uploaded image stays in the theme's list). See
 [images](images.md).
 
-While the editor is open, the draft's logos show wherever the page has a
-`{% theme_logo %}` (in light and dark), and the browser tab shows the draft's
-icon. That's only in your browser; closing the editor puts the published ones
-back. (For staff who can edit themes, `{% theme_logo %}` marks each logo with
-`data-capy-logo-slot` so the editor can find it; visitors get the same HTML as
-always. If a project caches whole pages or template fragments with the logo in
-them, keep editors' pages out of that cache (or vary it by user): otherwise a
-visitor could be served the marked HTML, which is harmless, or an editor the
-unmarked HTML, where the preview can't swap the logo. Of the attributes given to
-`{% theme_logo %}`, the preview keeps only `class`, `title` and `aria-*`; others,
-such as `style`, `width` or `id`, only show on the published logo.) The generated
+While the editor is open, the draft's logo shows in the live-edit page header (in light
+and dark), and the browser tab shows the draft's icon. That's only in your browser;
+closing the editor puts the published ones back. (The header logo carries a
+`data-capy-logo-slot` marker so the editor can swap it as you edit.) The generated
 favicons and app icons are made when you publish.
 - **Suggestions** (in the Colors section): click **Suggest colors** for colors
   that go with the current primary (analogous, complementary, triadic) and, if the

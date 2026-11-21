@@ -11,11 +11,11 @@ stand-in project in `tests/`, and `demo/` is a small site for trying it out.
 Whoever runs the site controls its look from the Django admin, with no code
 changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
 
-- **Live theme editor:** staff edit a theme right on the page (any page using
-  `{% theme_head %}`), with color pickers, shape controls, contrast
-  ratings and palette suggestions (from the primary color or the logo). Every
-  change shows instantly, for that user only, until they **Save draft** or
-  **Save and publish**. The admin form stays as a plain fallback.
+- **Live theme editor:** staff edit a theme live on capy-theme's own page (below),
+  with color pickers, shape controls, contrast ratings and palette suggestions
+  (from the primary color or the logo). Every change shows instantly, for that user
+  only, until they **Save draft** or **Save and publish**. The admin form stays as a
+  plain fallback.
 - **Live edit page** at `/theme/live-edit/`: capy-theme's own page for building a
   theme. It has the header (logo, tagline, Light / Dark / Auto) and every daisyUI
   component, with the editor open, and works the same in any project (the admin's
@@ -43,17 +43,16 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
   - every favicon and app icon made from one square icon;
   - a 1200 × 630 sharing image for link previews;
   - optional login and page background images.
-- **Theme artifacts for other apps:** `get_artifacts()` (and
-  `{% theme_artifacts %}`) give every color, font, logo, icon and image as plain
-  data, so an email module, app shell or PWA module can use the theme. capy-theme
-  doesn't apply them outside the page's own look. The light/dark/auto and
-  theme-choice **state** come the same way — `{% theme_mode_state %}` and
-  `{% theme_picker_state %}` — so an app-shell renders its own controls from the data
-  instead of capy-theme rendering the widgets.
-- **JSON API and downloads** for front ends, apps and design tools:
-  `/theme/api.json` (with ETag; a DRF view documented by drf-spectacular when the
-  project uses DRF), W3C design tokens and daisyUI theme blocks. See
-  [docs/developers.md](docs/developers.md).
+- **Theme data for other apps:** `get_artifacts()` (and `{% theme_artifacts %}`)
+  give every color, font, logo, icon and image as plain data, so an email module,
+  app shell or PWA module can use the theme. capy-theme exposes the data and applies
+  nothing itself — the consumer links the stylesheet and builds its own chrome
+  (a light/dark toggle, a theme picker) from it.
+- **JSON API and downloads** for front ends, apps and design tools: a **catalog** of
+  the available themes (`/theme/themes.json`) and each theme's **assets**
+  (`/theme/themes/<slug>.json`), with ETags and DRF views documented by
+  drf-spectacular when the project uses DRF, plus W3C design tokens and daisyUI theme
+  blocks. See [docs/developers.md](docs/developers.md).
 - **Export and import** a theme between sites (admin buttons or management
   commands), arriving as a draft.
 - **Drafts and publishing:** editing a theme changes only its draft. Publishing
@@ -63,15 +62,15 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
 - **One active theme** (or one per domain, see Multiple sites): pick it with
   **Activate** on the admin's theme list, or **Save, publish and activate** on the
   theme's page. It's cached, so pages don't query the database for it.
-- **On every page:** `{% theme_head %}` links the theme's stylesheet (with the
-  browser address-bar color and a visible focus outline), `{% theme_logo %}`
-  shows the logo or site name, and every template gets a `theme` variable
-  (including hex colors for HTML emails).
-- **Light and dark mode:** follow the device or force one, and visitors can switch
-  with `{% theme_mode_toggle %}`, with no flash on page load.
-- **Visitors and scheduling:** visitors can pick among themes the operator offers
-  (`{% theme_picker %}`); themes can be scheduled between two dates (e.g. a
-  holiday theme) and the default returns afterwards; visitors' "reduce motion"
+- **Using it in a page:** a consumer links the theme's stylesheet (its URL comes from
+  the catalog or a theme's assets) and reads `{% theme_artifacts %}` for the logo,
+  colors (including hex for HTML emails) and the rest. capy-theme injects nothing into
+  the page itself.
+- **Light and dark mode:** the stylesheet carries both; it follows the device, or a
+  consumer forces one by setting `data-theme` on `<html>` and builds its own toggle.
+- **Several themes and scheduling:** the admin offers themes for a consumer to let
+  visitors pick among (via the catalog); themes can be scheduled between two dates
+  (e.g. a holiday theme) and the default returns afterwards; visitors' "reduce motion"
   and "more contrast" device settings are respected.
 - **Components view** in the editor: every daisyUI component and the theme's
   images and icons in the draft theme, light and dark side by side, updating as
@@ -122,45 +121,29 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
    ]
    ```
 
-4. Add its context processor to `TEMPLATES` in `settings.py`, so every template
-   gets a `theme` variable:
+4. **Configure a theme in the admin and link its stylesheet.** Add a theme (its
+   colors, fonts, logo and branding) in the Django admin, then publish and activate it
+   (see below). A consumer links the active theme's stylesheet and reads its data from
+   `{% theme_artifacts %}` — capy-theme injects nothing into your page itself:
 
-   ```python
-   TEMPLATES = [
-       {
-           ...,
-           "OPTIONS": {
-               "context_processors": [
-                   ...,
-                   "capy_theme.context_processors.theme",
-               ],
-           },
-       },
-   ]
+   ```django
+   {% load capy_theme %}
+   {% theme_artifacts as theme %}
+   {% if theme %}<link rel="stylesheet" href="{{ theme.stylesheet_url }}">{% endif %}
    ```
 
-5. Add the template tags where your pages get their shell. In a project from
-   capy-project v1.1 or later this is `templates/layout.html`, which has the blocks
-   to fill:
+   `theme` holds the active theme's data (`stylesheet_url`, `branding`, `colors`,
+   `logos`, `icons`, …; see [docs/artifacts.md](docs/artifacts.md)). To let visitors
+   pick among several themes, read the catalog (`/theme/themes.json`) and a theme's
+   assets (`/theme/themes/<slug>.json`) and link the chosen stylesheet. Light/dark/auto
+   and any switching are the consumer's: the stylesheet follows the device, or the
+   consumer forces a mode by setting `data-theme="capy-light"` / `"capy-dark"` on
+   `<html>` and builds its own toggle.
 
-   - `{% block html_attrs %} {% theme_html_attrs %}{% endblock %}` — note the leading
-     space; this puts the forced mode (`data-theme="capy-light"` or `"capy-dark"`) on
-     `<html>`.
-   - `{% theme_head %}` in the `head` block (after `{{ block.super }}`) — links the
-     active theme's stylesheet and adds a tiny script that sets light or dark mode
-     before the page draws.
-   - `{% theme_logo %}` and `{% theme_mode_toggle %}` in the nav — the logo, and the
-     Light / Dark / Auto buttons for visitors.
-
-   In a plain Django project without that layout, put the same tags straight in your
-   base template instead: a leading space then `{% theme_html_attrs %}` on the
-   `<html>` tag, `{% theme_head %}` in `<head>` after your Tailwind/daisyUI
-   stylesheet, and the logo and toggle in your nav.
-
-   The toggle uses daisyUI's `join` and `btn` classes. Tailwind only includes
-   classes it finds in scanned files, so add capy-theme's templates to the project's
-   Tailwind source with an `@source` line pointing at the installed
-   `capy_theme/templates` folder. This prints where that is:
+   The stylesheet uses daisyUI's classes, and Tailwind only builds classes it finds in
+   scanned files, so add capy-theme's templates to the project's Tailwind source with an
+   `@source` line pointing at the installed `capy_theme/templates` folder. This prints
+   where that is:
 
    ```bash
    uv run python -c "import capy_theme, pathlib; print(pathlib.Path(capy_theme.__file__).parent / 'templates')"
@@ -169,7 +152,7 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
    If the project doesn't have Tailwind CSS and daisyUI yet, see
    [Tailwind and daisyUI for a new project](#tailwind-and-daisyui-for-a-new-project) below.
 
-6. Make sure the project stores and serves uploaded files, for theme images,
+5. Make sure the project stores and serves uploaded files, for theme images,
    icons and fonts.
    Set `MEDIA_ROOT` and `MEDIA_URL` in `settings.py`. While developing, serve them
    from `urls.py`; in production, serve that folder from the web server or a
@@ -200,7 +183,7 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
    otherwise theme images and fonts won't be readable by visitors (typically a 403
    or 404). Set it before uploading theme assets (see the setting's note).
 
-7. Create its database tables and, in production, collect its static files (the
+6. Create its database tables and, in production, collect its static files (the
    editor, admin and bundled font files):
 
    ```bash
@@ -211,18 +194,17 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
    It needs `USE_TZ = True` (Django's default), since schedules are stored with
    time zones.
 
-To show the theme's logo (or its site name if it has no logo), use
-`{% theme_logo %}`, or `{% theme_logo slot="mark" %}` for another logo slot (see
-[Logos](docs/images.md#logos)). Extra attributes go on the `<img>`, e.g.
-`{% theme_logo class="me-2" %}`. Every template also gets a `theme` variable
-holding the published `site_name`, `tagline`, `logo_url`, `logo_alt`, `name`,
-`slug`, `revision`, `light_base`, `dark_base`, `stylesheet_url`, `default_mode`,
-`visitors_can_switch`, `mode` (what this visitor sees), `email_colors` (hex),
-`background_login_url` and `background_pattern_url`, or `None`
-if no theme is active.
+To show the theme's logo, read it from `{% theme_artifacts %}` — e.g.
+`artifacts.logos.logo_main.light`, or another logo slot (see
+[Logos](docs/images.md#logos)), each with responsive `variants`. `{% theme_artifacts
+as artifacts %}` holds the active theme's published data: `stylesheet_url`,
+`branding` (`site_name`, `tagline`, `logo_alt`), `colors` (and `colors_hex` for HTML
+emails), `fonts`, `logos`, `icons`, `sharing_image`, `backgrounds`, and `mode`
+(`default`, `visitors_can_switch`) — or `None` if no theme is active (see
+[docs/artifacts.md](docs/artifacts.md)).
 
-Pages then show the **active** theme's **published** colors. Until a theme is
-published and activated in the admin, they show daisyUI's defaults.
+Once you link the stylesheet, pages show the **active** theme's **published** colors.
+Until a theme is published and activated in the admin, they show daisyUI's defaults.
 
 The module's tables go into the project's database. Supported databases are
 SQLite and PostgreSQL (the ones its tests run on).
@@ -295,8 +277,9 @@ the demo):
    @plugin "./daisyui.mjs";
    ```
 
-4. Link it in the base template, before `{% theme_head %}`:
-   `<link rel="stylesheet" href="{% static 'css/site.css' %}">`, then build it:
+4. Link your own built stylesheet in the base template
+   (`<link rel="stylesheet" href="{% static 'css/site.css' %}">`), alongside the theme
+   stylesheet from `{% theme_artifacts %}` (step 4 above), then build it:
 
    ```bash
    uv run python manage.py tailwind build       # once, or for production
@@ -371,10 +354,9 @@ Optional settings a project can add to its `settings.py` (all defaults are in
 | --- | --- | --- |
 | `CAPY_THEME_BUILTIN_THEMES` | all 35 | Which built-in daisyUI themes can be used as a theme's light or dark base, e.g. `["light", "dark"]`. Listing an unknown theme raises an error that names it. |
 | `CAPY_THEME_CACHE_SECONDS` | `300` | How long the active theme is cached, in seconds. Publishing or activating clears the cache straight away; this limit makes every server process catch up when the project's cache isn't shared between processes (e.g. Django's default in-memory cache). |
-| `CAPY_THEME_API` | `"auto"` | How `/theme/api.json` is served: `"auto"` (a DRF view if Django REST Framework is installed, so drf-spectacular documents it; otherwise a plain Django view), `"drf"` or `"django"`. See [docs/artifacts.md](docs/artifacts.md). |
+| `CAPY_THEME_API` | `"auto"` | How the themes catalog and per-theme assets endpoints are served: `"auto"` (DRF views if Django REST Framework is installed, so drf-spectacular documents them; otherwise plain Django views), `"drf"` or `"django"`. See [docs/artifacts.md](docs/artifacts.md). |
 | `CAPY_THEME_STORAGE` | `"default"` | Which entry in the project's `STORAGES` setting capy-theme saves and serves its uploads (logos, icons, backgrounds, fonts) from. Set it to a public storage in a project whose default storage is private (e.g. staff-only media), so visitors can load theme images. The storage must serve **stable, public URLs**: capy-theme writes image URLs into the theme CSS, which is cached for a year, so a storage that returns signed, expiring URLs (such as S3's default) would break them. It's read at startup, so set it before uploading theme assets; changing it later leaves existing files in the old storage (copy them, under `capy_theme/`, if you move it). |
 | `CAPY_THEME_CUSTOM_CSS` | `True` | Allow custom CSS. `False` switches it off for the whole project: no theme's custom CSS is loaded, and nobody (not even superusers) sees the Custom CSS section. See [docs/colors-and-css.md](docs/colors-and-css.md#custom-css). |
-| `CAPY_THEME_VISITOR_THEMES` | `True` | Let visitors choose among the themes offered to them with `{% theme_picker %}`. `False` turns the picker off and ignores visitors' choices. |
 | `CAPY_THEME_EDITOR_BUTTON` | `True` | Show the live editor's **Edit theme** button in the corner of every page, for staff who can edit. `False` hides it (the editor still opens with `?edit=<theme id>`, e.g. from **Edit live** in the admin). |
 | `CAPY_THEME_FONT_MAX_BYTES` | `5242880` (5 MB) | The largest font file that can be uploaded, in bytes. |
 | `CAPY_THEME_FONT_MAX_UNPACKED_BYTES` | `31457280` (30 MB) | The most a WOFF or WOFF2 font file may unpack to, in bytes. Fonts are compressed, so a small file could otherwise unpack to gigabytes. Real fonts unpack to well under this (the largest, with every Chinese, Japanese or Korean character, to about 15–20 MB); it matches the default of Google's WOFF2 library. Must be a positive whole number. |
@@ -562,7 +544,7 @@ Every command in one place. Details are in the linked pages.
 | [docs/fonts.md](docs/fonts.md) | The font library: system stacks, bundled fonts, uploads, Google Fonts, external stylesheets |
 | [docs/images.md](docs/images.md) | Uploads and SVG cleaning, logo slots, icons, the sharing image, backgrounds |
 | [docs/editor.md](docs/editor.md) | The live editor and its Components view |
-| [docs/artifacts.md](docs/artifacts.md) | What other apps get: `get_artifacts()`, `{% theme_artifacts %}`, the mode/theme-picker state (`{% theme_mode_state %}`, `{% theme_picker_state %}`) and mode-switching protocol, the JSON API (`/theme/api.json`, with DRF/drf-spectacular support), the design tokens download (`/theme/tokens.json`) and daisyUI theme blocks (`/theme/daisyui-theme.css`) |
+| [docs/artifacts.md](docs/artifacts.md) | What other apps get: `get_artifacts()` / `{% theme_artifacts %}`, the themes catalog (`/theme/themes.json`) and per-theme assets (`/theme/themes/<slug>.json`, with DRF/drf-spectacular support), the design tokens download (`/theme/tokens.json`) and daisyUI theme blocks (`/theme/daisyui-theme.css`) |
 | [docs/developers.md](docs/developers.md) | **For developers using the theme from their own code:** every CSS variable, the JSON API with an example, the downloads |
 | [docs/development.md](docs/development.md) | The demo site and updating daisyUI |
 | [docs/PLAN.md](docs/PLAN.md), [docs/DECISIONS.md](docs/DECISIONS.md) | The build plan, and why things are the way they are |
@@ -691,12 +673,12 @@ job and stays under about 300 lines.
 | `colors/` | Color names and groups, color math (OKLCH, contrast, readable text, shades), a theme's color values, palette suggestions, the color form field |
 | `css/` | Writing the theme stylesheet: `stylesheet.py` plus shape, type scale, backgrounds, accessibility; and the view that serves it |
 | `fonts/` | `Font` and `FontFile` models, the library (roles, stacks, `@font-face`), uploads (with the unpacking check and fontTools in its own process with limits), Google Fonts import, `curated.json` |
-| `images/` | `ThemeAsset` and `ThemeAssetVariant` models, image slots and their explanations, upload checks, SVG cleaning, logo slots, logo copies, the `{% theme_logo %}` HTML, icons, the sharing image |
+| `images/` | `ThemeAsset` and `ThemeAssetVariant` models, image slots and their explanations, upload checks, SVG cleaning, logo slots, logo copies, the logo `<picture>` builder (`logo_html`), icons, the sharing image |
 | `editor/` | The live editor: who can use it, its state and controls, preview, saving, adding it to pages, its JSON views and the Components view |
 | `artifacts/` | `get_artifacts()`: everything other apps get, and the JSON API (plain Django and DRF views) |
 | `admin/` | The theme form (one file per area: colors, type, shape, images, custom CSS) and its tabs and fieldsets, the image slots and Media, the theme admin page, the Save and publish area and the theme list's row buttons, the Revisions and Restore pages, export and import, inlines, fonts, Site themes and the theme schedule |
 | `templatetags/capy_theme.py` | The template tags; each calls its section |
-| `models.py`, `urls.py`, `apps.py`, `context_processors.py` | Django's entry points |
+| `models.py`, `urls.py`, `apps.py` | Django's entry points |
 | `templates/capy_theme/`, `static/capy_theme/` | Templates and static files (the editor's JavaScript is one file per section in `static/capy_theme/editor/controls/`) |
 | `migrations/`, `management/commands/` | Database migrations and the management commands (`capy_theme_add_fonts`, `theme_export`, `theme_import`, `theme_publish`, `theme_rebuild_images`) |
 

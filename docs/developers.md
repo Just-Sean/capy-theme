@@ -2,20 +2,17 @@
 
 What a developer using the theme from their own code needs: in their CSS, in a
 React, Vue or other front end, in a mobile app, or in another Django module.
-capy-theme owns the theme and makes it available; other code applies it.
-
-To build a **control** from the theme — a light/dark/auto toggle or a theme picker —
-render your own from `{% theme_mode_state %}` / `{% theme_picker_state %}` and the
-mode-switching protocol; see
-[artifacts.md → Mode and theme-picker controls](artifacts.md#mode-and-theme-picker-controls).
+capy-theme owns the theme and exposes it; your code applies it — it links the
+stylesheet and builds its own chrome (a light/dark toggle, a theme picker) from the
+catalog and per-theme assets below.
 
 ## CSS variables
 
-`{% theme_head %}` links the theme stylesheet (`/theme/<version>.css`). It
-defines these variables on `:root`, with the light values by default, the dark
-values when the visitor's device prefers dark, and either set forced by
-`data-theme="capy-light"` or `"capy-dark"` on any element (the mode toggle sets it
-on `<html>`). Use them in your own CSS, e.g. `color: var(--color-primary)`.
+The theme stylesheet (`/theme/<version>.css`; its URL is in the catalog and each
+theme's assets) defines these variables on `:root`, with the light values by default,
+the dark values when the visitor's device prefers dark, and either set forced by
+`data-theme="capy-light"` or `"capy-dark"` on any element (your code sets that to force
+a mode). Use them in your own CSS, e.g. `color: var(--color-primary)`.
 
 daisyUI's classes (`btn-primary`, `bg-base-200`…) already use the daisyUI
 variables, so most pages never name them directly.

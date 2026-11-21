@@ -52,8 +52,8 @@ visitors' browsers never contact Google. Weights a family doesn't have are skipp
 like **Adobe Fonts**. Add a font with source **External stylesheet**, the font's
 CSS family name as the family (e.g. `proxima-nova`), and the provider's https
 stylesheet address (e.g. your Adobe Fonts kit, `https://use.typekit.net/abc1234.css`).
-`{% theme_head %}` then links that stylesheet before the theme's own, and the live
-editor links it while previewing. The provider's stylesheet defines the font
+A consumer links that stylesheet before the theme's own (it's in a theme's assets as
+`fonts[role].stylesheet`), and the live editor links it while previewing. The provider's stylesheet defines the font
 faces, so the browser loads them from the provider.
 
 If the project uses a **Content Security Policy**, allow the provider's domains:

@@ -149,43 +149,34 @@ every site. The live editor, the API and the downloads
 all follow the domain they're opened on. From code:
 `capy_theme.themes.active.activate(theme, site="shop.example.com")`.
 
-## Visitor theme picker
+## Offering themes for visitors to choose
 
-Visitors can choose among themes the operator offers:
+An admin can offer several themes for visitors to pick among:
 
 1. In the admin, tick **Offer to visitors** on each theme to offer, and publish it.
-2. Put `{% theme_picker %}` where visitors should choose (the demo has it in a
-   **Theme** dropdown in the navbar). It lists **Site default** and the offered
-   themes, and outputs nothing if none are offered.
+2. The offered themes (plus the default) appear in the **catalog**
+   (`/theme/themes.json`), each with its stylesheet URL and a light/dark preview swatch.
 
-Each option is a link to `/theme/choose/<slug>/` (or `/theme/choose/default/`),
-which stores the choice in the `capy_theme_choice` cookie and goes back to the
-page. Only offered, published themes are used; any other value in the cookie is
-ignored, so visitors can't force a theme. `CAPY_THEME_VISITOR_THEMES = False`
-turns the whole feature off. Pages then depend on that cookie, so a project that
-caches whole pages must vary its cache on it.
+A consumer reads the catalog, builds its own picker, and links the chosen theme's
+stylesheet — capy-theme renders no picker and remembers no choice (see
+[docs/artifacts.md](artifacts.md#the-json-api)).
 
 ## Light and dark mode
 
 On a theme's admin page, the **Mode** section has:
 
 - **Default mode:** *Auto* (follow the visitor's device setting), *Light* or *Dark*.
-- **Visitors can switch** (on by default): shows `{% theme_mode_toggle %}`, three
-  buttons (Light, Dark, Auto). A visitor's choice is kept in the `capy_theme_mode`
-  cookie for a year.
+- **Visitors can switch** (on by default).
 
-Like everything else, these take effect when the theme is published.
+Both are published with the theme and exposed as data (the `mode` key in a theme's
+assets: `default`, `visitors_can_switch`), for a consumer to honor. capy-theme doesn't
+switch modes or render a toggle itself.
 
-How it works: the server puts `data-theme="capy-light"` or `"capy-dark"` on
-`<html>` (`{% theme_html_attrs %}`) when a mode is forced, so pages arrive in the
-right mode with no flash. For "auto" it adds nothing, and the stylesheet follows
-the device. The script from `{% theme_head %}` does the same before the page
-draws (so cached pages are right too) and makes the buttons switch instantly.
-Without JavaScript, each button is a link to `/theme/mode/<light|dark|auto>/`,
-which sets the cookie and comes back to the page. The script carries Django's
-CSP nonce when the project uses Django's CSP middleware. (With a nonce in the
-policy, don't cache whole pages that use `{% theme_head %}`: every visitor would
-get the same nonce.)
+How it works in the stylesheet: it carries both light and dark. For "auto" it follows
+the device (`prefers-color-scheme`); to force a mode, set `data-theme="capy-light"` or
+`"capy-dark"` on `<html>` (or any element). A consumer does this and builds its own
+toggle, using the `mode` setting to know the admin's default and whether a toggle is
+wanted.
 
 ## Permissions
 
