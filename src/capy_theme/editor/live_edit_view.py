@@ -17,11 +17,14 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.clickjacking import xframe_options_deny
 from django.views.decorators.http import require_GET
 
-from ..context_processors import theme as theme_context
+from .. import conf
+from ..css.stylesheet import stylesheet_url
+from ..fonts.library import external_stylesheets
 from ..images.logo_tag import logo_html
 from ..models import Theme
 from ..themes.active import get_active_theme
 from .access import can_edit, requested_theme_id
+from .state import editor_urls
 
 
 def draft_header(theme):
@@ -62,16 +65,42 @@ def live_edit(request):
         if theme is not None:
             return redirect(f"{reverse('capy_theme:live_edit')}?edit={theme.pk}")
     editing = Theme.objects.filter(pk=requested).first() if requested is not None else None
-    # `theme` (the published theme visitors see, for the header) and `request` are
-    # given here, so the page doesn't depend on the project's context processors.
+    # The page is self-contained: it links the theme's stylesheet and mounts the editor
+    # itself, so it needs neither the project's context processors nor capy-theme's public
+    # tags (the editor is capy-theme's own tool, previewing on its own page).
     context = {
-        **theme_context(request),
         "request": request,
         "editing": editing,
         "no_theme": not Theme.objects.exists(),
         "missing_theme": requested is not None and editing is None,
         "header": draft_header(editing) if editing else None,
+        "stylesheet_url": _stylesheet_url(editing),
+        "font_stylesheets": _font_stylesheets(editing),
+        "editor": _editor_mount(editing) if editing else None,
         # Every theme, for the menu that switches the theme being edited (#269).
         "edit_choices": Theme.objects.only("pk", "name", "live_revision"),
     }
     return render(request, "capy_theme/editor/live_edit.html", context)
+
+
+def _stylesheet_url(editing):
+    """The editing theme's published stylesheet, or "" (the editor injects the draft CSS)."""
+    if editing is None or editing.live_revision_id is None:
+        return ""
+    return stylesheet_url(editing.live_revision)
+
+
+def _font_stylesheets(editing):
+    """External font stylesheets (e.g. Google Fonts) the editing theme's draft needs."""
+    if editing is None:
+        return []
+    return external_stylesheets(editing.snapshot().get("fonts"))
+
+
+def _editor_mount(editing):
+    """The context the editor mount (mount.html) needs for the theme being edited."""
+    return {
+        "theme": editing,
+        "urls": editor_urls(editing),
+        "floating_button": conf.get("CAPY_THEME_EDITOR_BUTTON"),
+    }

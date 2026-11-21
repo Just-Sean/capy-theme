@@ -1,4 +1,4 @@
-{% load static capy_theme %}<!doctype html>
+{% load static %}<!doctype html>
 {% comment %}
   The live edit page (/theme/live-edit/, issue #229): capy-theme's own page for
   building a theme. The header and every daisyUI component, with the live editor
@@ -9,13 +9,21 @@
   its draft (#271); the editor previews the draft's changes on the whole page.
   Switch theme opens the editor on another theme.
 {% endcomment %}
-<html lang="en" {% theme_html_attrs %}>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Live edit{% if editing %}: {{ editing.name }}{% endif %}</title>
+  {% comment %}Self-contained: the bundled daisyUI stylesheet, then the theme's own
+     stylesheet and fonts, the editor mount, and the preview toggle — no public tags,
+     so stripping them doesn't touch the editor. The editor injects the draft CSS over
+     the top.{% endcomment %}
   <link rel="stylesheet" href="{% static 'capy_theme/editor/components.css' %}">
-  {% theme_head %}
+  {% if stylesheet_url %}<link rel="stylesheet" href="{{ stylesheet_url }}">{% endif %}
+  {% for sheet in font_stylesheets %}<link rel="stylesheet" href="{{ sheet }}">
+  {% endfor %}
+  {% if editor %}{% include "capy_theme/editor/mount.html" %}{% endif %}
+  <script src="{% static 'capy_theme/editor/mode-preview.js' %}" defer></script>
 </head>
 <body class="min-h-screen bg-base-100 text-base-content capy-bg-pattern">
   <a href="#live-edit-main" class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 btn btn-sm">Skip to the components</a>
@@ -28,15 +36,17 @@
         {% if header.logo and header.site_name %}<span class="text-xl font-bold">{{ header.site_name }}</span>{% endif %}
         {% if header.tagline %}<span class="text-sm opacity-70">{{ header.tagline }}</span>{% endif %}
       {% else %}
-        <span class="flex items-center gap-3 text-xl font-bold">
-          {% if theme.logo_url or theme.site_name %}{% theme_logo %}{% else %}Live edit{% endif %}
-        </span>
-        {% if theme.logo_url and theme.site_name %}<span class="text-xl font-bold">{{ theme.site_name }}</span>{% endif %}
-        {% if theme.tagline %}<span class="text-sm opacity-70">{{ theme.tagline }}</span>{% endif %}
+        <span class="flex items-center gap-3 text-xl font-bold">Live edit</span>
       {% endif %}
     </div>
     <nav class="flex flex-none flex-wrap items-center gap-2">
-      {% theme_mode_toggle %}
+      {% comment %}The editor's own light/dark/auto PREVIEW toggle (mode-preview.js),
+         not the public mode toggle — it switches only this page's preview.{% endcomment %}
+      <div class="join" role="group" aria-label="Preview mode">
+        <button type="button" data-capy-preview-mode="light" class="btn btn-sm join-item">Light</button>
+        <button type="button" data-capy-preview-mode="dark" class="btn btn-sm join-item">Dark</button>
+        <button type="button" data-capy-preview-mode="auto" class="btn btn-sm join-item">Auto</button>
+      </div>
       {% if edit_choices %}
         {# Switches the theme being edited, not the visitor's theme (#269); editor.js asks first if there are unsaved changes. #}
         <details class="dropdown dropdown-end">

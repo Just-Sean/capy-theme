@@ -203,6 +203,24 @@ def test_the_page_doesnt_need_the_projects_context_processors(client, django_use
     assert "Capy Co" in html and ">Dark<" in html and 'id="capy-editor"' in html
 
 
+def test_the_preview_toggle_is_internal_not_the_public_tags(client, django_user_model, active):
+    # The editor is self-contained: its own preview toggle + script, and none of the
+    # public switching tags' output, so stripping those tags (v2) doesn't touch it.
+    log_in(client, django_user_model, "change_theme")
+    html = client.get(f"{URL}?edit={active.pk}").content.decode()
+    assert "data-capy-preview-mode=" in html
+    assert "capy_theme/editor/mode-preview.js" in html
+    # No output from {% theme_mode_toggle %} / {% theme_picker %} / the public head script.
+    assert "/theme/mode/" not in html
+    assert 'data-capy-mode="' not in html
+    assert "/theme/choose/" not in html
+    # It still links the editing theme's own stylesheet and mounts the editor.
+    from capy_theme.css.stylesheet import stylesheet_url
+
+    assert stylesheet_url(active.live_revision) in html
+    assert 'id="capy-editor"' in html
+
+
 def test_the_page_has_nothing_a_strict_csp_would_block(client, django_user_model, active):
     log_in(client, django_user_model, "change_theme")
     html = client.get(f"{URL}?edit={active.pk}").content.decode()
