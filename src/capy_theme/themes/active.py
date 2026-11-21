@@ -105,6 +105,24 @@ def offered_themes():
     return sorted(_state("")["offered"].values(), key=lambda theme: theme.name)
 
 
+def catalog_theme(slug):
+    """A published theme a consumer may fetch by slug, or None if there's no such theme.
+
+    ``slug`` is an offered theme's slug, or ``"default"`` / the default theme's own slug
+    for the admin's default. Only offered themes and the default are reachable, so an
+    unpublished or not-offered theme can't be fetched.
+    """
+    default = default_theme()
+    if slug == "default":
+        return default
+    offered = {theme.slug: theme for theme in offered_themes()}
+    if slug in offered:
+        return offered[slug]
+    if default is not None and default.slug == slug:
+        return default
+    return None
+
+
 def site_of(request):
     """The request's domain, lower case and without the port ("" without a request)."""
     if request is None:

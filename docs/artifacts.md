@@ -158,6 +158,42 @@ document.title = theme.branding.site_name;
 const logo = theme.logos.logo_main.light;   // { url, width, height, alt, variants }
 ```
 
+### Available themes and per-theme assets
+
+A consumer that lets a visitor **choose** a theme reads the catalog, then fetches the
+chosen theme's assets — capy-theme never decides for them:
+
+- **`GET /theme/themes.json`** — the available themes (the ones the admin offers to
+  visitors, plus the default). Each entry:
+
+  | Field | Contents |
+  | --- | --- |
+  | `slug`, `name` | The theme's slug and display name |
+  | `default` | `true` for the admin's default theme |
+  | `light`, `dark` | Each `{ "base": <daisyUI base>, "swatch": <primary #rrggbb>, "background": <base-100 #rrggbb> }` — enough to show a light/dark preview |
+  | `assets_url` | The theme's assets endpoint (below) |
+  | `stylesheet_url` | The theme's stylesheet |
+
+  Always `200` (an empty list when nothing is published).
+
+- **`GET /theme/themes/<slug>.json`** — one theme's full assets (the same shape as
+  `/theme/api.json`), by slug. `<slug>` may be `default` for the admin's default theme.
+  `404` for an unknown, unpublished, or not-offered theme.
+
+Both carry an `ETag` (send it in `If-None-Match` for `304`) and
+`Cache-Control: public, max-age=60`. Unlike `/theme/api.json`, they're keyed only by
+slug (no visitor cookie), so they cache cleanly for everyone.
+
+```js
+const themes = await (await fetch("/theme/themes.json")).json();
+const chosen = themes.find((t) => t.slug === mySavedChoice) ?? themes.find((t) => t.default);
+const assets = await (await fetch(chosen.assets_url)).json();
+// link chosen.stylesheet_url, set data-theme, etc. — all on the consumer's side.
+```
+
+In Python (another Django module): `from capy_theme.artifacts import theme_catalog` and
+`build_artifacts(theme)`.
+
 ### Django REST Framework and generated API docs (`CAPY_THEME_API`)
 
 > **Note for projects:** how the API is served depends on whether the project

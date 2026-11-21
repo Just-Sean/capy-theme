@@ -15,7 +15,14 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .api import cache_publicly, not_modified, payload
+from .api import (
+    cache_publicly,
+    cache_static,
+    catalog_payload,
+    not_modified,
+    payload,
+    theme_payload,
+)
 
 try:
     from drf_spectacular.utils import extend_schema
@@ -85,6 +92,22 @@ class ArtifactsSerializer(serializers.Serializer):
     stylesheet_url = serializers.CharField()
 
 
+class CatalogSideSerializer(serializers.Serializer):
+    base = serializers.CharField(help_text="The daisyUI base theme")
+    swatch = serializers.CharField(help_text="Primary color, #rrggbb")
+    background = serializers.CharField(help_text="base-100 color, #rrggbb")
+
+
+class CatalogEntrySerializer(serializers.Serializer):
+    slug = serializers.CharField()
+    name = serializers.CharField()
+    default = serializers.BooleanField(help_text="The admin's default theme")
+    light = CatalogSideSerializer()
+    dark = CatalogSideSerializer()
+    assets_url = serializers.CharField()
+    stylesheet_url = serializers.CharField()
+
+
 class ThemeAPIView(APIView):
     """The active theme's colors, fonts, shape, logos, icons and images."""
 
@@ -110,3 +133,55 @@ class ThemeAPIView(APIView):
         if etag:
             response["ETag"] = etag
         return cache_publicly(response)
+
+
+class ThemeCatalogAPIView(APIView):
+    """The available themes: slug, name, which is default, and light/dark swatches."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    throttle_classes = []
+    renderer_classes = [JSONRenderer]
+
+    @extend_schema(
+        responses={200: CatalogEntrySerializer(many=True), 304: None},
+        summary="Available themes",
+        description="The themes offered to visitors, plus the default. Send the ETag "
+        "back in If-None-Match to get 304 until a theme changes.",
+    )
+    def get(self, request):
+        data, etag = catalog_payload(request)
+        if not_modified(request, etag):
+            response = Response(status=304)
+        else:
+            response = Response(data)
+        if etag:
+            response["ETag"] = etag
+        return cache_static(response)
+
+
+class ThemeAssetsAPIView(APIView):
+    """One theme's colors, fonts, shape, logos, icons and images, by slug."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    throttle_classes = []
+    renderer_classes = [JSONRenderer]
+
+    @extend_schema(
+        responses={200: ArtifactsSerializer, 304: None, 404: None},
+        summary="A theme's assets",
+        description="A published theme's values and asset URLs (absolute), by slug (or "
+        '"default"). Send the ETag back in If-None-Match to get 304.',
+    )
+    def get(self, request, slug):
+        data, etag = theme_payload(request, slug)
+        if data is None:
+            response = Response({"error": "No such theme."}, status=404)
+        elif not_modified(request, etag):
+            response = Response(status=304)
+        else:
+            response = Response(data)
+        if etag:
+            response["ETag"] = etag
+        return cache_static(response)
