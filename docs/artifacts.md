@@ -58,11 +58,13 @@ is active):
 | --- | --- |
 | `can_switch` | Whether the theme lets visitors switch |
 | `current` | The current mode: `light`, `dark` or `auto` |
-| `options` | One per mode: `value`, `label`, `url`, `current` |
-| `next` | The mode a single cycling button advances to: `value`, `label`, `url` |
+| `options` | One per mode: `value`, `label`, `url`, `current` (empty when `can_switch` is `False`) |
+| `next` | The mode a single cycling button advances to: `value`, `label`, `url` (`None` when `can_switch` is `False`) |
 
 Each `url` sets that mode and returns to the current page, so a plain `<a>` works
-without JavaScript.
+without JavaScript. **Render the mode control only when `can_switch` is `True`:** when the
+theme forbids switching, `options` is empty, `next` is `None`, and switching is a no-op
+both server-side and in the script, so a control would be inert.
 
 ### Theme-picker state — `{% theme_picker_state %}`
 
@@ -80,19 +82,60 @@ Show the picker only when there's more than one option.
 ### The mode-switching protocol
 
 `{% theme_head %}` includes a tiny script that applies the mode before the page draws
-and enhances a consumer's control to switch with no reload. Any markup works, as long
-as it uses these hooks:
+and enhances a consumer's control to switch with no reload. Put the hooks on a **native
+`<a href>` or `<button>`** (never a `<div>`/`<span>`), so keyboard activation and focus
+come for free and the no-JS fallback works:
 
-- **`data-capy-mode="light|dark|auto"`** on a clickable element → clicking sets that
-  mode. The script marks the current one with `aria-current="true"` and `.btn-active`.
-- **`data-capy-mode-cycle`** on a clickable element → clicking advances to the next
-  mode (light → dark → auto → light). Point its `href` at `mode.next.url` so it still
-  works without JavaScript.
+- **`data-capy-mode="light|dark|auto"`** on a native control → clicking sets that mode,
+  and the script marks the current one with `aria-current="true"` and `.btn-active`.
+  Point its `href` at the option's `url`. These are link-style options tracked with
+  `aria-current`; a consumer that wants button / `aria-pressed` semantics manages that
+  state itself.
+- **`data-capy-mode-cycle`** on a native control → clicking advances to the next mode
+  (light → dark → auto → light). Point its `href` at `mode.next.url` so it still works
+  without JavaScript.
 - **`<html data-capy-color-mode="light|dark|auto">`** — set by the script (and
   server-side by `{% theme_html_attrs %}`), so a consumer can show the matching icon
   with CSS, e.g. `[data-capy-color-mode="dark"] .icon-sun { display: none }`.
+- **`capy:modechange` event** — the script dispatches it on `document` (`detail: {mode}`)
+  whenever a visitor switches, so a consumer can announce the change to assistive
+  technology (WCAG 2.2 §4.1.3) without reinventing a `MutationObserver`:
+
+  ```js
+  document.addEventListener("capy:modechange", (e) => {
+    liveRegion.textContent = e.detail.mode + " theme";  // an aria-live="polite" element
+  });
+  ```
 
 Use links (`<a href=…>`) so switching degrades to a full-page reload without JavaScript.
+
+**Make the current mode perceptible to assistive tech.** An icon swapped by CSS alone
+reaches sighted users only. Give the control an accessible name that reflects the current
+mode with visually-hidden, per-mode labels shown and hidden by the same
+`data-capy-color-mode` CSS (the hidden ones must use `display: none` so they drop out of
+the name), and announce changes with the `capy:modechange` event above.
+
+### Rendering a mode control (example)
+
+A single cycling button — gated on `can_switch`, with a no-JS fallback via `href`, and an
+icon and accessible name driven by `html[data-capy-color-mode]` (the consumer owns the CSS):
+
+```django
+{% theme_mode_state as mode %}
+{% if mode.can_switch %}
+  <a href="{{ mode.next.url }}" data-capy-mode-cycle class="btn btn-ghost">
+    <span class="capy-icon-light" aria-hidden="true">…</span>
+    <span class="capy-icon-dark" aria-hidden="true">…</span>
+    <span class="capy-icon-auto" aria-hidden="true">…</span>
+    <span class="sr-only capy-name-light">Light theme</span>
+    <span class="sr-only capy-name-dark">Dark theme</span>
+    <span class="sr-only capy-name-auto">Auto theme</span>
+  </a>
+{% endif %}
+```
+
+Per-mode options instead: loop `mode.options`, putting `o.value` on `data-capy-mode` and
+`o.url` on `href`.
 
 ## The JSON API
 
