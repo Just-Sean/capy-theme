@@ -52,7 +52,8 @@ class ThemeForm(forms.ModelForm):
     visitors_can_switch = forms.BooleanField(
         required=False,
         initial=True,
-        help_text="Lets visitors choose light, dark or auto with {% theme_mode_toggle %}.",
+        help_text="Exposes 'visitors can switch' in the theme's data, so a consumer can "
+        "offer a light / dark / auto toggle.",
     )
 
     # Form fields stored as keys in Theme.settings.

@@ -1,7 +1,4 @@
-"""Who can use the live editor, which theme it edits, and adding it to pages."""
-
-from ..models import Theme
-from ..themes.active import get_active_theme
+"""Who can use the live editor, and which theme it edits."""
 
 
 def can_edit(user):
@@ -27,12 +24,3 @@ def requested_theme_id(request):
     if requested.isascii() and requested.isdigit():
         return int(requested)
     return None
-
-
-def editor_theme(request):
-    """The theme the editor works on: ?edit=<id> if given, else the active theme."""
-    requested = requested_theme_id(request)
-    if requested is not None:
-        return Theme.objects.filter(pk=requested).first()
-    active = get_active_theme(request)
-    return Theme.objects.filter(pk=active.pk).first() if active else None

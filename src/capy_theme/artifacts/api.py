@@ -1,14 +1,15 @@
-"""The JSON API: the active theme's artifacts at /theme/api.json.
+"""The JSON API: the themes catalog and each theme's assets.
 
-Front ends, mobile apps and other modules read it. It's the same data as
-get_artifacts(), with absolute URLs. Responses carry an ETag, so a client that
-sends it back (If-None-Match) gets "304 Not Modified" until the theme changes.
+- ``/theme/themes.json`` — the available themes (catalog)
+- ``/theme/themes/<slug>.json`` — one theme's assets (same shape as ``build_artifacts()``)
 
-Two ways to serve it, chosen by CAPY_THEME_API:
-- "auto" (default): the DRF view if Django REST Framework is installed, so
-  drf-spectacular lists it in the project's API docs; otherwise the plain view.
-- "drf": always the DRF view (the project must have DRF installed).
-- "django": always the plain Django view.
+Responses carry an ETag, so a client that sends it back (If-None-Match) gets
+"304 Not Modified" until the theme changes. Two ways to serve them, chosen by
+CAPY_THEME_API:
+- "auto" (default): DRF views if Django REST Framework is installed, so drf-spectacular
+  lists them in the project's API docs; otherwise plain Django views.
+- "drf": always the DRF views (the project must have DRF installed).
+- "django": always the plain Django views.
 Both return the same JSON.
 """
 
@@ -18,12 +19,11 @@ import json
 from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpResponseNotModified, JsonResponse
-from django.utils.cache import patch_vary_headers
 from django.views.decorators.http import require_GET
 
 from .. import conf
 from ..themes.active import catalog_theme
-from .build import build_artifacts, get_artifacts, theme_catalog
+from .build import build_artifacts, theme_catalog
 
 API_MODES = ("auto", "drf", "django")
 CACHE_CONTROL = "public, max-age=60"  # short: the address stays the same after publishing
@@ -32,14 +32,6 @@ CACHE_CONTROL = "public, max-age=60"  # short: the address stays the same after 
 def _etag(data):
     canonical = json.dumps(data, sort_keys=True, separators=(",", ":")).encode()
     return '"' + hashlib.sha256(canonical).hexdigest()[:32] + '"'
-
-
-def payload(request):
-    """(data, ETag) for the API, or (None, None) if no theme is published."""
-    data = get_artifacts(request)
-    if data is None:
-        return None, None
-    return data, _etag(data)
 
 
 def catalog_payload(request):
@@ -57,18 +49,6 @@ def theme_payload(request, slug):
     return data, _etag(data)
 
 
-def cache_publicly(response):
-    """Let browsers and shared caches keep the response for a minute.
-
-    The content depends on the visitor's theme choice (a cookie), so caches must
-    keep one copy per cookie (Vary: Cookie), or one visitor's choice would be
-    served to everyone.
-    """
-    response["Cache-Control"] = CACHE_CONTROL
-    patch_vary_headers(response, ["Cookie"])
-    return response
-
-
 def cache_static(response):
     """Public caching for the catalog and per-theme endpoints.
 
@@ -82,20 +62,6 @@ def not_modified(request, etag):
     """True if the client already has this version (its If-None-Match matches)."""
     sent = request.headers.get("If-None-Match", "")
     return etag in [tag.strip() for tag in sent.split(",")] or sent.strip() == "*"
-
-
-@require_GET
-def theme_api(request):
-    """The plain Django view of the API."""
-    data, etag = payload(request)
-    if data is None:
-        return JsonResponse({"error": "No theme is published."}, status=404)
-    if not_modified(request, etag):
-        response = HttpResponseNotModified()
-    else:
-        response = JsonResponse(data)
-    response["ETag"] = etag
-    return cache_publicly(response)
 
 
 @require_GET
@@ -125,7 +91,7 @@ def theme_assets_api(request, slug):
 
 
 def api_mode():
-    """ "drf" or "django": which view serves the API in this project."""
+    """ "drf" or "django": which views serve the API in this project."""
     mode = conf.get("CAPY_THEME_API")
     if mode not in API_MODES:
         raise ImproperlyConfigured(
@@ -141,17 +107,8 @@ def api_mode():
     return mode
 
 
-def api_view():
-    """The view the URL uses (decided once, when the URLs load)."""
-    if api_mode() == "drf":
-        from .api_drf import ThemeAPIView  # only imported when DRF is installed
-
-        return ThemeAPIView.as_view()
-    return theme_api
-
-
 def catalog_view():
-    """The view for /theme/themes.json (DRF or plain, like api_view)."""
+    """The view for /theme/themes.json (DRF or plain)."""
     if api_mode() == "drf":
         from .api_drf import ThemeCatalogAPIView
 
@@ -160,7 +117,7 @@ def catalog_view():
 
 
 def assets_view():
-    """The view for /theme/themes/<slug>.json (DRF or plain, like api_view)."""
+    """The view for /theme/themes/<slug>.json (DRF or plain)."""
     if api_mode() == "drf":
         from .api_drf import ThemeAssetsAPIView
 

@@ -4,8 +4,6 @@ import pytest
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
-from django.template import Context, Template
-from django.test import RequestFactory
 
 from capy_theme.admin.theme_form import ThemeForm
 from capy_theme.css.stylesheet import render_css
@@ -14,7 +12,6 @@ from capy_theme.editor.state import controls
 from capy_theme.fonts.library import preload_urls
 from capy_theme.fonts.models import Font, FontFile
 from capy_theme.models import Theme
-from capy_theme.themes.active import activate
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -114,16 +111,12 @@ def test_preload_picks_the_regular_latin_file_of_body_and_heading():
         name="Main", slug="main", settings={"fonts": {"body": body.pk, "heading": heading.pk}}
     )
     revision = publish(theme)
+    # preload_urls exposes the files a consumer preloads (it renders its own <link>s).
     urls = preload_urls(revision.snapshot["fonts"])
     assert urls == [
         body.files.get(weight=400, style="normal", subset="latin").file.url,
         heading.files.get().file.url,
     ]
-    activate(theme)
-    head = Template("{% load capy_theme %}{% theme_head %}").render(
-        Context({"request": RequestFactory().get("/")})
-    )
-    assert f'<link rel="preload" href="{urls[0]}" as="font" type="font/woff2" crossorigin>' in head
 
 
 def test_no_preload_for_system_fonts():

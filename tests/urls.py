@@ -1,5 +1,6 @@
 """URLs for the test project: the admin, the module's URLs under /theme/, and one
-ordinary page (/page/) that includes {% theme_head %}, like any project page."""
+ordinary page (/page/) that links the theme's stylesheet from the exposed data, the way
+a v2 consumer does (capy-theme injects nothing into the page itself)."""
 
 from django.contrib import admin
 from django.http import HttpResponse
@@ -7,8 +8,10 @@ from django.template import engines
 from django.urls import include, path
 
 PAGE = engines["django"].from_string(
-    "{% load capy_theme %}<!doctype html><html {% theme_html_attrs %}><head>"
-    "{% theme_head %}</head><body><h1>A project page</h1></body></html>"
+    "{% load capy_theme %}{% theme_artifacts as t %}"
+    "<!doctype html><html><head>"
+    '{% if t %}<link rel="stylesheet" href="{{ t.stylesheet_url }}">{% endif %}'
+    "</head><body><h1>A project page</h1></body></html>"
 )
 
 

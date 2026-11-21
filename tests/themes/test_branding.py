@@ -7,12 +7,11 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.template import Context, Template
 from django.urls import reverse
 from PIL import Image
 
 from capy_theme.admin.theme_form import ThemeForm
-from capy_theme.context_processors import theme as theme_context
+from capy_theme.artifacts.build import get_artifacts
 from capy_theme.images.uploads import add_asset
 from capy_theme.models import Theme
 from capy_theme.themes.active import activate
@@ -45,10 +44,6 @@ def form_data(**kwargs):
         "visitors_can_switch": "on",  # ticked by default in the real form
     }
     return data | kwargs
-
-
-def render(source):
-    return Template("{% load capy_theme %}" + source).render(Context({}))
 
 
 def live_theme(**settings_values):
@@ -134,61 +129,18 @@ def test_changing_branding_is_an_unpublished_change():
     assert theme.has_unpublished_changes
 
 
-# {% theme_logo %}
+# Artifacts (data for consumers)
 
 
-def test_logo_tag_outputs_the_logo_with_alt_text():
-    theme = live_theme(site_name="Capy Co", logo_alt="The Capy logo")
-    asset = with_logo(theme)
-    publish(theme)
-    html = render('{% theme_logo class="h-8" %}')
-    assert f'src="/media/{asset.original.name}"' in html
-    assert 'alt="The Capy logo"' in html
-    assert 'class="capy-logo h-8"' in html
-
-
-def test_logo_alt_text_falls_back_to_the_site_name():
-    theme = live_theme(site_name="Capy Co")
-    with_logo(theme)
-    publish(theme)
-    assert 'alt="Capy Co"' in render("{% theme_logo %}")
-
-
-def test_logo_tag_shows_the_site_name_without_a_logo():
-    live_theme(site_name="Capy & Co")
-    assert render('{% theme_logo class="font-bold" %}') == (
-        '<span class="font-bold">Capy &amp; Co</span>'
-    )
-
-
-def test_logo_tag_outputs_nothing_without_logo_or_site_name():
-    live_theme()
-    assert render("{% theme_logo %}") == ""
-
-
-def test_logo_tag_outputs_nothing_without_an_active_theme():
-    assert render("{% theme_logo %}") == ""
-
-
-def test_logo_tag_uses_published_values_not_the_draft():
-    theme = live_theme(site_name="Published")
-    theme.settings = {"site_name": "Draft"}
-    theme.save()
-    assert "Published" in render("{% theme_logo %}")
-
-
-# Template context
-
-
-def test_context_has_branding(rf):
+def test_artifacts_have_branding(rf):
     theme = live_theme(site_name="Capy Co", tagline="Hello")
     asset = with_logo(theme)
     publish(theme)
-    values = theme_context(rf.get("/"))["theme"]
-    assert values["site_name"] == "Capy Co"
-    assert values["tagline"] == "Hello"
-    assert values["logo_url"] == f"/media/{asset.original.name}"
-    assert values["logo_alt"] == "Capy Co"
+    artifacts = get_artifacts(rf.get("/"))
+    assert artifacts["branding"]["site_name"] == "Capy Co"
+    assert artifacts["branding"]["tagline"] == "Hello"
+    assert artifacts["branding"]["logo_alt"] == "Capy Co"
+    assert artifacts["logos"]["logo_main"]["light"]["url"].endswith(f"/media/{asset.original.name}")
 
 
 def test_admin_shows_branding_fields_and_read_only_settings(client, django_user_model):

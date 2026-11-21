@@ -71,7 +71,7 @@ def test_needs_the_change_permission(client, django_user_model, url):
 
 
 def test_the_editor_knows_where_it_is(editor_client, theme, url):
-    content = editor_client.get(f"/page/?edit={theme.pk}").content.decode()
+    content = editor_client.get(f"/theme/live-edit/?edit={theme.pk}").content.decode()
     assert f'data-components-url="{url}"' in content
     assert "editor/controls/components.js" in content
     state = editor_client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()

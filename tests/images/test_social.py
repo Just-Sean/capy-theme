@@ -7,7 +7,6 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.template import Context, Template
 from django.urls import reverse
 from PIL import Image
 
@@ -47,10 +46,6 @@ def live(settings_values=None, image=None, alt=""):
     return revision
 
 
-def head(rf, source="{% theme_head %}", path="/about/"):
-    return Template("{% load capy_theme %}" + source).render(Context({"request": rf.get(path)}))
-
-
 # The image
 
 
@@ -77,16 +72,6 @@ def test_svg_isnt_accepted_for_sharing():
     svg = SimpleUploadedFile("s.svg", b'<svg xmlns="http://www.w3.org/2000/svg"/>')
     with pytest.raises(ValidationError, match="Upload a PNG or JPEG"):
         add_asset(theme, "social", "light", svg)
-
-
-# No tags: link-preview tags belong to the project or another module (#143)
-
-
-def test_theme_head_outputs_no_link_preview_tags(rf):
-    live({"site_name": "Capy", "tagline": "Hello"}, image=picture())
-    html = head(rf)
-    assert "og:" not in html and "twitter:" not in html
-    assert 'rel="manifest"' not in html
 
 
 # Controls

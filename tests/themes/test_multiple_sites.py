@@ -6,9 +6,9 @@ import pytest
 from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.template import Context, Template
 from django.utils import timezone
 
+from capy_theme.artifacts.build import get_artifacts
 from capy_theme.css.stylesheet import stylesheet_url
 from capy_theme.models import SiteTheme, Theme, ThemeAssignment
 from capy_theme.themes.active import activate, get_active_theme, site_of
@@ -48,11 +48,11 @@ def test_the_issue_check_two_hostnames_show_different_themes(rf, themes):
     main, other = themes
     assert get_active_theme(on(rf, "localhost")) == main
     assert get_active_theme(on(rf, "127.0.0.1")) == other
-    head = Template("{% load capy_theme %}{% theme_head %}")
-    local = head.render(Context({"request": on(rf, "localhost:8000")}))
-    ip = head.render(Context({"request": on(rf, "127.0.0.1:8000")}))
-    assert stylesheet_url(main.live_revision) in local
-    assert stylesheet_url(other.live_revision) in ip
+    # The exposed stylesheet differs per host (a consumer links it itself).
+    local = get_artifacts(on(rf, "localhost:8000"))["stylesheet_url"]
+    ip = get_artifacts(on(rf, "127.0.0.1:8000"))["stylesheet_url"]
+    assert local.endswith(stylesheet_url(main.live_revision))
+    assert ip.endswith(stylesheet_url(other.live_revision))
 
 
 def test_other_domains_and_no_request_use_the_theme_for_every_site(rf, themes):

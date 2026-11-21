@@ -1,7 +1,7 @@
 """The draft's logos and icon, for previewing them on the page before publishing (#271).
 
-The editor (controls/page-images.js) swaps the logos that {% theme_logo %} put on
-the page, and the browser-tab icon, for these. Only in the editing user's browser.
+The editor (controls/page-images.js) swaps the page's logos, and the browser-tab icon,
+for these. Only in the editing user's browser.
 """
 
 from ..images.logos import HEADER_SLOTS, LOGO_SLOTS, resolve

@@ -100,18 +100,6 @@ def test_open_ended_schedules(themes, clock):
     assert get_active_theme() == launch  # the ended one doesn't come back
 
 
-def test_a_visitors_choice_still_wins(themes, clock, rf):
-    from capy_theme.themes.active import CHOICE_COOKIE
-
-    ocean = published("Ocean")
-    ocean.offered_to_visitors = True
-    ocean.save()
-    clock.now = DEC_1
-    request = rf.get("/")
-    request.COOKIES[CHOICE_COOKIE] = "ocean"
-    assert get_active_theme(request) == ocean
-
-
 def test_scheduled_assignments_list(themes):
     _, holiday = themes
     assert [a.theme for a in scheduled_assignments()] == [holiday]

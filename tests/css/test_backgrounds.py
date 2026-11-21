@@ -9,7 +9,7 @@ from django.urls import reverse
 from PIL import Image
 
 from capy_theme.admin.theme_form import ThemeForm
-from capy_theme.context_processors import theme as theme_context
+from capy_theme.artifacts.build import get_artifacts
 from capy_theme.css.stylesheet import render_css
 from capy_theme.images.uploads import add_asset
 from capy_theme.models import Theme
@@ -81,12 +81,12 @@ def test_helper_classes():
     assert "--capy-bg-login:" not in css  # no variable without an image
 
 
-def test_template_values(theme, rf):
+def test_artifacts_have_background_urls(theme, rf):
     pattern = add_asset(theme, "background_pattern", "light", png())
     choose(theme, background_pattern={"light": pattern})
-    values = theme_context(rf.get("/"))["theme"]
-    assert values["background_pattern_url"] == f"/media/{pattern.original.name}"
-    assert values["background_login_url"] == ""
+    backgrounds = get_artifacts(rf.get("/"))["backgrounds"]
+    assert backgrounds["pattern"]["light"].endswith(f"/media/{pattern.original.name}")
+    assert backgrounds["login"]["light"] is None
 
 
 def test_an_old_single_logo_never_becomes_a_background(theme):

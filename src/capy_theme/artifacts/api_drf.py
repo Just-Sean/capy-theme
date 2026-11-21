@@ -15,14 +15,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .api import (
-    cache_publicly,
-    cache_static,
-    catalog_payload,
-    not_modified,
-    payload,
-    theme_payload,
-)
+from .api import cache_static, catalog_payload, not_modified, theme_payload
 
 try:
     from drf_spectacular.utils import extend_schema
@@ -106,33 +99,6 @@ class CatalogEntrySerializer(serializers.Serializer):
     dark = CatalogSideSerializer()
     assets_url = serializers.CharField()
     stylesheet_url = serializers.CharField()
-
-
-class ThemeAPIView(APIView):
-    """The active theme's colors, fonts, shape, logos, icons and images."""
-
-    authentication_classes = []
-    permission_classes = [AllowAny]
-    throttle_classes = []
-    renderer_classes = [JSONRenderer]
-
-    @extend_schema(
-        responses={200: ArtifactsSerializer, 304: None, 404: None},
-        summary="The active theme",
-        description="The published theme's values and asset URLs (absolute). Send the "
-        "ETag back in If-None-Match to get 304 until the theme changes.",
-    )
-    def get(self, request):
-        data, etag = payload(request)
-        if data is None:
-            response = Response({"error": "No theme is published."}, status=404)
-        elif not_modified(request, etag):
-            response = Response(status=304)
-        else:
-            response = Response(data)
-        if etag:
-            response["ETag"] = etag
-        return cache_publicly(response)
 
 
 class ThemeCatalogAPIView(APIView):

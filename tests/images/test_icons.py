@@ -7,11 +7,11 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.template import Context, Template
 from django.urls import reverse
 from PIL import Image
 
 from capy_theme.admin.theme_form import ThemeForm
+from capy_theme.artifacts.build import get_artifacts
 from capy_theme.images.icons import FILES, icon_folder, icon_urls
 from capy_theme.images.uploads import add_asset
 from capy_theme.models import Theme
@@ -121,25 +121,19 @@ def test_monochrome_icon_is_white_in_the_icons_shape(theme):
     assert mono.getpixel((10, 10))[3] == 0
 
 
-def test_the_issue_check_head_links(theme, rf):
+def test_icons_are_exposed_as_data(theme):
+    # In v2 capy-theme exposes the icon URLs; the consumer builds its own
+    # <link rel="icon"> tags from them.
     revision = with_icon(theme)
-    urls = icon_urls(revision.snapshot)
-    html = Template("{% load capy_theme %}{% theme_head %}").render(
-        Context({"request": rf.get("/")})
-    )
-    assert f'<link rel="icon" href="{urls["favicon.ico"]}" sizes="32x32">' in html
-    assert f'<link rel="icon" href="{urls["favicon.svg"]}" type="image/svg+xml">' in html
-    assert f'<link rel="apple-touch-icon" href="{urls["apple-touch-icon.png"]}">' in html
-    assert urls["favicon.ico"].startswith("/media/capy_theme/icons/")
+    icons = get_artifacts()["icons"]  # no request -> relative URLs, like icon_urls
+    assert icons == icon_urls(revision.snapshot)
+    assert icons["favicon.ico"].startswith("/media/capy_theme/icons/")
 
 
-def test_no_icon_no_links(theme, rf):
+def test_no_icon_no_data(theme):
     publish(theme)
     activate(theme)
-    html = Template("{% load capy_theme %}{% theme_head %}").render(
-        Context({"request": rf.get("/")})
-    )
-    assert 'rel="icon"' not in html
+    assert get_artifacts()["icons"] == {}  # nothing for a consumer to render
     assert not default_storage.exists("capy_theme/icons")
 
 
