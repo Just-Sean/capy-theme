@@ -82,6 +82,20 @@ In Python (another Django module): `from capy_theme.artifacts import theme_catal
 build_artifacts, get_artifacts` (`get_artifacts(request)` is the published default theme's
 assets).
 
+**In a Django template** (the same data, for a server-rendered consumer — e.g. a theme
+picker — with no client-side fetch):
+
+```django
+{% theme_catalog as themes %}           {# the list above #}
+{% for t in themes %}<option value="{{ t.slug }}">{{ t.name }}</option>{% endfor %}
+
+{% theme_assets chosen_slug as assets %} {# one theme's assets by slug (or "default") #}
+<link rel="stylesheet" href="{{ assets.stylesheet_url }}">
+```
+
+`{% theme_assets %}` is `None` for an unknown, unpublished, or not-offered theme. The
+consumer owns the picker UI and remembers the choice itself (capy-theme stores nothing).
+
 ### Building an accessible control
 
 Since you render the mode toggle / theme picker yourself, make it accessible:

@@ -4,6 +4,7 @@ import importlib
 
 import pytest
 from django.core.cache import cache
+from django.template import Context, Template
 from django.urls import clear_url_caches
 
 from capy_theme.artifacts.build import build_artifacts, theme_catalog
@@ -175,3 +176,38 @@ def test_catalog_survives_a_default_without_a_live_revision(client, themes):
     response = client.get(CATALOG)
     assert response.status_code == 200
     assert "site" not in {e["slug"] for e in response.json()}
+
+
+# --- The template tags: {% theme_catalog %} and {% theme_assets %} ------------------
+
+
+def _render(source, request):
+    return Template("{% load capy_theme %}" + source).render(Context({"request": request}))
+
+
+def test_theme_catalog_tag_lists_offered_and_default(rf, themes):
+    out = _render(
+        "{% theme_catalog as themes %}{% for t in themes %}{{ t.slug }},{% endfor %}", rf.get("/")
+    )
+    assert "site," in out and "ocean," in out and "forest," in out
+    assert "secret," not in out  # not offered, not the default
+
+
+def test_theme_catalog_tag_is_empty_without_a_published_theme(rf):
+    out = _render("{% theme_catalog as themes %}{{ themes|length }}", rf.get("/"))
+    assert out == "0"
+
+
+def test_theme_assets_tag_by_slug_and_default(rf, themes):
+    out = _render(
+        '{% theme_assets "ocean" as a %}{{ a.theme.slug }}|{{ a.stylesheet_url }}', rf.get("/")
+    )
+    slug, _, url = out.partition("|")
+    assert slug == "ocean" and "/theme/" in url and ".css" in url
+    default = _render('{% theme_assets "default" as a %}{{ a.theme.slug }}', rf.get("/"))
+    assert default == "site"  # the admin's default theme
+
+
+def test_theme_assets_tag_unknown_or_unoffered_is_none(rf, themes):
+    assert _render('{% theme_assets "nope" as a %}[{{ a }}]', rf.get("/")) == "[None]"
+    assert _render('{% theme_assets "secret" as a %}[{{ a }}]', rf.get("/")) == "[None]"
