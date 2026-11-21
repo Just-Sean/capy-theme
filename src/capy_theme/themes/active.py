@@ -19,7 +19,9 @@ from uuid import uuid4
 from django.core.cache import cache
 from django.db import Error as DatabaseError
 from django.http.request import split_domain_port
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import urlencode
 
 from .. import conf
 from ..models import Theme, ThemeAssignment
@@ -114,6 +116,39 @@ def site_of(request):
 def visitor_themes_allowed():
     """CAPY_THEME_VISITOR_THEMES: whether visitors may choose a theme (default True)."""
     return conf.get("CAPY_THEME_VISITOR_THEMES")
+
+
+def picker_state(request):
+    """The themes a visitor may choose, as plain data for a consumer to render its own
+    picker. Returns {"allowed", "current", "options"}; each option is
+    {"value", "label", "url", "current"}, where "default" is the site's own theme and
+    "url" sets the choice and returns to the current page (so a plain link works without
+    JavaScript). "allowed" is False (and only "Site default" is offered) when
+    CAPY_THEME_VISITOR_THEMES is off. See docs/artifacts.md.
+    """
+    allowed = visitor_themes_allowed()
+    back = request.get_full_path() if request is not None else "/"
+    offered = offered_themes() if allowed else []
+    chosen = request.COOKIES.get(CHOICE_COOKIE, "") if request is not None else ""
+    if chosen not in {theme.slug for theme in offered}:
+        chosen = "default"
+
+    def choose_url(slug):
+        return reverse("capy_theme:choose_theme", args=[slug]) + "?" + urlencode({"next": back})
+
+    options = [
+        {
+            "value": "default",
+            "label": "Site default",
+            "url": choose_url("default"),
+            "current": chosen == "default",
+        }
+    ]
+    options += [
+        {"value": t.slug, "label": t.name, "url": choose_url(t.slug), "current": chosen == t.slug}
+        for t in offered
+    ]
+    return {"allowed": allowed, "current": chosen, "options": options}
 
 
 def _state(site):

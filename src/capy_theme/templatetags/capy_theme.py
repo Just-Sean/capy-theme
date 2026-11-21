@@ -23,7 +23,13 @@ from ..fonts.library import external_stylesheets, preload_urls
 from ..images.icons import head_links as icon_links
 from ..images.logo_tag import logo_html
 from ..images.logos import LOGO_SLOTS
-from ..themes.active import CHOICE_COOKIE, get_active_theme, offered_themes, visitor_themes_allowed
+from ..themes.active import (
+    CHOICE_COOKIE,
+    get_active_theme,
+    offered_themes,
+    picker_state,
+    visitor_themes_allowed,
+)
 from ..themes.branding import branding
 from ..themes.mode import (
     MODE_LABELS,
@@ -32,6 +38,7 @@ from ..themes.mode import (
     head_script,
     html_theme_value,
     mode_settings,
+    mode_state,
     theme_color_meta,
 )
 
@@ -125,20 +132,53 @@ def theme_artifacts(context):
 
 
 @register.simple_tag(takes_context=True)
+def theme_mode_state(context):
+    """The light/dark/auto state as data, for a consumer to render its own control.
+
+    ``{% theme_mode_state as mode %}``, then e.g. ``{{ mode.current }}``,
+    ``{{ mode.next.url }}``, or loop ``mode.options`` ({value, label, url, current}).
+    None if no theme is active. See docs/artifacts.md.
+    """
+    request = context.get("request")
+    theme = get_active_theme(request)
+    if theme is None or theme.live_revision is None:
+        return None
+    return mode_state(request, theme.live_revision)
+
+
+@register.simple_tag(takes_context=True)
+def theme_picker_state(context):
+    """The themes a visitor may choose, as data, for a consumer to render its own picker.
+
+    ``{% theme_picker_state as picker %}``, then loop ``picker.options``
+    ({value, label, url, current}); show it only when there's more than one. None if no
+    theme is active. See docs/artifacts.md.
+    """
+    request = context.get("request")
+    theme = get_active_theme(request)
+    if theme is None or theme.live_revision is None:
+        return None
+    return picker_state(request)
+
+
+@register.simple_tag(takes_context=True)
 def theme_html_attrs(context):
     """Output attributes for the page's <html> tag.
 
-    When the page should be forced into light or dark (the theme's default, or
-    the visitor's choice from {% theme_mode_toggle %}), outputs
-    data-theme="capy-light" or "capy-dark". For "auto" it outputs nothing, and
-    the stylesheet follows the visitor's device setting.
+    ``data-theme="capy-light"`` / ``"capy-dark"`` forces a mode (the theme's default or
+    the visitor's choice); for "auto" there's no data-theme and the stylesheet follows
+    the visitor's device. ``data-capy-color-mode`` always carries the current mode
+    (light/dark/auto) so a consumer can style a control (e.g. a mode-toggle icon) by it.
     """
     request = context.get("request")
     theme = get_active_theme(request)
     if theme is None or theme.live_revision is None:
         return ""
-    value = html_theme_value(current_mode(request, theme.live_revision))
-    return format_html('data-theme="{}"', value) if value else ""
+    mode = current_mode(request, theme.live_revision)
+    forced = html_theme_value(mode)
+    if forced:
+        return format_html('data-theme="{}" data-capy-color-mode="{}"', forced, mode)
+    return format_html('data-capy-color-mode="{}"', mode)
 
 
 @register.simple_tag(takes_context=True)

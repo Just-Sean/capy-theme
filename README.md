@@ -46,7 +46,10 @@ changes or redeploys. The project needs a Tailwind CSS 4 / daisyUI 5 stylesheet.
 - **Theme artifacts for other apps:** `get_artifacts()` (and
   `{% theme_artifacts %}`) give every color, font, logo, icon and image as plain
   data, so an email module, app shell or PWA module can use the theme. capy-theme
-  doesn't apply them outside the page's own look.
+  doesn't apply them outside the page's own look. The light/dark/auto and
+  theme-choice **state** come the same way — `{% theme_mode_state %}` and
+  `{% theme_picker_state %}` — so an app-shell renders its own controls from the data
+  instead of capy-theme rendering the widgets.
 - **JSON API and downloads** for front ends, apps and design tools:
   `/theme/api.json` (with ETag; a DRF view documented by drf-spectacular when the
   project uses DRF), W3C design tokens and daisyUI theme blocks. See
@@ -559,7 +562,7 @@ Every command in one place. Details are in the linked pages.
 | [docs/fonts.md](docs/fonts.md) | The font library: system stacks, bundled fonts, uploads, Google Fonts, external stylesheets |
 | [docs/images.md](docs/images.md) | Uploads and SVG cleaning, logo slots, icons, the sharing image, backgrounds |
 | [docs/editor.md](docs/editor.md) | The live editor and its Components view |
-| [docs/artifacts.md](docs/artifacts.md) | What other apps get: `get_artifacts()`, `{% theme_artifacts %}` and the JSON API (`/theme/api.json`, with DRF/drf-spectacular support) the design tokens download (`/theme/tokens.json`) and daisyUI theme blocks (`/theme/daisyui-theme.css`) |
+| [docs/artifacts.md](docs/artifacts.md) | What other apps get: `get_artifacts()`, `{% theme_artifacts %}`, the mode/theme-picker state (`{% theme_mode_state %}`, `{% theme_picker_state %}`) and mode-switching protocol, the JSON API (`/theme/api.json`, with DRF/drf-spectacular support), the design tokens download (`/theme/tokens.json`) and daisyUI theme blocks (`/theme/daisyui-theme.css`) |
 | [docs/developers.md](docs/developers.md) | **For developers using the theme from their own code:** every CSS variable, the JSON API with an example, the downloads |
 | [docs/development.md](docs/development.md) | The demo site and updating daisyUI |
 | [docs/PLAN.md](docs/PLAN.md), [docs/DECISIONS.md](docs/DECISIONS.md) | The build plan, and why things are the way they are |
