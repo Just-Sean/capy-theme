@@ -7,7 +7,9 @@ from the data (see docs/artifacts.md and the catalog / per-theme endpoints).
 
 from django import template
 
-from ..artifacts import get_artifacts
+from ..artifacts import build_artifacts, get_artifacts
+from ..artifacts import theme_catalog as _theme_catalog
+from ..themes.active import catalog_theme
 
 register = template.Library()
 
@@ -22,6 +24,34 @@ def theme_artifacts(context):
     None if no theme is published. URLs are absolute.
     """
     return get_artifacts(context.get("request"))
+
+
+@register.simple_tag(takes_context=True)
+def theme_catalog(context):
+    """The available themes as data, for a consumer to render its own picker.
+
+    ``{% theme_catalog as themes %}`` then loop ``themes`` — each is
+    ``{slug, name, default, light, dark, assets_url, stylesheet_url}``. The same data as
+    the ``/theme/themes.json`` endpoint; an empty list when nothing is published.
+    See docs/artifacts.md.
+    """
+    return _theme_catalog(context.get("request"))
+
+
+@register.simple_tag(takes_context=True)
+def theme_assets(context, slug):
+    """One theme's assets by slug, for a consumer to apply a chosen theme.
+
+    ``{% theme_assets "ocean" as assets %}`` then e.g. ``{{ assets.stylesheet_url }}``.
+    Same shape as ``{% theme_artifacts %}``, for the theme named by ``slug`` (or
+    ``"default"``). None for an unknown, unpublished, or not-offered theme.
+    See docs/artifacts.md.
+    """
+    request = context.get("request")
+    theme = catalog_theme(slug, request)
+    if theme is None or theme.live_revision is None:
+        return None
+    return build_artifacts(theme, request)
 
 
 @register.filter
