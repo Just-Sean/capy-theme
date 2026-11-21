@@ -123,8 +123,8 @@ to **Capy Theme → Theme schedule → Add**, choose a published theme and give 
 start and/or end date (blank start: straight away; blank end: until removed).
 While a schedule is running (start ≤ now < end) its theme replaces the site's
 default; afterwards the default returns by itself. If schedules overlap, the one
-that started most recently wins. A visitor's own choice (below) still wins over
-both. The list shows each schedule as Upcoming, Running or Finished. Scheduling
+that started most recently wins. The list shows each schedule as Upcoming, Running or
+Finished. Scheduling
 needs the `publish_theme` permission, like activating.
 
 The cached theme expires at the next start or end, so schedules switch on time

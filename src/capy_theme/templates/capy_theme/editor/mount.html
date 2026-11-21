@@ -1,7 +1,7 @@
 {% load static %}{% comment %}
-  Loads the live theme editor for a staff user who can edit. Output by
-  {% theme_head %}, so it sits in <head>: the editor's settings are data
-  attributes on its <script> tag (a <div> isn't allowed in <head>). The panel
+  Loads the live theme editor for a staff user who can edit. Included by the
+  live-edit page in its <head>: the editor's settings are data attributes on its
+  <script> tag (a <div> isn't allowed in <head>). The panel
   itself is built by editor.js. Any element with data-capy-editor-open opens it.
 {% endcomment %}
 <link rel="stylesheet" href="{% static 'capy_theme/editor/editor.css' %}">

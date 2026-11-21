@@ -1,5 +1,5 @@
 // Shows the draft's logos and icon on the page while the editor is open (#271).
-// {% theme_logo %} marks each logo for editors with data-capy-logo-slot (and the
+// logo_html marks each logo for editors with data-capy-logo-slot (and the
 // attributes the template gave it); this swaps them for the draft's, in light and
 // dark, and points the browser-tab icon at the draft's icon. No reload, nothing
 // saved: closing the editor puts the published ones back. Visitors never see it.
@@ -9,7 +9,7 @@
   var editor = window.capyEditor;
   if (!editor || !editor.ui) return;
   var HEADER = ["logo_main", "logo_stacked", "logo_mark", "logo_wordmark"];
-  // What {% theme_logo %} writes, and the only attributes copied from its
+  // What logo_html writes, and the only attributes copied from its
   // data-capy-logo-attrs onto the draft's logo: class, title and aria-*. Anything
   // else (event handlers, style, src, id, data-*...) is left off the preview: a page
   // could hold a forged marker, e.g. in content its users wrote.

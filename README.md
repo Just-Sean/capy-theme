@@ -556,6 +556,22 @@ Run `uv run python manage.py migrate` and, in production,
 `uv run python manage.py collectstatic` after every update. Version notes, newest
 first:
 
+- **From 1.x to 2.0 (breaking):** v2 makes capy-theme **configure and expose** only — it
+  no longer switches modes, remembers a visitor's choice, or injects/applies anything
+  into a page. See the [CHANGELOG](CHANGELOG.md) for the full breaking-change list. What
+  a project must do:
+  - **Run `migrate`** (migration `0018`).
+  - **Your templates must change.** These are gone: `{% theme_head %}`,
+    `{% theme_html_attrs %}`, `{% theme_logo %}`, `{% theme_mode_toggle %}`,
+    `{% theme_picker %}` (and `{% theme_mode_state %}` / `{% theme_picker_state %}`), the
+    `capy_theme.context_processors.theme` context processor, the `/theme/api.json`
+    endpoint, the `set_mode` / `choose_theme` endpoints and their cookies, and the
+    `CAPY_THEME_VISITOR_THEMES` setting. Instead, **link the theme's stylesheet yourself**
+    (from `{% theme_artifacts %}` or the catalog `/theme/themes.json` + per-theme
+    `/theme/themes/<slug>.json`), and **build your own** light/dark toggle and theme
+    picker from the exposed data (see [docs/artifacts.md](docs/artifacts.md), including
+    "Building an accessible control"). Remove the context processor from your `TEMPLATES`
+    setting.
 - **From 0.7 to 1.0:**
   - Migrations: `0014_sitetheme` adds Site themes; `0015` renames `Font.licence`
     to `Font.license` (code that reads `licence` must change); `0016` checks font

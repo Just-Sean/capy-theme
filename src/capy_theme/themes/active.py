@@ -85,25 +85,26 @@ def get_active_theme(request=None):
 
 
 def offered_themes():
-    """The published themes visitors may choose, by name."""
+    """The published themes offered to visitors, by name (for the catalog)."""
     return sorted(_state("")["offered"].values(), key=lambda theme: theme.name)
 
 
-def catalog_theme(slug):
-    """A published theme a consumer may fetch by slug, or None if there's no such theme.
+def catalog_theme(slug, request=None):
+    """A published theme a consumer may fetch by slug for this request, or None.
 
-    ``slug`` is an offered theme's slug, or ``"default"`` / the default theme's own slug
-    for the admin's default. Only offered themes and the default are reachable, so an
-    unpublished or not-offered theme can't be fetched.
+    ``slug`` is a theme offered to visitors, or ``"default"`` / its own slug for the
+    **domain's** active theme (its default/scheduled theme — the one `get_active_theme`
+    serves for the request's host). Only those are reachable, so an unpublished or
+    not-offered theme can't be fetched.
     """
-    default = default_theme()
+    active = get_active_theme(request)
     if slug == "default":
-        return default
+        return active
     offered = {theme.slug: theme for theme in offered_themes()}
     if slug in offered:
         return offered[slug]
-    if default is not None and default.slug == slug:
-        return default
+    if active is not None and active.slug == slug:
+        return active
     return None
 
 

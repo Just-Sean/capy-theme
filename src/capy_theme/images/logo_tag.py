@@ -1,4 +1,8 @@
-"""The HTML and CSS for {% theme_logo %}: <picture>, srcset and light/dark switching."""
+"""The HTML and CSS for a theme's logo: <picture>, srcset and light/dark switching.
+
+Used by the live editor's header (editor.live_edit_view.draft_header); the logo URLs are
+also exposed as data in the theme's assets (``get_artifacts``), for a consumer to render.
+"""
 
 from django.utils.html import format_html, format_html_join
 

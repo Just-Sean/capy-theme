@@ -1,7 +1,7 @@
 // The live theme editor: a panel on top of the page that previews a theme's
 // draft in this browser only. Data comes from the JSON views in editor/views.py, which
 // use the same code as publishing. Loaded by templates/capy_theme/editor/mount.html,
-// which {% theme_head %} outputs for staff who can edit, so it works on any page.
+// which the live-edit page includes in its <head>, so it runs only on that page.
 (function () {
   "use strict";
 

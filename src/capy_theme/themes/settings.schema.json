@@ -30,7 +30,7 @@
       ]
     },
     "visitors_can_switch": {
-      "description": "Whether visitors can choose light, dark or auto with {% theme_mode_toggle %}. Default true.",
+      "description": "Whether visitors may switch mode. Exposed in the theme's data so a consumer can offer a light/dark/auto toggle. Default true.",
       "type": "boolean"
     },
     "colors": {

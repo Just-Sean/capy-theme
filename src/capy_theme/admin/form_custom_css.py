@@ -18,8 +18,8 @@ def add_fields(form_class):
             max_length=MAX_LENGTH,
             label="Custom CSS",
             widget=forms.Textarea(attrs={"rows": 12, "cols": 80, "spellcheck": "false"}),
-            help_text="Loaded after the theme stylesheet on every page that uses "
-            "{% theme_head %}, once published. For anything the settings don't cover.",
+            help_text="Served after the theme stylesheet (at the theme's custom-CSS URL), "
+            "once published. For anything the settings don't cover.",
         )
     )
     form_class.base_fields["custom_css_enabled"] = form_class.declared_fields[

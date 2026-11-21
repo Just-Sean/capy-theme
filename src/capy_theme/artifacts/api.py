@@ -42,7 +42,7 @@ def catalog_payload(request):
 
 def theme_payload(request, slug):
     """(a theme's assets, ETag), or (None, None) if there's no such published theme."""
-    theme = catalog_theme(slug)
+    theme = catalog_theme(slug, request)
     if theme is None or theme.live_revision is None:
         return None, None
     data = build_artifacts(theme, request)

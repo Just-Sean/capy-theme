@@ -15,7 +15,7 @@
       "label": "Stacked logo",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "Your symbol above your name, for narrow spaces such as a phone-width header or a sidebar. It only shows where your site's developer has added it to the site's pages. Leave it empty to use the main logo. (For developers: {% theme_logo slot=\"stacked\" %}.)",
+      "help": "Your symbol above your name, for narrow spaces such as a phone-width header or a sidebar. It only shows where your site's developer has added it to the site's pages. Leave it empty to use the main logo. (For developers: the `logo_stacked` slot in the theme's assets data.)",
       "modes": [
         "light",
         "dark"
@@ -25,7 +25,7 @@
       "label": "Logo mark",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "Just the symbol, without the name, for tight spots such as an app bar, an avatar or a footer. It only shows where your site's developer has added it to the site's pages. Leave it empty to use the main logo. (For developers: {% theme_logo slot=\"mark\" %}.)",
+      "help": "Just the symbol, without the name, for tight spots such as an app bar, an avatar or a footer. It only shows where your site's developer has added it to the site's pages. Leave it empty to use the main logo. (For developers: the `logo_mark` slot in the theme's assets data.)",
       "modes": [
         "light",
         "dark"
@@ -35,7 +35,7 @@
       "label": "Wordmark",
       "max_mb": 2,
       "max_pixels": 4000,
-      "help": "Just the name in lettering, without the symbol, for places that already show the symbol. It only shows where your site's developer has added it to the site's pages. Leave it empty to use the main logo. (For developers: {% theme_logo slot=\"wordmark\" %}.)",
+      "help": "Just the name in lettering, without the symbol, for places that already show the symbol. It only shows where your site's developer has added it to the site's pages. Leave it empty to use the main logo. (For developers: the `logo_wordmark` slot in the theme's assets data.)",
       "modes": [
         "light",
         "dark"
@@ -54,7 +54,7 @@
       "label": "Print logo",
       "max_mb": 5,
       "max_pixels": 6000,
-      "help": "A high-resolution version (up to 6000 px) for printed pages, PDFs or invoices. Print has no dark mode, so there's only a light version. It only shows where your site's developer has added it to the site's pages. Leave it empty to use the main logo. (For developers: {% theme_logo slot=\"print\" %}.)",
+      "help": "A high-resolution version (up to 6000 px) for printed pages, PDFs or invoices. Print has no dark mode, so there's only a light version. It only shows where your site's developer has added it to the site's pages. Leave it empty to use the main logo. (For developers: the `logo_print` slot in the theme's assets data.)",
       "modes": [
         "light"
       ]
