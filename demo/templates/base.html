@@ -1,30 +1,30 @@
 {% load tailwind_cli capy_theme %}<!doctype html>
-<html lang="en" {% theme_html_attrs %}>
+{% comment %}A v2 consumer: capy-theme exposes the theme's data (stylesheet, logo, branding)
+   and this page links and renders it itself — capy-theme injects nothing.{% endcomment %}
+{% theme_artifacts as theme %}
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Capy Theme demo{% endblock %}</title>
   {% tailwind_css %}
-  {% theme_head %}
+  {% if theme %}<link rel="stylesheet" href="{{ theme.stylesheet_url }}">{% endif %}
 </head>
 <body class="min-h-screen bg-base-100 text-base-content capy-bg-pattern">
   <header class="navbar bg-base-200 px-4">
     <div class="flex-1">
-      {# The logo's height comes from the theme (Logos: header height), so no size classes. #}
+      {# The logo's height comes from the theme's stylesheet (.capy-logo), so no size classes. #}
       <a href="{% url 'home' %}" class="flex items-center gap-3 text-xl font-bold">
-        {% if theme.logo_url or theme.site_name %}{% theme_logo %}{% else %}Capy Theme demo{% endif %}
+        {% if theme.logos.logo_main.light %}
+          {% with logo=theme.logos.logo_main.light %}
+            <img class="capy-logo" src="{{ logo.url }}" alt="{{ logo.alt }}"
+                 width="{{ logo.width }}" height="{{ logo.height }}">
+          {% endwith %}
+        {% else %}{{ theme.branding.site_name|default:"Capy Theme demo" }}{% endif %}
       </a>
-      {% if theme.logo_url and theme.site_name %}<span class="ml-3 text-xl font-bold">{{ theme.site_name }}</span>{% endif %}
-      {% if theme.tagline %}<span class="ml-3 text-sm opacity-70">{{ theme.tagline }}</span>{% endif %}
+      {% if theme.branding.tagline %}<span class="ml-3 text-sm opacity-70">{{ theme.branding.tagline }}</span>{% endif %}
     </div>
     <nav class="flex-none flex items-center gap-2">
-      {% theme_mode_toggle %}
-      {% theme_picker as picker %}{% if picker %}
-        <details class="dropdown dropdown-end">
-          <summary class="btn btn-ghost btn-sm">Theme</summary>
-          <div class="dropdown-content z-10 mt-2 w-48 shadow">{{ picker }}</div>
-        </details>
-      {% endif %}
       <a href="{% url 'admin:index' %}" class="btn btn-ghost btn-sm">Admin</a>
     </nav>
   </header>

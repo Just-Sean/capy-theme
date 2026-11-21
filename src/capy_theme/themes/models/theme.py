@@ -43,7 +43,8 @@ class Theme(models.Model):
     )
     offered_to_visitors = models.BooleanField(
         default=False,
-        help_text="Visitors can choose this theme with {% theme_picker %} (once it's published).",
+        help_text="List this theme in the themes catalog, so a consumer can offer it to "
+        "visitors (once it's published).",
     )
     live_revision = models.ForeignKey(
         "ThemeRevision",

@@ -13,7 +13,7 @@ from capy_theme.themes.active import activate
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
-PAGE = "/page/"  # an ordinary project page with {% theme_head %} (tests/urls.py)
+PAGE = "/page/"  # an ordinary consumer page: the editor is never injected here (v2)
 PINK = "oklch(65% 0.24 350)"
 STATIC = Path(__file__).resolve().parents[2] / "src/capy_theme/static/capy_theme/editor"
 
@@ -65,7 +65,7 @@ def test_staff_without_change_permission_cant(django_user_model):
 
 
 def test_editors_get_the_editor(editor_client, active):
-    content = editor_client.get(PAGE).content.decode()
+    content = editor_client.get(f"/theme/live-edit/?edit={active.pk}").content.decode()
     assert 'id="capy-editor"' in content
     assert "capy_theme/editor/editor.js" in content
     assert f'data-state-url="{state_url(active)}"' in content
@@ -84,7 +84,7 @@ def test_no_editor_without_a_theme(editor_client):
 
 def test_edit_parameter_picks_another_theme(editor_client, active):
     other = Theme.objects.create(name="Other", slug="other")
-    content = editor_client.get(f"{PAGE}?edit={other.pk}").content.decode()
+    content = editor_client.get(f"/theme/live-edit/?edit={other.pk}").content.decode()
     assert f'data-state-url="{state_url(other)}"' in content
     assert 'data-theme-name="Other"' in content
 

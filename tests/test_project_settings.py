@@ -10,7 +10,6 @@ from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.template import Context, Template
 from django.urls import reverse
 from fontTools.ttLib import TTFont
 from PIL import Image
@@ -73,16 +72,6 @@ def test_api(settings):
     assert api_mode() == "django"
 
 
-def test_visitor_themes(settings, rf):
-    theme = Theme.objects.create(name="Ocean", slug="ocean", offered_to_visitors=True)
-    publish(theme)
-    request = rf.get("/")
-    request.COOKIES[active.CHOICE_COOKIE] = "ocean"
-    assert active.get_active_theme(request) == theme
-    settings.CAPY_THEME_VISITOR_THEMES = False
-    assert active.get_active_theme(request) is None
-
-
 def test_custom_css(settings, client, django_user_model):
     theme = Theme.objects.create(
         name="Main", slug="main", settings={"custom_css": {"css": ".a{}", "enabled": True}}
@@ -98,17 +87,17 @@ def test_custom_css(settings, client, django_user_model):
     assert b'name="custom_css"' not in page  # even for a superuser
 
 
-def test_editor_button(settings, rf, django_user_model):
+def test_editor_button(settings, client, django_user_model):
     theme = Theme.objects.create(name="Main", slug="main")
     active.activate(publish(theme).theme)
     user = django_user_model.objects.create_user("e", password="pw", is_staff=True)
     user.user_permissions.add(Permission.objects.get(codename="change_theme"))
-    request = rf.get("/")
-    request.user = user
-    head = Template("{% load capy_theme %}{% theme_head %}")
-    assert 'data-floating-button="true"' in head.render(Context({"request": request}))
+    client.force_login(user)
+    page = client.get("/theme/live-edit/", follow=True).content.decode()
+    assert 'data-floating-button="true"' in page
     settings.CAPY_THEME_EDITOR_BUTTON = False
-    assert 'data-floating-button="false"' in head.render(Context({"request": request}))
+    page = client.get("/theme/live-edit/", follow=True).content.decode()
+    assert 'data-floating-button="false"' in page
 
 
 def test_font_max_bytes(settings):

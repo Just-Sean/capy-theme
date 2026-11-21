@@ -1,4 +1,8 @@
-"""Tests for {% theme_logo %} and the editor's logo choices (issue #34)."""
+"""Tests for the logo rendering (logo_html) and the editor's logo choices (issue #34).
+
+In v2 the logo is rendered by the consumer, not a {% theme_logo %} tag; capy-theme exposes
+the rendering engine (``logo_html``) and the image data (artifacts), tested here.
+"""
 
 import io
 import re
@@ -6,11 +10,11 @@ import re
 import pytest
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.template import Context, Template, TemplateSyntaxError
 from django.urls import reverse
 from PIL import Image
 
 from capy_theme.css.stylesheet import render_css
+from capy_theme.images.logo_tag import logo_html
 from capy_theme.images.uploads import add_asset
 from capy_theme.models import Theme
 from capy_theme.themes.active import activate
@@ -57,14 +61,15 @@ def choose(theme, **slots):
     return revision
 
 
-def render(source):
-    return Template("{% load capy_theme %}" + source).render(Context({}))
+def logo(revision, slot="logo_main", attrs=None):
+    """Render a published logo the way the engine does (what the old tag called)."""
+    return logo_html(revision.snapshot, slot, "Capy", attrs or {}, {})
 
 
 def test_the_issue_check_phones_get_a_smaller_file(theme):
     asset = add_asset(theme, "logo_main", "light", image((1200, 300)))
     revision = choose(theme, logo_main={"light": asset})
-    html = render("{% theme_logo %}")
+    html = logo(revision)
     assert html.startswith("<picture>")
     assert '<source type="image/avif"' in html and '<source type="image/webp"' in html
     # 32 px high on phones (128 px wide at 4:1), 40 px elsewhere (160 px wide):
@@ -85,7 +90,7 @@ def test_header_heights_change_sizes_and_css(theme):
     asset = add_asset(theme, "logo_main", "light", image((400, 100)))
     theme.settings = {"logo": {"header_height": 60, "header_height_mobile": 24}}
     revision = choose(theme, logo_main={"light": asset})
-    assert 'sizes="(max-width: 640px) 96px, 240px"' in render("{% theme_logo %}")
+    assert 'sizes="(max-width: 640px) 96px, 240px"' in logo(revision)
     assert "img.capy-logo { height: 60px" in render_css(revision)
     assert "img.capy-logo { height: 24px; }" in render_css(revision)
 
@@ -94,7 +99,7 @@ def test_the_issue_check_dark_mode_swaps_the_logo(theme):
     light = add_asset(theme, "logo_main", "light", image(), "Light logo")
     dark = add_asset(theme, "logo_main", "dark", image(color="white"), "Dark logo")
     revision = choose(theme, logo_main={"light": light, "dark": dark})
-    html = render("{% theme_logo %}")
+    html = logo(revision)
     assert html.count("<picture") == 2
     first, second = html.split("</picture>")[:2]
     assert 'class="capy-logo-light"' in first and light.original.name in first
@@ -108,28 +113,22 @@ def test_the_issue_check_dark_mode_swaps_the_logo(theme):
 
 def test_alt_text_from_the_image_then_the_theme_then_the_site_name(theme):
     asset = add_asset(theme, "logo_main", "light", image(), "Capy & friends")
-    choose(theme, logo_main={"light": asset})
-    assert 'alt="Capy &amp; friends"' in render("{% theme_logo %}")
+    revision = choose(theme, logo_main={"light": asset})
+    assert 'alt="Capy &amp; friends"' in logo(revision)
 
 
 def test_slot_argument(theme):
     main = add_asset(theme, "logo_main", "light", image())
     mark = add_asset(theme, "logo_mark", "light", svg_logo())
-    choose(theme, logo_main={"light": main}, logo_mark={"light": mark})
-    html = render('{% theme_logo slot="mark" class="h-6" %}')
+    revision = choose(theme, logo_main={"light": main}, logo_mark={"light": mark})
+    html = logo(revision, "logo_mark", {"class": "h-6"})
     assert html == (
         f'<img src="/media/{mark.original.name}" alt="Capy" class="capy-logo h-6" '
         'height="10" width="30">'
     )
-    assert main.original.name in render('{% theme_logo slot="stacked" %}')  # fallback
-    email = render('{% theme_logo slot="email" %}')
+    assert main.original.name in logo(revision, "logo_stacked")  # fallback
+    email = logo(revision, "logo_email")
     assert "capy-logo" not in email and "srcset" not in email  # not a header logo
-
-
-def test_unknown_slot_is_an_error(theme):
-    choose(theme)
-    with pytest.raises(TemplateSyntaxError, match="unknown slot"):
-        render('{% theme_logo slot="footer" %}')
 
 
 @pytest.fixture

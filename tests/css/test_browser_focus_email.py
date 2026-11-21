@@ -1,16 +1,19 @@
-"""Tests for browser color, focus color and email colors (issue #20)."""
+"""Tests for the focus color (in the stylesheet) and email colors (issue #20).
+
+The theme-color meta tags used to be applied by {% theme_head %}; in v2 capy-theme only
+exposes the colors (artifacts), and a consumer renders its own meta tags, so those tests
+are gone. The base-100 color they checked is covered by the artifacts/colors tests.
+"""
 
 import pytest
 from django.core.cache import cache
-from django.template import Context, Template
 
-from capy_theme.colors.color_math import contrast, focus_color, hex_colors, to_hex
-from capy_theme.context_processors import theme as theme_context
+from capy_theme.artifacts.build import get_artifacts
+from capy_theme.colors.color_math import contrast, focus_color, hex_colors
 from capy_theme.css.stylesheet import render_css
 from capy_theme.models import Theme
 from capy_theme.themes.active import activate
 from capy_theme.themes.catalog import THEMES
-from capy_theme.themes.mode import COOKIE_NAME
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -28,43 +31,6 @@ def live(**settings_values):
     publish(theme)
     activate(theme)
     return theme
-
-
-def head(rf, cookie=None):
-    request = rf.get("/")
-    if cookie:
-        request.COOKIES[COOKIE_NAME] = cookie
-    return Template("{% load capy_theme %}{% theme_head %}").render(Context({"request": request}))
-
-
-# theme-color
-
-
-def test_theme_color_follows_the_device_with_one_tag_per_mode(rf):
-    live()
-    html = head(rf)
-    light = to_hex(THEMES["light"]["values"]["--color-base-100"], alpha=False)
-    dark = to_hex(THEMES["dark"]["values"]["--color-base-100"], alpha=False)
-    assert (
-        f'<meta name="theme-color" media="(prefers-color-scheme: light)" content="{light}">' in html
-    )
-    assert (
-        f'<meta name="theme-color" media="(prefers-color-scheme: dark)" content="{dark}">' in html
-    )
-
-
-def test_theme_color_uses_an_overridden_background(rf):
-    live(colors={"light": {"base-100": "oklch(97.5% 0.026 90.1)"}})
-    expected = to_hex("oklch(97.5% 0.026 90.1)", alpha=False)
-    assert f'media="(prefers-color-scheme: light)" content="{expected}"' in head(rf)
-
-
-def test_forced_mode_gives_a_single_theme_color(rf):
-    live()
-    html = head(rf, cookie="dark")
-    dark = to_hex(THEMES["dark"]["values"]["--color-base-100"], alpha=False)
-    assert html.count('name="theme-color"') == 1
-    assert f'<meta name="theme-color" content="{dark}">' in html
 
 
 # Focus outline
@@ -100,7 +66,7 @@ def test_hex_colors_for_emails():
     assert all(value.startswith("#") and len(value) == 7 for value in colors.values())
 
 
-def test_context_has_email_colors(rf):
+def test_artifacts_have_email_colors(rf):
     live(colors={"light": {"primary": "oklch(62.31% 0.188 259.81)"}})
-    colors = theme_context(rf.get("/"))["theme"]["email_colors"]
+    colors = get_artifacts(rf.get("/"))["colors_hex"]["light"]
     assert colors["primary"] == "#3b82f6"

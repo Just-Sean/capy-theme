@@ -78,37 +78,37 @@ variables, so most pages never name them directly.
 
 ## The JSON API
 
-`GET /theme/api.json` returns the active theme's published values and asset URLs
-(absolute): colors (OKLCH and hex), fonts with file URLs, shape, type, every
-logo slot (after fallbacks, with smaller copies), icons, the sharing image,
-backgrounds and mode settings. Full details: [artifacts.md](artifacts.md#the-json-api).
+- **`GET /theme/themes.json`** — the available themes: slug, name, which is the default,
+  and light/dark swatches, each with its assets and stylesheet URLs.
+- **`GET /theme/themes/<slug>.json`** — one theme's values and asset URLs (absolute):
+  colors (OKLCH and hex), fonts with file URLs, shape, type, every logo slot (after
+  fallbacks, with smaller copies), icons, the sharing image, backgrounds and mode
+  settings. `<slug>` may be `default`. Full details: [artifacts.md](artifacts.md#the-json-api).
 
 ```js
-const response = await fetch("https://example.com/theme/api.json");
-if (response.ok) {
-  const theme = await response.json();
-  document.documentElement.style.setProperty("--brand", theme.colors.light.primary);
-  const logo = theme.logos.logo_main.light; // { url, width, height, alt, variants }
-}
+const themes = await (await fetch("https://example.com/theme/themes.json")).json();
+const chosen = themes.find((t) => t.default);
+const theme = await (await fetch(chosen.assets_url)).json();
+document.documentElement.style.setProperty("--brand", theme.colors.light.primary);
+const logo = theme.logos.logo_main.light; // { url, width, height, alt, variants }
 ```
 
 - **Caching:** send the `ETag` back in `If-None-Match` and you get `304` until the
   theme is published again. Responses may be cached for 60 seconds.
-- **Which view serves it:** with Django REST Framework installed it's a DRF view,
-  listed automatically in the project's drf-spectacular API docs; otherwise a
-  plain Django view. `CAPY_THEME_API = "auto"` (default), `"drf"` or `"django"`
-  chooses. Both return the same JSON.
+- **Which views serve them:** with Django REST Framework installed they're DRF views,
+  listed automatically in the project's drf-spectacular API docs; otherwise plain Django
+  views. `CAPY_THEME_API = "auto"` (default), `"drf"` or `"django"` chooses.
 - **Apps on other domains** need the project to allow them with CORS (for example
   `django-cors-headers`). capy-theme doesn't set CORS headers.
 
-In Python (another Django module): `from capy_theme.artifacts import get_artifacts`.
+In Python (another Django module): `from capy_theme.artifacts import theme_catalog, build_artifacts`.
 In templates: `{% theme_artifacts as artifacts %}`.
 
 ## Downloads
 
 | Address | What it is |
 | --- | --- |
-| `/theme/api.json` | The JSON API |
+| `/theme/themes.json` | The themes catalog (each theme's assets are at `/theme/themes/<slug>.json`) |
 | `/theme/tokens.json` | W3C design tokens (format 2025.10), for design tools and native app builds ([details](artifacts.md#design-tokens)) |
 | `/theme/daisyui-theme.css` | daisyUI theme blocks (light and dark), to compile the theme into your own Tailwind CSS ([details](artifacts.md#daisyui-theme-blocks)) |
 

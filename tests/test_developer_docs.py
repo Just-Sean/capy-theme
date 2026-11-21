@@ -60,6 +60,6 @@ def test_the_issue_check_variables_match_the_stylesheet_exactly(everything):
 
 def test_the_issue_check_every_download_address_works(client, everything):
     addresses = re.findall(r"^\| `(/theme/[^`]+)` \|", DOC, re.M)
-    assert addresses == ["/theme/api.json", "/theme/tokens.json", "/theme/daisyui-theme.css"]
+    assert addresses == ["/theme/themes.json", "/theme/tokens.json", "/theme/daisyui-theme.css"]
     for address in addresses:
         assert client.get(address).status_code == 200, address

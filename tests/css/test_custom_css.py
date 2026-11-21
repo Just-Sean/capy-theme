@@ -6,9 +6,9 @@ import pytest
 from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.template import Context, Template
 from django.urls import reverse
 
+from capy_theme.css.custom import custom_css_url
 from capy_theme.models import Theme
 from capy_theme.portability.export import export_theme
 from capy_theme.portability.importing import import_theme
@@ -34,43 +34,35 @@ def live(custom):
     return theme, revision
 
 
-def head(rf):
-    return Template("{% load capy_theme %}{% theme_head %}").render(
-        Context({"request": rf.get("/")})
-    )
-
-
-def test_published_custom_css_is_linked_after_the_theme_stylesheet(client, rf):
+def test_published_custom_css_is_exposed_and_served(client):
     _, revision = live({"css": CSS, "enabled": True})
     url = reverse("capy_theme:custom_css", args=[revision.css_version])
-    html = head(rf)
-    assert f'<link rel="stylesheet" href="{url}">' in html
-    assert html.index(f"/theme/{revision.css_version}.css") < html.index(url)
+    assert custom_css_url(revision) == url  # the consumer links this itself
     response = client.get(url)
     assert response.content.decode() == CSS + "\n"
     assert response["Content-Type"] == "text/css; charset=utf-8"
     assert "immutable" in response["Cache-Control"]
 
 
-def test_the_issue_check_switched_off_it_isnt_loaded(client, rf):
+def test_the_issue_check_switched_off_it_isnt_served(client):
     _, revision = live({"css": CSS, "enabled": False})
-    assert "/theme/custom/" not in head(rf)
+    assert custom_css_url(revision) is None
     url = reverse("capy_theme:custom_css", args=[revision.css_version])
     assert client.get(url).status_code == 404
 
 
-def test_empty_custom_css_isnt_linked(rf):
-    live({"css": "   ", "enabled": True})
-    assert "/theme/custom/" not in head(rf)
+def test_empty_custom_css_isnt_exposed():
+    _, revision = live({"css": "   ", "enabled": True})
+    assert custom_css_url(revision) is None
 
 
-def test_it_needs_publishing_like_everything_else(rf):
-    theme, _ = live({"css": CSS, "enabled": True})
+def test_it_needs_publishing_like_everything_else():
+    theme, old = live({"css": CSS, "enabled": True})
     theme.settings = {"custom_css": {"css": ".x{}", "enabled": True}}
     theme.save()
     assert theme.has_unpublished_changes
     new = publish(theme)
-    assert reverse("capy_theme:custom_css", args=[new.css_version]) in head(rf)
+    assert custom_css_url(new) == reverse("capy_theme:custom_css", args=[new.css_version])
 
 
 def test_too_long_is_rejected():

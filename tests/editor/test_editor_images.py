@@ -6,13 +6,10 @@ import io
 from pathlib import Path
 
 import pytest
-from django.contrib.auth.models import AnonymousUser, Permission
+from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.template import Context, Template
-from django.test import RequestFactory
 from django.urls import reverse
-from django.utils.translation import gettext_lazy
 from PIL import Image
 
 from capy_theme.images.models import ThemeAsset
@@ -147,41 +144,12 @@ def test_without_a_logo_the_preview_says_so(editor_client, theme):
     assert page["logos"]["logo_main"] == {"light": None, "dark": None}
 
 
-def render_logo(user, source="{% theme_logo %}"):
-    request = RequestFactory().get("/")
-    request.user = user
-    return Template("{% load capy_theme %}" + source).render(Context({"request": request}))
-
-
 def published_with_logo(theme):
     asset = add_asset(theme, "logo_main", "light", png())
     theme.settings = {**theme.settings, "images": {"logo_main": {"light": asset.pk}}}
     theme.save()
     publish(theme)
     activate(theme)
-
-
-def test_logos_are_marked_for_editors_so_the_preview_can_find_them(theme, editor):
-    published_with_logo(theme)
-    html = render_logo(editor, '{% theme_logo slot="mark" class="h-8" %}')
-    assert 'data-capy-logo-slot="logo_mark"' in html
-    assert 'data-capy-logo-attrs="{&quot;class&quot;: &quot;h-8&quot;}"' in html
-
-
-def test_visitors_get_the_same_logo_html_as_before(theme):
-    published_with_logo(theme)
-    html = render_logo(AnonymousUser())
-    assert "<img" in html and "data-capy-logo" not in html
-
-
-def test_editors_get_a_hidden_marker_where_there_is_no_logo_yet(editor):
-    theme = Theme.objects.create(name="Bare", slug="bare")
-    publish(theme)
-    activate(theme)
-    html = render_logo(editor)
-    assert html == (
-        '<span data-capy-logo-attrs="{}" data-capy-logo-slot="logo_main" hidden></span>'
-    )
 
 
 def test_the_live_edit_page_header_shows_the_theme_being_edited(editor_client, theme):
@@ -466,55 +434,6 @@ def test_uploading_needs_change_theme(client, django_user_model, theme):
     assert not ThemeAsset.objects.exists()
 
 
-# {% theme_logo %} markers
-
-
-@pytest.mark.parametrize("who", ["anonymous", "staff_without_perm", "inactive", "not_staff"])
-def test_no_marker_for_people_who_cant_edit(theme, django_user_model, who):
-    published_with_logo(theme)
-    if who == "anonymous":
-        user = AnonymousUser()
-    else:
-        user = django_user_model.objects.create_user(
-            "u", password="pw", is_staff=who != "not_staff", is_active=who != "inactive"
-        )
-        if who != "staff_without_perm":
-            user.user_permissions.add(Permission.objects.get(codename="change_theme"))
-    html = render_logo(user)
-    assert "data-capy-logo" not in html
-
-
-def test_visitors_with_only_a_site_name_get_no_marker(theme):
-    publish(theme)
-    activate(theme)
-    assert render_logo(AnonymousUser()) == "<span>Capy Co</span>"
-
-
-def test_no_request_in_the_context_means_no_marker(theme):
-    published_with_logo(theme)
-    html = Template("{% load capy_theme %}{% theme_logo %}").render(Context({}))
-    assert "data-capy-logo" not in html
-
-
-def test_editor_html_with_a_dark_logo_marks_both_pictures(theme, editor):
-    light = add_asset(theme, "logo_main", "light", png("l.png"))
-    dark = add_asset(theme, "logo_main", "dark", png("d.png"))
-    chosen = {"logo_main": {"light": light.pk, "dark": dark.pk}}
-    theme.settings = {**theme.settings, "images": chosen}
-    theme.save()
-    publish(theme)
-    activate(theme)
-    html = render_logo(editor, '{% theme_logo class="h-8" %}')
-    assert html.count('data-capy-logo-slot="logo_main"') == 2
-    assert html.count("<picture") == 2
-
-
-def test_editor_marker_attrs_are_escaped(theme, editor):
-    published_with_logo(theme)
-    html = render_logo(editor, '{% theme_logo class="a\\"><script>x</script>" %}')
-    assert "<script>" not in html
-
-
 # The live edit page header
 
 
@@ -547,26 +466,6 @@ def test_save_draft_drops_a_dark_choice_for_a_light_only_slot(editor_client, the
     assert reply.status_code == 200, reply.content
     theme.refresh_from_db()
     assert theme.settings["images"] == {"logo_email": {"light": email.pk}}
-
-
-# Fixes after review (#271)
-
-
-def test_the_logo_works_without_djangos_auth_middleware(theme):
-    published_with_logo(theme)
-    request = RequestFactory().get("/")  # no request.user, as without auth middleware
-    html = Template("{% load capy_theme %}{% theme_logo %}").render(Context({"request": request}))
-    assert "<img" in html and "data-capy-logo" not in html
-
-
-def test_any_attribute_value_works_for_editors(theme, editor):
-    published_with_logo(theme)
-    request = RequestFactory().get("/")
-    request.user = editor
-    context = Context({"request": request, "label": theme})  # not JSON: a model instance
-    html = Template("{% load capy_theme %}{% theme_logo title=label %}").render(context)
-    assert 'title="Main"' in html
-    assert 'data-capy-logo-attrs="{&quot;title&quot;: &quot;Main&quot;}"' in html
 
 
 # QA, second round (#271 review fixes)
@@ -647,38 +546,6 @@ def test_importing_an_export_with_an_old_dark_email_logo_still_works(theme):
     imported = import_theme(io.BytesIO(data))
     assert imported.pk != theme.pk
     assert set(imported.settings["images"]["logo_email"]) >= {"light"}
-
-
-# {% theme_logo %} attribute values
-
-
-@pytest.mark.parametrize(
-    "value",
-    [None, 0, 3.5, True, ["a"], {"a": 1}, gettext_lazy("Logo"), "Capy 🐹", "x" * 5000],
-)
-def test_theme_logo_takes_any_attribute_value_for_editors(theme, editor, value):
-    published_with_logo(theme)
-    request = RequestFactory().get("/")
-    request.user = editor
-    html = Template("{% load capy_theme %}{% theme_logo title=v %}").render(
-        Context({"request": request, "v": value})
-    )
-    assert 'data-capy-logo-slot="logo_main"' in html
-
-
-def test_theme_logo_with_a_request_whose_user_is_none(theme):
-    published_with_logo(theme)
-    request = RequestFactory().get("/")
-    request.user = None
-    html = Template("{% load capy_theme %}{% theme_logo %}").render(Context({"request": request}))
-    assert "data-capy-logo" not in html
-
-
-def test_theme_logo_with_no_active_theme_and_no_user(theme):
-    Theme.objects.all().delete()
-    request = RequestFactory().get("/")
-    html = Template("{% load capy_theme %}{% theme_logo %}").render(Context({"request": request}))
-    assert "data-capy-logo" not in html
 
 
 # QA, third round (#271 review fixes): odd modes reach add_asset's own message

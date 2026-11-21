@@ -82,8 +82,8 @@ THEME_FIELDSETS = [
         "Visitors",
         {
             "fields": ["offered_to_visitors"],
-            "description": "Themes offered to visitors appear in {% theme_picker %} once "
-            "they're published. Visitors can only pick offered themes.",
+            "description": "Themes offered to visitors appear in the themes catalog "
+            "(/theme/themes.json) once they're published, for a consumer to offer.",
         },
     ),
     (

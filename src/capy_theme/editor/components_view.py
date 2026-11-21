@@ -17,7 +17,7 @@ from django.views.decorators.http import require_GET
 from ..css.custom import can_edit_custom_css, custom_css_url
 from ..images.icons import square_preview
 from ..models import Theme
-from ..themes.active import get_site_theme, site_of
+from ..themes.active import get_active_theme, site_of
 from .access import can_edit
 from .custom_css_view import selectors
 from .images_panel import images as images_panel
@@ -50,7 +50,7 @@ def editor_components(request, pk):
         draft = apply_changes(theme, changes) if isinstance(changes, dict) else theme
     except ValueError, ValidationError:
         draft = theme  # half-typed values: show the saved draft
-    site_theme = get_site_theme(request)
+    site_theme = get_active_theme(request)
     custom = draft.settings.get("custom_css", {})
     context = {
         "theme": theme,
