@@ -122,10 +122,19 @@
     ui.showDirty();
   };
 
+  // Preview this page in the theme's own scheme (a theme is light or dark). Updated
+  // when the base is changed, so switching a light base for a dark one re-themes the
+  // page. Forces data-theme so the draft CSS's capy-light / capy-dark block applies.
+  function previewScheme(scheme) {
+    document.documentElement.setAttribute("data-theme", "capy-" + (scheme || "light"));
+  }
+
   document.addEventListener("capy-editor:loaded", function (event) {
+    previewScheme(event.detail.scheme);
     ui.build(event.detail);
   });
   document.addEventListener("capy-editor:preview", function (event) {
+    previewScheme(event.detail.scheme);
     ui.latest = event.detail;
     ui.fill();
   });
