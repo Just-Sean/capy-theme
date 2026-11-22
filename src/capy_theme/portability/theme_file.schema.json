@@ -10,18 +10,18 @@
     "exported_by": {"type": "string", "maxLength": 100},
     "theme": {
       "type": "object",
-      "required": ["name", "slug", "light_base", "dark_base", "settings"],
+      "required": ["name", "slug", "base", "settings"],
       "additionalProperties": false,
       "properties": {
         "name": {"type": "string", "minLength": 1, "maxLength": 100},
         "slug": {"type": "string", "pattern": "^[-a-zA-Z0-9_]{1,100}$"},
-        "light_base": {"type": "string", "maxLength": 50},
-        "dark_base": {"type": "string", "maxLength": 50},
+        "base": {"type": "string", "maxLength": 50},
+        "scheme": {"enum": ["light", "dark"]},
         "settings": {"type": "object"},
         "font_roles": {"type": "object", "additionalProperties": {"type": "string"}},
         "image_slots": {
           "type": "object",
-          "additionalProperties": {"type": "object", "additionalProperties": {"type": "string"}}
+          "additionalProperties": {"type": "string"}
         }
       }
     },
@@ -67,11 +67,10 @@
       "maxProperties": 100,
       "additionalProperties": {
         "type": "object",
-        "required": ["slot", "mode", "path"],
+        "required": ["slot", "path"],
         "additionalProperties": false,
         "properties": {
           "slot": {"type": "string", "maxLength": 40},
-          "mode": {"enum": ["light", "dark"]},
           "alt_text": {"type": "string", "maxLength": 200},
           "path": {"type": "string", "pattern": "^images/[-a-zA-Z0-9_.]{1,150}$"}
         }

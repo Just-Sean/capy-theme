@@ -3,7 +3,7 @@
 from django.db import models
 
 from ..storage import theme_storage
-from .slots import MODES, SLOT_CHOICES
+from .slots import SLOT_CHOICES
 
 
 def asset_path(asset, filename):
@@ -19,7 +19,6 @@ class ThemeAsset(models.Model):
 
     theme = models.ForeignKey("capy_theme.Theme", on_delete=models.CASCADE, related_name="assets")
     slot = models.CharField(max_length=40, choices=SLOT_CHOICES)
-    mode = models.CharField(max_length=10, choices=MODES, default="light")
     original = models.FileField(upload_to=asset_path, storage=theme_storage)
     alt_text = models.CharField(max_length=200, blank=True)
     width = models.PositiveIntegerField(default=0)
@@ -29,10 +28,10 @@ class ThemeAsset(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["theme", "slot", "mode", "-created_at"]
+        ordering = ["theme", "slot", "-created_at"]
 
     def __str__(self):
-        return f"{self.theme} {self.slot} ({self.mode})"
+        return f"{self.theme} {self.slot}"
 
 
 def variant_path(variant, filename):

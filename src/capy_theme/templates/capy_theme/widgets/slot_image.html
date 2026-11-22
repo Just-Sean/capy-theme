@@ -1,10 +1,10 @@
 {% comment %}
-  One image slot and mode on the theme page (admin/slot_image.py, #271): the image
-  saved in the theme (named by its file) and its alt text, the image to use (this
-  slot's uploads), and a new upload with its own alt text. The hidden "alt_for"
-  says which image the alt text box belongs to, so choosing another image never
-  changes that one's alt text. The field's label (e.g. "Main logo (light)") is for
-  the choice; each other input has its own label. No inline styles: admin/images.css.
+  One image slot on the theme page (admin/slot_image.py, #271): the image saved in
+  the theme (named by its file) and its alt text, the image to use (this slot's
+  uploads), and a new upload with its own alt text. The hidden "alt_for" says which
+  image the alt text box belongs to, so choosing another image never changes that
+  one's alt text. The field's label (e.g. "Main logo") is for the choice; each other
+  input has its own label. No inline styles: admin/images.css.
 {% endcomment %}<div class="capy-slot-image">
   <div class="capy-slot-current">
     {% if widget.current %}<img class="capy-slot-preview" src="{{ widget.current.original.url }}" alt="{{ widget.current.alt_text }}">

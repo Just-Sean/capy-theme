@@ -5,7 +5,7 @@ Code: `src/capy_theme/colors/` (color math, values, suggestions) and `src/capy_t
 ## Colors
 
 On a theme's admin page, the color sections let you override any of daisyUI's
-20 colors, separately for light and dark mode:
+20 colors (one set — a theme is a single scheme):
 
 - **Basic**: primary, secondary, accent, neutral, background and
   text on background.
@@ -30,22 +30,23 @@ it as well. Anything you set yourself is always kept.
 
 **Contrast warnings.** Each color field shows the WCAG contrast of its pair
 (e.g. *Primary / Primary text: 4.7:1, passes AA*), and the **Contrast** section
-lists every pair for light and dark. AA needs 4.5:1 and AAA 7:1 for normal text.
+lists every pair. AA needs 4.5:1 and AAA 7:1 for normal text.
 Pairs below AA are marked "⚠ fails AA". They're warnings only: saving and
 publishing still work. Ratings are for the saved draft, so save to update them.
 
 ## Browser color, focus outline and email colors
 
 - **Browser color:** a theme's colors (exposed as data) include the page background,
-  so a consumer can add `<meta name="theme-color">` tags — one per mode, or a single
-  one when a mode is forced — to color phones' address bar to match.
+  so a consumer can add a `<meta name="theme-color">` tag to color phones' address bar
+  to match (one per loaded scheme, or whichever scheme is forced).
 - **Focus outline:** the stylesheet gives keyboard focus (`:focus-visible`) a 2 px
   outline in `--capy-focus`. That's the primary color when it has at least 3:1
   contrast with the background (WCAG's minimum for non-text), otherwise the text
   color, so it's always visible.
-- **Email colors:** HTML emails can't use OKLCH or CSS variables, so templates
-  get every light-mode color as hex in `theme.email_colors`, e.g.
-  `{{ theme.email_colors.primary }}` or `{{ theme.email_colors.base_100 }}`.
+- **Email colors:** HTML emails can't use OKLCH or CSS variables, so a theme's colors
+  are also exposed as hex in `colors_hex`, e.g. `{{ artifacts.colors_hex.primary }}`
+  (via `{% theme_artifacts as artifacts %}`; use the `capy_get` filter for hyphenated
+  names like `base-100`).
 
 ## Type scale
 
@@ -70,8 +71,7 @@ files (`<link rel="preload" as="font">`) for the right font to arrive sooner.
 
 ## Shape and effects
 
-The **Shape and effects** section overrides daisyUI's shape settings, for both
-light and dark mode:
+The **Shape and effects** section overrides daisyUI's shape settings:
 
 | Setting | daisyUI variable | Range |
 | --- | --- | --- |
@@ -104,9 +104,12 @@ To try them: Chrome DevTools → **Rendering** → "Emulate CSS media feature".
 
 Each published revision has its own stylesheet at `/theme/<version>.css`, where
 `<version>` is a short hash unique to that revision (`ThemeRevision.css_version`).
-It sets daisyUI's CSS variables (`--color-primary` and the rest): light values on
-`:root`, and dark values inside `@media (prefers-color-scheme: dark)`. The rules
-aren't in a CSS layer, so they override daisyUI's own theme rules.
+It sets daisyUI's CSS variables (`--color-primary` and the rest) for the theme's one
+scheme: a **light** theme on `:root` (and `:root[data-theme="capy-light"]`), a **dark**
+theme inside `@media (prefers-color-scheme: dark)` (and `:root[data-theme="capy-dark"]`).
+A consumer loads a light theme's sheet and a dark theme's sheet together, so they
+compose: the device setting picks one, and `data-theme` on `<html>` forces one. The
+rules aren't in a CSS layer, so they override daisyUI's own theme rules.
 
 - Browsers cache each stylesheet for a year. Publishing creates a new version,
   so pages link to a new URL and visitors get the change straight away.
@@ -116,12 +119,12 @@ aren't in a CSS layer, so they override daisyUI's own theme rules.
   writes its CSS, the new version in the link makes browsers fetch it again
   instead of using a copy cached for a year. The view ignores `?v=`.
 - The values come from the revision itself, not from today's daisyUI catalog.
-  Each publish saves both base themes' full values, so a later daisyUI update
+  Each publish saves the base theme's full values, so a later daisyUI update
   can't change or break a published theme. To pick up daisyUI's changes,
   publish again.
 - After a daisyUI update (see [Updating daisyUI](development.md#updating-daisyui)), the admin
   shows which published themes are affected. The theme list's "Base changed in
-  daisyUI" column ticks them, and each theme's page says whether a base was
+  daisyUI" column ticks them, and each theme's page says whether its base was
   changed or removed. The site keeps using the saved version until someone publishes.
 
 On a theme's admin page, "View its stylesheet" opens the live revision's

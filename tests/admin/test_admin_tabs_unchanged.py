@@ -151,14 +151,14 @@ def test_an_image_uploaded_in_its_slot_is_saved_and_chosen(admin_client, setting
     theme = Theme.objects.create(name="Main", slug="main")
     url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
     data = _post_back(admin_client.get(url).content.decode())
-    data.update({"image_logo_main_light_upload": png_upload(), "image_logo_main_light_alt": "Logo"})
+    data.update({"image_logo_main_upload": png_upload(), "image_logo_main_alt": "Logo"})
     response = admin_client.post(url, data)
     assert response.status_code == 302, re.findall(
         r'<ul class="errorlist[^>]*>.*?</ul>', response.content.decode(), re.S
     )
     asset = ThemeAsset.objects.get(theme=theme)
     theme.refresh_from_db()
-    assert theme.settings["images"]["logo_main"] == {"light": asset.pk}
+    assert theme.settings["images"]["logo_main"] == asset.pk
 
 
 def test_an_upload_error_is_inside_the_branding_tab(admin_client, settings, tmp_path):
@@ -166,7 +166,7 @@ def test_an_upload_error_is_inside_the_branding_tab(admin_client, settings, tmp_
     theme = Theme.objects.create(name="Main", slug="main")
     url = reverse("admin:capy_theme_theme_change", args=[theme.pk])
     data = _post_back(admin_client.get(url).content.decode())
-    data["image_logo_main_light_upload"] = SimpleUploadedFile("x.png", b"not an image")
+    data["image_logo_main_upload"] = SimpleUploadedFile("x.png", b"not an image")
     response = admin_client.post(url, data).content.decode()
     by_label = {label: body for _, label, body in panels(response)}
     assert "supported image" in by_label["Branding"]

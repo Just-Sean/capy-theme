@@ -1,6 +1,6 @@
 """Exporting a theme as one zip: theme.json plus its image and font files.
 
-theme.json holds the draft (bases and settings). Its fonts and images are given
+theme.json holds the draft (base and settings). Its fonts and images are given
 keys ("font-3", "image-12"), because database ids differ between sites; the
 import maps them to new ids. Generated files (logo copies, icons) aren't
 included: the import and the next publish make them again.
@@ -27,10 +27,7 @@ def export_theme(theme, keep_custom_css=True):
     if not keep_custom_css:
         settings.pop("custom_css", None)
     font_roles = {role: f"font-{pk}" for role, pk in settings.pop("fonts", {}).items()}
-    image_slots = {
-        slot: {mode: f"image-{pk}" for mode, pk in modes.items()}
-        for slot, modes in settings.pop("images", {}).items()
-    }
+    image_slots = {slot: f"image-{pk}" for slot, pk in settings.pop("images", {}).items()}
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
         fonts = _fonts(archive, {int(key.split("-")[1]) for key in font_roles.values()})
@@ -41,8 +38,8 @@ def export_theme(theme, keep_custom_css=True):
             "theme": {
                 "name": theme.name,
                 "slug": theme.slug,
-                "light_base": theme.light_base,
-                "dark_base": theme.dark_base,
+                "base": theme.base,
+                "scheme": theme.scheme,
                 "settings": settings,
                 "font_roles": font_roles,
                 "image_slots": image_slots,
@@ -83,7 +80,7 @@ def _fonts(archive, ids):
 
 
 def _images(archive, theme, image_slots):
-    keys = {key for modes in image_slots.values() for key in modes.values()}
+    keys = set(image_slots.values())
     images = {}
     for asset in theme.assets.filter(pk__in=[int(key.split("-")[1]) for key in keys]):
         # Keeps the file's name (storage names only use letters, digits, - _ and .).
@@ -93,7 +90,6 @@ def _images(archive, theme, image_slots):
             archive.writestr(path, handle.read())
         images[f"image-{asset.pk}"] = {
             "slot": asset.slot,
-            "mode": asset.mode,
             "alt_text": asset.alt_text,
             "path": path,
         }

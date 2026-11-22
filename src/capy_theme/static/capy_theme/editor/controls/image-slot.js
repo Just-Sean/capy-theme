@@ -1,8 +1,9 @@
-// One image slot and mode in the editor (#271): what it's for, the current image,
-// a choice of this slot's earlier uploads, a new upload and the alt text. An
-// upload is checked and stored on the server straight away and chosen in the
-// unsaved changes; Save draft keeps the choice, Revert drops it (the image stays
-// in the theme's list). Used by image-sections.js. Loaded after core.js.
+// One image slot in the editor (#271): what it's for, the current image, a choice
+// of this slot's earlier uploads, a new upload and the alt text. A theme is a
+// single scheme, so each slot has one image (no light/dark). An upload is checked
+// and stored on the server straight away and chosen in the unsaved changes; Save
+// draft keeps the choice, Revert drops it (the image stays in the theme's list).
+// Used by image-sections.js. Loaded after core.js.
 (function () {
   "use strict";
 
@@ -12,15 +13,14 @@
   var el = ui.el;
   var counter = 0;
 
-  function chosen(slot, mode) {
-    return ((ui.changes.settings.images || {})[slot] || {})[mode];
+  function chosen(slot) {
+    return (ui.changes.settings.images || {})[slot];
   }
 
-  function choose(slot, mode, id) {
+  function choose(slot, id) {
     var images = (ui.changes.settings.images = ui.changes.settings.images || {});
-    var modes = (images[slot] = images[slot] || {});
-    if (id) modes[mode] = id;
-    else delete modes[mode];
+    if (id) images[slot] = id;
+    else delete images[slot];
     ui.update();
   }
 
@@ -29,35 +29,34 @@
   }
 
   // Remember a new upload, also in the saved state, so Revert keeps it in the lists,
-  // and refresh every box's list for that slot (light and dark) so it's there too.
-  // Only the list: a file chosen in another box, not yet uploaded, stays chosen.
+  // and refresh the box's list for that slot so it's there too. Only the list: a file
+  // chosen in another box, not yet uploaded, stays chosen.
   function remember(assets, slot) {
     ui.assets = assets;
     if (ui.saved) ui.saved.assets = assets;
     var panel = editor.panel;
     if (!panel) return;
     panel.querySelectorAll("[data-capy-slot]").forEach(function (box) {
-      if (box.getAttribute("data-capy-slot").split(":")[0] === slot && box.capyRefreshList) {
+      if (box.getAttribute("data-capy-slot") === slot && box.capyRefreshList) {
         box.capyRefreshList();
       }
     });
   }
 
-  // The list of a slot's images: None (or Same as light) and each upload.
-  function fillOptions(select, slot, mode, value) {
+  // The list of a slot's images: None and each upload.
+  function fillOptions(select, slot, value) {
     select.textContent = "";
-    select.appendChild(el("option", { value: "", text: mode === "dark" ? "Same as light" : "None" }));
+    select.appendChild(el("option", { value: "", text: "None" }));
     ui.assets.forEach(function (a) {
       if (a.slot !== slot) return;
-      select.appendChild(el("option", { value: String(a.id), text: a.name + " (" + a.width + " × " + a.height + (a.mode === "dark" ? ", dark" : "") + ")" }));
+      select.appendChild(el("option", { value: String(a.id), text: a.name + " (" + a.width + " × " + a.height + ")" }));
     });
     select.value = value;
   }
 
-  function send(url, slot, mode, file, alt) {
+  function send(url, slot, file, alt) {
     var data = new FormData();
     data.append("slot", slot);
-    data.append("mode", mode);
     data.append("alt_text", alt);
     data.append("file", file);
     return fetch(url, {
@@ -73,31 +72,31 @@
     });
   }
 
-  // The control for one slot and mode; it redraws itself when its image changes.
-  ui.slotControl = function (spec, mode) {
-    var box = el("div", { class: "capy-editor-slot", "data-capy-slot": spec.name + ":" + mode });
+  // The control for one slot; it redraws itself when its image changes.
+  ui.slotControl = function (spec) {
+    var box = el("div", { class: "capy-editor-slot", "data-capy-slot": spec.name });
     var uploading = false; // kept across redraws, so a redraw can't allow a second upload
     function draw() {
       box.textContent = "";
       var id = "capy-slot-" + (counter += 1);
-      var label = spec.label + (spec.modes.length > 1 ? " (" + mode + ")" : "");
-      var current = asset(chosen(spec.name, mode));
+      var label = spec.label;
+      var current = asset(chosen(spec.name));
       box.appendChild(el("h4", { class: "capy-editor-slot-title", text: label }));
-      box.appendChild(el("p", { class: "capy-editor-note", id: id + "-help", text: spec.help[mode] }));
+      box.appendChild(el("p", { class: "capy-editor-note", id: id + "-help", text: spec.help }));
       box.appendChild(
         current
           ? el("img", { class: "capy-editor-slot-preview", src: current.url, alt: current.alt_text || "", width: String(current.width), height: String(current.height) })
-          : el("p", { class: "capy-editor-slot-empty", text: spec.empty[mode] })
+          : el("p", { class: "capy-editor-slot-empty", text: spec.empty })
       );
 
       var select = el("select", { id: id + "-choice", "aria-describedby": id + "-help" });
-      fillOptions(select, spec.name, mode, current ? String(current.id) : "");
+      fillOptions(select, spec.name, current ? String(current.id) : "");
       select.disabled = uploading;
       box.capyRefreshList = function () {
-        fillOptions(select, spec.name, mode, select.value);
+        fillOptions(select, spec.name, select.value);
       };
       select.addEventListener("change", function () {
-        choose(spec.name, mode, select.value ? Number(select.value) : null);
+        choose(spec.name, select.value ? Number(select.value) : null);
         draw();
         box.querySelector("select").focus();
       });
@@ -131,7 +130,7 @@
         button.setAttribute("aria-busy", "true");
         button.textContent = "Uploading…";
         editor.status("Uploading…");
-        send(ui.saved.urls.upload, spec.name, mode, file.files[0], newAlt.value)
+        send(ui.saved.urls.upload, spec.name, file.files[0], newAlt.value)
           .then(function (body) {
             uploading = false;
             // Closed, saved or reverted meanwhile: this box is gone. The image is in
@@ -144,7 +143,7 @@
               return;
             }
             remember(body.assets, spec.name);
-            choose(spec.name, mode, body.uploaded.id);
+            choose(spec.name, body.uploaded.id);
             draw();
             editor.status("Uploaded and chosen for the " + label.toLowerCase() + ". Save draft to keep it. Location and camera details were removed.");
             box.querySelector("select").focus();
@@ -160,7 +159,7 @@
           });
       });
       box.appendChild(
-        el("details", { class: "capy-editor-upload", "data-capy-fold": "Upload: " + spec.name + ":" + mode }, [
+        el("details", { class: "capy-editor-upload", "data-capy-fold": "Upload: " + spec.name }, [
           el("summary", { text: "Upload a new image" }),
           el("label", { class: "capy-editor-stack", for: id + "-file" }, [el("span", { text: "Image file" }), file]),
           el("label", { class: "capy-editor-stack", for: id + "-new-alt" }, [el("span", { text: "Alt text for the new image" }), newAlt]),

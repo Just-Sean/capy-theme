@@ -1,4 +1,4 @@
-"""Everything the active theme produces, as plain data for other modules.
+"""Everything a published theme produces, as plain data for other modules.
 
 capy-theme owns the theme but doesn't apply it outside the page's own look. An
 email module, an app shell, a PWA or social-tags module reads what it needs
@@ -8,18 +8,20 @@ from here (or from `{% theme_artifacts as theme_artifacts %}` in templates):
 
     artifacts = get_artifacts(request)
     if artifacts:
-        logo = artifacts["logos"]["logo_email"]["light"]["url"]
-        primary = artifacts["colors_hex"]["light"]["primary"]
+        logo = artifacts["logos"]["logo_email"]["url"]
+        primary = artifacts["colors"]["primary"]
         icon = artifacts["icons"].get("icon-512.png")
 
-Everything comes from the published revision, never the draft. With a request,
-every URL is absolute (e.g. for emails and manifests).
+A theme is a single scheme (light or dark), so its colors, shape, logos and
+backgrounds are one set, not split by mode. Everything comes from the published
+revision, never the draft. With a request, every URL is absolute (e.g. for
+emails and manifests).
 """
 
 from django.urls import reverse
 
 from ..colors.color_math import to_hex
-from ..colors.names import COLOR_NAMES, SCHEMES
+from ..colors.names import COLOR_NAMES
 from ..colors.values import effective_values
 from ..css.backgrounds import VARIABLES as BACKGROUND_SLOTS
 from ..css.shape import EFFECTS, SIZES
@@ -29,41 +31,41 @@ from ..images.icons import icon_urls
 from ..images.logos import HEADER_SLOTS, LOGO_SLOTS, resolve
 from ..images.sharing import sharing_image
 from ..storage import theme_storage
-from ..themes.active import get_active_theme, offered_themes
+from ..themes.active import default_themes, offered_themes, primary_theme
 from ..themes.branding import branding
-from ..themes.mode import mode_settings
 
 
 def get_artifacts(request=None):
-    """The active theme's published artifacts, or None if no theme is published.
+    """The domain's primary theme's published artifacts, or None if none is published.
 
-    Returns a dict:
+    The primary theme is the domain's default light theme (or its default dark
+    theme if no light default is set) — the one a single-theme consumer such as
+    an email or a PWA manifest reads. Returns a dict:
 
-    - "theme": {"name", "slug", "revision"}
+    - "theme": {"name", "slug", "scheme", "revision"}
     - "branding": {"site_name", "tagline", "logo_alt"}
-    - "colors": {"light"|"dark": {"primary": "oklch(…)", "base-100": …}} (all 20)
+    - "colors": {"primary": "oklch(…)", "base-100": …} (all 20)
     - "colors_hex": the same as #rrggbb (for emails and other non-CSS uses)
     - "fonts": {role: {"family", "stack", "source", "stylesheet", "files"}} for the
       roles the theme sets; "files" are [{"url", "weight", "style", "unicode_range"}]
       ("stylesheet" is the external stylesheet URL for external fonts, else "")
-    - "shape": {"light"|"dark": {setting: CSS value}}: radii, sizes, border, depth
-      and noise (e.g. "radius_box": "0.5rem")
+    - "shape": {setting: CSS value}: radii, sizes, border, depth and noise
+      (e.g. "radius_box": "0.5rem")
     - "type": the type scale settings the theme sets (e.g. {"base_size": 18})
-    - "logos": {slot: {"light"|"dark": image or None}} for the six logo slots,
-      after fallbacks (an empty slot gives the main logo; dark gives light)
+    - "logos": {slot: image or None} for the six logo slots, after fallbacks
+      (an empty slot gives the main logo)
     - "icons": {file name: URL} (favicon.ico, favicon.svg, apple-touch-icon.png,
       icon-192.png, icon-512.png, icon-maskable-512.png, icon-monochrome-512.png);
       {} without an icon
     - "sharing_image": {"url", "width", "height", "alt"} (1200 × 630) or None
-    - "backgrounds": {"login"|"pattern": {"light"|"dark": URL or None}}
-    - "mode": {"default", "visitors_can_switch"}
+    - "backgrounds": {"login"|"pattern": URL or None}
     - "stylesheet_url"
 
     An image is {"url", "width", "height", "alt", "content_type", "variants":
     [{"url", "width", "format"}]}; variants are the smaller copies (header logos
     only).
     """
-    theme = get_active_theme(request)
+    theme = primary_theme(request)
     if theme is None or theme.live_revision is None:
         return None
     return build_artifacts(theme, request)
@@ -78,25 +80,23 @@ def build_artifacts(theme, request=None):
     snapshot = revision.snapshot
     url = _url_maker(request)
     brand = branding(revision)
-    default_mode, can_switch = mode_settings(revision)
-    values = {scheme: effective_values(snapshot, scheme) for scheme in SCHEMES}
+    values = effective_values(snapshot)
     share = sharing_image(snapshot)
     return {
-        "theme": {"name": theme.name, "slug": theme.slug, "revision": revision.number},
+        "theme": {
+            "name": theme.name,
+            "slug": theme.slug,
+            "scheme": snapshot["scheme"],
+            "revision": revision.number,
+        },
         "branding": {
             "site_name": brand["site_name"],
             "tagline": brand["tagline"],
             "logo_alt": brand["logo_alt"],
         },
-        "colors": {
-            scheme: {name: values[scheme][f"--color-{name}"] for name in COLOR_NAMES}
-            for scheme in SCHEMES
-        },
+        "colors": {name: values[f"--color-{name}"] for name in COLOR_NAMES},
         "colors_hex": {
-            scheme: {
-                name: to_hex(values[scheme][f"--color-{name}"], alpha=False) for name in COLOR_NAMES
-            }
-            for scheme in SCHEMES
+            name: to_hex(values[f"--color-{name}"], alpha=False) for name in COLOR_NAMES
         },
         "fonts": {
             role: {
@@ -118,19 +118,11 @@ def build_artifacts(theme, request=None):
             if role in ROLES
         },
         "shape": {
-            scheme: {
-                name: values[scheme][spec[0]]
-                for name, spec in (SIZES | EFFECTS).items()
-                if spec[0] in values[scheme]
-            }
-            for scheme in SCHEMES
+            name: values[spec[0]] for name, spec in (SIZES | EFFECTS).items() if spec[0] in values
         },
         "type": dict(snapshot.get("settings", {}).get("type", {})),
         "logos": {
-            slot: {
-                scheme: _image(resolve(snapshot, slot, scheme), slot, url, brand["logo_alt"])
-                for scheme in SCHEMES
-            }
+            slot: _image(resolve(snapshot, slot), slot, url, brand["logo_alt"])
             for slot in LOGO_SLOTS
         },
         "icons": {name: url(path) for name, path in icon_urls(snapshot).items()},
@@ -143,12 +135,9 @@ def build_artifacts(theme, request=None):
         if share
         else None,
         "backgrounds": {
-            slot.removeprefix("background_"): {
-                scheme: _file_url(resolve(snapshot, slot, scheme), url) for scheme in SCHEMES
-            }
+            slot.removeprefix("background_"): _file_url(resolve(snapshot, slot), url)
             for slot in BACKGROUND_SLOTS
         },
-        "mode": {"default": default_mode, "visitors_can_switch": can_switch},
         "stylesheet_url": url(stylesheet_url(revision)),
     }
 
@@ -156,19 +145,22 @@ def build_artifacts(theme, request=None):
 def theme_catalog(request=None):
     """The available themes as plain data, for a consumer to render its own picker.
 
-    Each entry: ``slug``, ``name``, ``default`` (the admin's default theme), ``light``
-    and ``dark`` (each ``{"base", "swatch", "background"}`` — the daisyUI base and the
-    primary/background colors as #rrggbb), and ``assets_url`` / ``stylesheet_url``. Lists
-    the themes offered to visitors, plus the **domain's** active (default/scheduled) theme,
-    which is the one flagged ``default``; ``[]`` if none is published. With a request,
-    every URL is absolute.
+    Each entry: ``slug``, ``name``, ``scheme`` (``"light"`` or ``"dark"``),
+    ``default`` (whether it's the domain's default theme **for its scheme**),
+    ``swatch`` and ``background`` (the primary/background colors as #rrggbb), and
+    ``assets_url`` / ``stylesheet_url``. Lists the themes offered to visitors, plus
+    the **domain's** default light and dark themes. ``[]`` if none is published.
+    With a request, every URL is absolute.
     """
     url = _url_maker(request)
-    active = get_active_theme(request)
-    default_slug = active.slug if active else None
+    defaults = default_themes(request)
+    default_slug = {scheme: (theme.slug if theme else None) for scheme, theme in defaults.items()}
     themes = list(offered_themes())
-    if active is not None and active.slug not in {theme.slug for theme in themes}:
-        themes.append(active)
+    offered_slugs = {theme.slug for theme in themes}
+    for theme in defaults.values():
+        if theme is not None and theme.slug not in offered_slugs:
+            themes.append(theme)
+            offered_slugs.add(theme.slug)
     # Only published themes have a snapshot to read; skip any without one so a theme
     # that somehow lost its live revision can't 500 the whole catalog.
     themes = [theme for theme in themes if theme.live_revision_id is not None]
@@ -178,22 +170,15 @@ def theme_catalog(request=None):
 
 def _catalog_entry(theme, url, default_slug):
     snapshot = theme.live_revision.snapshot
-    values = {scheme: effective_values(snapshot, scheme) for scheme in SCHEMES}
-
-    def side(scheme, base):
-        colors = values[scheme]
-        return {
-            "base": base,
-            "swatch": to_hex(colors["--color-primary"], alpha=False),
-            "background": to_hex(colors["--color-base-100"], alpha=False),
-        }
-
+    scheme = snapshot["scheme"]
+    values = effective_values(snapshot)
     return {
         "slug": theme.slug,
         "name": theme.name,
-        "default": theme.slug == default_slug,
-        "light": side("light", snapshot["light_base"]),
-        "dark": side("dark", snapshot["dark_base"]),
+        "scheme": scheme,
+        "default": theme.slug == default_slug.get(scheme),
+        "swatch": to_hex(values["--color-primary"], alpha=False),
+        "background": to_hex(values["--color-base-100"], alpha=False),
         "assets_url": url(reverse("capy_theme:theme_assets", args=[theme.slug])),
         "stylesheet_url": url(stylesheet_url(theme.live_revision)),
     }

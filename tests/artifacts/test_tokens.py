@@ -30,7 +30,7 @@ def live():
         name="Main",
         slug="main",
         settings={
-            "colors": {"light": {"primary": "oklch(65% 0.24 350 / 0.8)"}},
+            "colors": {"primary": "oklch(65% 0.24 350 / 0.8)"},
             "shape": {"radius_box": 1, "noise": True},
             "fonts": {"body": Font.objects.get(family="System serif").pk},
             "type": {"base_size": 18, "scale": 1.25, "line_height": 1.6, "heading_weight": 700},
@@ -69,18 +69,18 @@ def test_download_headers(client, live):
 
 def test_values(client, live):
     tokens = json.loads(client.get(URL).content)
-    primary = tokens["light"]["color"]["primary"]
+    primary = tokens["color"]["primary"]
     assert primary["$type"] == "color"
     assert primary["$value"]["colorSpace"] == "oklch"
     assert primary["$value"]["components"] == [0.65, 0.24, 350]
     assert primary["$value"]["alpha"] == 0.8
     assert primary["$value"]["hex"].startswith("#") and len(primary["$value"]["hex"]) == 7
-    assert len(tokens["light"]["color"]) == len(tokens["dark"]["color"]) == 20
-    assert tokens["light"]["shape"]["radius-box"] == {
+    assert len(tokens["color"]) == 20
+    assert tokens["shape"]["radius-box"] == {
         "$type": "dimension",
         "$value": {"value": 1, "unit": "rem"},
     }
-    assert tokens["light"]["shape"]["noise"] == {"$type": "number", "$value": 1}
+    assert tokens["shape"]["noise"] == {"$type": "number", "$value": 1}
     assert tokens["font"]["body"]["$type"] == "fontFamily"
     assert tokens["font"]["body"]["$value"][0] == "ui-serif"
     assert tokens["type"]["base-size"]["$value"] == {"value": 18, "unit": "px"}
@@ -90,13 +90,13 @@ def test_values(client, live):
 def test_gray_colors_have_no_hue():
     artifacts = {
         "theme": {"name": "T", "revision": 1},
-        "colors": {m: {"base-100": "oklch(100% 0 0)"} for m in ("light", "dark")},
-        "colors_hex": {m: {"base-100": "#ffffff"} for m in ("light", "dark")},
-        "shape": {"light": {}, "dark": {}},
+        "colors": {"base-100": "oklch(100% 0 0)"},
+        "colors_hex": {"base-100": "#ffffff"},
+        "shape": {},
         "fonts": {},
         "type": {},
     }
-    value = build_tokens(artifacts)["light"]["color"]["base-100"]["$value"]
+    value = build_tokens(artifacts)["color"]["base-100"]["$value"]
     assert value["components"][2] == "none"
     assert errors(build_tokens(artifacts)) == []
 

@@ -145,10 +145,10 @@ def test_the_page_has_the_header_components_and_the_editor(client, django_user_m
     # Its own bundled daisyUI stylesheet, then the theme's (from {% theme_head %}).
     assert "capy_theme/editor/components.css" in html
     assert html.index("capy_theme/editor/components.css") < html.index('id="capy-editor"')
-    # The header: site name, tagline, Light / Dark / Auto, a link to the admin.
+    # The header: site name, tagline, a link to the admin.
     assert "Capy Co" in html and "Soft and calm" in html
-    for mode in ("Light", "Dark", "Auto"):
-        assert f">{mode}<" in html
+    # A theme is a single scheme, so the page previews it in its own scheme.
+    assert f'data-theme="capy-{active.scheme}"' in html
     assert 'href="/admin/"' in html
     # Every component, and the editor on the requested theme.
     for heading in ("Buttons", "Badges", "Card", "Alerts", "Table", "Form fields", "Headings"):
@@ -200,16 +200,18 @@ def test_the_page_doesnt_need_the_projects_context_processors(client, django_use
     # gets the full page: the view supplies `theme` and `request` itself.
     log_in(client, django_user_model, "change_theme")
     html = client.get(f"{URL}?edit={active.pk}").content.decode()
-    assert "Capy Co" in html and ">Dark<" in html and 'id="capy-editor"' in html
+    assert "Capy Co" in html and 'data-theme="capy-' in html and 'id="capy-editor"' in html
 
 
-def test_the_preview_toggle_is_internal_not_the_public_tags(client, django_user_model, active):
-    # The editor is self-contained: its own preview toggle + script, and none of the
-    # public switching tags' output, so stripping those tags (v2) doesn't touch it.
+def test_the_page_previews_the_theme_in_its_scheme_and_is_self_contained(
+    client, django_user_model, active
+):
+    # A theme is a single scheme, so the page previews it in its own scheme (data-theme
+    # on <html>), and it emits none of the public switching tags' output, so stripping
+    # those tags (v2) doesn't touch it.
     log_in(client, django_user_model, "change_theme")
     html = client.get(f"{URL}?edit={active.pk}").content.decode()
-    assert "data-capy-preview-mode=" in html
-    assert "capy_theme/editor/mode-preview.js" in html
+    assert f'data-theme="capy-{active.scheme}"' in html
     # No output from {% theme_mode_toggle %} / {% theme_picker %} / the public head script.
     assert "/theme/mode/" not in html
     assert 'data-capy-mode="' not in html

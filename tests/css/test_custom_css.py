@@ -86,9 +86,7 @@ def form_data(**extra):
     return {
         "name": "Main",
         "slug": "main",
-        "light_base": "light",
-        "dark_base": "dark",
-        "visitors_can_switch": "on",
+        "base": "light",
         "assets-TOTAL_FORMS": "0",
         "assets-INITIAL_FORMS": "0",
         "revisions-TOTAL_FORMS": "0",

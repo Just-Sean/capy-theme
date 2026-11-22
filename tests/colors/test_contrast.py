@@ -33,22 +33,22 @@ def gray_on_white():
     return Theme.objects.create(
         name="Main",
         slug="main",
-        settings={"colors": {"light": {"base-100": WHITE, "base-content": LIGHT_GRAY}}},
+        settings={"colors": {"base-100": WHITE, "base-content": LIGHT_GRAY}},
     )
 
 
 def test_the_issue_check_light_gray_on_white_fails_aa():
-    report = contrast_report(draft_values(gray_on_white(), "light"))
+    report = contrast_report(draft_values(gray_on_white()))
     entry = next(e for e in report if (e["background"], e["text"]) == ("base-100", "base-content"))
     assert entry["rating"] == "fail"
 
 
 def test_rating_shows_next_to_each_color_in_the_form():
     form = ThemeForm(instance=gray_on_white())
-    help_text = form.fields["color_light_base_content"].help_text
+    help_text = form.fields["color_base_content"].help_text
     assert "fails AA" in help_text
     assert "Contrast Background / Text on background:" in help_text
-    assert "passes" in form.fields["color_light_primary"].help_text
+    assert "passes" in form.fields["color_primary"].help_text
 
 
 def test_warnings_dont_stop_saving_or_publishing():
@@ -57,11 +57,9 @@ def test_warnings_dont_stop_saving_or_publishing():
         data={
             "name": "Main",
             "slug": "main",
-            "light_base": "light",
-            "dark_base": "dark",
-            "visitors_can_switch": "on",
-            "color_light_base_100": WHITE,
-            "color_light_base_content": LIGHT_GRAY,
+            "base": "light",
+            "color_base_100": WHITE,
+            "color_base_content": LIGHT_GRAY,
         },
         instance=theme,
     )
@@ -81,4 +79,4 @@ def test_admin_shows_the_contrast_table(client, django_user_model):
 
 def test_new_theme_has_no_ratings_yet():
     form = ThemeForm()
-    assert "Contrast" not in form.fields["color_light_primary"].help_text
+    assert "Contrast" not in form.fields["color_primary"].help_text

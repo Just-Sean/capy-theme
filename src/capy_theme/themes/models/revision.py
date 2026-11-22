@@ -17,7 +17,7 @@ class ThemeRevision(models.Model):
     theme = models.ForeignKey(Theme, on_delete=models.CASCADE, related_name="revisions")
     number = models.PositiveIntegerField(help_text="1 for the theme's first publish, then 2, 3…")
     snapshot = models.JSONField(
-        help_text="The theme's light and dark base names and their values, logo and settings."
+        help_text="The theme's base name and scheme, its values, logo and settings."
     )
     css_version = models.CharField(
         max_length=16,

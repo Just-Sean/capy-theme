@@ -38,8 +38,8 @@ def picture(size=(1600, 1600), fmt="JPEG", mode="RGB", color="red"):
 def live(settings_values=None, image=None, alt=""):
     theme = Theme.objects.create(name="T", slug="t", settings=settings_values or {})
     if image is not None:
-        asset = add_asset(theme, "social", "light", image, alt)
-        theme.settings = {**theme.settings, "images": {"social": {"light": asset.pk}}}
+        asset = add_asset(theme, "social", image, alt)
+        theme.settings = {**theme.settings, "images": {"social": asset.pk}}
         theme.save()
     revision = publish(theme)
     activate(theme)
@@ -71,7 +71,7 @@ def test_svg_isnt_accepted_for_sharing():
     theme = Theme.objects.create(name="T", slug="t")
     svg = SimpleUploadedFile("s.svg", b'<svg xmlns="http://www.w3.org/2000/svg"/>')
     with pytest.raises(ValidationError, match="Upload a PNG or JPEG"):
-        add_asset(theme, "social", "light", svg)
+        add_asset(theme, "social", svg)
 
 
 # Controls
@@ -79,20 +79,19 @@ def test_svg_isnt_accepted_for_sharing():
 
 def test_admin_sharing_image_field():
     theme = Theme.objects.create(name="T", slug="t")
-    asset = add_asset(theme, "social", "light", picture())
+    asset = add_asset(theme, "social", picture())
     data = {
         "name": "T",
         "slug": "t",
-        "light_base": "light",
-        "dark_base": "dark",
-        "visitors_can_switch": "on",
-        "image_social_light": str(asset.pk),
+        "base": "light",
+        "image_social": str(asset.pk),
     }
     form = ThemeForm(data=data, instance=theme)
-    assert "image_social_dark" not in form.fields
+    # One scheme, so the sharing image has a single field and no description.
+    assert "image_social" in form.fields
     assert "social_description" not in form.fields
     assert form.is_valid(), form.errors
-    assert form.save().settings == {"images": {"social": {"light": asset.pk}}}
+    assert form.save().settings == {"images": {"social": asset.pk}}
 
 
 def test_editor_offers_the_sharing_image_slot(client, django_user_model):
@@ -103,8 +102,8 @@ def test_editor_offers_the_sharing_image_slot(client, django_user_model):
     client.force_login(user)
     theme = Theme.objects.create(name="T", slug="t")
     state = client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()
-    slots = {s["name"]: s["modes"] for s in state["controls"]["image_slots"]}
-    assert slots["social"] == ["light"]
+    slots = [s["name"] for s in state["controls"]["image_slots"]]
+    assert "social" in slots
     assert "social_settings" not in state["controls"]
     assert "app_settings" not in state["controls"]
 

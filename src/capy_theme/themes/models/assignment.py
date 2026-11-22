@@ -14,15 +14,26 @@ DOMAIN = re.compile(
 
 
 class ThemeAssignment(models.Model):
-    """Which theme is active, on every site or on one domain.
+    """Which theme is the default for one scheme, on every site or one domain.
 
+    A theme is a single scheme (light or dark), so there's one default per scheme:
+    a default light theme and a default dark theme. `scheme` follows the theme.
     The default assignment has no dates; change it with active.activate().
     Scheduled assignments have a start and/or end date and win while they're
     running (start ≤ now < end), e.g. a holiday theme. An assignment with a site
     (domain) applies only there and wins over the ones for every site.
     """
 
+    SCHEME_CHOICES = [("light", "Light"), ("dark", "Dark")]
+
     theme = models.ForeignKey(Theme, on_delete=models.CASCADE, related_name="assignments")
+    scheme = models.CharField(
+        max_length=5,
+        choices=SCHEME_CHOICES,
+        default="light",
+        editable=False,
+        help_text="The theme's scheme; set from the theme.",
+    )
     site = models.CharField(
         max_length=255, blank=True, help_text="Domain this applies to. Blank means every site."
     )
@@ -32,17 +43,17 @@ class ThemeAssignment(models.Model):
 
     class Meta:
         constraints = [
-            # Only one default (undated) assignment per site.
+            # Only one default (undated) assignment per site and scheme.
             models.UniqueConstraint(
-                fields=["site"],
+                fields=["site", "scheme"],
                 condition=models.Q(starts_at__isnull=True, ends_at__isnull=True),
-                name="one_default_assignment_per_site",
+                name="one_default_assignment_per_site_scheme",
             ),
         ]
 
     def __str__(self):
         if not self.is_scheduled:
-            return f"{self.theme} (default)"
+            return f"{self.theme} ({self.scheme} default)"
         return f"{self.theme} ({self.starts_at or '…'} to {self.ends_at or '…'})"
 
     @property
@@ -57,6 +68,9 @@ class ThemeAssignment(models.Model):
 
     def clean(self):
         super().clean()
+        # The scheme always follows the theme (a light theme is a light default).
+        if self.theme_id:
+            self.scheme = self.theme.scheme
         self.site = self.site.strip().lower()
         if self.site and not DOMAIN.fullmatch(self.site):
             raise ValidationError(

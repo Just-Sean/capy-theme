@@ -9,11 +9,11 @@ from capy_theme.colors.values import effective_values
 from capy_theme.themes.catalog import THEMES
 
 
-def snapshot(light=None, base="light"):
+def snapshot(colors=None, base="light"):
     return {
-        "light_values": dict(THEMES[base]["values"]),
-        "dark_values": dict(THEMES["dark"]["values"]),
-        "settings": {"colors": {"light": light or {}}},
+        "scheme": THEMES[base]["scheme"],
+        "values": dict(THEMES[base]["values"]),
+        "settings": {"colors": colors or {}},
     }
 
 
@@ -26,17 +26,15 @@ PALE_YELLOW = "oklch(92% 0.12 95)"
 
 
 def test_the_issue_check_dark_primary_gets_light_text_and_vice_versa():
-    on_dark = effective_values(snapshot({"primary": DARK_BLUE}), "light")["--color-primary-content"]
-    on_light = effective_values(snapshot({"primary": PALE_YELLOW}), "light")[
-        "--color-primary-content"
-    ]
+    on_dark = effective_values(snapshot({"primary": DARK_BLUE}))["--color-primary-content"]
+    on_light = effective_values(snapshot({"primary": PALE_YELLOW}))["--color-primary-content"]
     assert lightness(on_dark) > 0.9
     assert lightness(on_light) < 0.3
 
 
 @pytest.mark.parametrize("name", WITH_CONTENT)
 def test_every_colored_element_gets_readable_text(name):
-    values = effective_values(snapshot({name: DARK_BLUE}), "light")
+    values = effective_values(snapshot({name: DARK_BLUE}))
     assert contrast(values[f"--color-{name}-content"], DARK_BLUE) >= 7
 
 
@@ -58,19 +56,19 @@ def test_text_is_readable_on_any_color(background):
 
 def test_a_text_color_set_by_hand_is_kept():
     values = effective_values(
-        snapshot({"primary": DARK_BLUE, "primary-content": "oklch(50% 0.2 30)"}), "light"
+        snapshot({"primary": DARK_BLUE, "primary-content": "oklch(50% 0.2 30)"})
     )
     assert values["--color-primary-content"] == "oklch(50% 0.2 30)"
 
 
 def test_text_colors_of_colors_not_overridden_come_from_the_base():
-    values = effective_values(snapshot({"primary": DARK_BLUE}), "light")
+    values = effective_values(snapshot({"primary": DARK_BLUE}))
     base = THEMES["light"]["values"]
     assert values["--color-secondary-content"] == base["--color-secondary-content"]
 
 
 def test_background_shades_and_text_follow_an_overridden_background():
-    values = effective_values(snapshot({"base-100": "oklch(96% 0.02 80)"}), "light")
+    values = effective_values(snapshot({"base-100": "oklch(96% 0.02 80)"}))
     assert lightness(values["--color-base-200"]) < 0.96
     assert lightness(values["--color-base-300"]) < lightness(values["--color-base-200"])
     assert contrast(values["--color-base-content"], "oklch(96% 0.02 80)") >= 7
@@ -78,7 +76,7 @@ def test_background_shades_and_text_follow_an_overridden_background():
 
 def test_shades_set_by_hand_are_kept():
     values = effective_values(
-        snapshot({"base-100": "oklch(96% 0.02 80)", "base-200": "oklch(50% 0 0)"}), "light"
+        snapshot({"base-100": "oklch(96% 0.02 80)", "base-200": "oklch(50% 0 0)"})
     )
     assert values["--color-base-200"] == "oklch(50% 0 0)"
 
@@ -88,4 +86,4 @@ def test_very_dark_backgrounds_get_lighter_shades():
 
 
 def test_nothing_is_worked_out_without_overrides():
-    assert effective_values(snapshot(), "light") == THEMES["light"]["values"]
+    assert effective_values(snapshot()) == THEMES["light"]["values"]

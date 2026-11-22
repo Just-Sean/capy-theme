@@ -244,7 +244,7 @@
   editor.applyCss = applyCss;
 
   // Ask the server for the CSS, values and contrast of unsaved values, and show
-  // them on the page. `changes` is {light_base?, dark_base?, settings?: {colors?, shape?}}.
+  // them on the page. `changes` is {base?, settings?: {colors?, shape?}}.
   // Nothing is saved.
   // Bumped by cancelPreview(), so a preview still on its way when the changes are
   // reverted can't put them back on the page (#261).

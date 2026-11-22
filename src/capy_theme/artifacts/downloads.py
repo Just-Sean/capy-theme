@@ -6,7 +6,7 @@ import json
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET
 
-from ..themes.active import get_active_theme
+from ..themes.active import primary_theme
 from .api import cache_static
 from .build import get_artifacts
 from .daisyui_block import build_block
@@ -32,8 +32,8 @@ def design_tokens(request):
 
 @require_GET
 def daisyui_theme(request):
-    """/theme/daisyui-theme.css: the theme as daisyUI theme blocks (light and dark)."""
-    theme = get_active_theme(request)
+    """/theme/daisyui-theme.css: the theme as a daisyUI theme block."""
+    theme = primary_theme(request)
     if theme is None or theme.live_revision is None:
         return JsonResponse({"error": "No theme is published."}, status=404)
     content = build_block(theme, theme.live_revision)

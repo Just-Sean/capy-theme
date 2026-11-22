@@ -16,33 +16,29 @@ SETTING_LABELS = {
     "site_name": "Site name",
     "tagline": "Tagline",
     "logo_alt": "Logo alt text",
-    "default_mode": "Default mode",
-    "visitors_can_switch": "Visitors can switch",
 }
 
 
 def describe(snapshot):
     """Return {readable name: value} for everything a revision saved.
 
-    E.g. {"Light base": "cupcake", "Light color: Primary": "oklch(...)",
+    E.g. {"Base": "cupcake", "Color: Primary": "oklch(...)",
     "Shape: Box corner radius": 0.0}. Used to compare revisions.
     """
     settings = snapshot.get("settings", {})
     rows = {
-        "Light base": snapshot.get("light_base"),
-        "Dark base": snapshot.get("dark_base"),
+        "Base": snapshot.get("base"),
+        "Scheme": snapshot.get("scheme"),
     }
-    for slot, modes in snapshot.get("images", {}).items():
-        for mode, image in modes.items():
-            rows[f"Image: {SLOTS.get(slot, (slot,))[0]} ({mode})"] = image["file"]
+    for slot, image in snapshot.get("images", {}).items():
+        rows[f"Image: {SLOTS.get(slot, (slot,))[0]}"] = image["file"]
     if snapshot.get("logo"):
-        rows["Image: Main logo (light)"] = snapshot["logo"]  # before logo slots
+        rows["Image: Main logo"] = snapshot["logo"]  # before logo slots
     for key, title in SETTING_LABELS.items():
         rows[title] = settings.get(key)
-    for scheme in ("light", "dark"):
-        chosen = settings.get("colors", {}).get(scheme, {})
-        for name in COLOR_NAMES:
-            rows[f"{scheme.capitalize()} color: {label(name)}"] = chosen.get(name)
+    chosen = settings.get("colors", {})
+    for name in COLOR_NAMES:
+        rows[f"Color: {label(name)}"] = chosen.get(name)
     shape = settings.get("shape", {})
     for name, spec in SIZES.items():
         rows[f"Shape: {spec[4]}"] = shape.get(name)
@@ -84,8 +80,7 @@ def restore(theme, revision, user=None, restore_custom_css=True):
     """
     snapshot = revision.snapshot
     current_custom_css = theme.settings.get("custom_css")
-    theme.light_base = snapshot["light_base"]
-    theme.dark_base = snapshot["dark_base"]
+    theme.base = snapshot["base"]
     theme.settings = dict(snapshot.get("settings", {}))
     if not restore_custom_css:
         theme.settings.pop("custom_css", None)
@@ -105,11 +100,7 @@ def _drop_deleted_images(theme):
     """Forget chosen images that have since been deleted, so the restore still works."""
     chosen = theme.settings.get("images", {})
     existing = set(theme.assets.values_list("pk", flat=True))
-    kept = {}
-    for slot, modes in chosen.items():
-        modes = {mode: pk for mode, pk in modes.items() if pk in existing}
-        if modes:
-            kept[slot] = modes
+    kept = {slot: pk for slot, pk in chosen.items() if pk in existing}
     if kept:
         theme.settings["images"] = kept
     else:

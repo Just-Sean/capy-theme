@@ -6,14 +6,13 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 
-from ..colors.names import SCHEMES
 from ..colors.values import contrast_report, draft_values
 from ..css.custom import can_edit_custom_css, without_custom_css
 from ..css.custom import summary as custom_css_summary
 from ..css.stylesheet import stylesheet_url
 from ..editor.access import can_edit
 from ..models import Theme
-from ..themes.active import get_active_theme
+from ..themes.active import default_themes
 from .fieldsets import THEME_FIELDSETS
 from .form_colors import _pair
 from .form_images import ask_to_choose_again, save_images
@@ -38,8 +37,8 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, SavePublishMixin, admin.M
     list_display = [
         "name",
         "slug",
-        "light_base",
-        "dark_base",
+        "base",
+        "scheme_label",
         "is_active",
         "offered_to_visitors",
         "live_revision_number",
@@ -47,7 +46,7 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, SavePublishMixin, admin.M
         "base_changed_in_daisyui",
         "updated_at",
     ]
-    list_filter = ["light_base", "dark_base"]
+    list_filter = ["base"]
     search_fields = ["name", "slug"]
     prepopulated_fields = {"slug": ["name"]}
     readonly_fields = [
@@ -85,26 +84,23 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, SavePublishMixin, admin.M
 
     @admin.display(description="WCAG contrast (saved draft)")
     def contrast_table(self, theme):
-        """Every color pair's contrast rating, for light and dark. Warnings only."""
+        """Every color pair's contrast rating. Warnings only."""
         if theme.pk is None:
             return "Save the theme to see its contrast ratings."
-        rows = []
-        for scheme in SCHEMES:
-            values = draft_values(theme, scheme)
-            if not values:
-                continue
-            for entry in contrast_report(values):
-                rows.append(
-                    format_html(
-                        "<tr><td>{}</td><td>{}</td><td>{}:1</td><td>{}</td></tr>",
-                        scheme.capitalize(),
-                        _pair(entry),
-                        entry["ratio"],
-                        "⚠ fails AA" if entry["rating"] == "fail" else entry["rating"],
-                    )
-                )
+        values = draft_values(theme)
+        if not values:
+            return "Save the theme to see its contrast ratings."
+        rows = [
+            format_html(
+                "<tr><td>{}</td><td>{}:1</td><td>{}</td></tr>",
+                _pair(entry),
+                entry["ratio"],
+                "⚠ fails AA" if entry["rating"] == "fail" else entry["rating"],
+            )
+            for entry in contrast_report(values)
+        ]
         return format_html(
-            "<table><thead><tr><th>Mode</th><th>Pair</th><th>Ratio</th><th>Rating</th></tr>"
+            "<table><thead><tr><th>Pair</th><th>Ratio</th><th>Rating</th></tr>"
             "</thead><tbody>{}</tbody></table>"
             "<p>AA needs 4.5:1 and AAA 7:1 for normal text. These are warnings: saving and "
             "publishing still work.</p>",
@@ -122,10 +118,15 @@ class ThemeAdmin(ImportExportMixin, PublishPagesMixin, SavePublishMixin, admin.M
             settings["custom_css"] = f"({custom_css_summary(theme.settings)})"
         return format_html("<pre>{}</pre>", json.dumps(settings, indent=2, sort_keys=True))
 
+    @admin.display(description="Scheme")
+    def scheme_label(self, theme):
+        return theme.scheme or "—"
+
     @admin.display(boolean=True, description="Showing now")
     def is_active(self, theme):
-        active = get_active_theme()
-        return active is not None and active.pk == theme.pk
+        """True if this theme is the domain's default for its scheme (light or dark)."""
+        defaults = default_themes()
+        return any(current is not None and current.pk == theme.pk for current in defaults.values())
 
     def has_publish_permission(self, request, obj=None):
         """Publishing, activating and (later) restoring need the publish_theme permission."""

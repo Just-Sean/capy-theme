@@ -93,8 +93,8 @@ class ThemeAssetInline(admin.TabularInline):
     formset = ThemeAssetFormSet
     classes = ["collapse"]  # foldable like every section; starts folded
     extra = 0
-    fields = ["preview", "slot", "mode", "alt_text", "details", "used"]
-    readonly_fields = ["preview", "slot", "mode", "details", "used"]
+    fields = ["preview", "slot", "alt_text", "details", "used"]
+    readonly_fields = ["preview", "slot", "details", "used"]
     verbose_name = "image"
     verbose_name_plural = "Media"
 

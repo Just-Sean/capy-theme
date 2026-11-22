@@ -61,15 +61,13 @@ def admin_client(client, django_user_model):
     return client
 
 
-def admin_data(upload, slot="logo_main", mode="light", alt="Logo"):
+def admin_data(upload, slot="logo_main", alt="Logo"):
     """The theme page with a new image uploaded in a slot's own field (#271)."""
-    name = f"image_{slot}_{mode}"
+    name = f"image_{slot}"
     return {
         "name": "Main",
         "slug": "main",
-        "light_base": "light",
-        "dark_base": "dark",
-        "visitors_can_switch": "on",
+        "base": "light",
         f"{name}_upload": upload,
         f"{name}_upload_alt": alt,  # the new image's own alt text box
         "assets-TOTAL_FORMS": "0",
@@ -90,7 +88,7 @@ def test_admin_upload_strips_gps(admin_client, theme):
     with asset.original.open("rb") as f:
         assert not Image.open(f).getexif()
     theme.refresh_from_db()
-    assert theme.settings["images"] == {"logo_main": {"light": asset.pk}}  # chosen, no 2nd save
+    assert theme.settings["images"] == {"logo_main": asset.pk}  # chosen, no 2nd save
     assert b"40 \xc3\x97 20" in admin_client.get(url).content  # details shown
 
 
@@ -120,7 +118,7 @@ def upload_url(theme):
 def test_editor_upload(editor_client, theme):
     upload = SimpleUploadedFile("holiday.jpg", gps_photo(), content_type="image/jpeg")
     response = editor_client.post(
-        upload_url(theme), {"slot": "icon", "mode": "light", "alt_text": "", "file": upload}
+        upload_url(theme), {"slot": "icon", "alt_text": "", "file": upload}
     )
     assert response.status_code == 200, response.content
     body = response.json()

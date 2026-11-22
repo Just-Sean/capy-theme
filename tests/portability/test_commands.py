@@ -13,7 +13,7 @@ from PIL import Image
 from capy_theme.images.icons import icon_folder
 from capy_theme.images.uploads import add_asset
 from capy_theme.models import Font, Theme, ThemeAsset, ThemeAssetVariant
-from capy_theme.themes.active import get_active_theme
+from capy_theme.themes.active import primary_theme
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -36,13 +36,13 @@ def png(size=(300, 100), name="logo.png"):
 
 @pytest.fixture
 def theme():
-    theme = Theme.objects.create(name="Main", slug="main", light_base="cupcake")
-    logo = add_asset(theme, "logo_main", "light", png())
-    icon = add_asset(theme, "icon", "light", png((256, 256), "icon.png"))
+    theme = Theme.objects.create(name="Main", slug="main", base="cupcake")
+    logo = add_asset(theme, "logo_main", png())
+    icon = add_asset(theme, "icon", png((256, 256), "icon.png"))
     theme.settings = {
         "site_name": "Capy",
         "fonts": {"body": Font.objects.get(family="System sans").pk},
-        "images": {"logo_main": {"light": logo.pk}, "icon": {"light": icon.pk}},
+        "images": {"logo_main": logo.pk, "icon": icon.pk},
     }
     theme.save()
     return theme
@@ -59,11 +59,11 @@ def test_the_issue_check_a_fresh_install_themed_from_the_command_line(theme, med
     assert "Exported “Main”" in run("theme_export", "main", "--output", str(path))
     # A fresh install: no themes or images.
     Theme.objects.all().delete()
-    assert get_active_theme() is None
+    assert primary_theme() is None
     output = run("theme_import", str(path), "--activate")
     assert "Imported “Main” (slug main) as a draft." in output
     assert "Published revision 1." in output and "is now the site's theme" in output
-    active = get_active_theme()
+    active = primary_theme()
     assert active.slug == "main" and active.live_revision.number == 1
     assert active.assets.count() == 2
 
@@ -81,7 +81,7 @@ def test_import_publish_without_activating(theme, media):
     imported = Theme.objects.get(slug="main-imported")
     assert imported.live_revision is not None
     assert "is now the site's theme" not in output
-    assert get_active_theme() is None
+    assert primary_theme() is None
 
 
 def test_import_reports_problems(media):
@@ -96,7 +96,7 @@ def test_import_reports_problems(media):
 def test_publish_and_activate(theme):
     output = run("theme_publish", "main", "--note", "First", "--activate")
     assert "Published “Main” as revision 1." in output
-    assert get_active_theme() == theme
+    assert primary_theme() == theme
     assert theme.revisions.get().note == "First"
     assert "Nothing to publish" in run("theme_publish", "main")
 

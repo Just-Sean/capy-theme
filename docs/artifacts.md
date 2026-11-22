@@ -13,14 +13,14 @@ or something that builds a web app manifest or link-preview tags:
 from capy_theme.artifacts import get_artifacts
 
 artifacts = get_artifacts(request)  # None if no theme is published
-artifacts["logos"]["logo_email"]["light"]["url"]  # every logo slot, light and dark
-artifacts["colors_hex"]["light"]["primary"]  # also "colors" (OKLCH)
+artifacts["logos"]["logo_email"]["url"]  # every logo slot (one image each)
+artifacts["colors_hex"]["primary"]  # also "colors" (OKLCH)
 artifacts["icons"]["icon-512.png"]  # every generated icon
 artifacts["sharing_image"]  # url, width, height, alt
 ```
 
 In templates: `{% theme_artifacts as artifacts %}`, then e.g.
-`{{ artifacts.logos.logo_email.light.url }}`.
+`{{ artifacts.logos.logo_email.url }}`.
 
 > **Building a control (a light/dark toggle, a theme picker, a logo)?** capy-theme
 > exposes the data for it but renders no widget and applies nothing to the page — the
@@ -31,15 +31,14 @@ What's in it (all from the published revision; with a request, URLs are absolute
 
 | Key | Contents |
 | --- | --- |
-| `theme` | `name`, `slug`, `revision` |
+| `theme` | `name`, `slug`, `scheme` (`"light"` or `"dark"`), `revision` |
 | `branding` | `site_name`, `tagline`, `logo_alt` |
-| `colors`, `colors_hex` | The 20 colors per mode (`light`, `dark`), as OKLCH and as `#rrggbb` |
+| `colors`, `colors_hex` | The 20 colors, as OKLCH and as `#rrggbb` |
 | `fonts` | Per role the theme sets: `family`, `stack` (CSS `font-family`), `source`, `stylesheet` (external-font URL, else `""`), `files` (each `url`, `weight`, `style`, `unicode_range`) |
-| `logos` | The six logo slots, `light` and `dark`, after fallbacks: `url`, `width`, `height`, `alt`, `content_type`, `variants` (smaller copies: `url`, `width`, `format`) |
+| `logos` | The six logo slots, one image each, after fallbacks: `url`, `width`, `height`, `alt`, `content_type`, `variants` (smaller copies: `url`, `width`, `format`); `None` for an empty slot with no fallback |
 | `icons` | File name → URL: `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `icon-monochrome-512.png` |
 | `sharing_image` | `url`, `width`, `height`, `alt` (1200 × 630), or `None` |
-| `backgrounds` | `login` and `pattern`, each `light` and `dark` URL (or `None`) |
-| `mode` | `default`, `visitors_can_switch` |
+| `backgrounds` | `login` and `pattern`, each a URL (or `None`) |
 | `stylesheet_url` | The theme stylesheet |
 
 ## The JSON API
@@ -49,21 +48,24 @@ includes `capy_theme.urls`) and does all the using itself — capy-theme decides
 for it:
 
 - **`GET /theme/themes.json`** — the catalog of available themes (the ones the admin
-  offers to visitors, plus the default). Each entry:
+  offers to visitors, plus the domain's default light and dark themes). Each entry:
 
   | Field | Contents |
   | --- | --- |
   | `slug`, `name` | The theme's slug and display name |
-  | `default` | `true` for the admin's default theme |
-  | `light`, `dark` | Each `{ "base": <daisyUI base>, "swatch": <primary #rrggbb>, "background": <base-100 #rrggbb> }` — enough to show a light/dark preview |
+  | `scheme` | `"light"` or `"dark"` |
+  | `default` | `true` when it's the domain's default theme **for its scheme** |
+  | `swatch` | The primary color as `#rrggbb` — a preview swatch |
+  | `background` | The base-100 (background) color as `#rrggbb` |
   | `assets_url` | The theme's assets endpoint (below) |
   | `stylesheet_url` | The theme's stylesheet |
 
-  Always `200` (an empty list when nothing is published).
+  The list holds the themes offered to visitors plus the domain's default light and
+  dark themes. Always `200` (an empty list when nothing is published).
 
 - **`GET /theme/themes/<slug>.json`** — one theme's full assets: the same data as
-  `get_artifacts()` (the table above), by slug. `<slug>` may be `default` for the admin's
-  default theme. `404` for an unknown, unpublished, or not-offered theme.
+  `get_artifacts()` (the table above), by slug. `<slug>` may be `default` for the domain's
+  primary theme. `404` for an unknown, unpublished, or not-offered theme.
 
 Both carry an `ETag` (send it back in `If-None-Match` for `304 Not Modified` until the
 theme changes) and `Cache-Control: public, max-age=60`. They're keyed only by slug (no
@@ -107,9 +109,9 @@ Since you render the mode toggle / theme picker yourself, make it accessible:
   a radio group for mutually-exclusive choices).
 - **Announce changes** to assistive tech via an `aria-live="polite"` region when you
   switch with JavaScript (no reload).
-- The catalog's `light`/`dark` entries are **colors** (`swatch`/`background`); a color
-  swatch alone is not an accessible label, so each theme option must also carry the
-  theme's text `name` (WCAG 1.4.1).
+- A catalog entry's `swatch`/`background` are **colors**; a color swatch alone is not an
+  accessible label, so each theme option must also carry the theme's text `name`
+  (WCAG 1.4.1).
 
 ### Django REST Framework and generated API docs (`CAPY_THEME_API`)
 
@@ -140,9 +142,9 @@ for design tools (Figma, Tokens Studio, Style Dictionary) and native app builds.
 It's made from the same data as the JSON API. File name `<theme slug>.tokens.json`,
 media type `application/design-tokens+json`.
 
-- `light` and `dark` groups: `color` (all 20, as OKLCH components with a 6-digit
-  `hex` fallback; colorless grays have hue `"none"`) and `shape` (radii and sizes
-  as `rem`/`px` dimensions, depth and noise as numbers).
+- `color`: all 20, as OKLCH components with a 6-digit `hex` fallback; colorless grays
+  have hue `"none"`.
+- `shape`: radii and sizes as `rem`/`px` dimensions, depth and noise as numbers.
 - `font`: a `fontFamily` token per role the theme sets (the stack as a list).
 - `type`: base size, heading scale, line height and heading weight, if set.
 
@@ -151,22 +153,21 @@ format's official JSON Schema (`tests/artifacts/dtcg/`).
 
 ## daisyUI theme blocks
 
-`/theme/daisyui-theme.css` downloads the published theme as two daisyUI theme
-blocks, for projects that compile the theme into their own Tailwind stylesheet
-instead of loading capy-theme's: `<slug>-light` (the default) and `<slug>-dark`
-(used when the device prefers dark). Paste it into your Tailwind source after the
-daisyUI plugin:
+`/theme/daisyui-theme.css` downloads the published theme as one daisyUI theme
+block, for projects that compile the theme into their own Tailwind stylesheet
+instead of loading capy-theme's. The block is named `<slug>`, and is the default
+when the theme is a light scheme or `prefersdark` when it's a dark scheme. Paste it
+into your Tailwind source after the daisyUI plugin:
 
 ```css
 @import "tailwindcss";
 @plugin "daisyui";
-/* the downloaded blocks: */
-@plugin "daisyui/theme" { name: "main-light"; default: true; ... }
-@plugin "daisyui/theme" { name: "main-dark"; prefersdark: true; ... }
+/* the downloaded block (a light theme shown): */
+@plugin "daisyui/theme" { name: "main"; default: true; prefersdark: false; ... }
 ```
 
 With daisyUI's standalone plugin files (no npm), change `"daisyui/theme"` to the
-path of your `daisyui-theme.mjs`. The blocks carry daisyUI's own variables only
+path of your `daisyui-theme.mjs`. The block carries daisyUI's own variables only
 (colors, radii, sizes, border, depth, noise); fonts, the type scale, logos and
 the other extras come from the theme stylesheet or the API. The download is a snapshot:
 download it again after publishing changes.

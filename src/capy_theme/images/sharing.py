@@ -47,7 +47,7 @@ def make_sharing_image(asset):
 
 def sharing_image(snapshot):
     """The published sharing image: {"file", "width", "height", "alt"}, or None."""
-    image = snapshot.get("images", {}).get("social", {}).get("light")
+    image = snapshot.get("images", {}).get("social")
     if not image:
         return None
     for variant in image.get("variants", []):

@@ -24,8 +24,8 @@ def make_theme(**kwargs):
 
 def test_new_theme_has_defaults():
     theme = make_theme()
-    assert theme.light_base == "light"
-    assert theme.dark_base == "dark"
+    assert theme.base == "light"
+    assert theme.scheme == "light"
     assert theme.settings == {}
     assert isinstance(theme.public_id, uuid.UUID)
     assert theme.created_at is not None
@@ -49,30 +49,25 @@ def test_slug_must_be_unique():
         make_theme(name="Main 2")
 
 
-def test_bases_can_be_any_theme_of_the_matching_type():
-    theme = make_theme(light_base="cupcake", dark_base="synthwave")
-    assert (theme.light_base, theme.dark_base) == ("cupcake", "synthwave")
+def test_base_can_be_any_builtin_theme_and_sets_the_scheme():
+    light = make_theme(base="cupcake")
+    assert (light.base, light.scheme) == ("cupcake", "light")
+    dark = make_theme(name="Night", slug="night", base="synthwave")
+    assert (dark.base, dark.scheme) == ("synthwave", "dark")
 
 
-@pytest.mark.parametrize(
-    ("field", "value"),
-    [
-        ("light_base", "synthwave"),  # a dark theme as the light base
-        ("dark_base", "cupcake"),  # a light theme as the dark base
-        ("light_base", "not-a-theme"),
-    ],
-)
-def test_wrong_or_unknown_base_cant_be_saved(field, value):
+@pytest.mark.parametrize("value", ["not-a-theme", "lite"])
+def test_unknown_base_cant_be_saved(value):
     with pytest.raises(ValidationError) as excinfo:
-        make_theme(**{field: value})
-    assert field in excinfo.value.message_dict
+        make_theme(base=value)
+    assert "base" in excinfo.value.message_dict
     assert not Theme.objects.exists()
 
 
 def test_base_must_be_allowed_by_project_setting(settings):
     settings.CAPY_THEME_BUILTIN_THEMES = ["light", "dark"]
     with pytest.raises(ValidationError):
-        make_theme(light_base="cupcake")
+        make_theme(base="cupcake")
 
 
 # Settings schema
@@ -110,8 +105,7 @@ def form_data(**kwargs):
     data = {
         "name": "Main",
         "slug": "main",
-        "light_base": "light",
-        "dark_base": "dark",
+        "base": "light",
         "settings": "{}",
         # The published-revisions inline's management form (it has no rows here).
         "assets-TOTAL_FORMS": "0",
@@ -124,30 +118,28 @@ def form_data(**kwargs):
     return data | kwargs
 
 
-def test_form_offers_only_matching_themes_as_bases():
+def test_form_offers_every_builtin_theme_as_the_base():
     form = ThemeForm()
-    light = {value for value, _ in form.fields["light_base"].choices}
-    dark = {value for value, _ in form.fields["dark_base"].choices}
-    assert {"light", "cupcake"} <= light
-    assert "synthwave" not in light
-    assert {"dark", "synthwave"} <= dark
-    assert "cupcake" not in dark
-    assert form.fields["light_base"].initial == "light"
-    assert form.fields["dark_base"].initial == "dark"
+    bases = {value for value, _ in form.fields["base"].choices}
+    # A single base field covers both schemes now (the scheme follows the base).
+    assert {"light", "cupcake", "dark", "synthwave"} <= bases
+    labels = dict(form.fields["base"].choices)
+    assert labels["cupcake"] == "cupcake (light)"
+    assert labels["synthwave"] == "synthwave (dark)"
+    assert form.fields["base"].initial == "light"
 
 
 def test_form_follows_project_setting(settings):
     settings.CAPY_THEME_BUILTIN_THEMES = ["light", "dark"]
     form = ThemeForm()
-    assert [value for value, _ in form.fields["light_base"].choices] == ["light"]
-    assert [value for value, _ in form.fields["dark_base"].choices] == ["dark"]
+    assert [value for value, _ in form.fields["base"].choices] == ["light", "dark"]
 
 
 def test_form_saves_a_valid_theme():
-    form = ThemeForm(data=form_data(light_base="cupcake", dark_base="dracula"))
+    form = ThemeForm(data=form_data(base="dracula"))
     assert form.is_valid(), form.errors
     theme = form.save()
-    assert (theme.light_base, theme.dark_base) == ("cupcake", "dracula")
+    assert (theme.base, theme.scheme) == ("dracula", "dark")
 
 
 def test_form_rejects_too_long_branding():
@@ -178,11 +170,11 @@ def test_admin_list_and_add_pages_load(admin_client_logged_in):
 def test_admin_creates_a_theme(admin_client_logged_in):
     response = admin_client_logged_in.post(
         reverse("admin:capy_theme_theme_add"),
-        form_data(name="Holiday", slug="holiday", light_base="cupcake", dark_base="dracula"),
+        form_data(name="Holiday", slug="holiday", base="dracula"),
     )
     assert response.status_code == 302, response.content
     theme = Theme.objects.get(slug="holiday")
-    assert (theme.light_base, theme.dark_base) == ("cupcake", "dracula")
+    assert (theme.base, theme.scheme) == ("dracula", "dark")
 
 
 def test_the_slug_default_is_reserved():
@@ -190,7 +182,5 @@ def test_the_slug_default_is_reserved():
     # choose a theme with this slug (#254).
     with pytest.raises(ValidationError, match='"default" is reserved'):
         Theme.objects.create(name="Default", slug="default")
-    form = ThemeForm(
-        data={"name": "Default", "slug": "default", "light_base": "light", "dark_base": "dark"}
-    )
+    form = ThemeForm(data={"name": "Default", "slug": "default", "base": "light"})
     assert not form.is_valid() and "slug" in form.errors

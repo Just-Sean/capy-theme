@@ -13,7 +13,7 @@
     changes: null, // the unsaved values: what the preview and Save receive
     baseline: "", // the values as last loaded or saved, to tell if anything changed
     spec: null, // what the panel offers (from the server)
-    scheme: "light", // the color tab being edited
+    scheme: "light", // the theme's scheme (light or dark), from the base
     latest: null, // the latest values, CSS and contrast from the server
     saved: null, // the state as last loaded or saved, which Revert goes back to
     assets: [], // the theme's uploaded images (image-slot.js adds new uploads)
@@ -41,26 +41,19 @@
     return ui.el("section", { class: "capy-editor-section" }, [fold]);
   };
 
-  // The color overrides for one mode, created if missing.
-  ui.colors = function (mode) {
+  // The theme's color overrides, created if missing.
+  ui.colors = function () {
     var settings = ui.changes.settings;
     settings.colors = settings.colors || {};
-    settings.colors[mode] = settings.colors[mode] || {};
-    return settings.colors[mode];
+    return settings.colors;
   };
 
   // The values without empty groups, so "nothing changed" compares equal.
   function normalized() {
     var copy = JSON.parse(JSON.stringify(ui.changes));
-    var c = copy.settings.colors || {};
-    Object.keys(c).forEach(function (mode) {
-      if (!Object.keys(c[mode]).length) delete c[mode];
-    });
-    if (!Object.keys(c).length) copy.settings.colors = {};
-    var images = copy.settings.images || {};
-    Object.keys(images).forEach(function (slot) {
-      if (!Object.keys(images[slot]).length) delete images[slot];
-    });
+    if (copy.settings.colors && !Object.keys(copy.settings.colors).length) {
+      copy.settings.colors = {};
+    }
     return copy;
   }
 
@@ -93,9 +86,9 @@
       return JSON.parse(JSON.stringify(value || {}));
     };
     ui.spec = state.controls;
+    ui.scheme = state.scheme || "light";
     ui.changes = {
-      light_base: state.light_base,
-      dark_base: state.dark_base,
+      base: state.base,
       settings: {},
       alts: {}, // edited alt text: {image id: text}, saved with the draft (#271)
     };
@@ -129,10 +122,19 @@
     ui.showDirty();
   };
 
+  // Preview this page in the theme's own scheme (a theme is light or dark). Updated
+  // when the base is changed, so switching a light base for a dark one re-themes the
+  // page. Forces data-theme so the draft CSS's capy-light / capy-dark block applies.
+  function previewScheme(scheme) {
+    document.documentElement.setAttribute("data-theme", "capy-" + (scheme || "light"));
+  }
+
   document.addEventListener("capy-editor:loaded", function (event) {
+    previewScheme(event.detail.scheme);
     ui.build(event.detail);
   });
   document.addEventListener("capy-editor:preview", function (event) {
+    previewScheme(event.detail.scheme);
     ui.latest = event.detail;
     ui.fill();
   });

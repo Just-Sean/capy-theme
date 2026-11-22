@@ -8,8 +8,8 @@ from .preview import apply_changes
 
 
 def main_logo_asset(theme):
-    """The draft's main logo (light), if it's a raster image; else None."""
-    pk = theme.settings.get("images", {}).get("logo_main", {}).get("light")
+    """The draft's main logo, if it's a raster image; else None."""
+    pk = theme.settings.get("images", {}).get("logo_main")
     asset = theme.assets.filter(pk=pk).first() if pk else None
     return asset if asset and asset.content_type != "image/svg+xml" else None
 
@@ -32,13 +32,12 @@ def save_draft(theme, data):
     """Store the editor's values in the theme's draft. Visitors see nothing until publish.
 
     Validated exactly like the preview. Only the editor's settings are changed;
-    the rest of the theme (name, branding, mode) is left as it is. `data` may also
+    the rest of the theme (name, branding) is left as it is. `data` may also
     have "alts": {asset id: alt text} for the theme's images (#271).
     """
     draft = apply_changes(theme, data)
     alts = _alts(theme, data.get("alts", {}))
-    theme.light_base = draft.light_base
-    theme.dark_base = draft.dark_base
+    theme.base = draft.base
     theme.settings = draft.settings
     theme.save()
     for asset, text in alts:

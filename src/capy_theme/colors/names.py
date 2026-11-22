@@ -12,9 +12,6 @@ COLOR_GROUPS = _DATA["groups"]
 COLOR_NAMES = [name for names in COLOR_GROUPS.values() for name in names]
 
 
-SCHEMES = ("light", "dark")
-
-
 # Labels that differ from the color's name.
 COLOR_LABELS = _DATA["labels"]
 
@@ -28,9 +25,9 @@ def label(name):
     return name.capitalize()
 
 
-def overrides(settings, scheme):
-    """Return {name: value} of a scheme's overridden colors from theme settings."""
-    return dict(settings.get("colors", {}).get(scheme, {}))
+def overrides(settings):
+    """Return {name: value} of the theme's overridden colors from its settings."""
+    return dict(settings.get("colors", {}))
 
 
 # Colors with a text ("-content") color.

@@ -59,10 +59,8 @@ def _describe(error):
     return f"{location}: {error.message}" if location else error.message
 
 
-def validate_base(name, scheme):
-    """Raise ValidationError unless name is an offered built-in theme of this scheme."""
-    names = {theme.name for theme in get_builtin_themes() if theme.scheme == scheme}
+def validate_base(name):
+    """Raise ValidationError unless name is an offered built-in daisyUI theme."""
+    names = {theme.name for theme in get_builtin_themes()}
     if name not in names:
-        raise ValidationError(
-            f"{name!r} is not an available {scheme} daisyUI theme.", code="invalid_base"
-        )
+        raise ValidationError(f"{name!r} is not an available daisyUI theme.", code="invalid_base")

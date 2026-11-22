@@ -60,7 +60,7 @@ class ScheduledThemeAdmin(PublishPermissionMixin, admin.ModelAdmin):
     def status(self, assignment):
         now = timezone.now()
         if assignment.is_running(now):
-            live = theme_at(now, assignment.site)
+            live = theme_at(now, assignment.scheme, assignment.site)
             return "Running" if live == assignment.theme else "Running (overlapped)"
         if assignment.starts_at and assignment.starts_at > now:
             return "Upcoming"

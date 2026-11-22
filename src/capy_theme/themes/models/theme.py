@@ -1,4 +1,4 @@
-"""The Theme model: a theme's draft look (bases and settings)."""
+"""The Theme model: a theme's draft look (base and settings)."""
 
 import copy
 import uuid
@@ -10,30 +10,28 @@ from ...fonts.library import snapshot_fonts
 from ...fonts.models import Font
 from ...images.logos import snapshot_images
 from ...images.models import ThemeAsset
-from ..catalog import builtin_values
+from ..catalog import builtin_scheme, builtin_values
 from ..validation import validate_base, validate_settings
 
 RESERVED_SLUG = "default"  # the visitor theme picker's "Site default"
 
 
 class Theme(models.Model):
-    """A saved theme: two built-in daisyUI bases plus the overrides in `settings`.
+    """A saved theme: one built-in daisyUI base plus the overrides in `settings`.
 
-    The fields here are the draft: editing a theme changes only the draft.
-    Publishing (see themes/publishing.py) copies the draft's look into a ThemeRevision,
-    and `live_revision` points at the one pages use.
+    A theme is a single scheme — light or dark — which comes from its base (see
+    the `scheme` property). The fields here are the draft: editing a theme changes
+    only the draft. Publishing (see themes/publishing.py) copies the draft's look
+    into a ThemeRevision, and `live_revision` points at the one pages use.
     """
 
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True)
-    # Names of built-in daisyUI themes (see themes/catalog.py). Not stored as model
+    # Name of a built-in daisyUI theme (see themes/catalog.py). Not stored as model
     # `choices`, because the list depends on the CAPY_THEME_BUILTIN_THEMES setting
     # and choices would end up in migrations. Checked in clean() instead.
-    light_base = models.CharField(
-        max_length=50, default="light", help_text="The built-in daisyUI theme used in light mode."
-    )
-    dark_base = models.CharField(
-        max_length=50, default="dark", help_text="The built-in daisyUI theme used in dark mode."
+    base = models.CharField(
+        max_length=50, default="light", help_text="The built-in daisyUI theme this is based on."
     )
     settings = models.JSONField(
         default=dict,
@@ -103,18 +101,17 @@ class Theme(models.Model):
             # /theme/choose/default/ means the site's own theme, so visitors could
             # never choose a theme with this slug (#254).
             errors["slug"] = [f'"{RESERVED_SLUG}" is reserved; choose another slug.']
-        for field, scheme in (("light_base", "light"), ("dark_base", "dark")):
-            try:
-                validate_base(getattr(self, field), scheme)
-            except ValidationError as error:
-                errors[field] = error.messages
+        try:
+            validate_base(self.base)
+        except ValidationError as error:
+            errors["base"] = error.messages
         if errors:
             raise ValidationError(errors)
 
     def _image_errors(self):
         """Chosen images must be this theme's, uploaded for that slot."""
         chosen = self.settings.get("images", {})
-        wanted = {(slot, pk) for slot, modes in chosen.items() for pk in modes.values()}
+        wanted = set(chosen.items())
         if not wanted:
             return []
         found = set()
@@ -129,6 +126,11 @@ class Theme(models.Model):
             for slot, pk in sorted(wanted - found)
         ]
 
+    @property
+    def scheme(self):
+        """ "light" or "dark", from the base theme (None if the base is unknown)."""
+        return builtin_scheme(self.base)
+
     def snapshot(self):
         """Return the draft's look: everything a revision copies when published.
 
@@ -136,13 +138,12 @@ class Theme(models.Model):
         a theme takes effect without publishing.
         """
         snapshot = {
-            "light_base": self.light_base,
-            "dark_base": self.dark_base,
-            # The bases' full values are copied too, so a later daisyUI update
+            "base": self.base,
+            "scheme": self.scheme,
+            # The base's full values are copied too, so a later daisyUI update
             # can't change or break a published theme. None if the base no
             # longer exists (such a draft can't be published).
-            "light_values": builtin_values(self.light_base),
-            "dark_values": builtin_values(self.dark_base),
+            "values": builtin_values(self.base),
             "settings": copy.deepcopy(self.settings),
         }
         # The chosen logos and images: their files, sizes and smaller copies.
@@ -159,31 +160,29 @@ class Theme(models.Model):
         return snapshot
 
     def base_changes(self):
-        """Return notes on daisyUI changes to the live revision's base themes.
+        """Return notes on daisyUI changes to the live revision's base theme.
 
         The live revision keeps the base values saved when it was published. If
-        the daisyUI catalog the module now ships has different values for a
+        the daisyUI catalog the module now ships has different values for the
         base, or no longer has it, this explains that the site still uses the
         saved version. Empty if nothing changed or the theme isn't published.
         """
         live = self.live_revision
         if live is None:
             return []
-        notes = []
-        for scheme in ("light", "dark"):
-            name = live.snapshot.get(f"{scheme}_base")
-            current = builtin_values(name)
-            if current is None:
-                notes.append(
-                    f"“{name}” no longer exists in daisyUI. Your site keeps using the saved "
-                    f"version. Choose a new {scheme} base to publish changes."
-                )
-            elif current != live.snapshot.get(f"{scheme}_values"):
-                notes.append(
-                    f"daisyUI has changed “{name}” since this theme was published. Your site "
-                    "keeps using the saved version. Publish again to use daisyUI's new one."
-                )
-        return notes
+        name = live.snapshot.get("base")
+        current = builtin_values(name)
+        if current is None:
+            return [
+                f"“{name}” no longer exists in daisyUI. Your site keeps using the saved "
+                "version. Choose a new base to publish changes."
+            ]
+        if current != live.snapshot.get("values"):
+            return [
+                f"daisyUI has changed “{name}” since this theme was published. Your site "
+                "keeps using the saved version. Publish again to use daisyUI's new one."
+            ]
+        return []
 
     @property
     def has_unpublished_changes(self):

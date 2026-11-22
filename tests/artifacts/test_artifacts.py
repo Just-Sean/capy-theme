@@ -45,22 +45,21 @@ def published():
         settings={"site_name": "Capy", "tagline": "Hello", "logo_alt": "Capy logo"},
     )
     assets = {
-        "main": add_asset(theme, "logo_main", "light", png(name="main.png")),
-        "main_dark": add_asset(theme, "logo_main", "dark", png(color="blue", name="dark.png")),
-        "email": add_asset(theme, "logo_email", "light", png(name="email.png"), "Email logo"),
-        "icon": add_asset(theme, "icon", "light", png((256, 256), name="icon.png")),
-        "social": add_asset(theme, "social", "light", png((1300, 700), name="share.png"), "Shop"),
-        "pattern": add_asset(theme, "background_pattern", "light", png((16, 16), name="p.png")),
+        "main": add_asset(theme, "logo_main", png(name="main.png")),
+        "email": add_asset(theme, "logo_email", png(name="email.png"), "Email logo"),
+        "icon": add_asset(theme, "icon", png((256, 256), name="icon.png")),
+        "social": add_asset(theme, "social", png((1300, 700), name="share.png"), "Shop"),
+        "pattern": add_asset(theme, "background_pattern", png((16, 16), name="p.png")),
     }
     theme.settings = {
         **theme.settings,
         "fonts": {"body": Font.objects.get(family="System sans").pk},
         "images": {
-            "logo_main": {"light": assets["main"].pk, "dark": assets["main_dark"].pk},
-            "logo_email": {"light": assets["email"].pk},
-            "icon": {"light": assets["icon"].pk},
-            "social": {"light": assets["social"].pk},
-            "background_pattern": {"light": assets["pattern"].pk},
+            "logo_main": assets["main"].pk,
+            "logo_email": assets["email"].pk,
+            "icon": assets["icon"].pk,
+            "social": assets["social"].pk,
+            "background_pattern": assets["pattern"].pk,
         },
     }
     theme.save()
@@ -76,32 +75,36 @@ def test_none_without_a_published_theme():
 def test_the_issue_check_every_artifact_without_touching_models(published):
     theme, assets = published
     artifacts = get_artifacts()
-    assert artifacts["theme"] == {"name": "Main", "slug": "main", "revision": 1}
+    assert artifacts["theme"] == {
+        "name": "Main",
+        "slug": "main",
+        "scheme": "light",
+        "revision": 1,
+    }
     assert artifacts["branding"] == {
         "site_name": "Capy",
         "tagline": "Hello",
         "logo_alt": "Capy logo",
     }
-    # Colors: all 20, per mode, as OKLCH and as hex for emails.
-    assert len(artifacts["colors"]["light"]) == 20
+    # Colors: all 20, flat, as OKLCH and as hex for emails.
+    assert len(artifacts["colors"]) == 20
     primary = THEMES["light"]["values"]["--color-primary"]
-    assert artifacts["colors"]["light"]["primary"] == primary
-    assert artifacts["colors_hex"]["light"]["primary"] == to_hex(primary, alpha=False)
-    assert artifacts["colors_hex"]["dark"]["base-100"].startswith("#")
+    assert artifacts["colors"]["primary"] == primary
+    assert artifacts["colors_hex"]["primary"] == to_hex(primary, alpha=False)
+    assert artifacts["colors_hex"]["base-100"].startswith("#")
     # Fonts.
     assert artifacts["fonts"]["body"]["family"] == "System sans"
     assert artifacts["fonts"]["body"]["source"] == "system"
     # Logos, after fallbacks.
     logos = artifacts["logos"]
-    main = logos["logo_main"]["light"]
+    main = logos["logo_main"]
     assert main["url"] == f"/media/{assets['main'].original.name}"
     assert main["alt"] == "Capy logo"
     assert {v["format"] for v in main["variants"]} == {"avif", "webp", "png"}
-    assert logos["logo_main"]["dark"]["url"] == f"/media/{assets['main_dark'].original.name}"
-    assert logos["logo_mark"]["dark"]["url"] == logos["logo_main"]["dark"]["url"]  # fallback
-    assert logos["logo_email"]["light"]["alt"] == "Email logo"
-    assert logos["logo_email"]["dark"]["url"] == f"/media/{assets['email'].original.name}"
-    assert logos["logo_email"]["light"]["variants"] == []
+    assert logos["logo_mark"]["url"] == logos["logo_main"]["url"]  # fallback
+    assert logos["logo_email"]["alt"] == "Email logo"
+    assert logos["logo_email"]["url"] == f"/media/{assets['email'].original.name}"
+    assert logos["logo_email"]["variants"] == []
     # Icons: every generated file, including those a manifest needs.
     assert set(artifacts["icons"]) == set(FILES)
     assert artifacts["icons"]["icon-maskable-512.png"].startswith("/media/capy_theme/icons/")
@@ -109,17 +112,15 @@ def test_the_issue_check_every_artifact_without_touching_models(published):
     sharing = artifacts["sharing_image"]
     assert (sharing["width"], sharing["height"], sharing["alt"]) == (1200, 630, "Shop")
     assert sharing["url"].endswith("-1200x630.png")
-    assert artifacts["backgrounds"]["pattern"]["dark"] == (
-        f"/media/{assets['pattern'].original.name}"
-    )
-    assert artifacts["backgrounds"]["login"] == {"light": None, "dark": None}
-    assert artifacts["mode"] == {"default": "auto", "visitors_can_switch": True}
+    assert artifacts["backgrounds"]["pattern"] == f"/media/{assets['pattern'].original.name}"
+    assert artifacts["backgrounds"]["login"] is None
+    assert "mode" not in artifacts
     assert artifacts["stylesheet_url"].startswith("/theme/")
 
 
 def test_urls_are_absolute_with_a_request(published, rf):
     artifacts = get_artifacts(rf.get("/"))
-    assert artifacts["logos"]["logo_email"]["light"]["url"].startswith("http://testserver/media/")
+    assert artifacts["logos"]["logo_email"]["url"].startswith("http://testserver/media/")
     assert artifacts["icons"]["icon-512.png"].startswith("http://testserver/media/")
     assert artifacts["sharing_image"]["url"].startswith("http://testserver/media/")
     assert artifacts["stylesheet_url"].startswith("http://testserver/theme/")
@@ -137,7 +138,7 @@ def test_empty_theme_has_empty_artifacts():
     publish(theme)
     activate(theme)
     artifacts = get_artifacts()
-    assert artifacts["logos"]["logo_main"] == {"light": None, "dark": None}
+    assert artifacts["logos"]["logo_main"] is None
     assert artifacts["icons"] == {}
     assert artifacts["sharing_image"] is None
     assert artifacts["fonts"] == {}
@@ -147,7 +148,7 @@ def test_template_tag(published, rf):
     _, assets = published
     html = Template(
         "{% load capy_theme %}{% theme_artifacts as a %}"
-        "{{ a.logos.logo_email.light.url }}|{{ a.colors_hex.light.primary }}|"
+        "{{ a.logos.logo_email.url }}|{{ a.colors_hex.primary }}|"
         '{{ a.icons|capy_get:"icon-512.png" }}'
     ).render(Context({"request": rf.get("/")}))
     email, primary, icon = html.split("|")
@@ -161,6 +162,7 @@ def test_migration_removes_app_and_social_settings():
     from django.db import connection
     from django.db.migrations.executor import MigrationExecutor
 
+    target = [("capy_theme", "0011_remove_app_and_social_settings")]
     executor = MigrationExecutor(connection)
     executor.migrate([("capy_theme", "0010_logo_slots")])
     old = executor.loader.project_state([("capy_theme", "0010_logo_slots")]).apps
@@ -169,9 +171,15 @@ def test_migration_removes_app_and_social_settings():
         slug="old",
         settings={"site_name": "Capy", "app": {"name": "X"}, "social": {"description": "Y"}},
     )
+    # Migrate only up to the migration under test: a later migration (0019)
+    # clears every theme when a theme became a single scheme.
+    executor = MigrationExecutor(connection)
+    executor.loader.build_graph()
+    executor.migrate(target)
+    migrated_apps = executor.loader.project_state(target).apps
+    migrated = migrated_apps.get_model("capy_theme", "Theme").objects.get(pk=theme.pk)
+    assert migrated.settings == {"site_name": "Capy"}
+    # Restore the full migration state for the rest of the suite.
     executor = MigrationExecutor(connection)
     executor.loader.build_graph()
     executor.migrate(executor.loader.graph.leaf_nodes())
-    migrated = Theme.objects.get(pk=theme.pk)
-    assert migrated.settings == {"site_name": "Capy"}
-    migrated.save()  # valid again under the new schema

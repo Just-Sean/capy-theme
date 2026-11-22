@@ -51,7 +51,7 @@
       var name = input.getAttribute("data-capy-shape");
       var size = ui.spec.sizes.find(function (s) { return s.name === name; });
       if (document.activeElement !== input) input.value = name in shape ? shape[name] : "";
-      input.placeholder = (ui.latest.values.light[size.variable] || "").replace(size.unit, "");
+      input.placeholder = (ui.latest.values[size.variable] || "").replace(size.unit, "");
     });
     panel.querySelectorAll("[data-capy-effect]").forEach(function (select) {
       var name = select.getAttribute("data-capy-effect");

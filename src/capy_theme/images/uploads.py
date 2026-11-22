@@ -10,7 +10,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from .. import conf
 from .assets import store_asset
 from .gif_frames import BrokenGif, frame_disposals, frame_extent
-from .slots import MODES, NO_SVG, SLOTS
+from .slots import NO_SVG, SLOTS
 from .svg import clean_svg
 
 # Image info Pillow may write back when saving that is safe to keep.
@@ -237,17 +237,15 @@ def _strip_metadata(image):
     return clean
 
 
-def add_asset(theme, slot, mode, upload, alt_text=""):
+def add_asset(theme, slot, upload, alt_text=""):
     """Check and clean an uploaded file and store it as a new ThemeAsset.
 
-    `upload` is a Django UploadedFile. Raises ValidationError if the slot, mode
-    or file isn't acceptable. Existing assets are never changed.
+    `upload` is a Django UploadedFile. Raises ValidationError if the slot or file
+    isn't acceptable. Existing assets are never changed.
     """
     if slot not in SLOTS:
         raise ValidationError("Choose where the image goes.")
-    if mode not in dict(MODES):
-        raise ValidationError("Choose light or dark mode.")
-    return store_asset(theme, slot, mode, prepare_upload(upload, slot), alt_text)
+    return store_asset(theme, slot, prepare_upload(upload, slot), alt_text)
 
 
 def prepare_upload(upload, slot):

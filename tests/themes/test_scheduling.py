@@ -10,7 +10,7 @@ from django.urls import reverse
 from capy_theme.models import ScheduledTheme, Theme, ThemeAssignment
 from capy_theme.themes.active import (
     activate,
-    get_active_theme,
+    primary_theme,
     scheduled_assignments,
     theme_at,
 )
@@ -58,23 +58,23 @@ def themes(clock):
 
 def test_the_issue_check_holiday_theme_only_inside_its_dates(themes, clock):
     default, holiday = themes
-    assert get_active_theme() == default  # 15 November
+    assert primary_theme() == default  # 15 November
     clock.now = DEC_1 - timedelta(seconds=1)
-    assert get_active_theme() == default
+    assert primary_theme() == default
     clock.now = DEC_1  # the start is included
-    assert get_active_theme() == holiday
+    assert primary_theme() == holiday
     clock.now = datetime(2026, 12, 20, tzinfo=UTC)
-    assert get_active_theme() == holiday
+    assert primary_theme() == holiday
     clock.now = DEC_26  # the end isn't
-    assert get_active_theme() == default
+    assert primary_theme() == default
 
 
 def test_the_cache_never_outlives_a_schedule_boundary(themes, clock, settings):
     default, holiday = themes
     settings.CAPY_THEME_CACHE_SECONDS = 60 * 60 * 24 * 365  # a very long cache
-    assert get_active_theme() == default
+    assert primary_theme() == default
     clock.now = DEC_1  # nothing cleared the cache, but its state expired
-    assert get_active_theme() == holiday
+    assert primary_theme() == holiday
 
 
 def test_overlapping_schedules_the_latest_start_wins(themes, clock):
@@ -84,9 +84,9 @@ def test_overlapping_schedules_the_latest_start_wins(themes, clock):
         theme=sale, starts_at=datetime(2026, 12, 10, tzinfo=UTC), ends_at=DEC_26
     )
     clock.now = datetime(2026, 12, 5, tzinfo=UTC)
-    assert get_active_theme() == holiday
+    assert primary_theme() == holiday
     clock.now = datetime(2026, 12, 12, tzinfo=UTC)
-    assert get_active_theme() == sale
+    assert primary_theme() == sale
 
 
 def test_open_ended_schedules(themes, clock):
@@ -94,10 +94,10 @@ def test_open_ended_schedules(themes, clock):
     launch = published("Launch")
     ThemeAssignment.objects.create(theme=launch, starts_at=datetime(2027, 1, 1, tzinfo=UTC))
     clock.now = datetime(2030, 1, 1, tzinfo=UTC)
-    assert get_active_theme() == launch
+    assert primary_theme() == launch
     old = published("Old")
     ThemeAssignment.objects.create(theme=old, ends_at=datetime(2026, 1, 1, tzinfo=UTC))
-    assert get_active_theme() == launch  # the ended one doesn't come back
+    assert primary_theme() == launch  # the ended one doesn't come back
 
 
 def test_scheduled_assignments_list(themes):
@@ -107,8 +107,8 @@ def test_scheduled_assignments_list(themes):
 
 def test_theme_at_uses_the_same_rules_as_the_site(themes):
     default, holiday = themes
-    assert theme_at(datetime(2026, 12, 5, tzinfo=UTC)) == holiday
-    assert theme_at(datetime(2026, 11, 5, tzinfo=UTC)) == default
+    assert theme_at(datetime(2026, 12, 5, tzinfo=UTC), "light") == holiday
+    assert theme_at(datetime(2026, 11, 5, tzinfo=UTC), "light") == default
 
 
 def test_validation(clock):

@@ -1,6 +1,6 @@
 # Themes, publishing and permissions
 
-Code: `src/capy_theme/themes/` (models, publishing, history, which theme is live, scheduling, light/dark) and `src/capy_theme/admin/`.
+Code: `src/capy_theme/themes/` (models, publishing, history, which theme is live, scheduling, per-scheme defaults) and `src/capy_theme/admin/`.
 
 ## Theme settings schema
 
@@ -27,13 +27,13 @@ unfolded. Its sections, top to bottom:
 
 1. Name and slug
 2. Publishing status
-3. Base themes
+3. Base (one of daisyUI's themes, which sets whether the theme is light or dark)
 4. Branding (site name and tagline, then Icon, Logos, More logo versions,
    Backgrounds and Sharing image, each uploaded and chosen in place)
-5. Colors (light and dark; Basic, Advanced and Expert)
+5. Colors (one set: Basic, Advanced and Expert)
 6. Contrast
 7. Shape and effects
-8. Mode
+8. Visitors (offer the theme in the catalog)
 9. Advanced (stored settings, ID and dates)
 10. Media (every uploaded image: edit its alt text, or delete one nothing uses)
 
@@ -69,8 +69,8 @@ theme's **live revision**, which changes only when someone publishes:
   - **Save and publish:** saves, then publishes. Visitors see it wherever this
     theme is used.
   - **Save, publish and activate:** saves, publishes, then makes it the default
-    theme (see [The active theme](#the-active-theme)). Not shown when it already
-    is, or in a popup.
+    theme for its scheme (see [The default themes](#the-default-themes)). Not shown
+    when it already is, or in a popup.
 
   The two publishing buttons need the `publish_theme` permission (without it, only
   **Save draft** shows), and ask before going ahead. Above them is an optional
@@ -81,7 +81,7 @@ theme's **live revision**, which changes only when someone publishes:
 - Saving and publishing with one button happen together: in the rare case that
   publishing fails unexpectedly (say the server can't write the icon files), the
   page shows an error and the draft isn't saved either, so nothing is half done.
-- Publishing copies the draft's look (light base, dark base and `settings`) into a
+- Publishing copies the draft's look (the base and `settings`) into a
   new numbered `ThemeRevision`, recording who published it and when, and makes it
   the live revision.
 - If the draft matches the live revision, publishing is refused ("Nothing to
@@ -90,31 +90,35 @@ theme's **live revision**, which changes only when someone publishes:
 - Revisions can't be edited or deleted. They're listed on the theme's edit page,
   and removed only if the theme itself is deleted.
 - **Revisions** (button on the theme's edit page) lists every revision and
-  **compares** any two, showing exactly which values changed (bases, logo,
-  branding, mode, each color and each shape setting).
+  **compares** any two, showing exactly which values changed (base, logo,
+  branding, each color and each shape setting).
 - **Restore** (needs `publish_theme`) copies an old revision into the draft and
   publishes it **as a new revision**, noted "Restored revision N". Nothing in the
   history is deleted, and the site shows it straight away.
 
-From code: `from capy_theme.themes.publishing import publish` then `publish(theme, user=request.user, note="…")`, or `publish_and_activate(theme, user=…, note="…")` to publish and make it the default theme in one step.
+From code: `from capy_theme.themes.publishing import publish` then `publish(theme, user=request.user, note="…")`, or `publish_and_activate(theme, user=…, note="…")` to publish and make it the default theme for its scheme in one step.
 
-## The active theme
+## The default themes
 
-One theme is the site's **default** theme: the one it shows, unless a theme
-schedule is running or a domain has a site theme of its own. To choose it, click
-**Activate** on its row in the admin's theme list, or **Save, publish and activate**
-on its page (both need the `publish_theme` permission). The list's "Showing now"
-column shows which theme the site is showing right now (the default, or a scheduled
-one), on every domain without a site theme of its own. A theme must be published
-before it can be activated.
+A theme is a single scheme (light or dark), so a domain has up to **two defaults**:
+a default light theme and a default dark theme. A consumer loads both and switches
+between them with its own light/dark toggle. **Activating** a theme makes it the
+default **for its scheme** (a light theme becomes the light default, a dark theme
+the dark default). Click **Activate** on its row in the admin's theme list, or
+**Save, publish and activate** on its page (both need the `publish_theme`
+permission). The list's "Showing now" column shows which theme the site is showing
+right now (the default for that scheme, or a scheduled one), on every domain without
+a site theme of its own. A theme must be published before it can be activated.
 
-From code: `from capy_theme.themes.active import get_active_theme` then
-`get_active_theme(request)` returns the active `Theme`, with its live revision
-loaded, or `None` if no theme is active. It's cached (see
-`CAPY_THEME_CACHE_SECONDS`), so a normal page load doesn't query the database.
-If the cache is unreachable the theme is loaded straight from the database; if
-the database is unreachable too, it returns `None` and the page renders unthemed
-rather than erroring (the outage is logged — see the README's Logging section).
+From code: `from capy_theme.themes.active import default_themes` then
+`default_themes(request)` returns `{"light": theme or None, "dark": theme or None}`,
+each with its live revision loaded; `primary_theme(request)` returns the default
+light theme (or the dark one if no light default is set), for a single-theme
+consumer such as an email. They're cached (see `CAPY_THEME_CACHE_SECONDS`), so a
+normal page load doesn't query the database. If the cache is unreachable the themes
+are loaded straight from the database; if the database is unreachable too, they come
+back `None` and the page renders unthemed rather than erroring (the outage is logged
+— see the README's Logging section).
 
 ## Scheduled themes
 
@@ -122,8 +126,8 @@ A theme can be live between two dates, e.g. a holiday theme. In the admin, go
 to **Capy Theme → Theme schedule → Add**, choose a published theme and give a
 start and/or end date (blank start: straight away; blank end: until removed).
 While a schedule is running (start ≤ now < end) its theme replaces the site's
-default; afterwards the default returns by itself. If schedules overlap, the one
-that started most recently wins. The list shows each schedule as Upcoming, Running or
+default for its scheme; afterwards the default returns by itself. If schedules
+overlap, the one that started most recently wins. The list shows each schedule as Upcoming, Running or
 Finished. Scheduling
 needs the `publish_theme` permission, like activating.
 
@@ -136,10 +140,10 @@ One install can serve several domains (for example `shop.example.com` and
 `blog.example.com`), each with its own theme:
 
 1. Activate a theme as usual (**Activate** on the theme list, or **Save, publish and
-   activate**): it's the theme for **every site**.
+   activate**): it's the default for its scheme on **every site**.
 2. In **Admin → Capy Theme → Site themes → Add**, give a domain and the theme it
-   should use. Only that domain uses it; every other domain uses the theme for
-   every site. Needs the `publish_theme` permission.
+   should use. Only that domain uses it (for that theme's scheme); every other
+   domain uses the default for every site. Needs the `publish_theme` permission.
 
 The domain comes from the request (`request.get_host()`), without the port and in
 lower case, so it must be in the project's `ALLOWED_HOSTS`. A scheduled theme can
@@ -154,8 +158,9 @@ all follow the domain they're opened on. From code:
 An admin can offer several themes for visitors to pick among:
 
 1. In the admin, tick **Offer to visitors** on each theme to offer, and publish it.
-2. The offered themes (plus the default) appear in the **catalog**
-   (`/theme/themes.json`), each with its stylesheet URL and a light/dark preview swatch.
+2. The offered themes (plus the domain's default light and dark themes) appear in the
+   **catalog** (`/theme/themes.json`), each with its scheme, stylesheet URL and a
+   preview swatch.
 
 A consumer reads the catalog, builds its own picker, and links the chosen theme's
 stylesheet — capy-theme renders no picker and remembers no choice (see
@@ -163,20 +168,19 @@ stylesheet — capy-theme renders no picker and remembers no choice (see
 
 ## Light and dark mode
 
-On a theme's admin page, the **Mode** section has:
+A theme is a **single scheme** (light or dark), set by its base. capy-theme no longer
+carries a mode toggle inside a theme; the light/dark toggle lives in the **consumer**
+(for example capy-shell), which switches between the domain's default light theme and
+its default dark theme (see [The default themes](#the-default-themes)).
 
-- **Default mode:** *Auto* (follow the visitor's device setting), *Light* or *Dark*.
-- **Visitors can switch** (on by default).
-
-Both are published with the theme and exposed as data (the `mode` key in a theme's
-assets: `default`, `visitors_can_switch`), for a consumer to honor. capy-theme doesn't
-switch modes or render a toggle itself.
-
-How it works in the stylesheet: it carries both light and dark. For "auto" it follows
-the device (`prefers-color-scheme`); to force a mode, set `data-theme="capy-light"` or
-`"capy-dark"` on `<html>` (or any element). A consumer does this and builds its own
-toggle, using the `mode` setting to know the admin's default and whether a toggle is
-wanted.
+How it works in the stylesheet: each theme's sheet renders only its own scheme — a
+light theme on `:root` (and `:root[data-theme="capy-light"]`), a dark theme inside
+`@media (prefers-color-scheme: dark)` (and `:root[data-theme="capy-dark"]`). A consumer
+loads the default light theme's sheet and the default dark theme's sheet together, so
+they compose: the device setting (`prefers-color-scheme`) picks one on its own, and the
+consumer's toggle forces one by setting `data-theme="capy-light"` or `"capy-dark"` on
+`<html>`. capy-theme exposes the data (the catalog's `scheme`, each theme's stylesheet
+URL and colors); the consumer builds the toggle.
 
 ## Permissions
 
@@ -207,7 +211,7 @@ Superusers have every permission.
 Move a theme between sites (for example from staging to production):
 
 1. On the theme's admin page, **Export** downloads `<slug>.capy-theme.zip`:
-   `theme.json` (the draft: bases and settings) plus the images and font files it
+   `theme.json` (the draft: base and settings) plus the images and font files it
    uses. Generated files (logo copies, icons) aren't included; they're made again.
 2. On the other site, **Import theme** (on the theme list) uploads the zip. It
    needs the `import_theme` permission.
@@ -215,7 +219,7 @@ Move a theme between sites (for example from staging to production):
 The import arrives as a new, **unpublished draft**; publish and activate it when
 it looks right. Everything is checked first: the zip's size (50 MB unpacked at
 most, or `CAPY_THEME_IMPORT_MAX_BYTES`) and file names, `theme.json` against
-`src/capy_theme/portability/theme_file.schema.json`, the base themes and settings
+`src/capy_theme/portability/theme_file.schema.json`, the base and settings
 like any theme, images through the same checks as uploads, and font files like
 font uploads. Fonts already in the library (same family name) are reused. If a
 theme with the same name or slug exists, " (imported)" / "-imported" is added. If

@@ -1,7 +1,7 @@
 """The theme form's images: logo slots, icon, sharing image, backgrounds.
 
-Each slot and mode is one field (admin/slot_image.py): its current image, a choice
-of earlier uploads, a new upload and the alt text. A new upload is stored and
+Each slot is one field (admin/slot_image.py): its current image, a choice of
+earlier uploads, a new upload and the alt text. A new upload is stored and
 chosen when the theme is saved (save_images); nothing changes for visitors until
 the theme is published.
 """
@@ -12,7 +12,7 @@ from ..images.assets import store_asset
 from ..images.icons import SETTINGS as ICON_SETTINGS
 from ..images.logos import HEIGHTS
 from ..images.slot_text import empty_text, help_text
-from ..images.slots import SLOT_MODES, SLOTS
+from ..images.slots import SLOTS
 from .slot_image import SlotImageField
 
 TWO_ALT_EDITS = (
@@ -24,24 +24,22 @@ CHOOSE_AGAIN = (
 )
 
 
-def image_field_name(slot, mode):
-    return f"image_{slot}_{mode}"
+def image_field_name(slot):
+    return f"image_{slot}"
 
 
-# The image slots with a choice in the form, and their modes (from slots.json).
-CHOOSABLE = SLOT_MODES
+# The image slots with a choice in the form (from slots.json).
+CHOOSABLE = tuple(SLOTS)
 
 
 def add_fields(form_class):
-    for slot, modes in CHOOSABLE.items():
-        for mode in modes:
-            name = image_field_name(slot, mode)
-            form_class.base_fields[name] = form_class.declared_fields[name] = SlotImageField(
-                slot,
-                mode,
-                label=SLOTS[slot][0] if len(modes) == 1 else f"{SLOTS[slot][0]} ({mode})",
-                help_text=help_text(slot, mode),
-            )
+    for slot in CHOOSABLE:
+        name = image_field_name(slot)
+        form_class.base_fields[name] = form_class.declared_fields[name] = SlotImageField(
+            slot,
+            label=SLOTS[slot][0],
+            help_text=help_text(slot),
+        )
     for name, (field_label, default) in HEIGHTS.items():
         form_class.base_fields[f"logo_{name}"] = form_class.declared_fields[f"logo_{name}"] = (
             forms.IntegerField(
@@ -73,28 +71,20 @@ def add_fields(form_class):
 
 
 def set_initial(form):
-    """A choice of this theme's uploaded images for each logo slot and mode."""
+    """A choice of this theme's uploaded images for each slot."""
     chosen = form.instance.settings.get("images", {})
     assets = list(form.instance.assets.all()) if form.instance.pk else []
-    for slot, modes in CHOOSABLE.items():
+    for slot in CHOOSABLE:
         mine = [a for a in assets if a.slot == slot]
-        for mode in modes:
-            widget = form.fields[image_field_name(slot, mode)].widget
-            none = "Same as light" if mode == "dark" else "None"
-            widget.choices = [("", f"Image to use: {none}")] + [
-                (
-                    a.pk,
-                    f"{a.original.name.rsplit('/', 1)[-1]} ({a.width} × {a.height}"
-                    f"{', dark' if a.mode == 'dark' else ''})",
-                )
-                for a in mine
-            ]
-            widget.assets = {str(a.pk): a for a in mine}
-            widget.empty_text = empty_text(slot, mode)
-            place = SLOTS[slot][0] if len(modes) == 1 else f"{SLOTS[slot][0]} ({mode})"
-            widget.attrs["aria-label"] = f"{place}: image to use"
-            widget.saved = str(chosen.get(slot, {}).get(mode, ""))
-            form.fields[image_field_name(slot, mode)].initial = widget.saved
+        widget = form.fields[image_field_name(slot)].widget
+        widget.choices = [("", "Image to use: None")] + [
+            (a.pk, f"{a.original.name.rsplit('/', 1)[-1]} ({a.width} × {a.height})") for a in mine
+        ]
+        widget.assets = {str(a.pk): a for a in mine}
+        widget.empty_text = empty_text(slot)
+        widget.attrs["aria-label"] = f"{SLOTS[slot][0]}: image to use"
+        widget.saved = str(chosen.get(slot, ""))
+        form.fields[image_field_name(slot)].initial = widget.saved
     heights = form.instance.settings.get("logo", {})
     for name in HEIGHTS:
         form.fields[f"logo_{name}"].initial = heights.get(name)
@@ -105,21 +95,20 @@ def set_initial(form):
 
 def _alt_edits(form, cleaned):
     """{image id: new alt text} for the alt text boxes that were changed. An image
-    shown in two boxes (e.g. light and dark) is only changed by a box that differs
-    from its saved text; two different changes for one image are an error."""
+    shown in two boxes is only changed by a box that differs from its saved text;
+    two different changes for one image are an error."""
     edits = {}
-    for slot, modes in CHOOSABLE.items():
-        for mode in modes:
-            name = image_field_name(slot, mode)
-            value = cleaned.get(name) or {}
-            asset = form.fields[name].widget.assets.get(str(value.get("alt_for") or ""))
-            alt = value.get("alt")
-            if asset is None or alt is None or alt == asset.alt_text:
-                continue
-            if edits.get(asset.pk, alt) != alt:
-                form.add_error(name, TWO_ALT_EDITS)
-                continue
-            edits[asset.pk] = alt
+    for slot in CHOOSABLE:
+        name = image_field_name(slot)
+        value = cleaned.get(name) or {}
+        asset = form.fields[name].widget.assets.get(str(value.get("alt_for") or ""))
+        alt = value.get("alt")
+        if asset is None or alt is None or alt == asset.alt_text:
+            continue
+        if edits.get(asset.pk, alt) != alt:
+            form.add_error(name, TWO_ALT_EDITS)
+            continue
+        edits[asset.pk] = alt
     return edits
 
 
@@ -128,17 +117,14 @@ def clean(form, cleaned, settings):
     # different edit of the same image's alt text there (admin/inlines.py).
     form.capy_alt_edits = form.instance.capy_alt_edits = _alt_edits(form, cleaned)
     images = {
-        slot: {
-            mode: cleaned[image_field_name(slot, mode)]["choice"]
-            for mode in modes
-            if (cleaned.get(image_field_name(slot, mode)) or {}).get("choice")
-        }
-        for slot, modes in CHOOSABLE.items()
+        slot: cleaned[image_field_name(slot)]["choice"]
+        for slot in CHOOSABLE
+        if (cleaned.get(image_field_name(slot)) or {}).get("choice")
     }
     # Slots without admin fields are kept as they are.
     images = {
         **{k: v for k, v in settings.get("images", {}).items() if k not in CHOOSABLE},
-        **{k: v for k, v in images.items() if v},
+        **images,
     }
     if images:
         settings["images"] = images
@@ -167,12 +153,11 @@ def ask_to_choose_again(form):
     the form or in a list below it), so say so next to each slot that had one.
     Called by ThemeAdmin when the page is shown again after a failed save (#271)."""
     cleaned = getattr(form, "cleaned_data", None) or {}
-    for slot, modes in CHOOSABLE.items():
-        for mode in modes:
-            name = image_field_name(slot, mode)
-            value = cleaned.get(name) or {}
-            if value.get("clean") and name not in form.errors:
-                form.add_error(name, CHOOSE_AGAIN)
+    for slot in CHOOSABLE:
+        name = image_field_name(slot)
+        value = cleaned.get(name) or {}
+        if value.get("clean") and name not in form.errors:
+            form.add_error(name, CHOOSE_AGAIN)
 
 
 def save_images(form, theme):
@@ -181,13 +166,12 @@ def save_images(form, theme):
     images = theme.settings.get("images", {})
     assets = {a.pk: a for a in theme.assets.all()}
     changed = False
-    for slot, modes in CHOOSABLE.items():
-        for mode in modes:
-            value = form.cleaned_data.get(image_field_name(slot, mode)) or {}
-            if value.get("clean"):
-                asset = store_asset(theme, slot, mode, value["clean"], value["upload_alt"])
-                images.setdefault(slot, {})[mode] = asset.pk
-                changed = True
+    for slot in CHOOSABLE:
+        value = form.cleaned_data.get(image_field_name(slot)) or {}
+        if value.get("clean"):
+            asset = store_asset(theme, slot, value["clean"], value["upload_alt"])
+            images[slot] = asset.pk
+            changed = True
     # Alt text typed for the images the page showed (never another one).
     for pk, alt in getattr(form, "capy_alt_edits", {}).items():
         if pk in assets:

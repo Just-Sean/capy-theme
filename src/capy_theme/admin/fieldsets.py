@@ -5,7 +5,7 @@ from ..css.typography import TYPE_SETTINGS
 from ..fonts.library import ROLES
 from ..images.logos import HEIGHTS, LOGO_SLOTS
 from .form_colors import color_fieldsets
-from .form_images import CHOOSABLE, image_field_name
+from .form_images import image_field_name
 
 MORE_LOGOS = "More logo versions (optional)"
 
@@ -21,11 +21,12 @@ THEME_FIELDSETS = [
     ),
     ("Publishing", {"fields": ["publish_status"]}),
     (
-        "Base themes",
+        "Base",
         {
-            "fields": ["light_base", "dark_base"],
-            "description": "Every theme starts from two of daisyUI's built-in themes. "
-            "Anything you don't change below comes from them.",
+            "fields": ["base"],
+            "description": "Every theme starts from one of daisyUI's built-in themes, which "
+            "sets whether the theme is light or dark. Anything you don't change below comes "
+            "from it.",
         },
     ),
     ("Branding", {"fields": ["site_name", "tagline", "logo_alt"]}),
@@ -33,8 +34,7 @@ THEME_FIELDSETS = [
         "Icon",
         {
             "fields": [
-                "image_icon_light",
-                "image_icon_dark",
+                image_field_name("icon"),
                 "icon_background",
                 "icon_padding",
             ],
@@ -46,8 +46,7 @@ THEME_FIELDSETS = [
         "Logos",
         {
             "fields": [
-                image_field_name("logo_main", "light"),
-                image_field_name("logo_main", "dark"),
+                image_field_name("logo_main"),
                 *[f"logo_{name}" for name in HEIGHTS],
             ],
             "description": "Upload a new image or pick an earlier one right here, then save. "
@@ -58,12 +57,7 @@ THEME_FIELDSETS = [
     (
         MORE_LOGOS,
         {
-            "fields": [
-                image_field_name(slot, mode)
-                for slot in LOGO_SLOTS
-                if slot != "logo_main"
-                for mode in CHOOSABLE[slot]
-            ],
+            "fields": [image_field_name(slot) for slot in LOGO_SLOTS if slot != "logo_main"],
             "description": "Optional versions of your logo for particular places. Each one "
             "says what it's for. Any you leave empty use the main logo, so you only need "
             "these if your logo should look different there.",
@@ -77,7 +71,6 @@ THEME_FIELDSETS = [
         "Shape and effects",
         {"fields": [f"shape_{name}" for name in SHAPE_NAMES], "classes": ["collapse"]},
     ),
-    ("Mode", {"fields": ["default_mode", "visitors_can_switch"]}),
     (
         "Visitors",
         {
@@ -90,9 +83,7 @@ THEME_FIELDSETS = [
         "Backgrounds",
         {
             "fields": [
-                image_field_name(slot, mode)
-                for slot in ("background_login", "background_pattern")
-                for mode in ("light", "dark")
+                image_field_name(slot) for slot in ("background_login", "background_pattern")
             ],
             "classes": ["collapse"],
             "description": "Optional. Upload a new image or pick an earlier one right here. "
@@ -102,7 +93,7 @@ THEME_FIELDSETS = [
     (
         "Sharing image",
         {
-            "fields": ["image_social_light"],
+            "fields": [image_field_name("social")],
             "classes": ["collapse"],
             "description": "Optional. Upload a new image or pick an earlier one right here. "
             "capy-theme makes it available (see Theme artifacts in the README); the "

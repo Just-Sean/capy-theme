@@ -5,17 +5,17 @@ from .color_math import contrast, rating, readable_text, shade
 from .names import WITH_CONTENT, overrides
 
 
-def effective_values(snapshot, scheme):
-    """Return a published revision's CSS values for one scheme.
+def effective_values(snapshot):
+    """Return a published revision's CSS values.
 
     The base theme's values, with the theme's shape and color overrides on top. When a
     color is overridden but its text color isn't, the text color is worked
     out so it's readable. When the background (base-100) is overridden but its
     shades or text aren't, those are worked out from it too.
     """
-    values = dict(snapshot[f"{scheme}_values"])
+    values = dict(snapshot["values"])
     values.update(shape_values(snapshot.get("settings", {})))
-    chosen = overrides(snapshot.get("settings", {}), scheme)
+    chosen = overrides(snapshot.get("settings", {}))
     for name, value in chosen.items():
         values[f"--color-{name}"] = value
     for name in WITH_CONTENT:
@@ -60,12 +60,12 @@ def contrast_report(values):
     return report
 
 
-def draft_values(theme, scheme):
-    """Return the CSS values a theme's draft would publish for one scheme.
+def draft_values(theme):
+    """Return the CSS values a theme's draft would publish.
 
-    Uses the same merging as publishing. Empty if a base no longer exists.
+    Uses the same merging as publishing. Empty if the base no longer exists.
     """
     snapshot = theme.snapshot()
-    if snapshot.get(f"{scheme}_values") is None:
+    if snapshot.get("values") is None:
         return {}
-    return effective_values(snapshot, scheme)
+    return effective_values(snapshot)

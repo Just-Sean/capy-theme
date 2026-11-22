@@ -47,7 +47,7 @@ def test_the_page_has_its_tabs_in_order(admin_client):
 
 def test_tab_ids_come_from_their_labels(admin_client):
     ids = {tab_id for tab_id, _, _ in panels(change_page(admin_client))}
-    assert {"capy-tab-general", "capy-tab-light-colors", "capy-tab-media"} <= ids
+    assert {"capy-tab-general", "capy-tab-colors", "capy-tab-media"} <= ids
 
 
 def test_every_section_is_still_on_the_page_with_its_old_id(admin_client):
@@ -63,7 +63,7 @@ def test_sections_are_in_their_tabs(admin_client):
         by_label[label] = by_label.get(label, "") + body
     assert ">Logos<" in by_label["Branding"]
     assert ">More logo versions (optional)<" in by_label["Branding"]
-    assert ">Light colors: Expert<" in by_label["Light colors"]
+    assert ">Colors: Expert<" in by_label["Colors"]
     assert re.search(r'id="[^"]*asset[^"]*-group"', by_label["Media"])
     assert "Images" not in by_label  # images are uploaded where they're used (#271)
     assert "Published revisions" in by_label["Revisions"]
@@ -134,8 +134,7 @@ def test_a_failed_save_shows_the_section_with_the_error(admin_client):
     data = {
         "name": "",
         "slug": "main",
-        "light_base": "light",
-        "dark_base": "dark",
+        "base": "light",
         "settings": "{}",
         "assets-TOTAL_FORMS": "0",
         "assets-INITIAL_FORMS": "0",
@@ -149,6 +148,6 @@ def test_a_failed_save_shows_the_section_with_the_error(admin_client):
     html = response.content.decode()
     heading = r'<h2 id="[^"]+" class="fieldset-heading">{}</h2>'
     assert re.search(r"<fieldset[^>]*>\s*" + heading.format("Name"), html)  # unfolded
-    assert re.search(r"<details><summary>\s*" + heading.format("Base themes"), html)
+    assert re.search(r"<details><summary>\s*" + heading.format("Base"), html)
     name_panel = next(body for _, label, body in panels(html) if label == "General")
     assert "errorlist" in name_panel

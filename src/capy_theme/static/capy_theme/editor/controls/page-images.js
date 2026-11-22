@@ -1,8 +1,8 @@
 // Shows the draft's logos and icon on the page while the editor is open (#271).
 // logo_html marks each logo for editors with data-capy-logo-slot (and the
-// attributes the template gave it); this swaps them for the draft's, in light and
-// dark, and points the browser-tab icon at the draft's icon. No reload, nothing
-// saved: closing the editor puts the published ones back. Visitors never see it.
+// attributes the template gave it); this swaps them for the draft's logo, and
+// points the browser-tab icon at the draft's icon. No reload, nothing saved:
+// closing the editor puts the published ones back. Visitors never see it.
 (function () {
   "use strict";
 
@@ -67,18 +67,8 @@
     return node;
   }
 
-  function picture(spot, image, modeClass) {
-    var node = document.createElement("picture");
-    node.className = modeClass;
-    node.appendChild(img(spot, image));
-    return node;
-  }
-
   function draft(spot, logo, siteName) {
-    if (logo && logo.light && logo.dark) {
-      return [picture(spot, logo.light, "capy-logo-light"), picture(spot, logo.dark, "capy-logo-dark")];
-    }
-    if (logo && logo.light) return [img(spot, logo.light)];
+    if (logo) return [img(spot, logo)];
     var span = document.createElement("span");
     Object.keys(spot.attrs).forEach(function (key) {
       span.setAttribute(key, spot.attrs[key]);
@@ -144,7 +134,7 @@
     spots.forEach(function (spot) {
       put(spot, draft(spot, images.logos[spot.slot], images.site_name));
     });
-    showIcon(images.icon.light);
+    showIcon(images.icon);
   }
 
   function restore() {

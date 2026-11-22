@@ -8,12 +8,12 @@ def branding(revision):
     """Return the revision's site name, tagline, logo URL and logo alt text.
 
     Everything comes from the published snapshot, never the draft. The logo is
-    the main logo's light version; its alt text falls back to the theme's logo
-    alt text, then the site name.
+    the main logo; its alt text falls back to the theme's logo alt text, then the
+    site name.
     """
     settings = revision.snapshot.get("settings", {})
     site_name = settings.get("site_name", "")
-    logo = resolve(revision.snapshot, "logo_main", "light")
+    logo = resolve(revision.snapshot, "logo_main")
     return {
         "site_name": site_name,
         "tagline": settings.get("tagline", ""),

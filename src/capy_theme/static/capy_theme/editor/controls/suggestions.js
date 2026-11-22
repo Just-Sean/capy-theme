@@ -22,7 +22,7 @@
       el("span", { class: "capy-editor-note", text: suggestion.description }),
     ]);
     button.addEventListener("click", function () {
-      var target = ui.colors(ui.scheme);
+      var target = ui.colors();
       Object.keys(suggestion.colors).forEach(function (name) {
         target[name] = suggestion.colors[name];
       });
@@ -37,7 +37,7 @@
     var button = el("button", { type: "button", "data-capy-suggest": "", text: "Suggest colors" });
     button.addEventListener("click", function () {
       list.textContent = "Finding suggestions…";
-      var primary = ui.latest.values[ui.scheme]["--color-primary"];
+      var primary = ui.latest.values["--color-primary"];
       fetch(editor.mount.getAttribute("data-suggestions-url"), {
         method: "POST",
         credentials: "same-origin",
@@ -64,7 +64,7 @@
     });
     return el("details", { class: "capy-editor-suggest", "data-capy-fold": "Colors: Suggestions" }, [
       el("summary", { text: "Suggestions" }),
-      el("p", { class: "capy-editor-note", text: "Colors that go with your primary color, or from your logo. Click one to try it on this mode; nothing is saved." }),
+      el("p", { class: "capy-editor-note", text: "Colors that go with your primary color, or from your logo. Click one to try it; nothing is saved." }),
       button,
       list,
     ]);

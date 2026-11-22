@@ -62,9 +62,7 @@ def test_the_issue_check_base_size_has_a_minimum():
         data={
             "name": "Main",
             "slug": "main",
-            "light_base": "light",
-            "dark_base": "dark",
-            "visitors_can_switch": "on",
+            "base": "light",
             "type_base_size": "10",
         }
     )
@@ -77,9 +75,7 @@ def test_admin_form_stores_type_settings():
         data={
             "name": "Main",
             "slug": "main",
-            "light_base": "light",
-            "dark_base": "dark",
-            "visitors_can_switch": "on",
+            "base": "light",
             "type_base_size": "17.5",
             "type_heading_weight": "700",
         }

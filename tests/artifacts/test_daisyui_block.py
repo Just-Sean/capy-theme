@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 from django.core.cache import cache
 
-from capy_theme.colors.values import effective_values
 from capy_theme.models import Theme
 from capy_theme.themes.active import activate
 from capy_theme.themes.publishing import publish
@@ -30,10 +29,9 @@ def live():
     theme = Theme.objects.create(
         name="Main",
         slug="main",
-        light_base="cupcake",
-        dark_base="dracula",
+        base="cupcake",
         settings={
-            "colors": {"light": {"primary": "oklch(65% 0.24 350)"}},
+            "colors": {"primary": "oklch(65% 0.24 350)"},
             "shape": {"radius_box": 1, "noise": True},
         },
     )
@@ -42,24 +40,32 @@ def live():
     return revision
 
 
-def test_two_blocks_with_every_daisyui_variable(client, live):
+def test_one_block_with_every_daisyui_variable(client, live):
     response = client.get(URL)
     assert response.status_code == 200
     assert response["Content-Type"] == "text/css; charset=utf-8"
     assert response["Content-Disposition"] == 'attachment; filename="main.daisyui-theme.css"'
     css = response.content.decode()
-    assert css.count('@plugin "daisyui/theme" {') == 2
-    light, dark = css.split('@plugin "daisyui/theme" {')[1:]
-    assert 'name: "main-light";' in light and "default: true;" in light
-    assert "prefersdark: false;" in light and "color-scheme: light;" in light
-    assert 'name: "main-dark";' in dark and "prefersdark: true;" in dark
-    assert "--color-primary: oklch(65% 0.24 350);" in light
-    assert "--radius-box: 1rem;" in light and "--noise: 1;" in light
-    dark_values = effective_values(live.snapshot, "dark")
-    assert f"--color-primary: {dark_values['--color-primary']};" in dark
+    # A theme is a single scheme, so it exports one daisyUI theme block.
+    assert css.count('@plugin "daisyui/theme" {') == 1
+    assert 'name: "main";' in css and "default: true;" in css  # a light theme is the default
+    assert "prefersdark: false;" in css and "color-scheme: light;" in css
+    assert "--color-primary: oklch(65% 0.24 350);" in css
+    assert "--radius-box: 1rem;" in css and "--noise: 1;" in css
     for name in ("--color-base-100", "--radius-field", "--size-selector", "--border", "--depth"):
-        assert f"{name}:" in light, name
+        assert f"{name}:" in css, name
     assert "--font" not in css  # daisyUI theme blocks don't take fonts
+
+
+def test_a_dark_theme_block_prefers_dark_and_isnt_the_default(client):
+    theme = Theme.objects.create(name="Night", slug="night", base="dracula")
+    publish(theme)
+    activate(theme)
+    css = client.get(URL).content.decode()
+    assert css.count('@plugin "daisyui/theme" {') == 1
+    assert 'name: "night";' in css
+    assert "default: false;" in css and "prefersdark: true;" in css
+    assert "color-scheme: dark;" in css
 
 
 def test_no_published_theme_is_404(client):
@@ -90,9 +96,8 @@ def test_the_issue_check_tailwind_builds_it(client, live, tmp_path):
     )
     assert result.returncode == 0, result.stderr
     built = output.read_text()
-    assert "main-light" in built and "main-dark" in built
+    assert "main" in built
     assert "oklch(65% 0.24 350)" in built
-    assert "prefers-color-scheme: dark" in built
 
 
 def test_a_name_with_a_comment_end_stays_inside_the_comment(client, live):

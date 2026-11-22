@@ -81,8 +81,7 @@ def test_the_issue_check_every_editor_setting_changes_the_components_view(
     login(client, django_user_model)
     spec = client.get(reverse("capy_theme:editor_state", args=[theme.pk])).json()["controls"]
     for slot in SLOTS:
-        for mode in ("light", "dark"):
-            add_asset(theme, slot, mode, png((256, 256), name=f"{slot}-{mode}.png"))
+        add_asset(theme, slot, png((256, 256), name=f"{slot}.png"))
     base_css = preview_css(client, theme, {})
     base_page = components(client, theme)
 
@@ -94,16 +93,15 @@ def test_the_issue_check_every_editor_setting_changes_the_components_view(
 
     font = Font.objects.get(family="System serif").pk
     checked = []
-    for scheme, names in spec["bases"].items():
-        other = next(name for name in names if name != getattr(theme, f"{scheme}_base"))
-        assert css_changes({f"{scheme}_base": other}), scheme
-        checked.append(f"{scheme} base")
+    # A theme is a single scheme now: one base, one set of colors.
+    other = next(base["name"] for base in spec["bases"] if base["name"] != theme.base)
+    assert css_changes({"base": other})
+    checked.append("base")
     for group in spec["color_groups"]:
         for color in group["colors"]:
-            for mode in ("light", "dark"):
-                changes = {"settings": {"colors": {mode: {color["name"]: "oklch(50% 0.2 90)"}}}}
-                assert css_changes(changes), color["name"]
-                checked.append(f"color {mode} {color['name']}")
+            changes = {"settings": {"colors": {color["name"]: "oklch(50% 0.2 90)"}}}
+            assert css_changes(changes), color["name"]
+            checked.append(f"color {color['name']}")
     for size in spec["sizes"]:
         assert css_changes({"settings": {"shape": {size["name"]: size["max"]}}}), size["name"]
         checked.append(size["name"])
@@ -123,30 +121,35 @@ def test_the_issue_check_every_editor_setting_changes_the_components_view(
         assert css_changes({"settings": {"logo": {item["name"]: 99}}}), item["name"]
         checked.append(item["name"])
     for slot in spec["image_slots"]:
-        for mode in slot["modes"]:
-            asset = theme.assets.get(slot=slot["name"], mode=mode)
-            changes = {"settings": {"images": {slot["name"]: {mode: asset.pk}}}}
-            assert page_changes(changes) or css_changes(changes), (slot["name"], mode)
-            checked.append(f"image {slot['name']} {mode}")
-    icon = theme.assets.get(slot="icon", mode="light").pk
+        asset = theme.assets.get(slot=slot["name"])
+        changes = {"settings": {"images": {slot["name"]: asset.pk}}}
+        assert page_changes(changes) or css_changes(changes), slot["name"]
+        checked.append(f"image {slot['name']}")
+    icon = theme.assets.get(slot="icon").pk
     for item in spec["icon_settings"]:
         value = "#00ff00" if item["name"] == "background" else 20
-        changes = {"settings": {"images": {"icon": {"light": icon}}, "icon": {item["name"]: value}}}
-        before = {"settings": {"images": {"icon": {"light": icon}}}}
+        changes = {"settings": {"images": {"icon": icon}, "icon": {item["name"]: value}}}
+        before = {"settings": {"images": {"icon": icon}}}
         assert components(client, theme, changes) != components(client, theme, before)
         checked.append(f"icon {item['name']}")
-    # 17 image choices: every slot in light and dark, except the sharing image and the
-    # email and print logos, which only have a light one (#271).
-    assert (
-        len(checked)
-        == 2 + 40 + len(spec["sizes"]) + len(spec["effects"]) + 4 + len(spec["type"]) + 2 + 17 + 2
+    # One image choice per slot (no per-mode choices now).
+    assert len(checked) == (
+        1
+        + 20
+        + len(spec["sizes"])
+        + len(spec["effects"])
+        + len(spec["font_roles"])
+        + len(spec["type"])
+        + len(spec["logo_heights"])
+        + len(SLOTS)
+        + len(spec["icon_settings"])
     )
 
 
 def test_unsaved_image_choices_show(client, django_user_model, theme):
     login(client, django_user_model)
-    logo = add_asset(theme, "logo_main", "light", png(name="unsaved.png"))
-    page = components(client, theme, {"settings": {"images": {"logo_main": {"light": logo.pk}}}})
+    logo = add_asset(theme, "logo_main", png(name="unsaved.png"))
+    page = components(client, theme, {"settings": {"images": {"logo_main": logo.pk}}})
     assert logo.original.name in page
     assert logo.original.name not in components(client, theme)  # not saved
     theme.refresh_from_db()
@@ -170,7 +173,7 @@ def test_text_sample_has_every_heading_and_the_display_font(client, django_user_
 
 def test_icon_preview(client, django_user_model, theme):
     login(client, django_user_model)
-    icon = add_asset(theme, "icon", "light", png((100, 100), "blue", "icon.png"))
+    icon = add_asset(theme, "icon", png((100, 100), "blue", "icon.png"))
     url = reverse("capy_theme:editor_icon_preview", args=[theme.pk])
     response = client.get(url, {"asset": icon.pk, "background": "#00ff00", "padding": "20"})
     assert response["Content-Type"] == "image/png"

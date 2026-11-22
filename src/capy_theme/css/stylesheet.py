@@ -15,6 +15,10 @@ from .backgrounds import css_variables as background_variables
 from .backgrounds import helper_css as background_css
 from .typography import type_css
 
+# The class a consumer forces a slot with: <html data-theme="capy-light"> or
+# "capy-dark". A theme renders under the one for its own scheme.
+FORCE_THEME = {"light": "capy-light", "dark": "capy-dark"}
+
 
 def css_version(theme_id, number, snapshot):
     """Return the short hash that names a revision's stylesheet.
@@ -30,11 +34,19 @@ def css_version(theme_id, number, snapshot):
 def render_css(revision):
     """Return the CSS for a revision.
 
-    - The page uses the light values, or the dark ones when the visitor's device
-      is in dark mode.
-    - Any element with data-theme="capy-light" or "capy-dark" is forced into that
-      mode, whatever the device setting. The editor's Components view uses this to
-      show both side by side, and the light/dark toggle uses it on <html>.
+    A theme is a single scheme (light or dark). Its stylesheet renders only that
+    scheme, and a consumer loads a light theme's sheet and a dark theme's sheet
+    together (the light slot and the dark slot) so the two compose:
+
+    - A **light** theme renders at ``:root`` (the default) and at
+      ``:root[data-theme="capy-light"]`` (forced light).
+    - A **dark** theme renders at ``:root`` under ``@media (prefers-color-scheme:
+      dark)`` (device dark) and at ``:root[data-theme="capy-dark"]`` (forced dark).
+
+    So with both loaded: the device setting picks light or dark on its own, and
+    setting ``data-theme="capy-light"`` / ``"capy-dark"`` on <html> forces one.
+    The forced rules use ``:root[data-theme=…]`` (higher specificity than
+    ``:root``), so the result doesn't depend on which sheet loads first.
 
     The rules aren't in a CSS layer, so they override daisyUI's own theme rules
     (which are in `@layer base`) wherever the stylesheet is loaded.
@@ -54,28 +66,37 @@ def snapshot_css(snapshot, comment):
     """Return the CSS for a snapshot of a theme's look (published or draft).
 
     Used for published revisions and, in the editor, for unsaved drafts, so the
-    two always match.
+    two always match. See render_css for how a light and a dark theme compose.
     """
+    scheme = snapshot["scheme"]
+    forced = FORCE_THEME[scheme]
     # Colors, plus the background image variables (none if not chosen).
-    light = effective_values(snapshot, "light") | background_variables(snapshot, "light")
-    dark = effective_values(snapshot, "dark") | background_variables(snapshot, "dark")
-    lines = [
-        f"/* {css_comment(comment)} */",
-        ":root {",
-        *_block("light", light, indent="  "),
-        "}",
-        "@media (prefers-color-scheme: dark) {",
-        "  :root {",
-        *_block("dark", dark, indent="    "),
-        "  }",
-        "}",
-        # After the rules above, so these win over them.
-        '[data-theme="capy-light"] {',
-        *_block("light", light, indent="  "),
-        "}",
-        '[data-theme="capy-dark"] {',
-        *_block("dark", dark, indent="  "),
-        "}",
+    values = effective_values(snapshot) | background_variables(snapshot)
+    lines = [f"/* {css_comment(comment)} */"]
+    if scheme == "dark":
+        # The device default (only when a light sheet hasn't forced light), then
+        # the forced rule.
+        lines += [
+            "@media (prefers-color-scheme: dark) {",
+            '  :root:not([data-theme="capy-light"]) {',
+            *_block(scheme, values, indent="    "),
+            "  }",
+            "}",
+            f':root[data-theme="{forced}"] {{',
+            *_block(scheme, values, indent="  "),
+            "}",
+        ]
+    else:
+        # The default, then the forced rule (higher specificity than :root).
+        lines += [
+            ":root {",
+            *_block(scheme, values, indent="  "),
+            "}",
+            f':root[data-theme="{forced}"] {{',
+            *_block(scheme, values, indent="  "),
+            "}",
+        ]
+    lines += [
         # A keyboard-focus outline that stays visible on the theme's colors.
         ":focus-visible {",
         "  outline: 2px solid var(--capy-focus);",

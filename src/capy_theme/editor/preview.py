@@ -5,17 +5,15 @@ import copy
 from django.core.exceptions import ValidationError
 
 from ..colors.color_math import to_hex, to_oklch
-from ..colors.names import SCHEMES
 from ..colors.values import contrast_report, effective_values
 from ..css.custom import without_custom_css
 from ..css.stylesheet import snapshot_css
 from ..fonts.library import external_stylesheets
-from ..images.slots import SLOT_MODES
 from ..themes.validation import validate_base, validate_settings
 from .page_images import page_images
 
 # The settings the editor manages. Anything else in a theme's settings (site
-# name, mode and so on) is kept as it is.
+# name and so on) is kept as it is.
 EDITOR_SETTINGS = (
     "colors",
     "shape",
@@ -30,20 +28,19 @@ EDITOR_SETTINGS = (
 def apply_changes(theme, data):
     """Return an unsaved copy of `theme` with the editor's values applied.
 
-    `data` may have "light_base", "dark_base" and "settings" (with "colors" and
-    "shape"). Colors can be in any CSS format; they're converted to OKLCH.
+    `data` may have "base" and "settings" (with "colors" and "shape"). Colors can
+    be in any CSS format; they're converted to OKLCH.
     Raises ValidationError (with every problem) if anything is invalid.
     The theme itself and the database are never changed.
     """
     draft = copy.copy(theme)
     errors = []
-    for field, scheme in (("light_base", "light"), ("dark_base", "dark")):
-        if field in data:
-            setattr(draft, field, str(data[field]))
-            try:
-                validate_base(getattr(draft, field), scheme)
-            except ValidationError as error:
-                errors.extend(error.messages)
+    if "base" in data:
+        draft.base = str(data["base"])
+        try:
+            validate_base(draft.base)
+        except ValidationError as error:
+            errors.extend(error.messages)
     settings = copy.deepcopy(theme.settings)
     changes = data.get("settings", {})
     if not isinstance(changes, dict):
@@ -54,15 +51,13 @@ def apply_changes(theme, data):
                 settings[key] = changes[key]
             else:
                 settings.pop(key, None)
-    _drop_modes_a_slot_cant_have(settings)
-    for scheme, colors in settings.get("colors", {}).items():
-        if not isinstance(colors, dict):
-            continue
+    colors = settings.get("colors")
+    if isinstance(colors, dict):
         for name, value in colors.items():
             try:
                 colors[name] = to_oklch(str(value))
             except ValueError:
-                errors.append(f"{scheme} {name}: {value!r} isn't a color.")
+                errors.append(f"{name}: {value!r} isn't a color.")
     if not errors:
         try:
             validate_settings(settings)
@@ -80,24 +75,6 @@ def apply_changes(theme, data):
     return draft
 
 
-def _drop_modes_a_slot_cant_have(settings):
-    """Drop e.g. a dark email logo: email and print logos and the sharing image only
-    have a light one (#271). Dropped, not refused, like the admin does, so a theme
-    saved before that still saves."""
-    images = settings.get("images")
-    if not isinstance(images, dict):
-        return
-    for slot, modes in list(images.items()):
-        if slot in SLOT_MODES and isinstance(modes, dict):
-            kept = {mode: pk for mode, pk in modes.items() if mode in SLOT_MODES[slot]}
-            if kept:
-                images[slot] = kept
-            else:
-                del images[slot]
-    if not images:
-        settings.pop("images")
-
-
 def preview(theme, data):
     """Return what the editor shows for unsaved values: CSS, values and contrast.
 
@@ -106,23 +83,20 @@ def preview(theme, data):
     """
     draft = apply_changes(theme, data)
     snapshot = draft.snapshot()
-    values = {scheme: effective_values(snapshot, scheme) for scheme in SCHEMES}
+    values = effective_values(snapshot)
     return {
         "css": snapshot_css(snapshot, f"capy-theme editor: preview of {theme.name}"),
         "values": values,
         # Hex for the browser's color pickers, keyed like "primary" or "base-100".
         "hex": {
-            scheme: {
-                key.removeprefix("--color-"): to_hex(value, alpha=False)
-                for key, value in values[scheme].items()
-                if key.startswith("--color-")
-            }
-            for scheme in SCHEMES
+            key.removeprefix("--color-"): to_hex(value, alpha=False)
+            for key, value in values.items()
+            if key.startswith("--color-")
         },
-        "contrast": {scheme: contrast_report(values[scheme]) for scheme in SCHEMES},
+        "contrast": contrast_report(values),
         "settings": without_custom_css(draft.settings),  # the editor doesn't edit it
-        "light_base": draft.light_base,
-        "dark_base": draft.dark_base,
+        "base": draft.base,
+        "scheme": draft.scheme,
         # External font stylesheets (e.g. Adobe Fonts) the page must link.
         "stylesheets": external_stylesheets(snapshot.get("fonts")),
         # The draft's logos and icon, shown on the page before publishing (#271).

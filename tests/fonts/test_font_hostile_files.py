@@ -292,8 +292,7 @@ def export_with_font(data):
         "theme": {
             "name": "T",
             "slug": "t",
-            "light_base": "light",
-            "dark_base": "dark",
+            "base": "light",
             "settings": {},
             "font_roles": {"body": "font-1"},
         },

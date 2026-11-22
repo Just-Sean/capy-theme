@@ -7,8 +7,8 @@ Code: `src/capy_theme/images/` (uploads, SVG cleaning, logo slots and copies, ic
 A theme's images (logos, the icon, the social sharing image, backgrounds) are
 uploaded and chosen **where they're used**: on the theme's admin page under
 **Branding** (Logos, More logo versions, Icon, Backgrounds, Sharing image), and in
-the live editor's sections of the same names. Each slot, for light or dark mode,
-shows:
+the live editor's sections of the same names. Each slot (one image — a theme is a
+single scheme) shows:
 
 - what it's for and its limits (size, largest width or height, whether SVG is
   allowed), and what happens if it's left empty;
@@ -22,9 +22,9 @@ shows:
 - the alt text of the image saved for the slot (named by its file), which can be
   changed at any time. It only ever changes that image: choosing another image in
   the same save leaves the other image's alt text as it was. If the same image is
-  used for both light and dark mode of a slot and its alt text is changed
-  differently in each box, the save asks you to change it in one box only. The
-  same goes for changing it in the slot and, differently, in **Media** in one save.
+  used by two slots and its alt text is changed differently in each, or changed in
+  the slot and, differently, in **Media** in one save, the save asks you to change
+  it in one place only.
 
 An image stays with the slot it was uploaded for. For every upload:
 
@@ -78,15 +78,14 @@ straight away, in your browser only (see [the editor](editor.md)).
 ### Media
 
 The admin's **Media** tab lists every image uploaded for the theme, with a
-preview, its slot and mode, its size, where it's used, and its alt text (which can
+preview, its slot, its size, where it's used, and its alt text (which can
 be changed there too). An image nothing uses can be deleted. An image that the
 draft, the published theme or any earlier revision uses can't: the save is
 refused, the page says so at the top, and the image's row says where it's used
 and what to do:
 
-- **Used only by the draft:** choose another image for that slot (or None; for
-  dark mode, Same as light) and save; then delete it. (Doing both in the same save
-  works too.)
+- **Used only by the draft:** choose another image for that slot (or None) and
+  save; then delete it. (Doing both in the same save works too.)
 - **Used by the published theme or an earlier revision:** it can't be deleted.
   Published versions of the theme are kept for good and keep their images, so that
   restoring one keeps working: once an image has been published, it stays in Media.
@@ -105,8 +104,8 @@ versions (optional)**, each saying what it's for:
 | **Stacked** | Symbol above the name, for narrow spaces (a phone-width header, a sidebar). |
 | **Mark** | The symbol alone, for tight spots (an app bar, an avatar, a footer). |
 | **Wordmark** | The name alone, in lettering, without the symbol. |
-| **Email** | HTML emails. PNG or JPEG (email programs don't show SVG); light only. |
-| **Print** | High resolution, for printed pages, PDFs or invoices; light only. |
+| **Email** | HTML emails. PNG or JPEG (email programs don't show SVG). |
+| **Print** | High resolution, for printed pages, PDFs or invoices. |
 
 A consumer uses the other five from [theme artifacts](artifacts.md)
 (`artifacts.logos.logo_mark`, and so on). To set one:
@@ -115,12 +114,10 @@ A consumer uses the other five from [theme artifacts](artifacts.md)
    editor: **Logos**), upload a new image, or pick an earlier one.
 2. Save (admin) or **Save draft** (live editor), then publish.
 
-Fallbacks: dark mode uses the slot's light image if there's no dark one, and a
-slot with no image uses the main logo. Email and print logos only have a light
-image (emails and print have no dark mode).
+Fallbacks: a slot with no image uses the main logo.
 
-Each logo slot's data (`artifacts.logos.<slot>`, with `light` and `dark`) gives what a
-consumer needs to render it:
+Each logo slot's data (`artifacts.logos.<slot>`) gives what a consumer needs to
+render it:
 
 - **Header slots** (main, stacked, mark, wordmark) carry responsive AVIF
   and WebP sources and a PNG or JPEG fallback. On upload, smaller copies are made
@@ -132,11 +129,8 @@ consumer needs to render it:
   phones** (default 32 px, for windows up to 640 px wide) are set in the same
   Logos section. The theme's stylesheet sizes `img.capy-logo` with them; a
   utility class on the tag (e.g. `class="h-12"`) still wins.
-- **Light and dark**: the slot carries a light and (if set) a dark image; a consumer
-  shows the one for the current mode (following the device setting or a forced
-  `data-theme`). Use `loading="lazy"`, so only the one shown is downloaded.
-- **Email and print** slots are a plain light image (a consumer renders a plain
-  `<img>`, since email programs don't handle `<picture>` or the light/dark CSS).
+- **Email and print** slots are a single image; a consumer renders a plain `<img>`,
+  since email programs don't handle `<picture>`.
 
 Alt text comes from the image's alt text, then the theme's logo alt text, then
 the site name.
@@ -147,10 +141,10 @@ Every browser and home-screen icon is made from one square image (at least
 512 × 512 px is best; SVG isn't accepted here). To set it:
 
 1. In the **Icon** section (admin: **Branding → Icon**; live editor: **Icon**),
-   upload the image or pick an earlier one, optionally with a dark version, and
-   set the **Icon background** (a hex color; blank is transparent) and **Icon
-   padding** (0–25% on each side) if you want. The live editor shows a preview of
-   them, and the browser tab shows the draft's icon while the editor is open.
+   upload the image or pick an earlier one, and set the **Icon background** (a hex
+   color; blank is transparent) and **Icon padding** (0–25% on each side) if you
+   want. The live editor shows a preview of them, and the browser tab shows the
+   draft's icon while the editor is open.
 2. Save and publish. The icons are made when you publish.
 
 The files are saved in `MEDIA_ROOT/capy_theme/icons/<id>/`, where the id comes
@@ -159,7 +153,7 @@ from the icon image and its settings, so each revision keeps its icons:
 | File | Used for |
 | --- | --- |
 | `favicon.ico` | Browser tab (16, 32 and 48 px in one file) |
-| `favicon.svg` | Browser tab; switches to the dark icon in dark mode |
+| `favicon.svg` | Browser tab (scalable) |
 | `apple-touch-icon.png` | iPhone and iPad home screen (180 px, never transparent: white if no background is set) |
 | `icon-192.png`, `icon-512.png` | Android home screen and app icons |
 | `icon-maskable-512.png` | Android adaptive icons: the icon sits in the middle 80%, on a solid background |
@@ -182,7 +176,7 @@ project or another module adds them, using the image from
 
 ## Background images
 
-Two optional decorative images, each with a light and dark version: a **login
+Two optional decorative images: a **login
 background** and a **page background pattern** (SVG allowed). Upload or pick them
 in the **Backgrounds** section (admin: **Branding → Backgrounds**; live editor:
 **Backgrounds**, where they preview straight away), then publish. They show only where the project's templates
@@ -190,10 +184,7 @@ use them:
 
 - **Classes**: `class="capy-bg-login"` (covers the element, centered) or
   `class="capy-bg-pattern"` (repeats). The demo's `<body>` uses `capy-bg-pattern`.
-- **CSS variables**: `--capy-bg-login` and `--capy-bg-pattern` (each a `url(...)`,
-  switching with light and dark mode), e.g.
-  `background-image: var(--capy-bg-login);` in the project's CSS.
+- **CSS variables**: `--capy-bg-login` and `--capy-bg-pattern` (each a `url(...)`),
+  e.g. `background-image: var(--capy-bg-login);` in the project's CSS.
 - **Template values**: `{{ theme.background_login_url }}` and
-  `{{ theme.background_pattern_url }}` (the light versions; `""` if not set).
-
-Dark mode uses the light image if there's no dark one.
+  `{{ theme.background_pattern_url }}` (`""` if not set).

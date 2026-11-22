@@ -129,9 +129,9 @@ def theme():
 
 def test_add_asset_stores_a_clean_copy(theme):
     upload = SimpleUploadedFile("holiday.jpg", gps_photo(), content_type="image/jpeg")
-    asset = add_asset(theme, "logo_main", "dark", upload, "Our logo")
+    asset = add_asset(theme, "logo_main", upload, "Our logo")
     asset.refresh_from_db()
-    assert (asset.slot, asset.mode, asset.alt_text) == ("logo_main", "dark", "Our logo")
+    assert (asset.slot, asset.alt_text) == ("logo_main", "Our logo")
     assert asset.content_type == "image/jpeg"
     assert asset.original.name.startswith("capy_theme/assets/logo_main/")
     with asset.original.open("rb") as f:
@@ -140,12 +140,10 @@ def test_add_asset_stores_a_clean_copy(theme):
     assert not Image.open(io.BytesIO(stored)).getexif()
 
 
-def test_add_asset_rejects_unknown_slots_and_modes(theme):
+def test_add_asset_rejects_unknown_slots(theme):
     upload = SimpleUploadedFile("a.png", png())
     with pytest.raises(ValidationError):
-        add_asset(theme, "nowhere", "light", upload)
-    with pytest.raises(ValidationError):
-        add_asset(theme, "logo_main", "sepia", upload)
+        add_asset(theme, "nowhere", upload)
     assert not ThemeAsset.objects.exists()
 
 

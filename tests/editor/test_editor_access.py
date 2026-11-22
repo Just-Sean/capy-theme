@@ -93,14 +93,14 @@ def test_edit_parameter_picks_another_theme(editor_client, active):
 
 
 def test_state_has_the_draft_and_its_css(editor_client, active):
-    active.settings = {"colors": {"light": {"primary": PINK}}}
+    active.settings = {"colors": {"primary": PINK}}
     active.save()
     response = editor_client.get(state_url(active))
     assert response.status_code == 200
     assert response["Cache-Control"] == "no-store"
     data = response.json()
     assert data["name"] == "Main"
-    assert data["settings"]["colors"]["light"]["primary"] == PINK
+    assert data["settings"]["colors"]["primary"] == PINK
     assert f"--color-primary: {PINK};" in data["css"]
     assert data["live_revision"] == 1
     assert data["has_unpublished_changes"] is True

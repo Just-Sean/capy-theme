@@ -35,5 +35,6 @@ def test_more_contrast_removes_noise_and_depth_and_thickens_borders(css):
 
 
 def test_the_rules_come_after_the_theme_values(css):
-    # So they win over the theme's own --noise, --depth and --border.
-    assert css.index("@media (prefers-contrast: more)") > css.index('[data-theme="capy-dark"]')
+    # So they win over the theme's own --noise, --depth and --border. A light theme
+    # renders its forced block at [data-theme="capy-light"].
+    assert css.index("@media (prefers-contrast: more)") > css.index('[data-theme="capy-light"]')

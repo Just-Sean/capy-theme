@@ -6,7 +6,7 @@ from django.core.cache import cache
 from django.urls import reverse
 
 from capy_theme.models import Theme, ThemeRevision
-from capy_theme.themes.active import get_active_theme
+from capy_theme.themes.active import primary_theme
 from capy_theme.themes.publishing import publish
 
 pytestmark = pytest.mark.django_db
@@ -86,8 +86,7 @@ def test_designer_can_edit_drafts(designer, theme):
         {
             "name": "Main",
             "slug": "main",
-            "light_base": "cupcake",
-            "dark_base": "dark",
+            "base": "cupcake",
             "assets-TOTAL_FORMS": "0",
             "assets-INITIAL_FORMS": "0",
             "revisions-TOTAL_FORMS": "0",
@@ -98,15 +97,14 @@ def test_designer_can_edit_drafts(designer, theme):
     )
     assert response.status_code == 302, response.content
     theme.refresh_from_db()
-    assert theme.light_base == "cupcake"
+    assert theme.base == "cupcake"
 
 
 def draft_post(**extra):
     return {
         "name": "Main",
         "slug": "main",
-        "light_base": "light",
-        "dark_base": "dark",
+        "base": "light",
         "assets-TOTAL_FORMS": "0",
         "assets-INITIAL_FORMS": "0",
         "revisions-TOTAL_FORMS": "0",
@@ -163,7 +161,7 @@ def test_designer_sees_no_row_buttons(designer, theme):
 def test_designer_direct_activate_request_is_refused(designer, theme):
     publish(theme)
     assert designer.post(row_url(theme, "activate")).status_code == 403
-    assert get_active_theme() is None
+    assert primary_theme() is None
 
 
 # A publisher can.
@@ -182,7 +180,7 @@ def test_publisher_can_activate(publisher, theme):
     publish(theme)
     assert row_url(theme, "activate") in publisher.get(CHANGELIST).content.decode()
     publisher.post(row_url(theme, "activate"))
-    assert get_active_theme() == theme
+    assert primary_theme() == theme
 
 
 def test_superusers_can_publish(client, django_user_model, theme):
