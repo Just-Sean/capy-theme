@@ -11,3 +11,4 @@ demo/static/css/tailwind.css
 .claude/settings.local.json
 .coverage
 htmlcov/
+.claude/worktrees/

@@ -25,3 +25,11 @@ repos:
         entry: uv run ruff format --check --force-exclude
         language: system
         types: [python]
+  - repo: local
+    hooks:
+      - id: django-missing-migrations
+        name: makemigrations --check
+        entry: scripts/check-migrations.sh
+        language: system
+        pass_filenames: false
+        types: [python]
